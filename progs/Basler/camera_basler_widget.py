@@ -19,22 +19,21 @@
 import sys
 import time
 import numpy as np
-import cv2
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QGridLayout,
-    QLabel, QComboBox, QPushButton,
+    QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
 from PyQt6.QtCore import pyqtSignal, QTimer
-from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtGui import QPixmap
 
 from camera_list import CameraList
 from camera_basler import CameraBasler, get_bits_per_pixel
 
 from supoptools.images.conversion import *
-from supoptools.pyqt6.widget_slider import SliderBlock
+from supoptools.pyqt6.widget_slider import WidgetSlider
 
 class CameraBaslerListWidget(QWidget):
     """Generate available cameras list.
@@ -150,6 +149,8 @@ class CameraBaslerParamsWidget(QWidget):
     :type camera: pylon.TlFactory    
     
     """
+    params_dict = {'fps': 'FPS', 'expo': 'Exposure Time', 'black':'Black Level'}
+    
     def __init__(self, parent):
         """Default constructor of the class.
         
@@ -164,12 +165,54 @@ class CameraBaslerParamsWidget(QWidget):
         self.main_layout = QVBoxLayout()
         # Graphical objects
         self.name_label = QLabel('Parameters')
-        self.main_layout.addWidget(self.name_label)
+        self.auto_update_check = QCheckBox('Auto-Update')
+        self.auto_update_validated = False
         
-        self.expotime_slider = SliderBlock(name='Exposure Time')
-        self.main_layout.addWidget(self.expotime_slider)
+        top_layout = QGridLayout()
+        top_layout.addWidget(self.name_label, 0, 0)
+        top_layout.setRowStretch(0, 2)
+        top_layout.addWidget(self.auto_update_check, 0, 1)
+        top_layout.setRowStretch(1, 1)
+        top_widget = QWidget()
+        top_widget.setLayout(top_layout)
         
-        self.setFixedSize(400, 300)
+        self.main_layout.addWidget(top_widget)
+        
+        name = CameraBaslerParamsWidget.params_dict['fps']
+        signal_name = 'fps'
+        self.fps_slider = WidgetSlider(
+            name=name, signal_name=signal_name)
+        self.fps_slider.slider_changed_signal.connect(self.update_params)
+        self.fps_slider.set_units('frames/s')
+        self.fps_slider.set_min_max_slider(5, 50)
+        fps_value = self.parent.camera.get_frame_rate()
+        self.fps_slider.set_value(fps_value)
+        self.main_layout.addWidget(self.fps_slider) 
+
+        name = CameraBaslerParamsWidget.params_dict['expo']
+        signal_name = 'expo'
+        self.expotime_slider = WidgetSlider(
+            name=name, signal_name=signal_name, integer=True)
+        self.expotime_slider.slider_changed_signal.connect(self.update_params)
+        self.expotime_slider.set_units('ms')
+        max_expo = 1000/fps_value - 1  # in ms
+        self.expotime_slider.set_min_max_slider(1, max_expo)
+        expo_value = self.parent.camera.get_exposure()
+        self.expotime_slider.set_value(expo_value/1000)
+        self.main_layout.addWidget(self.expotime_slider)       
+ 
+        name = CameraBaslerParamsWidget.params_dict['black']
+        signal_name = 'black'        
+        self.blacklevel_slider = WidgetSlider(
+            name=name, signal_name=signal_name, integer=True)
+        self.blacklevel_slider.slider_changed_signal.connect(self.update_params)
+        self.blacklevel_slider.set_units('LSB')
+        cam_bits_nb = get_bits_per_pixel(self.parent.camera.get_color_mode())
+        max_blacklevel = 2**cam_bits_nb - 1
+        self.blacklevel_slider.set_min_max_slider(0, max_blacklevel)
+        self.main_layout.addWidget(self.blacklevel_slider)
+        
+        self.setFixedSize(300, 400)
         self.setLayout(self.main_layout)
 
 
@@ -180,8 +223,51 @@ class CameraBaslerParamsWidget(QWidget):
         :type camera: pylon.TlFactory        
         """
         self.camera = camera
+        _, name = self.camera.get_cam_info()
+        self.name_label.setText(name+' Parameters')
         
-        
+    def update_params(self, event) -> None:
+        """Update parameters."""
+        str_event = event.split(':')
+        if str_event[0].lower() != 'update':
+            if str_event[0].lower() == 'slider':
+                if self.auto_update_check.isChecked() is False:
+                    return  
+                
+        if str_event[1].lower() == 'fps':
+            value = self.fps_slider.get_real_value()
+            # Verify if exposure time is lower than FPS limit
+            expo = self.parent.camera.get_exposure()/1000  # in ms
+            fps_t = 1/value*1000  # in ms
+            expo_val = int(fps_t-1) * 1000
+            print(f'Expo = {expo} - 1/FPS = {fps_t} --> EXP_V = {expo_val}')
+            # Update exposure time limits
+            self.expotime_slider.set_min_max_slider(1, expo_val / 1000)
+            
+            if expo > fps_t:
+                print('UPD')
+                self.parent.camera.set_exposure(expo_val)
+                self.expotime_slider.set_value(expo_val)
+            # Update frame rate of the camera
+            self.parent.camera.set_frame_rate(value)
+            # Update interval of the timer
+            
+            
+        elif str_event[1].lower() == 'expo':
+            value = self.expotime_slider.get_real_value()*1000
+            #time_ms = 1/value
+            #self.parent.parent.main_timer.setInterval()
+            self.parent.camera.set_exposure(value)
+        elif str_event[1].lower() == 'black':
+            value = self.blacklevel_slider.get_real_value()
+            self.parent.camera.set_black_level(value)
+        else:
+            print('Error')
+            
+        # Update Small panel information
+        self.parent.update_params()
+
+
     def closeEvent(self, event):
         """closeEvent redefinition. 
         
@@ -271,7 +357,6 @@ class SmallParamsDisplay(QWidget):
         self.camera_expotime_label.setText(expo)
         fps = str(self.camera.get_frame_rate())+' fps'
         self.camera_fps_label.setText(fps)
-        print('Update Params')
     
     def params_button_action(self):
         """
@@ -301,7 +386,7 @@ class CameraBaslerWidget(QWidget):
         The camera is initialized with the following parameters :
             
         * Exposure time = 100 ms
-        * FPS = 20
+        * FPS = 5
         * Black Level = 0
         * Color Mode = 'Mono12' (if possible)
      
@@ -352,9 +437,9 @@ class CameraBaslerWidget(QWidget):
         # Create Camera object
         self.camera = CameraBasler(cam_dev)
         # Initialize the camera with default parameters
+        self.camera.set_frame_rate(5)
+        self.camera.set_color_mode('Mono12')
         self.camera.set_exposure(100000)
-        self.camera.set_color_mode('Mono8')
-        self.camera.set_frame_rate(20)
         self.camera.set_black_level(0)
         # Clear layout with combo list
         self.clear_layout()
@@ -473,6 +558,7 @@ class MyMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("CameraBaslerWidet Test Window")
         self.setGeometry(100, 100, 400, 300)
+        #self.central_widget = CameraBaslerParamsWidget(self)
         self.central_widget = CameraBaslerWidget()
         self.setCentralWidget(self.central_widget)
 
