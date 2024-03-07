@@ -84,7 +84,10 @@ class CameraBasler():
        
     
     """
-    def __init__(self, cam_dev: pylon.TlFactory) -> None:    
+    def __init__(self, cam_dev: pylon.TlFactory) -> None:   
+        """
+        Default constructor of the class.
+        """
         tlFactory = pylon.TlFactory.GetInstance()     
         # Camera device
         self.camera_device: pylon.TlFactory = cam_dev  
@@ -125,6 +128,13 @@ class CameraBasler():
         else:
             self.camera.Close()
             raise BaslerERROR("init Basler Camera")
+            
+    def disconnect(self):
+        """
+        Disconnect the camera.
+        """
+        if self.camera.IsOpen():
+            self.camera.Close()
 
     def get_cam_info(self) -> tuple[str, str]:
         """
@@ -177,6 +187,7 @@ class CameraBasler():
     
         except :
             raise BaslerERROR("set_display_mode")
+           
             
     def get_color_mode(self):
         """
@@ -200,6 +211,7 @@ class CameraBasler():
 
         except :
             raise BaslerERROR("get_colormode")
+
 
     def set_color_mode(self, colormode: str) -> None:
         """

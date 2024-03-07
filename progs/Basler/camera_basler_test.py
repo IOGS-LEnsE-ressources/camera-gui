@@ -48,11 +48,12 @@ if __name__ == "__main__":
     
     print(images[0].shape)
     
-    
+    '''
     # display image
     plt.imshow(images[0], interpolation='nearest')
     plt.show()
-    
+    '''
+    '''
     if my_cam.set_aoi(200, 300, 500, 400):
         print('AOI OK')
         # Test to catch images
@@ -64,7 +65,7 @@ if __name__ == "__main__":
         elapsed_time = et - st
         print('\tExecution time:', elapsed_time, 'seconds')  
         print(images[0].shape)      
-
+    '''
     '''
     # Different exposure time
     my_cam.reset_aoi()
@@ -77,7 +78,7 @@ if __name__ == "__main__":
         plt.imshow(images[0], interpolation='nearest')
         plt.show()        
     '''
-    
+    '''
     # Frame Rate
     ft_act = my_cam.get_frame_rate()
     print(f'Actual Frame Time = {ft_act} fps')
@@ -91,10 +92,5 @@ if __name__ == "__main__":
     my_cam.set_black_level(200)
     bl_act = my_cam.get_black_level()
     print(f'New Black Level = {bl_act}')
-    
-    
-    
-    
-    
-    
-    
+    '''
+ 
