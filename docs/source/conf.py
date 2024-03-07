@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('../../progs/Basler'))
 
 project = 'Camera GUI'
 copyright = '2024, Julien Villemejane'
-author = 'Julien Villemejane'
+author = 'Julien Villemejane <>'
 release = '0.1'
 
 
