@@ -1,5 +1,5 @@
 """
-camera_basler_widget file that contains :
+*camera_basler_widget* file that contains :
 
     * :class::CameraBaslerWidget to integrate a Basler camera into a PyQt6 graphical interface.
     * :class::CameraBaslerListWidget to generate a Widget including the list of available camerasintegrate a Basler camera into a PyQt6 graphical interface.
@@ -31,9 +31,11 @@ from PyQt6.QtGui import QImage, QPixmap
 from camera_list import CameraList
 from camera_basler import CameraBasler, get_bits_per_pixel
 
+from supoptools.images.conversion import *
 
 class CameraBaslerListWidget(QWidget):
-    """
+    """Generate available cameras list.
+    
     Generate a Widget including the list of available cameras and two buttons :
         * connect : to connect a selected camera ;
         * refresh : to refresh the list of available cameras.
@@ -93,8 +95,7 @@ class CameraBaslerListWidget(QWidget):
 
     
     def refresh_cameras_list(self):
-        """
-        Refresh the list of available cameras.
+        """Refresh the list of available cameras.
         
         Update the cameras_list parameter of this class.
         """       
@@ -108,8 +109,7 @@ class CameraBaslerListWidget(QWidget):
             
     
     def refresh_cameras_list_combo(self):
-        """
-        Refresh the combobox list of available cameras.
+        """Refresh the combobox list of available cameras.
         
         Update the cameras_list_combo parameter of this class.
         """
@@ -119,7 +119,8 @@ class CameraBaslerListWidget(QWidget):
             self.cameras_list_combo.addItem(f'BAS-{cam[1]}')
 
     def get_selected_camera_dev(self):
-        """
+        """Return the device object.
+        
         Return the device object from pypylon wraper of the selected camera.
         
         :return: the index number of the selected camera.
@@ -130,11 +131,9 @@ class CameraBaslerListWidget(QWidget):
         return dev
         
     def send_signal_connected(self):
-        """
-        Send a signal when a camera is selected to be used.
+        """Send a signal when a camera is selected to be used.
         """
         self.connected_signal.emit('C')
-
 
 
 class CameraBaslerParamsWidget(QWidget):
@@ -149,8 +148,7 @@ class CameraBaslerParamsWidget(QWidget):
     
     """
     def __init__(self, parent):
-        """
-        Default constructor of the class.
+        """Default constructor of the class.
         
         :param parent: Parent widget of this widget.
         :type parent: SmallParamsDisplay
@@ -170,8 +168,7 @@ class CameraBaslerParamsWidget(QWidget):
 
 
     def set_camera(self, camera) -> None:
-        """
-        Set the camera device to setup.
+        """Set the camera device to setup.
         
         :param camera: Device to control
         :type camera: pylon.TlFactory        
@@ -180,9 +177,10 @@ class CameraBaslerParamsWidget(QWidget):
         
         
     def closeEvent(self, event):
-        """
-        closeEvent redefinition. Use when the user clicks 
-        on the red cross to close the window
+        """closeEvent redefinition. 
+        
+        Use when the user clicks on the red cross 
+        to close the window.
         """
         reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?', 
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
@@ -195,8 +193,7 @@ class CameraBaslerParamsWidget(QWidget):
 
 
 class SmallParamsDisplay(QWidget):
-    """
-    Area to display main parameters of the camera.
+    """Area to display main parameters of the camera.
     
     :param parent: Parent widget of this widget.
     :type parent: CameraBaslerWidget
@@ -367,8 +364,6 @@ class CameraBaslerWidget(QWidget):
         time_ms = int(1000/fps + 10) # 10 ms extra time
         self.main_timer.setInterval(time_ms) # in ms
         self.main_timer.start()
-        self.refresh()
-        print('Connected')
         
         
     def is_connected(self) -> bool:
@@ -401,47 +396,6 @@ class CameraBaslerWidget(QWidget):
             widget = item.widget()
             widget.deleteLater()
     
-    
-    def resize_image(self, im_array: numpy.ndarray, new_width: int, new_height: int) ->  numpy.ndarray:
-        """
-        Resize array containing image at a new size.
-
-        :param im_array: Initial array to resize.
-        :type im_array: numpy.ndarray
-        :param new_width: Width of the new array.
-        :type new_width: int        
-        :param new_height: Height of the new array.
-        :type new_height: int
-        :return: Resized array.
-        :rtype: numpy.ndarray
-
-        """
-        resized_image = cv2.resize(im_array, 
-                        dsize=(new_width, new_height), 
-                        interpolation=cv2.INTER_CUBIC)
-        return resized_image
-    
-    
-    def array_to_qimage(self, array: numpy.ndarray) -> QImage:
-        """
-        Transcode an array to a QImage.
-        
-        :param array: Array containing image data.
-        :type array: numpy.ndarray
-        :return: Image to display.
-        :rtype: QImage
-
-        """
-        shape_size = len(array.shape)
-        if shape_size == 2:
-            height, width = array.shape
-        else:
-            height, width, _ = array.shape
-        print(f'W={width}')
-        bytes_per_line = width # only in 8 bits gray 
-    
-        return QImage(array, width, height, bytes_per_line, QImage.Format.Format_Grayscale8)
-        
 
     def refresh(self) -> None:
         """
@@ -460,11 +414,10 @@ class CameraBaslerWidget(QWidget):
             # Get widget size
             frame_width = self.width() - 30
             frame_height = self.height() - 120
-            print(f'FW={frame_width} * FH={frame_height}')
             
             # Depending on the color mode - display only in 8 bits mono
-            nb_bits = get_bits_per_pixel(self.camera.get_color_mode())
-            print(f'Nb bits = {nb_bits}')
+            nb_bits = get_bits_per_pixel(
+                self.camera.get_color_mode())
             if nb_bits > 8:
                 image_array = image_array.view(np.uint16)
                 image_array_disp = (image_array / (2**(nb_bits-8))).astype(np.uint8)
@@ -472,16 +425,13 @@ class CameraBaslerWidget(QWidget):
                 image_array = image_array.view(np.uint8)
                 image_array_disp = image_array.astype(np.uint8)
             
-            print(type(image_array_disp[0,0]))
-            
             # Resize to the display size
-            image_array_disp2 = self.resize_image(
+            image_array_disp2 = resize_image(
                 image_array_disp, 
                 frame_width, 
                 frame_height)
             # Convert the frame into an image
-            image = self.array_to_qimage(image_array_disp2)
-            print(f'W = {image.width()}')
+            image = array_to_qimage(image_array_disp2)
             pmap = QPixmap(image)
 
             # display it in the cameraDisplay
@@ -497,12 +447,11 @@ class CameraBaslerWidget(QWidget):
         """
         if self.main_timer.isActive():
             self.main_timer.stop()
-            print('OK STOP')
+            print('TIMER STOP')
         time.sleep(0.5)
         self.camera.disconnect()
         print('DISCONNECTED')
         QApplication.instance().quit()
-
 
 
 class MyMainWindow(QMainWindow):
