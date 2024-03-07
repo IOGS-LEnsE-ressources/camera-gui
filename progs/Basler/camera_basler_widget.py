@@ -1,4 +1,6 @@
-"""
+# -*- coding: utf-8 -*-
+"""*camera_basler_widget* file.
+
 *camera_basler_widget* file that contains :
 
     * :class::CameraBaslerWidget to integrate a Basler camera into a PyQt6 graphical interface.
@@ -32,6 +34,7 @@ from camera_list import CameraList
 from camera_basler import CameraBasler, get_bits_per_pixel
 
 from supoptools.images.conversion import *
+from supoptools.pyqt6.widget_slider import SliderBlock
 
 class CameraBaslerListWidget(QWidget):
     """Generate available cameras list.
@@ -160,8 +163,11 @@ class CameraBaslerParamsWidget(QWidget):
         # Main layout
         self.main_layout = QVBoxLayout()
         # Graphical objects
-        self.test_label = QLabel('NEW WINDOW !!')
-        self.main_layout.addWidget(self.test_label)
+        self.name_label = QLabel('Parameters')
+        self.main_layout.addWidget(self.name_label)
+        
+        self.expotime_slider = SliderBlock(name='Exposure Time')
+        self.main_layout.addWidget(self.expotime_slider)
         
         self.setFixedSize(400, 300)
         self.setLayout(self.main_layout)

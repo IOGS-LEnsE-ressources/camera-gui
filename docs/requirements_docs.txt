@@ -9,6 +9,4 @@ sphinx-copybutton
 sphinx-automodapi
 sphinx-favicon
 sphinx-autoapi
-sphinx-copybutton
-sphinx-automodapi
 linuxdoc

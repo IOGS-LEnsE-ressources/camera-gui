@@ -150,8 +150,7 @@ class CameraBasler():
         serial_no, camera_name = None, None
         try:
             FriendlyName = self.camera_device.GetFriendlyName().split(' ')
-            camera_name, serial_no = FriendlyName[1],
-            int(FriendlyName[2].strip("()"))
+            camera_name, serial_no = FriendlyName[1], int(FriendlyName[2].strip("()"))
             return serial_no, camera_name
         except:
             raise BaslerERROR("get_cam_info")
@@ -290,8 +289,7 @@ class CameraBasler():
         :rtype: bool
 
         """
-        if self.__check_range(x0, y0) is False
-        or self.__check_range(x0+w, y0+h) is False:
+        if self.__check_range(x0, y0) is False or self.__check_range(x0+w, y0+h) is False:
             return False
         self.aoi_x0 = x0
         self.aoi_y0 = y0
