@@ -36,6 +36,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     'sphinx_rtd_theme',
+    'sphinx_toolbox.code',
+    'sphinx_copybutton',
     'linuxdoc.rstFlatTable'
 ]
 

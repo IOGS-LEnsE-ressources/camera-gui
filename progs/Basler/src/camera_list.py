@@ -94,7 +94,7 @@ class CameraList():
         """
         for i, d in self.available_cameras:
             if i == idx:
-                return d
+                return pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(d))
             else:
                 return None
 

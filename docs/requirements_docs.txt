@@ -10,3 +10,5 @@ sphinx-automodapi
 sphinx-favicon
 sphinx-autoapi
 linuxdoc
+sphinx_toolbox
+sphinx_copybutton
