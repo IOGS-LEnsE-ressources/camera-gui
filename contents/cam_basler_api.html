@@ -70,7 +70,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#camera_basler.CameraBasler"><code class="docutils literal notranslate"><span class="pre">CameraBasler</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#camerabaslerwidget-class">CameraBaslerWidget class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#camerabaslerwidget-class">CameraBaslerWidget class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#camera_basler_widget.CameraBaslerWidget"><code class="docutils literal notranslate"><span class="pre">CameraBaslerWidget</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -537,6 +540,90 @@ of the frame rate in frames per second.</p>
 </section>
 <section id="camerabaslerwidget-class">
 <h2>CameraBaslerWidget class<a class="headerlink" href="#camerabaslerwidget-class" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="camera_basler_widget.CameraBaslerWidget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera_basler_widget.</span></span><span class="sig-name descname"><span class="pre">CameraBaslerWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#camera_basler_widget.CameraBaslerWidget" title="Link to this definition"></a></dt>
+<dd><p>CameraBaslerWidget class, children of QWidget.</p>
+<p>Class to integrate a Basler camera into a PyQt6 graphical interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cameras_list_widget</strong> (<em>CameraBaslerListWidget</em>) – Widget containing a ComboBox with the list of available cameras.</p></li>
+<li><p><strong>main_layout</strong> (<em>QGridLayout</em>) – Main layout container of the widget.</p></li>
+<li><p><strong>camera</strong> (<em>pylon.TlFactory</em>) – Device to control</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The camera is initialized with the following parameters :</p>
+<ul class="simple">
+<li><p>Exposure time = 100 ms</p></li>
+<li><p>FPS = 5</p></li>
+<li><p>Black Level = 0</p></li>
+<li><p>Color Mode = ‘Mono12’ (if possible)</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>camera_display</strong> (<em>QLabel</em>) – Area to display the camera image</p></li>
+<li><p><strong>camera_infos</strong> (<em>SmallParamsDisplay</em>) – Area to display camera informations (FPS, expotime…)</p></li>
+<li><p><strong>main_timer</strong> (<em>QTimer</em>) – timer object to manage display refresh</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_basler_widget.CameraBaslerWidget.clear_layout">
+<span class="sig-name descname"><span class="pre">clear_layout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#camera_basler_widget.CameraBaslerWidget.clear_layout" title="Link to this definition"></a></dt>
+<dd><p>Clear the main layout of the Widget.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is used to display camera image instead of the camera
+list when a camera is selected and the user clicks on the connect
+button.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_basler_widget.CameraBaslerWidget.connect_camera">
+<span class="sig-name descname"><span class="pre">connect_camera</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#camera_basler_widget.CameraBaslerWidget.connect_camera" title="Link to this definition"></a></dt>
+<dd><p>Trigger action when a connected signal from the combo list is emitted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_basler_widget.CameraBaslerWidget.is_connected">
+<span class="sig-name descname"><span class="pre">is_connected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#camera_basler_widget.CameraBaslerWidget.is_connected" title="Link to this definition"></a></dt>
+<dd><p>Test if a camera is connected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if a camera is connected.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_basler_widget.CameraBaslerWidget.quit_application">
+<span class="sig-name descname"><span class="pre">quit_application</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#camera_basler_widget.CameraBaslerWidget.quit_application" title="Link to this definition"></a></dt>
+<dd><p>Quit properly the PyQt6 application window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_basler_widget.CameraBaslerWidget.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#camera_basler_widget.CameraBaslerWidget.refresh" title="Link to this definition"></a></dt>
+<dd><p>Refresh the image from camera.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is called by a QTimer event
+according to the FPS rate.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
