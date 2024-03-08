@@ -28,6 +28,7 @@ GUI Tutorials
 .. toctree::
    :maxdepth: 1
 	
+	How To use these ressources<contents/how_to_use>
 	PyQt6 widget integration<contents/pyqt6_integration>
 
 

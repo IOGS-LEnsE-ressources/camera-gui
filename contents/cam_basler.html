@@ -7,7 +7,7 @@
   <title>Basler Camera Sensors &mdash; Camera GUI 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=01374f0f" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=705d9870" />
       <link rel="stylesheet" type="text/css" href="../_static/css/links.css?v=7a4609b2" />
 
   
@@ -47,6 +47,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">     How To use these ressources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyqt6_integration.html">     PyQt6 widget integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
@@ -65,9 +66,15 @@
 <li class="toctree-l2"><a class="reference internal" href="#lense-development">LEnsE development</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#basler-driver">Basler Driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#basler-widget">Basler Widget</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#api-reference">API reference</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#camerabasler-class">CameraBasler class</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#cameralist-class">CameraList class</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#camerabasler-class">CameraBasler class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#camera_basler.CameraBasler"><code class="docutils literal notranslate"><span class="pre">CameraBasler</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cameralist-class">CameraList class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#camera_list.CameraList"><code class="docutils literal notranslate"><span class="pre">CameraList</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -102,6 +109,7 @@
              
   <section id="basler-camera-sensors">
 <h1>Basler Camera Sensors<a class="headerlink" href="#basler-camera-sensors" title="Link to this heading"></a></h1>
+<p>The LEnsE team developed <em>Python elements</em> for implementing industrial cameras from <strong>Basler</strong>.</p>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <section id="pylon-viewer-software-and-drivers">
@@ -144,7 +152,9 @@
 </section>
 <section id="pypylon-extension">
 <h4>Pypylon extension<a class="headerlink" href="#pypylon-extension" title="Link to this heading"></a></h4>
-<p>To check that the <strong>pypylon</strong> extension is also correctly installed and that the pylon driver is recognized by the Python API, you can download the next Python test file : <a class="reference external" href="https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/pypylon_main_test.py">pypylon_main_test.py</a>. This file is provided by the development team of the <strong>pypylon</strong> wrapper.</p>
+<p>The <code class="file docutils literal notranslate"><span class="pre">pypylon_main_test.py</span></code> file from the <code class="file docutils literal notranslate"><span class="pre">progs/Basler/examples/</span></code> directory of the repository is an example to check that the <strong>pypylon</strong> extension is correctly installed and that the pylon driver is recognized by the Python API.</p>
+<p><em>You can also download this example</em> <a class="reference download external" download="" href="https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/examples/pypylon_main_test.py"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<p>This file is provided by the development team of the <strong>pypylon</strong> wrapper.</p>
 <p>EXAMPLE ???</p>
 <p>If the execution of this script proceeds without error, it means that everything is ready to use the <em>Basler</em> devices in a Python script or interface.</p>
 </section>
@@ -162,8 +172,8 @@
 <p>This driver is based on the <a class="reference external" href="https://github.com/basler/pypylon">Pypylon Wrapper</a>.</p>
 <p>It is composed in two main files :</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_basler.py">camera_basler.py</a> containing</p></li>
-<li><p><a class="reference external" href="https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_list.py">camera_list.py</a></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">camera_basler.py</span></code> <a class="reference download external" download="" href="https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_basler.py"><code class="xref download docutils literal notranslate"><span class="pre">&lt;</span></code></a> containing …</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">camera_list.py</span></code> <a class="reference download external" download="" href="https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_list.py"><code class="xref download docutils literal notranslate"><span class="pre">&lt;</span></code></a> …</p></li>
 </ul>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_cam</span> <span class="o">=</span> <span class="n">CameraBasler</span><span class="p">(</span><span class="n">cam_dev</span><span class="p">)</span>
 </pre></div>
@@ -172,10 +182,11 @@
 <section id="basler-widget">
 <h3>Basler Widget<a class="headerlink" href="#basler-widget" title="Link to this heading"></a></h3>
 </section>
+</section>
 <section id="api-reference">
-<h3>API reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h3>
+<h2>API reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h2>
 <section id="camerabasler-class">
-<h4>CameraBasler class<a class="headerlink" href="#camerabasler-class" title="Link to this heading"></a></h4>
+<h3>CameraBasler class<a class="headerlink" href="#camerabasler-class" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="camera_basler.CameraBasler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera_basler.</span></span><span class="sig-name descname"><span class="pre">CameraBasler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cam_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pypylon.pylon.TlFactory</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#camera_basler.CameraBasler" title="Link to this definition"></a></dt>
@@ -199,6 +210,12 @@ the following color modes are available :</p>
 <li><p>‘Mono12’ : monochromatic mode in 12 bits raw data</p></li>
 </ul>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_basler.CameraBasler.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cam_dev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pypylon.pylon.TlFactory</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#camera_basler.CameraBasler.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the object.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="camera_basler.CameraBasler.disconnect">
 <span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#camera_basler.CameraBasler.disconnect" title="Link to this definition"></a></dt>
@@ -472,7 +489,7 @@ of the frame rate in frames per second.</p>
 
 </section>
 <section id="cameralist-class">
-<h4>CameraList class<a class="headerlink" href="#cameralist-class" title="Link to this heading"></a></h4>
+<h3>CameraList class<a class="headerlink" href="#cameralist-class" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="camera_list.CameraList">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera_list.</span></span><span class="sig-name descname"><span class="pre">CameraList</span></span><a class="headerlink" href="#camera_list.CameraList" title="Link to this definition"></a></dt>
@@ -547,7 +564,6 @@ of the frame rate in frames per second.</p>
 
 </dd></dl>
 
-</section>
 </section>
 </section>
 </section>

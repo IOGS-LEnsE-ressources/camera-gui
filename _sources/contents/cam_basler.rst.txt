@@ -1,6 +1,9 @@
 Basler Camera Sensors
 #####################
 
+The LEnsE team developed *Python elements* for implementing industrial cameras from **Basler**.
+
+
 Requirements
 ************
 
@@ -55,7 +58,11 @@ TO DO
 Pypylon extension
 -----------------
 
-To check that the **pypylon** extension is also correctly installed and that the pylon driver is recognized by the Python API, you can download the next Python test file : `pypylon_main_test.py <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/pypylon_main_test.py>`_. This file is provided by the development team of the **pypylon** wrapper.
+The :file:`pypylon_main_test.py` file from the :file:`progs/Basler/examples/` directory of the repository is an example to check that the **pypylon** extension is correctly installed and that the pylon driver is recognized by the Python API.
+
+*You can also download this example* :download:`here <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/examples/pypylon_main_test.py>`.
+
+This file is provided by the development team of the **pypylon** wrapper.
 
 EXAMPLE ???
 
@@ -76,8 +83,8 @@ This driver is based on the `Pypylon Wrapper <https://github.com/basler/pypylon>
 
 It is composed in two main files :
 
-* `camera_basler.py <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_basler.py>`_ containing
-* `camera_list.py <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_list.py>`_
+* :file:`camera_basler.py` :download:`< <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_basler.py>` containing ...
+* :file:`camera_list.py` :download:`< <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_list.py>` ...
 
 >>> my_cam = CameraBasler(cam_dev)
 
@@ -88,17 +95,18 @@ Basler Widget
 
 
 API reference
-=============
+*************
 
 CameraBasler class
-------------------
+==================
 
 .. autoclass:: camera_basler.CameraBasler
    :members:
+   :special-members: __init__
 
 
 CameraList class
-----------------
+================
 
 .. autoclass:: camera_list.CameraList
    :members:
