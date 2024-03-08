@@ -14,6 +14,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../progs'))
 sys.path.insert(0, os.path.abspath('../../progs/Basler'))
+sys.path.insert(0, os.path.abspath('../../progs/Basler/src'))
 
 
 
