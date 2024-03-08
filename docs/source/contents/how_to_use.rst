@@ -1,5 +1,5 @@
-How to use this ressource ?
-###########################
+How to use these ressources ?
+#############################
 
 You're actually on the *GitHup Page* of the `Camera GUI Git Repository <https://github.com/IOGS-LEnsE-ressources/camera-gui/>`_.
 
@@ -91,7 +91,25 @@ To clone a repository, you need to follow these steps:
 From the GitHub Documentation : `Cloning a repository <https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository>`_.
 
 
-
-
 Download specific files
 =======================
+
+The most **boring way** to obtain files in a GitHub repository is to browse in the different directories and to manually download each file you need.
+
+
+To download specific files from a repository, you need to follow these steps:
+
+#. Navigate to the main page of the repository you want to clone.
+#. Browse through the different directories.
+
+	.. figure:: ../_static/images/how_to/git_hub_browse.png
+		:align: center
+		:width: 80%
+
+#. Open a file and click :menuselection:`Download raw file` icon.
+
+	.. figure:: ../_static/images/how_to/git_hub_raw_download.png
+		:align: center
+		:width: 80%
+
+#. Change the current working directory to the location where you want to download the raw file.
