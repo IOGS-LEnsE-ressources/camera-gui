@@ -16,18 +16,18 @@
 
 /* Left menu */
 .wy-nav-side{
-	background-color: rgb(10, 50, 80);; 	
+	background-color: var(--iogs-violet); 	
 }
 
 .wy-menu-vertical p.caption{
-	color: rgb(217, 128, 78);
+	color: var(--ressources);
 	font-weight: bold;
 	font-size: 100%;
 }
 
 .wy-side-nav-search{
 	color: white;			
-	background-color: rgb(217, 128, 78);
+	background-color: var(--ressources);
 }
 
 .wy-side-nav-search>a img.logo{
