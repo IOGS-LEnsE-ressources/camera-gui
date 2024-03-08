@@ -7,7 +7,7 @@
   <title>Basler Camera Sensors &mdash; Camera GUI 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=705d9870" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=178975b6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/links.css?v=7a4609b2" />
 
   
@@ -54,6 +54,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">     Basler Camera</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#a-basler-camera">A Basler camera</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pylon-viewer-software-and-drivers">Pylon Viewer software and drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pypylon-wrapper">Pypylon wrapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installation-test">Installation test</a><ul>
@@ -112,6 +113,11 @@
 <p>The LEnsE team developed <em>Python elements</em> for implementing industrial cameras from <strong>Basler</strong>.</p>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<section id="a-basler-camera">
+<h3>A Basler camera<a class="headerlink" href="#a-basler-camera" title="Link to this heading"></a></h3>
+<p>It goes without saying that you must own a <strong>Basler</strong> camera.</p>
+<p>All the source codes of the wrapper were tested with a <strong class="program">a2A 1920-160ucBAS</strong> camera.</p>
+</section>
 <section id="pylon-viewer-software-and-drivers">
 <h3>Pylon Viewer software and drivers<a class="headerlink" href="#pylon-viewer-software-and-drivers" title="Link to this heading"></a></h3>
 <p>Industrial camera sensors from the <strong>Basler</strong> family require the installation of the <em>Basler drivers</em>, including in their <em>pylon Viewer</em> software. More information on the  <a class="reference external" href="https://www.baslerweb.com/en/">Basler website</a>.</p>
@@ -140,15 +146,44 @@
 <section id="installation-test">
 <h3>Installation test<a class="headerlink" href="#installation-test" title="Link to this heading"></a></h3>
 <p><strong>Before any software development</strong>, you need to test if the hardware is operational and if the driver of the USB camera is correctly installed.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be sure that your camera is connected to an USB port of your computer.</p>
+</div>
 <section id="pylon-software-from-basler">
 <h4>Pylon Software from Basler<a class="headerlink" href="#pylon-software-from-basler" title="Link to this heading"></a></h4>
 <p>First of all, you should try to obtain images <strong>from the software</strong> provided by <em>Basler</em>.</p>
-<p>The software is called <strong>pylon Viewer</strong>. Connect your USB camera (or verify that the USB cable is connected) to your computer and start the <strong>pylon Viewer</strong> software.</p>
-<figure class="align-center">
+<ol class="arabic">
+<li><p>Open the <strong>pylon Viewer</strong> software</p>
+<blockquote>
+<div><figure class="align-center">
 <img alt="../_images/basler_pylon_software_icone.png" src="../_images/basler_pylon_software_icone.png" />
 </figure>
-<p>STEPS ????</p>
-<p>TO DO</p>
+</div></blockquote>
+</li>
+<li><p>When the main window of the software is opened, you can see your device in the USB sub-section of the Devices area (in the upper left corner) :</p>
+<blockquote>
+<div><figure class="align-center">
+<img alt="../_images/basler_pylon_software_step1.png" src="../_images/basler_pylon_software_step1.png" />
+</figure>
+</div></blockquote>
+</li>
+<li><p>Double-click on the device you want to test.</p></li>
+<li><p>You have now control your device. Especially, in the lower left corner, you have access to different features of the camera :</p>
+<blockquote>
+<div><figure class="align-center">
+<img alt="../_images/basler_pylon_software_step2.png" src="../_images/basler_pylon_software_step2.png" />
+</figure>
+</div></blockquote>
+</li>
+<li><p>Start video by clicking on the Continuous Shot of the toolbar :</p>
+<blockquote>
+<div><figure class="align-center">
+<img alt="../_images/basler_pylon_software_main_tools.png" src="../_images/basler_pylon_software_main_tools.png" />
+</figure>
+</div></blockquote>
+</li>
+</ol>
 </section>
 <section id="pypylon-extension">
 <h4>Pypylon extension<a class="headerlink" href="#pypylon-extension" title="Link to this heading"></a></h4>

@@ -119,6 +119,7 @@ h4::before {
 	background: var(--iogs-violet-light); 
 	padding: 2px 5px 2px 5px;
 	border-radius: 3px;
+	color: var(--ressources);
 }
 .document a:hover{
 	background: var(--iogs-violet); 
