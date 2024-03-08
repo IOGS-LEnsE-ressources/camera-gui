@@ -52,16 +52,17 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">     How To use these ressources</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pyqt6_integration.html">     PyQt6 widget integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How To use these ressources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyqt6_integration.html">PyQt6 widget integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">     Basler Camera</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html">     Requirements and test</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html">     Basler Driver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_widgets.html">     Basler Widgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html">     API reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Basler Camera</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html">Requirements and test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html">Basler Camera List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html">Basler Driver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_widgets.html">Basler Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html">API reference</a></li>
 </ul>
 </li>
 </ul>
@@ -93,12 +94,42 @@
   <section id="basler-camera-sensors">
 <h1>Basler Camera Sensors<a class="headerlink" href="#basler-camera-sensors" title="Link to this heading"></a></h1>
 <p>The LEnsE team developed <em>Python elements</em> for implementing industrial cameras from <strong>Basler</strong>.</p>
+<p>To facilitate the integration of the pypylon API in the different projects, we developped :</p>
+<ul class="simple">
+<li><p>a <em>list system</em> to list available cameras, based on the <em>pypylon</em> API,</p></li>
+<li><p>a <em>driver</em> to setup and to access a camera, based on the <em>pypylon</em> API,</p></li>
+<li><p>a set of <em>widgets</em> based on <em>PyQt6</em>, to control and to display images.</p></li>
+</ul>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="cam_basler_requirements.html">     Requirements and test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cam_basler_driver.html">     Basler Driver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cam_basler_widgets.html">     Basler Widgets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cam_basler_api.html">     API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler_requirements.html">Requirements and test</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html#a-basler-camera">A Basler camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html#pylon-viewer-software-and-drivers">Pylon Viewer software and drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html#pypylon-wrapper">Pypylon wrapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html#installation-test">Installation test</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler_list.html">Basler Camera List</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html#import-the-cameralist-class">Import the CameraList class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html#example-of-use">Example of use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html#complete-example">Complete example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler_driver.html">Basler Driver</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html#import-the-camerabasler-class">Import the CameraBasler class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html#initialize-a-camera">Initialize a camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html#get-information-from-the-camera">Get information from the camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html#setup-a-camera">Setup a camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html#get-and-display-images">Get and display images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html#start-a-continuous-shot">Start a continuous shot</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler_widgets.html">Basler Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler_api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html#camerabasler-class">CameraBasler class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html#cameralist-class">CameraList class</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
