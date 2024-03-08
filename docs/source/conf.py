@@ -78,4 +78,5 @@ html_css_files = [
     'css/links.css',
 ]
 
+
 napoleon_google_docstring = False

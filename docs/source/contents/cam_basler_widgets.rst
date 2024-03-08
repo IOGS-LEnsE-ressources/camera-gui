@@ -9,6 +9,3 @@ To facilitate the integration of the pypylon API in the different projects, we d
 
 This section deals with the **widgets**.
 
-
-Titre 1
-*******

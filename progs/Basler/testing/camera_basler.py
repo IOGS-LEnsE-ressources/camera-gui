@@ -13,6 +13,7 @@ class to communicate with a Basler camera sensor.
 
 """
 from pypylon import pylon
+import numpy
 
 
 def get_converter_mode(color_mode: str) -> int:
@@ -90,6 +91,7 @@ class CameraBasler():
         * 'Mono8' : monochromatic mode in 8 bits raw data
         * 'Mono10' : monochromatic mode in 10 bits raw data
         * 'Mono12' : monochromatic mode in 12 bits raw data
+        * 'RGB8' : RGB mode in 8 bits raw data
 
     """
 
@@ -187,8 +189,6 @@ class CameraBasler():
         :param colormode: Color mode to use for the device
         :type colormode: str, default 'Mono8'
 
-        >>> my_cam.set_display_mode('Mono10')
-
         """
         mode_converter = get_converter_mode(colormode)
         try:
@@ -201,6 +201,9 @@ class CameraBasler():
 
         :param colormode: Color mode to use for the device
         :type colormode: str, default 'Mono8'
+
+        >>> my_cam.get_color_mode()
+        'Mono8'
 
         """
         try:
@@ -233,9 +236,21 @@ class CameraBasler():
                 self.camera.Close()
             self.color_mode = colormode
             self.nb_bits_per_pixels = get_bits_per_pixel(colormode)
-
+            self.set_display_mode(colormode)
         except:
             raise BaslerERROR("set_colormode")
+
+
+    def get_image(self) -> numpy.ndarray:
+        """Get one image.
+
+        :return: Array of the image.
+        :rtype: array
+
+        """  
+        image = self.get_images()
+        return image[0]
+
 
     def get_images(self, nb_images: int = 1) -> list:
         """Get a series of images.
@@ -284,9 +299,9 @@ class CameraBasler():
     def set_aoi(self, x0, y0, w, h) -> bool:
         """Set the area of interest (aoi).
 
-        :param x0: coordinate on X-axis of the top-left corner of the aoi
+        :param x0: coordinate on X-axis of the top-left corner of the aoi must be dividable without rest by Inc = 4.
         :type x0: int
-        :param y0: coordinate on X-axis of the top-left corner of the aoi
+        :param y0: coordinate on X-axis of the top-left corner of the aoi must be dividable without rest by Inc = 4.
         :type y0: int
         :param w: width of the aoi
         :type w: int
@@ -297,6 +312,8 @@ class CameraBasler():
 
         """
         if self.__check_range(x0, y0) is False or self.__check_range(x0+w, y0+h) is False:
+            return False
+        if x0 % 4 != 0 or y0 % 4 != 0:
             return False
         self.aoi_x0 = x0
         self.aoi_y0 = y0
@@ -327,13 +344,22 @@ class CameraBasler():
             and height are the size of the aoi.
         :rtype: tuple[int, int, int, int]
 
+        >>> my_cam.get_aoi()
+        (0, 0, 1936, 1216)
+
         """
         return self.aoi_x0, self.aoi_y0, self.aoi_width, self.aoi_height
 
-    def reset_aoi(self) -> None:
+    def reset_aoi(self) -> bool:
         """Reset the area of interest (aoi).
 
         Reset to the limit of the camera.
+        
+        :return: True if the aoi is modified
+        :rtype: bool
+
+        >>> my_cam.reset_aoi()
+        True
 
         """
         self.aoi_x0 = 0
@@ -348,6 +374,9 @@ class CameraBasler():
 
         :return: the exposure time in microseconds.
         :rtype: float
+
+        >>> my_cam.get_exposure()
+        5000.0
 
         """
         try:
@@ -405,6 +434,9 @@ class CameraBasler():
         :return: the frame rate.
         :rtype: float
 
+        >>> my_cam.get_frame_rate()
+        100.0
+
         """
         try:
             if self.camera.IsOpen():
@@ -460,8 +492,11 @@ class CameraBasler():
     def get_black_level(self):
         """Return the blacklevel.
 
-        :return: the black level of the device.
+        :return: the black level of the device in ADU.
         :rtype: int
+
+        >>> my_cam.get_black_level()
+        0.0
 
         """
         try:

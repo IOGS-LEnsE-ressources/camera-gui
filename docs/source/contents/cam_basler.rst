@@ -11,7 +11,7 @@ To facilitate the integration of the pypylon API in the different projects, we d
 * a set of *widgets* based on *PyQt6*, to control and to display images.
 
 .. toctree::
-   :maxdepth: 1
+	:maxdepth: 2
 
 	Requirements and test<cam_basler_requirements>
 	Basler Camera List<cam_basler_list>

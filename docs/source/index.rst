@@ -26,15 +26,14 @@ GUI Tutorials
 *************
 
 .. toctree::
-   :maxdepth: 1
 	
 	How To use these ressources<contents/how_to_use>
 	PyQt6 widget integration<contents/pyqt6_integration>
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Camera Sensors
+	:maxdepth: 2
+	:caption: Camera Sensors
 
 	Basler Camera<contents/cam_basler>
 

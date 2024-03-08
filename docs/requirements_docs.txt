@@ -12,3 +12,4 @@ sphinx-autoapi
 linuxdoc
 sphinx_toolbox
 sphinx_copybutton
+sphinxcontrib-fulltoc
