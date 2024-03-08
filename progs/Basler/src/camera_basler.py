@@ -120,6 +120,10 @@ class CameraBasler():
         :return: true if the device could be opened, and then close the device
         :rtype: bool (or error)
 
+        >>> my_cam.is_camera_connected()
+        Device is well initialized.
+        True
+
         """
         self.camera.Open()
         if self.camera.IsOpen():
@@ -140,6 +144,9 @@ class CameraBasler():
 
         :return: the serial number and the name of the camera
         :rtype: tuple[str, str]
+
+        >>> my_cam.get_cam_info()
+        ('40282239', 'a2A1920-160ucBAS')
 
         """
         serial_no, camera_name = None, None
