@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PyQt6 Widget Integration &mdash; Camera GUI 0.1 documentation</title>
+  <title>Basler Widgets &mdash; Camera GUI 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-toolbox-code.css" />
@@ -27,8 +27,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Basler Camera Sensors" href="cam_basler.html" />
-    <link rel="prev" title="How to use these ressources ?" href="how_to_use.html" /> 
+    <link rel="next" title="API reference" href="cam_basler_api.html" />
+    <link rel="prev" title="Basler Driver" href="cam_basler_driver.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -51,20 +51,22 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="how_to_use.html">     How To use these ressources</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">     PyQt6 widget integration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-is-a-widget">What is a Widget ?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pyqt6-camera-widget">PyQt6 Camera Widget</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#how-to-implement-it-in-my-graphical-interface">How-to implement it in my graphical interface ?</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="pyqt6_integration.html">     PyQt6 widget integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="cam_basler.html">     Basler Camera</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="cam_basler.html">     Basler Camera</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html">     Requirements and test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html">     Basler Driver</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">     Basler Widgets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#titre-1">Titre 1</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html">     API reference</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -81,9 +83,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">PyQt6 Widget Integration</li>
+          <li class="breadcrumb-item"><a href="cam_basler.html">Basler Camera Sensors</a></li>
+      <li class="breadcrumb-item active">Basler Widgets</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/contents/pyqt6_integration.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/contents/cam_basler_widgets.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -91,16 +94,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="pyqt6-widget-integration">
-<h1>PyQt6 Widget Integration<a class="headerlink" href="#pyqt6-widget-integration" title="Link to this heading"></a></h1>
-<section id="what-is-a-widget">
-<h2>What is a Widget ?<a class="headerlink" href="#what-is-a-widget" title="Link to this heading"></a></h2>
-</section>
-<section id="pyqt6-camera-widget">
-<h2>PyQt6 Camera Widget<a class="headerlink" href="#pyqt6-camera-widget" title="Link to this heading"></a></h2>
-<section id="how-to-implement-it-in-my-graphical-interface">
-<h3>How-to implement it in my graphical interface ?<a class="headerlink" href="#how-to-implement-it-in-my-graphical-interface" title="Link to this heading"></a></h3>
-</section>
+  <section id="basler-widgets">
+<h1>Basler Widgets<a class="headerlink" href="#basler-widgets" title="Link to this heading"></a></h1>
+<p>To facilitate the integration of the pypylon API in the different projects, we developped :</p>
+<ul class="simple">
+<li><p>a <em>driver</em> based on the <em>pypylon</em> API,</p></li>
+<li><p>a set of <em>widgets</em> based on <em>PyQt6</em>.</p></li>
+</ul>
+<p>This section deals with the <strong>widgets</strong>.</p>
+<section id="titre-1">
+<h2>Titre 1<a class="headerlink" href="#titre-1" title="Link to this heading"></a></h2>
 </section>
 </section>
 
@@ -108,8 +111,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="how_to_use.html" class="btn btn-neutral float-left" title="How to use these ressources ?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cam_basler.html" class="btn btn-neutral float-right" title="Basler Camera Sensors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cam_basler_driver.html" class="btn btn-neutral float-left" title="Basler Driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cam_basler_api.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
