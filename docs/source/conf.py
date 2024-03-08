@@ -42,7 +42,7 @@ extensions = [
     'linuxdoc.rstFlatTable'
 ]
 
-autodoc_mock_imports = ["pypylon","numpy","pyqt6"]
+autodoc_mock_imports = ["pypylon","numpy","PyQt6"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
