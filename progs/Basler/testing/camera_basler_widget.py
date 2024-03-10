@@ -117,7 +117,7 @@ class CameraBaslerListWidget(QWidget):
         """
         self.refresh_cameras_list()
         self.cameras_list_combo.clear()
-        for cam in self.cameras_list:
+        for i, cam in enumerate(self.cameras_list):
             self.cameras_list_combo.addItem(f'BAS-{cam[1]}')
 
     def get_selected_camera_dev(self):
@@ -540,8 +540,9 @@ class CameraBaslerWidget(QWidget):
             self.main_timer.stop()
             print('TIMER STOP')
         time.sleep(0.5)
-        self.camera.disconnect()
-        print('DISCONNECTED')
+        if self.camera is not None:
+            self.camera.disconnect()
+            print('DISCONNECTED')
         QApplication.instance().quit()
 
 
@@ -557,7 +558,7 @@ class MyMainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("CameraBaslerWidet Test Window")
-        self.setGeometry(100, 100, 400, 300)
+        self.setGeometry(100, 100, 500, 400)
         #self.central_widget = CameraBaslerParamsWidget(self)
         self.central_widget = CameraBaslerWidget()
         self.setCentralWidget(self.central_widget)

@@ -48,6 +48,8 @@ class CameraList():
         """
         Create the two lists of available cameras (devices and printable list).
         """
+        self.available_cameras = []
+        self.camera_list_str = []
         self.nb_cam = 0
         tlFactory = pylon.TlFactory.GetInstance()
         devices = tlFactory.EnumerateDevices()
