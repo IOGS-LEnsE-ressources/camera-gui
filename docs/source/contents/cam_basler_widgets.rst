@@ -9,3 +9,7 @@ To facilitate the integration of the pypylon API in the different projects, we d
 
 This section deals with the **widgets**.
 
+|
+
+To use this widget, you can follow the steps mentionned in this section :ref:`PyQt6 integration <pyqt6_integration>`.
+

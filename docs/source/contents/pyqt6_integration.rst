@@ -17,6 +17,7 @@ The LEnsE team also proposed a serie of widgets to integrate camera previzualisa
 	Example of Basler camera integration in a PyQt6 application. `Biophotonic labwork - Structured illumination microscope <https://iogs-lense-platforms.github.io/>`_
 
 
+.. _pyqt6_integration:
 
 PyQt6 Camera Widget
 *******************
