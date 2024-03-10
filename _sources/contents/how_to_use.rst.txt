@@ -3,7 +3,13 @@ How to use these ressources ?
 
 You're actually on the *GitHup Page* of the `Camera GUI Git Repository <https://github.com/IOGS-LEnsE-ressources/camera-gui/>`_.
 
-This repository gathers **ressources** to setup industrial cameras (Basler, IDS...) and to collect images in **Python applications** (console or :abbr:`GUI (graphical user interface)` applications).   
+This repository gathers **ressources** to setup industrial cameras (Basler, IDS...) and to collect images in **Python applications** (console or :abbr:`GUI (graphical user interface)` applications).
+
+.. figure:: ../_static/images/pieces_machine_vision.png
+	:width: 50%
+	:align: center
+	
+	Example of machine vision image. `Machine Vision platform from the LEnsE <https://iogs-lense-platforms.github.io/machine-vision/index.html>`_
 
 |
 

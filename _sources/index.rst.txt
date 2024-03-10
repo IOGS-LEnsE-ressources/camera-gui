@@ -11,6 +11,14 @@ Camera GUI's documentation
 
 **Camera GUI** is a library for industrial camera sensors to develop **graphical user interfaces** based on **PyQt6** in Python.
 
+.. figure:: _static/images/biophotonique_labwork_interface.png
+	:width: 60%
+	:align: center
+	
+	Example of Basler camera integration in a PyQt6 application. `Biophotonic labwork - Structured illumination microscope <https://iogs-lense-platforms.github.io/>`_
+
+
+
 Actual compatible cameras :
 
 * Basler
