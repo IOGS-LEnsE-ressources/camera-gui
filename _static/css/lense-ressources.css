@@ -2,10 +2,10 @@
   --iogs-orange: rgb(255, 150, 10);
   --iogs-violet: rgb(10, 50, 80);
   --iogs-violet-light: rgba(10, 50, 80, 0.2);
-  --platforms: rgb(11, 43, 82);	
-  --platforms-light: rgba(11, 43, 82, 0.7);	
-  --ressources: rgb(217, 128, 78);
-  --ressources-light: rgba(217, 128, 78, 0.8);
+  --platforms: rgb(230, 88, 86);	
+  --platforms-light: rgba(230, 88, 86, 0.7);	
+  --ressources: rgb(255, 141, 0);
+  --ressources-light: rgba(255, 141, 0, 0.8);
   --training: rgb(52, 162, 189);	
   --training-light: rgba(52, 162, 189, 0.8);
   --procedures: rgb(47, 167, 96);
