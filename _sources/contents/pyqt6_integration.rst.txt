@@ -53,8 +53,8 @@ Then go to the :file:`/src` directory to find the source codes of the wrapper an
 A typical structure of a that type of directory is as follows:
 
 * a :file:`camera_list.py` file containing a class that allows listing all the available cameras,
-* :file:`camera_brandname.py` file containing a class that gathers methods to setup a camera and get raw data (where *brandname* is the name of the camera manufacturer - for example *camera_basler.py* for Basler camera),
-* :file:`camera_brandname_widget.py` file containing a class that inherits from the :class:`QWidget`.
+* a :file:`camera_brandname.py` file containing a class that gathers methods to setup a camera and get raw data (where *brandname* is the name of the camera manufacturer - for example *camera_basler.py* for Basler camera),
+* a :file:`camera_brandname_widget.py` file containing a class that inherits from the :class:`QWidget`.
 
 Some extra files or directories containing support methods may be present in the :file:`/src` directory.
 
