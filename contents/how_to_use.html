@@ -9,7 +9,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-toolbox-code.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=861c11a9" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=bc9b2a83" />
       <link rel="stylesheet" type="text/css" href="../_static/css/links.css?v=7a4609b2" />
 
   
@@ -53,12 +53,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">How To use these ressources</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#github-repositories">GitHub repositories</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#download-the-repository">Download the repository</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#clone-the-repository">Clone the repository</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#download-specific-files">Download specific files</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#github-repositories">GitHub repositories</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pyqt6_integration.html">PyQt6 widget integration</a></li>
@@ -113,114 +108,7 @@
 </ul>
 <section id="github-repositories">
 <h2>GitHub repositories<a class="headerlink" href="#github-repositories" title="Link to this heading"></a></h2>
-<p>There are different ways to get a copy of a repository’s files on <strong>GitHub</strong>. You can:</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><strong>Download</strong> a snapshot of a repository’s files as a <strong>zip file</strong> to your own (local) computer.</dt><dd><ul>
-<li><p>To simply use the content of the repository</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>Clone</strong> a repository to your local computer using <em>Git</em>.</dt><dd><ul>
-<li><p>To use <em>Git</em> to track and manage your changes, to sync your locally-made changes with the GitHub-hosted repository</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>Fork</strong> a repository to create a new repository on GitHub.</dt><dd><ul>
-<li><p>to use the original repository’s data as a basis for your own project on GitHub - Advanced use of <em>Git</em>, not documented in this section.</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p><strong>Browse</strong> the repository’s directories and download only specific files.</p></li>
-</ul>
-<p>From the GitHub Documentation : <a class="reference external" href="https://docs.github.com/en/get-started/start-your-journey/downloading-files-from-github">Downloading files from GitHub</a>.</p>
-<section id="download-the-repository">
-<h3>Download the repository<a class="headerlink" href="#download-the-repository" title="Link to this heading"></a></h3>
-<p>This is the <strong>easiest way</strong> to obtain the most <strong>up-to-date source code</strong>.</p>
-<p>To download a repository, you need to follow these steps:</p>
-<ol class="arabic">
-<li><p>Navigate to the main page of the repository you want to clone.</p></li>
-<li><p>Above the list of files, click <span class="menuselection">&lt;&gt; Code</span>.</p>
-<blockquote>
-<div><figure class="align-center">
-<a class="reference internal image-reference" href="../_images/git_hub_code_icon.png"><img alt="../_images/git_hub_code_icon.png" src="../_images/git_hub_code_icon.png" style="width: 50%;" /></a>
-</figure>
-</div></blockquote>
-</li>
-<li><p>Click <span class="menuselection">Download ZIP</span></p>
-<blockquote>
-<div><figure class="align-center">
-<a class="reference internal image-reference" href="../_images/git_hub_download.png"><img alt="../_images/git_hub_download.png" src="../_images/git_hub_download.png" style="width: 80%;" /></a>
-</figure>
-</div></blockquote>
-</li>
-<li><p>Change the current working directory to the location where you want to download the repository ZIP file.</p></li>
-<li><p>Go into your file browser and go to the selected directory for this repository.</p></li>
-<li><p>Unzip the archive file.</p></li>
-</ol>
-</section>
-<section id="clone-the-repository">
-<h3>Clone the repository<a class="headerlink" href="#clone-the-repository" title="Link to this heading"></a></h3>
-<p>This is the <strong>best way</strong> to obtain the most <strong>up-to-date source code</strong>. However, you need to be familiar with the use of <strong>Git</strong> and a client software able to manage git repository must be installed (such as <strong class="program">Git Bash</strong> or <strong class="program">GitHub Desktop</strong>…).</p>
-<p>To clone a repository, you need to follow these steps:</p>
-<ol class="arabic">
-<li><p>Navigate to the main page of the repository you want to clone.</p></li>
-<li><p>Above the list of files, click <span class="menuselection">&lt;&gt; Code</span>.</p>
-<blockquote>
-<div><figure class="align-center">
-<a class="reference internal image-reference" href="../_images/git_hub_code_icon.png"><img alt="../_images/git_hub_code_icon.png" src="../_images/git_hub_code_icon.png" style="width: 50%;" /></a>
-</figure>
-</div></blockquote>
-</li>
-<li><p>Copy the URL for the repository in the corresponding HTTPS <cite>Clone</cite> sub-section.</p>
-<blockquote>
-<div><figure class="align-center">
-<a class="reference internal image-reference" href="../_images/git_hub_https_clone.png"><img alt="../_images/git_hub_https_clone.png" src="../_images/git_hub_https_clone.png" style="width: 80%;" /></a>
-</figure>
-</div></blockquote>
-</li>
-<li><p>Open <strong class="program">Git Bash</strong> (or another git management software).</p></li>
-<li><p>Change the current working directory to the location where you want the cloned directory.</p></li>
-<li><p>Type <strong class="command">git clone</strong>, and then paste the URL you copied earlier.</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">YOUR</span><span class="o">-</span><span class="n">USERNAME</span><span class="o">/</span><span class="n">YOUR</span><span class="o">-</span><span class="n">REPOSITORY</span>
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Press <kbd class="kbd docutils literal notranslate">Enter</kbd> to create your local clone.</p></li>
-<li><p>Go into your file browser and go to the selected directory for this repository.</p></li>
-</ol>
-<p>From the GitHub Documentation : <a class="reference external" href="https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository">Cloning a repository</a>.</p>
-</section>
-<section id="download-specific-files">
-<h3>Download specific files<a class="headerlink" href="#download-specific-files" title="Link to this heading"></a></h3>
-<p>The most <strong>boring way</strong> to obtain files in a GitHub repository is to browse in the different directories and to manually download each file you need.</p>
-<p>To download specific files from a repository, you need to follow these steps:</p>
-<ol class="arabic">
-<li><p>Navigate to the main page of the repository you want to clone.</p></li>
-<li><p>Browse through the different directories.</p>
-<blockquote>
-<div><figure class="align-center">
-<a class="reference internal image-reference" href="../_images/git_hub_browse.png"><img alt="../_images/git_hub_browse.png" src="../_images/git_hub_browse.png" style="width: 80%;" /></a>
-</figure>
-</div></blockquote>
-</li>
-<li><p>Open a file and click <span class="menuselection">Download raw file</span> icon.</p>
-<blockquote>
-<div><figure class="align-center">
-<a class="reference internal image-reference" href="../_images/git_hub_raw_download.png"><img alt="../_images/git_hub_raw_download.png" src="../_images/git_hub_raw_download.png" style="width: 80%;" /></a>
-</figure>
-</div></blockquote>
-</li>
-<li><p>Change the current working directory to the location where you want to download the raw file.</p></li>
-</ol>
-</section>
+<p>There are different ways to get a copy of a repository’s files on <strong>GitHub</strong>. To have more informations on how to download a repository, use this tutorial: <a class="reference external" href="http://lense.institutoptique.fr/github/">How To Use GitHub repositories</a> from the LEnsE.</p>
 </section>
 </section>
 
