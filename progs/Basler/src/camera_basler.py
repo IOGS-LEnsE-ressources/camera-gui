@@ -41,7 +41,7 @@ def get_bits_per_pixel(color_mode: str) -> int:
 
     :param color_mode: color mode.
     :type color_mode: str
-    :return : number of bits per pixel.
+    :return: number of bits per pixel.
     :rtype: int
 
     """
@@ -57,10 +57,6 @@ class BaslerERROR(Exception):
     """BaslerERROR class, children of Exeption.
 
     Class to manage error during communication with a Basler camera sensor
-
-    :param client: A handle to the :class:`simpleble.SimpleBleClient` client
-        object that detected the device
-    :type client: class:`simpleble.SimpleBleClient`
 
     """
 
