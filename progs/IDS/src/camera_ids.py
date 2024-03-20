@@ -1,19 +1,24 @@
  # -*- coding: utf-8 -*-
-"""camera_basler file.
+"""camera_ids file.
 
-File containing :class::CameraBasler
-class to communicate with a Basler camera sensor.
+File containing :class::CameraIDS
+class to communicate with an IDS camera sensor.
 
-.. module:: CameraBasler
-   :synopsis: class to communicate with a Basler camera sensor.
+.. warning::
+
+	Only works with USB2 camera !
+
+.. module:: CameraIDS
+   :synopsis: class to communicate with an IDS camera sensor.
 
 .. note:: LEnsE - Institut d'Optique - version 0.1
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 
+@see https://www.youtube.com/watch?v=0WbZ5naQzGw&ab_channel=IDSImagingDevelopmentSystemsGmbH
 """
-from pypylon import pylon
-import numpy
+from ids_peak import ids_peak
+import numpy as np
 
 
 def get_converter_mode(color_mode: str) -> int:
