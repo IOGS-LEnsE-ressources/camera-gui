@@ -84,6 +84,12 @@ Serial Number and name
 
 The :code:`get_cam_info()` method returns a tuple with the serial number (str) and the name of the camera (str).
 
+>>> my_cam.get_cam_info
+('40282239', 'a2A1920-160ucBAS')
+
+>>> my_cam.get_cam_info
+('40282239', 'a2A1920-160ucBAS')
+
 >>> my_cam.get_cam_info()
 ('40282239', 'a2A1920-160ucBAS')
 
