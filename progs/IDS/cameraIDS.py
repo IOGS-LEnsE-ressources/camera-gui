@@ -465,7 +465,7 @@ if __name__ == '__main__':
     camera.set_frame_rate(10)
 
     camera.set_exposure_time(40)
-    camera.set_colormode(get_cam_color_mode("MONO12"))
+    camera.set_colormode(get_cam_color_mode("MONO8"))
     max_w = camera.get_sensor_max_width()
     max_h = camera.get_sensor_max_height()
     print(f'M_W = {max_w} / M_H = {max_h}')
@@ -492,7 +492,7 @@ if __name__ == '__main__':
         frame_list.append(camera_array)
         camera.stop_video()
         camera.un_alloc()
-        camera.set_aoi(200, 300, 1000, 400)
+        #camera.set_aoi(200, 300, 100, 100)
         camera.alloc()
         camera.capture_video()
         time.sleep(0.2)
