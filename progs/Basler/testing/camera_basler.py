@@ -147,7 +147,7 @@ class CameraBasler():
         :return: the serial number and the name of the camera
         :rtype: tuple[str, str]
 
-        >>> my_cam.get_cam_info()
+        >>> my_cam.get_cam_info
         ('40282239', 'a2A1920-160ucBAS')
 
         """

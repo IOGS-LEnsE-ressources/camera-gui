@@ -143,7 +143,7 @@ class CameraBasler():
         :return: the serial number and the name of the camera
         :rtype: tuple[str, str]
 
-        >>> my_cam.get_cam_info()
+        >>> my_cam.get_cam_info
         ('40282239', 'a2A1920-160ucBAS')
 
         """
@@ -410,7 +410,7 @@ class CameraBasler():
     def set_exposure(self, exposure: float) -> None:
         """Set the exposure time in microseconds.
 
-        :param exposure: hexposure time in microseconds.
+        :param exposure: exposure time in microseconds.
         :type exposure: float
 
         """

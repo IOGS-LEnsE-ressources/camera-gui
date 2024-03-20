@@ -12,7 +12,7 @@ from pypylon import pylon
 
 class CameraList():
     """    
-    Class to list Basler camera (all camera in a future evoluation)
+    Class to list Basler camera (all camera in a future evolution)
     
     :param available_cameras: List of the devices connected to the computer [id, device]
     :type available_cameras: list[tuple[int, pylon.TlFactory]]

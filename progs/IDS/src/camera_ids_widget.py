@@ -223,7 +223,7 @@ class CameraBaslerParamsWidget(QWidget):
         :type camera: pylon.TlFactory        
         """
         self.camera = camera
-        _, name = self.camera.get_cam_info()
+        _, name = self.camera.get_cam_info
         self.name_label.setText(name+' Parameters')
         
     def update_params(self, event) -> None:
@@ -348,7 +348,7 @@ class SmallParamsDisplay(QWidget):
         """
         Update the display of the parameters
         """
-        _, name = self.camera.get_cam_info()
+        _, name = self.camera.get_cam_info
         name = 'Camera : '+name 
         self.camera_name_label.setText(name)
         colormode = self.camera.get_color_mode()

@@ -1,12 +1,8 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """camera_ids file.
 
 File containing :class::CameraIDS
 class to communicate with an IDS camera sensor.
-
-.. warning::
-
-	Only works with USB2 camera !
 
 .. module:: CameraIDS
    :synopsis: class to communicate with an IDS camera sensor.
@@ -15,10 +11,28 @@ class to communicate with an IDS camera sensor.
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 
-@see https://www.youtube.com/watch?v=0WbZ5naQzGw&ab_channel=IDSImagingDevelopmentSystemsGmbH
+.. warning::
+
+    Couche de transport spéciale « uEye » grâce à laquelle les caméras uEye
+    (matchcode « UI- ») sont également utilisables sur la base GenICam
+    et bénéficient des nombreux avantages du nouveau SDK.
+    
+    Veuillez noter qu’en plus d’IDS peak, la dernière version d’IDS Software Suite
+    (4.95 minimum) doit être installée.
+
+@see : https://en.ids-imaging.com/techtipp-details/rapid-prototyping-ids-peak.html
+@ see : https://www.1stvision.com/cameras/IDS/IDS-manuals/en/index.html
+@ See API DOC : C:\Program Files\IDS\ids_peak\generic_sdk\api\doc\html
+
 """
-from ids_peak import ids_peak
 import numpy as np
+
+# IDS peak API
+from ids_peak import ids_peak
+# Require IDS peak IPL and Numpy.
+# Go to C:\Program Files\IDS\ids_peak\generic_sdk\ipl\binding\python\wheel\x86_[32|64]
+# > pip install ids_peak_1.2.4.1-cp<version>-cp<version>m-[win32|win_amd64].whl
+import ids_peak_ipl.ids_peak_ipl as ids_ipl
 
 
 def get_converter_mode(color_mode: str) -> int:
@@ -30,14 +44,12 @@ def get_converter_mode(color_mode: str) -> int:
     :return: corresponding converter display mode
     :rtype: int
 
-    @see : https://docs.baslerweb.com/pixel-format
-
     """
     return {
-        "Mono8": pylon.PixelType_Mono8,
-        "Mono10": pylon.PixelType_Mono16,
-        "Mono12": pylon.PixelType_Mono16,
-        "RGB8": pylon.PixelType_RGB8packed
+        "Mono8": ids_ipl.PixelFormatName_Mono8,
+        "Mono10": ids_ipl.PixelFormatName_Mono10,
+        "Mono12": ids_ipl.PixelFormatName_Mono12,
+        "RGB8": ids_ipl.PixelFormatName_RGB8
     }[color_mode]
 
 
@@ -58,17 +70,17 @@ def get_bits_per_pixel(color_mode: str) -> int:
     }[color_mode]
 
 
-class BaslerERROR(Exception):
-    """BaslerERROR class, children of Exeption.
+class IdsError(Exception):
+    """IdsError class, children of Exeption.
 
-    Class to manage error during communication with a Basler camera sensor
+    Class to manage error during communication with an IDS camera sensor
 
     """
 
-    def __init__(self, ERROR_mode="BaslerERROR"):
+    def __init__(self, ERROR_mode="IdsERROR"):
         """Initialize object.
 
-        :param ERROR_mode: Type of error, defaults to "BaslerERROR"
+        :param ERROR_mode: Type of error, defaults to "IdsError"
         :type ERROR_mode: str, optional
 
         """
@@ -76,8 +88,8 @@ class BaslerERROR(Exception):
         super().__init__(self.ERROR_mode)
 
 
-class CameraBasler():
-    """Class to communicate with a Basler camera sensor.
+class CameraIDS():
+    """Class to communicate with an IDS camera sensor.
 
     :param camera: Camera object that can be controlled.
     :type camera: pylon.TlFactory.InstantCamera
@@ -96,16 +108,29 @@ class CameraBasler():
 
     """
 
-    def __init__(self, cam_dev: pylon.TlFactory) -> None:
+    '''
+# Open a device
+my_camera = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+print(f'Opened device : {my_camera.DisplayName()}')
+    '''
+
+    def __init__(self, cam_dev: ids_peak.Device) -> None:
         """Initialize the object."""
         # Camera device
-        self.camera = cam_dev  
-        self.converter = pylon.ImageFormatConverter()
+        self.camera = cam_dev
+        # Create a remote of the device (to control it)
+        self.camera_remote = self.camera.RemoteDevice().NodeMaps()[0]  # Is [0] Index of the camera ?
+
+        # Software trigger of the camera
+        self.camera_remote.FindNode("TriggerSelector").SetCurrentEntry("ExposureStart")
+        self.camera_remote.FindNode("TriggerSource").SetCurrentEntry("Software")
+        self.camera_remote.FindNode("TriggerMode").SetCurrentEntry("On")
+
         # Camera informations
         self.serial_no, self.camera_name = self.get_cam_info()
         self.width_max, self.height_max = self.get_sensor_size()
         self.nb_bits_per_pixels: int = 0
-        self.color_mode = 'Mono8'   # default
+        self.color_mode = 'Mono8'  # default
         self.set_color_mode('Mono8')
         self.set_display_mode('Mono8')
         # AOI size
@@ -128,19 +153,18 @@ class CameraBasler():
         True
 
         """
-        self.camera.Open()
-        if self.camera.IsOpen():
-            print('Device is well initialized.')
-            self.camera.Close()
+        value = self.camera_remote.FindNode("DeviceLinkSpeed").Value()
+        if value > 1:
             return True
         else:
-            self.camera.Close()
-            raise BaslerERROR("init Basler Camera")
+            return False
 
     def disconnect(self):
         """Disconnect the camera."""
-        if self.camera.IsOpen():
-            self.camera.Close()
+        '''
+        ids_peak.Library.Close() ??
+        '''
+        pass
 
     def get_cam_info(self) -> tuple[str, str]:
         """Return the serial number and the name.
@@ -148,17 +172,15 @@ class CameraBasler():
         :return: the serial number and the name of the camera
         :rtype: tuple[str, str]
 
-        >>> my_cam.get_cam_info()
+        >>> my_cam.get_cam_info
         ('40282239', 'a2A1920-160ucBAS')
 
         """
         serial_no, camera_name = None, None
-        try:
-            camera_name = self.camera.GetDeviceInfo().GetModelName()
-            serial_no = self.camera.GetDeviceInfo().GetSerialNumber()
-            return serial_no, camera_name
-        except:
-            raise BaslerERROR("get_cam_info")
+
+        camera_name = self.camera.DisplayName()
+        serial_no = self.camera_remote.FindNode("DeviceSerialNumber").Value()
+        return serial_no, camera_name
 
     def get_sensor_size(self) -> tuple[int, int]:
         """Return the width and the height of the sensor.
@@ -170,19 +192,9 @@ class CameraBasler():
         (1936, 1216)
 
         """
-        try:
-            if self.camera.IsOpen():
-                max_height = self.camera.Height.GetMax()
-                max_width = self.camera.Width.GetMax()
-                return max_width, max_height
-            else:
-                self.camera.Open()
-                max_height = self.camera.Height.GetMax()
-                max_width = self.camera.Width.GetMax()
-                self.camera.Close()
-                return max_width, max_height
-        except:
-            raise BaslerERROR("get_sensor_info")
+        max_height = self.camera_remote.FindNode("HeightMax").Value()
+        max_width = self.camera_remote.FindNode("WidthMax").Value()
+        return max_width, max_height
 
     def set_display_mode(self, colormode: str = 'Mono8') -> None:
         """Change the color mode of the converter.
@@ -191,11 +203,14 @@ class CameraBasler():
         :type colormode: str, default 'Mono8'
 
         """
+        '''
         mode_converter = get_converter_mode(colormode)
         try:
             self.converter.OutputPixelFormat = mode_converter
         except:
-            raise BaslerERROR("set_display_mode")
+            raise IdsError("set_display_mode")
+        '''
+        pass
 
     def get_color_mode(self):
         """Get the color mode.
@@ -207,6 +222,7 @@ class CameraBasler():
         'Mono8'
 
         """
+        '''
         try:
             # Test if the camera is opened
             if self.camera.IsOpen():
@@ -218,7 +234,9 @@ class CameraBasler():
             self.color_mode = pixelFormat
             return pixelFormat
         except:
-            raise BaslerERROR("get_colormode")
+            raise IdsError("get_colormode")
+        '''
+        pass
 
     def set_color_mode(self, colormode: str) -> None:
         """Change the color mode.
@@ -227,6 +245,7 @@ class CameraBasler():
         :type colormode: str, default 'Mono8'
 
         """
+        '''
         try:
             # Test if the camera is opened
             if self.camera.IsOpen():
@@ -239,19 +258,19 @@ class CameraBasler():
             self.nb_bits_per_pixels = get_bits_per_pixel(colormode)
             self.set_display_mode(colormode)
         except:
-            raise BaslerERROR("set_colormode")
+            raise IdsError("set_colormode")
+        '''
+        pass
 
-
-    def get_image(self) -> numpy.ndarray:
+    def get_image(self) -> np.ndarray:
         """Get one image.
 
         :return: Array of the image.
         :rtype: array
 
-        """  
+        """
         image = self.get_images()
         return image[0]
-
 
     def get_images(self, nb_images: int = 1) -> list:
         """Get a series of images.
@@ -262,6 +281,7 @@ class CameraBasler():
         :rtype: list
 
         """
+        '''
         try:
             # Test if the camera is opened
             if not self.camera.IsOpen():
@@ -283,7 +303,9 @@ class CameraBasler():
                 grabResult.Release()
             return images
         except:
-            raise BaslerERROR("get_images")
+            raise IdsError("get_images")
+        '''
+        pass
 
     def __check_range(self, x: int, y: int) -> bool:
         """Check if the coordinates are in the sensor area.
@@ -312,7 +334,7 @@ class CameraBasler():
         :rtype: bool
 
         """
-        if self.__check_range(x0, y0) is False or self.__check_range(x0+w, y0+h) is False:
+        if self.__check_range(x0, y0) is False or self.__check_range(x0 + w, y0 + h) is False:
             return False
         if x0 % 4 != 0 or y0 % 4 != 0:
             return False
@@ -320,6 +342,7 @@ class CameraBasler():
         self.aoi_y0 = y0
         self.aoi_width = w
         self.aoi_height = h
+        '''
         try:
             if self.camera.IsOpen():
                 self.camera.Width.SetValue(w)
@@ -335,7 +358,9 @@ class CameraBasler():
                 self.camera.Close()
             return True
         except:
-            raise BaslerERROR("set_aoi")
+            raise IdsError("set_aoi")
+        '''
+        pass
 
     def get_aoi(self) -> tuple[int, int, int, int]:
         """Return the area of interest (aoi).
@@ -380,16 +405,7 @@ class CameraBasler():
         5000.0
 
         """
-        try:
-            if self.camera.IsOpen():
-                exposure = self.camera.ExposureTime.GetValue()
-            else:
-                self.camera.Open()
-                exposure = self.camera.ExposureTime.GetValue()
-                self.camera.Close()
-            return exposure
-        except:
-            raise BaslerERROR("get_exposure")
+        return self.camera_remote.FindNode("ExposureTime").Value()
 
     def get_exposure_range(self) -> tuple[float, float]:
         """Return the range of the exposure time in microseconds.
@@ -399,35 +415,18 @@ class CameraBasler():
         :rtype: tuple[float, float]
 
         """
-        try:
-            if self.camera.IsOpen():
-                exposureMin = self.camera.ExposureTime.GetMin()
-                exposureMax = self.camera.ExposureTime.GetMax()
-            else:
-                self.camera.Open()
-                exposureMin = self.camera.ExposureTime.GetMin()
-                exposureMax = self.camera.ExposureTime.GetMax()
-                self.camera.Close()
-            return exposureMin, exposureMax
-        except:
-            raise BaslerERROR("get_exposure_range")
+        exposure_min = self.camera_remote.FindNode("ExposureTime").Minimum()
+        exposure_max = self.camera_remote.FindNode("ExposureTime").Maximum()
+        return exposure_min, exposure_max
 
     def set_exposure(self, exposure: float) -> None:
         """Set the exposure time in microseconds.
 
-        :param exposure: hexposure time in microseconds.
+        :param exposure: exposure time in microseconds.
         :type exposure: float
 
         """
-        try:
-            if self.camera.IsOpen():
-                self.camera.ExposureTime.SetValue(exposure)
-            else:
-                self.camera.Open()
-                self.camera.ExposureTime.SetValue(exposure)
-                self.camera.Close()
-        except:
-            raise BaslerERROR("set_exposure")
+        self.camera_remote.FindNode("ExposureTime").SetValue(exposure)
 
     def get_frame_rate(self) -> float:
         """Return the frame rate.
@@ -439,6 +438,7 @@ class CameraBasler():
         100.0
 
         """
+        '''
         try:
             if self.camera.IsOpen():
                 frameRate = self.camera.AcquisitionFrameRate.GetValue()
@@ -448,7 +448,9 @@ class CameraBasler():
                 self.camera.Close()
             return frameRate
         except:
-            raise BaslerERROR("get_frame_rate")
+            raise IdsError("get_frame_rate")
+        '''
+        pass
 
     def get_frame_rate_range(self):
         """Return the range of the frame rate in frames per second.
@@ -458,6 +460,7 @@ class CameraBasler():
         :rtype: tuple[float, float]
 
         """
+        '''
         try:
             if self.camera.IsOpen():
                 frameRateMin = self.camera.AcquisitionFrameRate.GetMin()
@@ -469,7 +472,9 @@ class CameraBasler():
                 self.camera.Close()
             return frameRateMin, frameRateMax
         except:
-            raise BaslerERROR("get_frame_time_range")
+            raise IdsError("get_frame_time_range")
+        '''
+        pass
 
     def set_frame_rate(self, fps):
         """Set the frame rate in frames per second.
@@ -478,6 +483,7 @@ class CameraBasler():
         :type fps:
 
         """
+        '''
         try:
             if self.camera.IsOpen():
                 self.camera.AcquisitionFrameRateEnable.SetValue(True)
@@ -488,7 +494,9 @@ class CameraBasler():
                 self.camera.AcquisitionFrameRate.SetValue(fps)
                 self.camera.Close()
         except:
-            raise BaslerERROR("set_frame_rate")
+            raise IdsError("set_frame_rate")
+        '''
+        pass
 
     def get_black_level(self):
         """Return the blacklevel.
@@ -500,6 +508,7 @@ class CameraBasler():
         0.0
 
         """
+        '''
         try:
             if self.camera.IsOpen():
                 BlackLevel = self.camera.BlackLevel.GetValue()
@@ -510,7 +519,9 @@ class CameraBasler():
             return BlackLevel
 
         except:
-            raise BaslerERROR("get_black_level")
+            raise IdsError("get_black_level")
+        '''
+        pass
 
     def get_black_level_range(self) -> tuple[int, int]:
         """Return the range of the black level.
@@ -520,6 +531,7 @@ class CameraBasler():
         :rtype: tuple[int, int]
 
         """
+        '''
         try:
             if self.camera.IsOpen():
                 BlackLevelMin = self.camera.BlackLevel.GetMin()
@@ -531,7 +543,9 @@ class CameraBasler():
                 self.camera.Close()
             return BlackLevelMin, BlackLevelMax
         except:
-            raise BaslerERROR("get_black_level_range")
+            raise IdsError("get_black_level_range"
+        '''
+        pass
 
     def set_black_level(self, black_level) -> bool:
         """Set the blackLevel.
@@ -542,7 +556,8 @@ class CameraBasler():
         :rtype: bool
 
         """
-        if black_level > 2**self.nb_bits_per_pixels-1:
+        '''
+        if black_level > 2 ** self.nb_bits_per_pixels - 1:
             return False
         try:
             if self.camera.IsOpen():
@@ -553,7 +568,9 @@ class CameraBasler():
                 self.camera.Close()
             return True
         except:
-            raise BaslerERROR("set_black_level")
+            raise IdsError("set_black_level")
+        '''
+        pass
 
 
 if __name__ == "__main__":
@@ -577,9 +594,24 @@ if __name__ == "__main__":
     # Create a camera object
     my_cam_dev = cam_list.get_cam_device(cam_id)
     '''
-    my_cam_dev = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
-    
-    my_cam = CameraBasler(my_cam_dev)
+    # Initialize library
+    ids_peak.Library.Initialize()
+    # Device manager
+    device_manager = ids_peak.DeviceManager.Instance()
+    device_manager.Update()
+    device_descriptors = device_manager.Devices()
+    # Open a device
+    my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+
+    my_cam = CameraIDS(my_cam_dev)
+    print(my_cam.is_camera_connected())
+    print(f'W/H = {my_cam.get_sensor_size()}')
+
+    # Change exposure time
+    print(f'Old Expo = {my_cam.get_exposure()}')
+    my_cam.set_exposure(40000)
+    print(f'New Expo = {my_cam.get_exposure()}')
+
 
     # Check the colormode
     print(my_cam.get_color_mode())
@@ -588,16 +620,19 @@ if __name__ == "__main__":
     my_cam.set_color_mode('Mono12')
     my_cam.set_display_mode('Mono12')
     print(my_cam.get_color_mode())
-    
+
+    '''
     # Test to catch one image
-    images = my_cam.get_images()    
+    images = my_cam.get_images()
     print(images[0].shape)
-    
+
     # display image
     from matplotlib import pyplot as plt
+
     plt.imshow(images[0], interpolation='nearest')
     plt.show()
-    
+    '''
+
     '''
     if my_cam.set_aoi(200, 300, 500, 400):
         print('AOI OK')
@@ -638,4 +673,3 @@ if __name__ == "__main__":
     bl_act = my_cam.get_black_level()
     print(f'New Black Level = {bl_act}')
     '''
- 

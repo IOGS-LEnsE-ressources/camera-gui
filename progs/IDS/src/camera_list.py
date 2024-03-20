@@ -1,18 +1,19 @@
-"""CameraList class to obtain the list of Basler sensors connected to the computer.
+"""CameraList class to obtain the list of IDS sensors connected to the computer.
 
 .. module:: CameraList
-   :synopsis: class to obtain the list of Basler sensors connected to the computer.
+   :synopsis: class to obtain the list of IDS sensors connected to the computer.
 
 .. note:: LEnsE - Institut d'Optique - version 0.1
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 
 """
-from pypylon import pylon
+# IDS peak API
+from ids_peak import ids_peak
 
 class CameraList():
     """    
-    Class to list Basler camera (all camera in a future evoluation)
+    Class to list IDS camera (all camera in a future evolution)
     
     :param available_cameras: List of the devices connected to the computer [id, device]
     :type available_cameras: list[tuple[int, pylon.TlFactory]]
@@ -39,7 +40,16 @@ class CameraList():
         """
         Default constructor of the class.
         """
-        self.available_cameras: list[tuple[int, pylon.TlFactory]] = []
+
+        # Initialize library
+        ids_peak.Library.Initialize()
+
+        # Device manager
+        self.device_manager = ids_peak.DeviceManager.Instance()
+        self.device_manager.Update()
+        self.device_descriptors = self.device_manager.Devices()
+
+        self.available_cameras: list[tuple[int, ids_peak.Device]] = []
         self.camera_list_str: list[tuple[int, str, str]] = []
         self.nb_cam: int = 0
         self.__create_list()
@@ -48,20 +58,18 @@ class CameraList():
         """
         Create the two lists of available cameras (devices and printable list).
         """
+        self.device_manager.Update()
+        self.device_descriptors = self.device_manager.Devices()
+
         self.available_cameras = []
         self.camera_list_str = []
         self.nb_cam = 0
-        tlFactory = pylon.TlFactory.GetInstance()
-        devices = tlFactory.EnumerateDevices()
-        for id, d in enumerate(devices):
-            dev = pylon.InstantCamera(tlFactory.CreateDevice(d))
-            if dev.IsUsb():
-                self.available_cameras.append([id, d])
-                FriendlyName = d.GetFriendlyName().split(' ')
-                FullModelName, SerNo = FriendlyName[1], int(FriendlyName[2].strip("()"))
-                self.camera_list_str.append([id, SerNo, FullModelName])
-                self.nb_cam += 1
-                
+
+        # Display devices
+        for id, device_desc in enumerate(self.device_descriptors):
+            self.available_cameras.append([id, device_desc])
+            self.camera_list_str.append([id, device_desc.SerialNumber(), device_desc.DisplayName()])
+
     def refresh_list(self) -> None:
         """
         Refresh the list of the connected devices.
@@ -87,7 +95,7 @@ class CameraList():
         """
         return self.camera_list_str
             
-    def get_cam_device(self, idx: int) -> pylon.TlFactory:
+    def get_cam_device(self, idx: int) -> ids_peak.Device:
         """
         Return the list containing the ID and a device pypylon object
 
@@ -95,12 +103,12 @@ class CameraList():
         :rtype: pylon.TlFactory.Device
         """
         for i, d in self.available_cameras:
+            print('OK')
             if i == idx:
-                return pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(d))
+                my_camera = self. device_descriptors[i].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+                return my_camera
             else:
                 return None
-
-
 
 if __name__ == "__main__":
     cam_list = CameraList()
