@@ -1,19 +1,40 @@
-# ATTENTION : Couche de transport spéciale « uEye » grâce à laquelle les caméras uEye
-# (matchcode « UI- ») sont également utilisables sur la base GenICam
-# et bénéficient des nombreux avantages du nouveau SDK.
-# Veuillez noter qu’en plus d’IDS peak, la dernière version d’IDS Software Suite
-# (4.95 minimum) doit être installée.
-# @see : https://en.ids-imaging.com/techtipp-details/rapid-prototyping-ids-peak.html
-# @ see : https://www.1stvision.com/cameras/IDS/IDS-manuals/en/index.html
-# @ See API DOC : C:\Program Files\IDS\ids_peak\generic_sdk\api\doc\html
+"""
+
+
+.. warning::
+
+    **IDS peak** (2.8 or higher) and **IDS Sofware Suite** (4.95 or higher) softwares
+    are required on your computer.
+
+    **IDS peak IPL** (Image Processing Library) and **Numpy** are required.
+
+.. note::
+
+    To use old IDS generation of cameras (type UI), you need to install **IDS peak** in **custom** mode
+    and add the **uEye Transport Layer** option.
+
+.. note::
+
+    **IDS peak IPL** can be found in the *IDS peak* Python API.
+
+    Installation file is in the directory :file:`INSTALLED_PATH_OF_IDS_PEAK\generic_sdk\ipl\binding\python\wheel\x86_[32|64]`.
+
+    Then run this command in a shell (depending on your python version and computer architecture):
+
+    .. code-block:: bash
+
+        pip install ids_peak_1.2.4.1-cp<version>-cp<version>m-[win32|win_amd64].whl
+
+    Generally *INSTALLED_PATH_OF_IDS_PEAK* is :file:`C:\Program Files\IDS\ids_peak`
+
+@ see : https://www.1stvision.com/cameras/IDS/IDS-manuals/en/index.html
+@ See API DOC : C:\Program Files\IDS\ids_peak\generic_sdk\api\doc\html
+
+"""
 
 # IDS peak API
 from ids_peak import ids_peak
-# Require IDS peak IPL and Numpy.
-# Go to C:\Program Files\IDS\ids_peak\generic_sdk\ipl\binding\python\wheel\x86_[32|64]
-# > pip install ids_peak_1.2.4.1-cp<version>-cp<version>m-[win32|win_amd64].whl
 import ids_peak_ipl.ids_peak_ipl as ids_ipl
-
 
 # Initialize library
 ids_peak.Library.Initialize()
@@ -61,6 +82,20 @@ print(f'Expo Time = {expo_time} us')
 # double inc = nodeMapRemoteDevice->FindNode<peak::core::nodes::FloatNode>("ExposureTime")->Increment();
 max_expo_time = my_camera_remote.FindNode("ExposureTime").Maximum()
 print(f'Max Expo Time = {max_expo_time/1000.0} ms')
+
+## Pixel Format
+# Determine the current entry of PixelFormat (str)
+value = my_camera_remote.FindNode("PixelFormat").CurrentEntry().SymbolicValue()
+# Get a list of all available entries of PixelFormat
+allEntries = my_camera_remote.FindNode("PixelFormat").Entries()
+availableEntries = []
+for entry in allEntries:
+    if (entry.AccessStatus() != ids_peak.NodeAccessStatus_NotAvailable
+            and entry.AccessStatus() != ids_peak.NodeAccessStatus_NotImplemented):
+        availableEntries.append(entry.SymbolicValue())
+
+# Set PixelFormat to "BayerRG8" (str)
+# my_camera_remote.FindNode("PixelFormat").SetCurrentEntry("BayerRG8")
 
 ## Flip camera
 # my_camera_remote.FindNode("ReverseX").SetValue(False)
