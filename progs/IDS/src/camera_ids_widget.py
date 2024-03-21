@@ -18,7 +18,6 @@
 
 import sys
 import time
-import numpy as np
 from ids_peak import ids_peak
 
 from PyQt6.QtWidgets import (
@@ -35,6 +34,8 @@ from camera_ids import CameraIds, get_bits_per_pixel
 
 from supoptools.images.conversion import *
 from supoptools.pyqt6.widget_slider import WidgetSlider
+
+from matplotlib import pyplot as plt
 
 class CameraIdsListWidget(QWidget):
     """Generate available cameras list.
@@ -222,7 +223,7 @@ class CameraIdsParamsWidget(QWidget):
         :type camera: pylon.TlFactory        
         """
         self.camera = camera
-        _, name = self.camera.get_cam_info
+        _, name = self.camera.get_cam_info()
         self.name_label.setText(name+' Parameters')
         
     def update_params(self, event) -> None:
@@ -250,8 +251,6 @@ class CameraIdsParamsWidget(QWidget):
             # Update frame rate of the camera
             self.parent.camera.set_frame_rate(value)
             # Update interval of the timer
-            
-            
         elif str_event[1].lower() == 'expo':
             value = self.expotime_slider.get_real_value()*1000
             #time_ms = 1/value
@@ -266,7 +265,6 @@ class CameraIdsParamsWidget(QWidget):
         # Update Small panel information
         self.parent.update_params()
 
-
     def closeEvent(self, event):
         """closeEvent redefinition. 
         
@@ -278,9 +276,9 @@ class CameraIdsParamsWidget(QWidget):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            event.accept()  # L'utilisateur a confirmé la fermeture
+            event.accept()
         else:
-            event.ignore()  # L'utilisateur a annulé la fermeture
+            event.ignore()
 
 
 class SmallParamsDisplay(QWidget):
@@ -347,14 +345,14 @@ class SmallParamsDisplay(QWidget):
         """
         Update the display of the parameters
         """
-        _, name = self.camera.get_cam_info
+        _, name = self.camera.get_cam_info()
         name = 'Camera : '+name 
         self.camera_name_label.setText(name)
         colormode = self.camera.get_color_mode()
         self.camera_colormode_label.setText(colormode)
-        expo = str(self.camera.get_exposure()/1000)+' ms'
+        expo = str(round(self.camera.get_exposure()/1000, 2))+' ms'
         self.camera_expotime_label.setText(expo)
-        fps = str(self.camera.get_frame_rate())+' fps'
+        fps = str(round(self.camera.get_frame_rate(), 2))+' fps'
         self.camera_fps_label.setText(fps)
     
     def params_button_action(self):
@@ -363,9 +361,12 @@ class SmallParamsDisplay(QWidget):
         Open a new window to modify the camera parameters.
         """
         print('PARAMS')
-        self.params_window = CameraIdsParamsWidget(self)
-        self.params_window.set_camera(self.camera)
-        self.params_window.show()
+        try:
+            self.params_window = CameraIdsParamsWidget(self)
+            self.params_window.set_camera(self.camera)
+            self.params_window.show()
+        except Exception as e:
+            print("Exception - connect_camera: " + str(e) + "")
 
 
 class CameraIdsWidget(QWidget):
@@ -425,8 +426,7 @@ class CameraIdsWidget(QWidget):
         self.main_timer.timeout.connect(self.refresh)
 
         self.setLayout(self.main_layout)    
-        
-        
+
     def connect_camera(self) -> None:
         """
         Trigger action when a connected signal from the combo list is emitted.
@@ -437,7 +437,6 @@ class CameraIdsWidget(QWidget):
             # Create Camera object
             self.camera = CameraIds(cam_dev)
 
-
             # Initialize the camera with default parameters
             self.camera.set_frame_rate(10)
             self.camera.set_color_mode('Mono8')
@@ -445,7 +444,6 @@ class CameraIdsWidget(QWidget):
             self.camera.set_black_level(0)
             # Clear layout with combo list
             self.clear_layout()
-            '''
             # Include the widget with the camera display
             self.main_layout.addWidget(self.camera_display, 0, 0)
             self.main_layout.setRowStretch(0, 4)
@@ -453,14 +451,13 @@ class CameraIdsWidget(QWidget):
             self.main_layout.setRowStretch(1, 1)
             self.camera_infos.set_camera(self.camera)
             self.camera_infos.update_params()
-            '''
             # Start main timer
             fps = self.camera.get_frame_rate()
             time_ms = int(1000/fps + 10) # 10 ms extra time
             self.main_timer.setInterval(time_ms) # in ms
             self.main_timer.start()
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - connect_camera: " + str(e) + "")
         
     def is_connected(self) -> bool:
         """
@@ -505,15 +502,14 @@ class CameraIdsWidget(QWidget):
         """
         try:
             if self.is_connected() :
+                self.camera.start_acquisition()
                 # Get raw image
-                image_array = self.camera.get_images()[0]
+                image_array = self.camera.get_image()
                 # Get widget size
                 frame_width = self.width() - 30
                 frame_height = self.height() - 120
-
                 # Depending on the color mode - display only in 8 bits mono
-                nb_bits = get_bits_per_pixel(
-                    self.camera.get_color_mode())
+                nb_bits = get_bits_per_pixel(self.camera.get_color_mode())
                 if nb_bits > 8:
                     image_array = image_array.view(np.uint16)
                     image_array_disp = (image_array / (2**(nb_bits-8))).astype(np.uint8)
@@ -565,9 +561,8 @@ class MyMainWindow(QMainWindow):
         Default constructor of the class.
         """
         super().__init__()
-        self.setWindowTitle("CameraIdsWidet Test Window")
+        self.setWindowTitle("CameraIdsWidget Test Window")
         self.setGeometry(100, 100, 500, 400)
-        #self.central_widget = CameraIdsParamsWidget(self)
         self.central_widget = CameraIdsWidget()
         self.setCentralWidget(self.central_widget)
 
@@ -583,9 +578,9 @@ class MyMainWindow(QMainWindow):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.central_widget.quit_application()
-            event.accept()  # L'utilisateur a confirmé la fermeture
+            event.accept()
         else:
-            event.ignore()  # L'utilisateur a annulé la fermeture
+            event.ignore()
 
 
 
