@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """camera_ids file.
 
-File containing :class::CameraIDS
+File containing :class::CameraIds
 class to communicate with an IDS camera sensor.
 
-.. module:: CameraIDS
+.. module:: CameraIds
    :synopsis: class to communicate with an IDS camera sensor.
 
 .. note:: LEnsE - Institut d'Optique - version 0.1
@@ -46,7 +46,7 @@ class to communicate with an IDS camera sensor.
 >>> device_manager.Update()
 >>> device_descriptors = device_manager.Devices()
 >>> my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
->>> my_cam = CameraIDS(my_cam_dev)
+>>> my_cam = CameraIds(my_cam_dev)
 
 """
 import sys
@@ -114,7 +114,7 @@ def get_bits_per_pixel(color_mode: str) -> int:
     }[color_mode]
 
 
-class CameraIDS:
+class CameraIds:
     """Class to communicate with an IDS camera sensor.
 
     :param camera: Camera object that can be controlled.
@@ -270,6 +270,11 @@ class CameraIDS:
         except Exception as e:
             print("Exception - stop Acq: " + str(e) + "")
 
+    def disconnect(self) -> None:
+        """Disconnect the camera.
+        """
+        self.stop_acquisition()
+
     def get_cam_info(self) -> tuple[str, str]:
         """Return the serial number and the name.
 
@@ -385,6 +390,18 @@ class CameraIDS:
             print("EXCEPTION - get_image: " + str(e))
             ids_peak.Library.Close()
             return -2
+
+    def get_images(self, nb_images:int = 1) -> list:
+        """Return a list of nb_images images.
+
+        :param nb_images: Number of images to collect. Default 1.
+        :type nb_images: int
+
+        """
+        images = []
+        for i in range(nb_images):
+            images.append(self.get_image())
+        return images
 
     def __check_range(self, x: int, y: int) -> bool:
         """Check if the coordinates are in the sensor area.
@@ -513,15 +530,21 @@ class CameraIDS:
         except Exception as e:
             print("Exception - get range exposure time: " + str(e) + "")
 
-    def set_exposure(self, exposure: float) -> None:
+    def set_exposure(self, exposure: float) -> bool:
         """Set the exposure time in microseconds.
 
         :param exposure: exposure time in microseconds.
-        :type exposure: float
+        :type exposure: int
 
+        :return: Return true if the exposure time changed.
+        :rtype: bool
         """
         try:
-            self.camera_remote.FindNode("ExposureTime").SetValue(exposure)
+            expo_min, expo_max = self.get_exposure_range()
+            if check_value_in(exposure, expo_max, expo_min):
+                self.camera_remote.FindNode("ExposureTime").SetValue(exposure)
+                return True
+            return False
         except Exception as e:
             print("Exception - set exposure time: " + str(e) + "")
 
@@ -540,7 +563,7 @@ class CameraIDS:
         except Exception as e:
             print("Exception - get frame rate: " + str(e) + "")
 
-    def get_frame_rate_range(self):
+    def get_frame_rate_range(self) -> tuple[float, float]:
         """Return the range of the frame rate in frames per second.
 
         :return: the minimum and the maximum value
@@ -555,93 +578,71 @@ class CameraIDS:
         except Exception as e:
             print("Exception - get range frame rate: " + str(e) + "")
 
-    def set_frame_rate(self, fps):
+    def set_frame_rate(self, fps: float) -> bool:
         """Set the frame rate in frames per second.
 
         :param fps: frame rate in frames per second.
-        :type fps:
+        :type fps: float
 
+        :return: Return true if the frame rate changed.
+        :rtype: bool
         """
         try:
             fps_min, fps_max = self.get_frame_rate_range()
-            # test if fps is in range
-            self.camera_remote.FindNode("AcquisitionFrameRate").SetValue(fps)
+            if check_value_in(fps, fps_max, fps_min):
+                self.camera_remote.FindNode("AcquisitionFrameRate").SetValue(fps)
+                return True
+            return False
         except Exception as e:
             print("Exception - set frame rate: " + str(e) + "")
 
-    def get_black_level(self):
-        """Return the blacklevel.
+    def get_black_level(self) -> float:
+        """Return the black level.
 
-        :return: the black level of the device in ADU.
-        :rtype: int
+        :return: the black level in gray scale.
+        :rtype: float
 
         >>> my_cam.get_black_level()
-        0.0
+        100.0
 
         """
-        '''
         try:
-            if self.camera.IsOpen():
-                BlackLevel = self.camera.BlackLevel.GetValue()
-            else:
-                self.camera.Open()
-                BlackLevel = self.camera.BlackLevel.GetValue()
-                self.camera.Close()
-            return BlackLevel
+            return self.camera_remote.FindNode("BlackLevel").Value()
+        except Exception as e:
+            print("Exception - get black level: " + str(e) + "")
 
-        except:
-            raise IdsError("get_black_level")
-        '''
-        pass
-
-    def get_black_level_range(self) -> tuple[int, int]:
-        """Return the range of the black level.
+    def get_black_level_range(self) -> tuple[float, float]:
+        """Return the range of the black level in gray scale.
 
         :return: the minimum and the maximum value
-            of the frame rate in frames per second.
-        :rtype: tuple[int, int]
+            of the black level in gray scale.
+        :rtype: tuple[float, float]
 
         """
-        '''
         try:
-            if self.camera.IsOpen():
-                BlackLevelMin = self.camera.BlackLevel.GetMin()
-                BlackLevelMax = self.camera.BlackLevel.GetMax()
-            elif not self.camera.IsOpen():
-                self.camera.Open()
-                BlackLevelMin = self.camera.BlackLevel.GetMin()
-                BlackLevelMax = self.camera.BlackLevel.GetMax()
-                self.camera.Close()
-            return BlackLevelMin, BlackLevelMax
-        except:
-            raise IdsError("get_black_level_range"
-        '''
-        pass
+            bl_min = self.camera_remote.FindNode("BlackLevel").Minimum()
+            bl_max = self.camera_remote.FindNode("BlackLevel").Maximum()
+            return bl_min, bl_max
+        except Exception as e:
+            print("Exception - get range black level: " + str(e) + "")
 
-    def set_black_level(self, black_level) -> bool:
-        """Set the blackLevel.
+    def set_black_level(self, black_level: int) -> bool:
+        """Set the black level of the camera.
 
-        :param black_level: blackLevel.
+        :param black_level: Black level in gray intensity.
         :type black_level: int
-        :return: True if the black level is lower than the maximum.
-        :rtype: bool
 
+        :return: Return true if the black level changed.
+        :rtype: bool
         """
-        '''
-        if black_level > 2 ** self.nb_bits_per_pixels - 1:
-            return False
         try:
-            if self.camera.IsOpen():
-                self.camera.BlackLevel.SetValue(black_level)
-            else:
-                self.camera.Open()
-                self.camera.BlackLevel.SetValue(black_level)
-                self.camera.Close()
-            return True
-        except:
-            raise IdsError("set_black_level")
-        '''
-        pass
+            bl_min, bl_max = self.get_black_level_range()
+            if check_value_in(black_level, bl_max, bl_min):
+                self.camera_remote.FindNode("BlackLevel").SetValue(black_level)
+                return True
+            return False
+        except Exception as e:
+            print("Exception - set frame rate: " + str(e) + "")
 
 
 if __name__ == "__main__":
@@ -676,7 +677,7 @@ if __name__ == "__main__":
         sys.exit(-1)
     my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
 
-    my_cam = CameraIDS(my_cam_dev)
+    my_cam = CameraIds(my_cam_dev)
 
     if my_cam.start_acquisition():
         print('Start Acq OK')
@@ -687,6 +688,16 @@ if __name__ == "__main__":
         plt.show()
 
     print(f'W/H = {my_cam.get_sensor_size()}')
+
+    print(f'FPS = {my_cam.get_frame_rate()}')
+    print(f'FPS_range = {my_cam.get_frame_rate_range()}')
+    print(f'FPS change ? {my_cam.set_frame_rate(10)}')
+    print(f'FPS = {my_cam.get_frame_rate()}')
+
+    print(f'Black Level = {my_cam.get_black_level()}')
+    print(f'Black Level_range = {my_cam.get_black_level_range()}')
+    print(f'Black Level change ? {my_cam.set_black_level(25)}')
+    print(f'Black Level = {my_cam.get_black_level()}')
 
     # Change exposure time
     print(f'Old Expo = {my_cam.get_exposure()}')
@@ -727,19 +738,4 @@ if __name__ == "__main__":
         images = my_cam.get_images()
         plt.imshow(images[0], interpolation='nearest')
         plt.show()        
-    '''
-    '''
-    # Frame Rate
-    ft_act = my_cam.get_frame_rate()
-    print(f'Actual Frame Time = {ft_act} fps')
-    my_cam.set_frame_rate(20)
-    ft_act = my_cam.get_frame_rate()
-    print(f'New Frame Time = {ft_act} fps')
-    
-    # BlackLevel
-    bl_act = my_cam.get_black_level()
-    print(f'Actual Black Level = {bl_act}')
-    my_cam.set_black_level(200)
-    bl_act = my_cam.get_black_level()
-    print(f'New Black Level = {bl_act}')
     '''

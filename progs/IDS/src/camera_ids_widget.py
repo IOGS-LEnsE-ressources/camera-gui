@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""*camera_basler_widget* file.
+"""*camera_ids_widget* file.
 
-*camera_basler_widget* file that contains :
+*camera_ids_widget* file that contains :
 
-    * :class::CameraBaslerWidget to integrate a Basler camera into a PyQt6 graphical interface.
-    * :class::CameraBaslerListWidget to generate a Widget including the list of available camerasintegrate a Basler camera into a PyQt6 graphical interface.
-    * :class::CameraBaslerParamsWidget to display the parameters of a camera.
+    * :class::CameraIdsWidget to integrate an IDS camera into a PyQt6 graphical interface.
+    * :class::CameraIdsListWidget to generate a Widget including the list of available camerasintegrate an IDS camera into a PyQt6 graphical interface.
+    * :class::CameraIdsParamsWidget to display the parameters of a camera.
     * :class::SmallParamsDisplay to ...
 
-.. module:: CameraBaslerWidget
-   :synopsis: class to integrate a Basler camera into a PyQt6 graphical interface.
+.. module:: CameraIDSWidget
+   :synopsis: class to integrate an IDS camera into a PyQt6 graphical interface.
 
 .. note:: LEnsE - Institut d'Optique - version 0.1
 
@@ -19,6 +19,7 @@
 import sys
 import time
 import numpy as np
+from ids_peak import ids_peak
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
@@ -30,12 +31,12 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
 from camera_list import CameraList
-from camera_basler import CameraBasler, get_bits_per_pixel
+from camera_ids import CameraIds, get_bits_per_pixel
 
 from supoptools.images.conversion import *
 from supoptools.pyqt6.widget_slider import WidgetSlider
 
-class CameraBaslerListWidget(QWidget):
+class CameraIdsListWidget(QWidget):
     """Generate available cameras list.
     
     Generate a Widget including the list of available cameras and two buttons :
@@ -44,7 +45,7 @@ class CameraBaslerListWidget(QWidget):
     
     :param cam_list: CameraList object that lists available cameras.
     :type cam_list: CameraList
-    :param cameras_list: list of the available Basler Camera.
+    :param cameras_list: list of the available IDS Camera.
     :type cameras_list: list[tuple[int, str, str]]
     :param cameras_nb: Number of available cameras.
     :type cameras_nb: int
@@ -95,8 +96,7 @@ class CameraBaslerListWidget(QWidget):
         self.setLayout(self.main_layout)
         self.refresh_cameras_list_combo()
 
-    
-    def refresh_cameras_list(self):
+    def refresh_cameras_list(self) -> None:
         """Refresh the list of available cameras.
         
         Update the cameras_list parameter of this class.
@@ -108,9 +108,8 @@ class CameraBaslerListWidget(QWidget):
             self.bt_connect.setEnabled(False)
         else:            
             self.bt_connect.setEnabled(True)
-            
-    
-    def refresh_cameras_list_combo(self):
+
+    def refresh_cameras_list_combo(self) -> None:
         """Refresh the combobox list of available cameras.
         
         Update the cameras_list_combo parameter of this class.
@@ -118,35 +117,35 @@ class CameraBaslerListWidget(QWidget):
         self.refresh_cameras_list()
         self.cameras_list_combo.clear()
         for i, cam in enumerate(self.cameras_list):
-            self.cameras_list_combo.addItem(f'BAS-{cam[1]}')
+            self.cameras_list_combo.addItem(f'IDS-{cam[1]}')
 
-    def get_selected_camera_dev(self):
+    def get_selected_camera_dev(self) -> ids_peak.Device:
         """Return the device object.
         
-        Return the device object from pypylon wraper of the selected camera.
+        Return the device object from ids_peak API of the selected camera.
         
         :return: the index number of the selected camera.
-        :rtype: pylon.TlFactory
+        :rtype: ids_peak.Device
         """
         cam_id = self.cameras_list_combo.currentIndex()
         dev = self.cam_list.get_cam_device(cam_id)
         return dev
         
-    def send_signal_connected(self):
+    def send_signal_connected(self) -> None:
         """Send a signal when a camera is selected to be used.
         """
         self.connected_signal.emit('C')
 
 
-class CameraBaslerParamsWidget(QWidget):
-    """CameraBaslerWidget class, children of QWidget.
+class CameraIdsParamsWidget(QWidget):
+    """CameraIdsWidget class, children of QWidget.
     
     Class to display and to change the available parameters of a camera.
     
     :param parent: Parent widget of this widget.
     :type parent: SmallParamsDisplay
     :param camera: Device to control
-    :type camera: pylon.TlFactory    
+    :type camera: ids_peak.Device
     
     """
     params_dict = {'fps': 'FPS', 'expo': 'Exposure Time', 'black':'Black Level'}
@@ -178,7 +177,7 @@ class CameraBaslerParamsWidget(QWidget):
         
         self.main_layout.addWidget(top_widget)
         
-        name = CameraBaslerParamsWidget.params_dict['fps']
+        name = CameraIdsParamsWidget.params_dict['fps']
         signal_name = 'fps'
         self.fps_slider = WidgetSlider(
             name=name, signal_name=signal_name)
@@ -189,7 +188,7 @@ class CameraBaslerParamsWidget(QWidget):
         self.fps_slider.set_value(fps_value)
         self.main_layout.addWidget(self.fps_slider) 
 
-        name = CameraBaslerParamsWidget.params_dict['expo']
+        name = CameraIdsParamsWidget.params_dict['expo']
         signal_name = 'expo'
         self.expotime_slider = WidgetSlider(
             name=name, signal_name=signal_name, integer=True)
@@ -201,7 +200,7 @@ class CameraBaslerParamsWidget(QWidget):
         self.expotime_slider.set_value(expo_value/1000)
         self.main_layout.addWidget(self.expotime_slider)       
  
-        name = CameraBaslerParamsWidget.params_dict['black']
+        name = CameraIdsParamsWidget.params_dict['black']
         signal_name = 'black'        
         self.blacklevel_slider = WidgetSlider(
             name=name, signal_name=signal_name, integer=True)
@@ -288,7 +287,7 @@ class SmallParamsDisplay(QWidget):
     """Area to display main parameters of the camera.
     
     :param parent: Parent widget of this widget.
-    :type parent: CameraBaslerWidget
+    :type parent: CameraIdsWidget
     :param camera: Device to control
     :type camera: pylon.TlFactory
     :param small_layout: Layout of the widget
@@ -307,7 +306,7 @@ class SmallParamsDisplay(QWidget):
         Default constructor of the class.
         
         :param parent: Parent widget of this widget.
-        :type parent: CameraBaslerWidget
+        :type parent: CameraIdsWidget
         """
         super().__init__(parent=None)
         self.parent = parent
@@ -364,18 +363,18 @@ class SmallParamsDisplay(QWidget):
         Open a new window to modify the camera parameters.
         """
         print('PARAMS')
-        self.params_window = CameraBaslerParamsWidget(self)
+        self.params_window = CameraIdsParamsWidget(self)
         self.params_window.set_camera(self.camera)
         self.params_window.show()
 
 
-class CameraBaslerWidget(QWidget):
-    """CameraBaslerWidget class, children of QWidget.
+class CameraIdsWidget(QWidget):
+    """CameraIdsWidget class, children of QWidget.
     
-    Class to integrate a Basler camera into a PyQt6 graphical interface.
+    Class to integrate an IDS camera into a PyQt6 graphical interface.
  
     :param cameras_list_widget: Widget containing a ComboBox with the list of available cameras.
-    :type cameras_list_widget: CameraBaslerListWidget
+    :type cameras_list_widget: CameraIdsListWidget
     :param main_layout: Main layout container of the widget.
     :type main_layout: QGridLayout
     :param camera: Device to control
@@ -385,8 +384,8 @@ class CameraBaslerWidget(QWidget):
         
         The camera is initialized with the following parameters :
             
-        * Exposure time = 100 ms
-        * FPS = 5
+        * Exposure time = 10 ms
+        * FPS = 10
         * Black Level = 0
         * Color Mode = 'Mono12' (if possible)
      
@@ -405,7 +404,7 @@ class CameraBaslerWidget(QWidget):
         """
         super().__init__(parent=None)
         # List of the availables camera
-        self.cameras_list_widget = CameraBaslerListWidget()
+        self.cameras_list_widget = CameraIdsListWidget()
         self.main_layout = QGridLayout()
         self.main_layout.addWidget(self.cameras_list_widget, 0, 0)
         
@@ -432,30 +431,36 @@ class CameraBaslerWidget(QWidget):
         """
         Trigger action when a connected signal from the combo list is emitted.
         """
-        # Get the index of the selected camera
-        cam_dev = self.cameras_list_widget.get_selected_camera_dev() 
-        # Create Camera object
-        self.camera = CameraBasler(cam_dev)
-        # Initialize the camera with default parameters
-        self.camera.set_frame_rate(5)
-        self.camera.set_color_mode('Mono12')
-        self.camera.set_exposure(100000)
-        self.camera.set_black_level(0)
-        # Clear layout with combo list
-        self.clear_layout()
-        # Include the widget with the camera display
-        self.main_layout.addWidget(self.camera_display, 0, 0)
-        self.main_layout.setRowStretch(0, 4)
-        self.main_layout.addWidget(self.camera_infos, 1, 0)
-        self.main_layout.setRowStretch(1, 1)
-        self.camera_infos.set_camera(self.camera)
-        self.camera_infos.update_params()
-        # Start main timer
-        fps = self.camera.get_frame_rate()
-        time_ms = int(1000/fps + 10) # 10 ms extra time
-        self.main_timer.setInterval(time_ms) # in ms
-        self.main_timer.start()
-        
+        try:
+            # Get the index of the selected camera
+            cam_dev = self.cameras_list_widget.get_selected_camera_dev()
+            # Create Camera object
+            self.camera = CameraIds(cam_dev)
+
+
+            # Initialize the camera with default parameters
+            self.camera.set_frame_rate(10)
+            self.camera.set_color_mode('Mono8')
+            self.camera.set_exposure(10000)
+            self.camera.set_black_level(0)
+            # Clear layout with combo list
+            self.clear_layout()
+            '''
+            # Include the widget with the camera display
+            self.main_layout.addWidget(self.camera_display, 0, 0)
+            self.main_layout.setRowStretch(0, 4)
+            self.main_layout.addWidget(self.camera_infos, 1, 0)
+            self.main_layout.setRowStretch(1, 1)
+            self.camera_infos.set_camera(self.camera)
+            self.camera_infos.update_params()
+            '''
+            # Start main timer
+            fps = self.camera.get_frame_rate()
+            time_ms = int(1000/fps + 10) # 10 ms extra time
+            self.main_timer.setInterval(time_ms) # in ms
+            self.main_timer.start()
+        except Exception as e:
+            print("Exception: " + str(e) + "")
         
     def is_connected(self) -> bool:
         """
@@ -498,53 +503,56 @@ class CameraBaslerWidget(QWidget):
             according to the FPS rate.
         
         """
-        
-        if self.is_connected() :
-            # Get raw image
-            image_array = self.camera.get_images()[0]
-            # Get widget size
-            frame_width = self.width() - 30
-            frame_height = self.height() - 120
-            
-            # Depending on the color mode - display only in 8 bits mono
-            nb_bits = get_bits_per_pixel(
-                self.camera.get_color_mode())
-            if nb_bits > 8:
-                image_array = image_array.view(np.uint16)
-                image_array_disp = (image_array / (2**(nb_bits-8))).astype(np.uint8)
+        try:
+            if self.is_connected() :
+                # Get raw image
+                image_array = self.camera.get_images()[0]
+                # Get widget size
+                frame_width = self.width() - 30
+                frame_height = self.height() - 120
+
+                # Depending on the color mode - display only in 8 bits mono
+                nb_bits = get_bits_per_pixel(
+                    self.camera.get_color_mode())
+                if nb_bits > 8:
+                    image_array = image_array.view(np.uint16)
+                    image_array_disp = (image_array / (2**(nb_bits-8))).astype(np.uint8)
+                else:
+                    image_array = image_array.view(np.uint8)
+                    image_array_disp = image_array.astype(np.uint8)
+
+                # Resize to the display size
+                image_array_disp2 = resize_image(
+                    image_array_disp,
+                    frame_width,
+                    frame_height)
+                # Convert the frame into an image
+                image = array_to_qimage(image_array_disp2)
+                pmap = QPixmap(image)
+
+                # display it in the cameraDisplay
+                self.camera_display.setPixmap(pmap)
             else:
-                image_array = image_array.view(np.uint8)
-                image_array_disp = image_array.astype(np.uint8)
-            
-            # Resize to the display size
-            image_array_disp2 = resize_image(
-                image_array_disp, 
-                frame_width, 
-                frame_height)
-            # Convert the frame into an image
-            image = array_to_qimage(image_array_disp2)
-            pmap = QPixmap(image)
-
-            # display it in the cameraDisplay
-            self.camera_display.setPixmap(pmap)
-        else:
-            self.camera_display.setText('No Camera Connected')
-
+                self.camera_display.setText('No Camera Connected')
+        except Exception as e:
+            print("Exception - refresh: " + str(e) + "")
 
 
     def quit_application(self) -> None:
         """
         Quit properly the PyQt6 application window.
         """
-        if self.main_timer.isActive():
-            self.main_timer.stop()
-            print('TIMER STOP')
-        time.sleep(0.5)
-        if self.camera is not None:
-            self.camera.disconnect()
-            print('DISCONNECTED')
-        QApplication.instance().quit()
-
+        try:
+            if self.main_timer.isActive():
+                self.main_timer.stop()
+                print('TIMER STOP')
+            time.sleep(0.5)
+            if self.camera is not None:
+                self.camera.disconnect()
+                print('DISCONNECTED')
+            QApplication.instance().quit()
+        except Exception as e:
+            print("Exception - close/quit: " + str(e) + "")
 
 class MyMainWindow(QMainWindow):
     """MyMainWindow class, children of QMainWindow.
@@ -557,10 +565,10 @@ class MyMainWindow(QMainWindow):
         Default constructor of the class.
         """
         super().__init__()
-        self.setWindowTitle("CameraBaslerWidet Test Window")
+        self.setWindowTitle("CameraIdsWidet Test Window")
         self.setGeometry(100, 100, 500, 400)
-        #self.central_widget = CameraBaslerParamsWidget(self)
-        self.central_widget = CameraBaslerWidget()
+        #self.central_widget = CameraIdsParamsWidget(self)
+        self.central_widget = CameraIdsWidget()
         self.setCentralWidget(self.central_widget)
 
 
