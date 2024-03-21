@@ -63,7 +63,7 @@ class CameraList():
 
         self.available_cameras = []
         self.camera_list_str = []
-        self.nb_cam = 0
+        self.nb_cam = self.device_descriptors.size()
 
         # Display devices
         for id, device_desc in enumerate(self.device_descriptors):

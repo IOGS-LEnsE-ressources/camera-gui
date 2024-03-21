@@ -53,25 +53,7 @@ def get_bits_per_pixel(color_mode: str) -> int:
     }[color_mode]
 
 
-class BaslerERROR(Exception):
-    """BaslerERROR class, children of Exeption.
-
-    Class to manage error during communication with a Basler camera sensor
-
-    """
-
-    def __init__(self, ERROR_mode="BaslerERROR"):
-        """Initialize object.
-
-        :param ERROR_mode: Type of error, defaults to "BaslerERROR"
-        :type ERROR_mode: str, optional
-
-        """
-        self.ERROR_mode = ERROR_mode
-        super().__init__(self.ERROR_mode)
-
-
-class CameraBasler():
+class CameraBasler:
     """Class to communicate with a Basler camera sensor.
 
     :param camera: Camera object that can be controlled.
@@ -130,7 +112,7 @@ class CameraBasler():
             return True
         else:
             self.camera.Close()
-            raise BaslerERROR("init Basler Camera")
+            return False
 
     def disconnect(self):
         """Disconnect the camera."""
@@ -152,8 +134,8 @@ class CameraBasler():
             camera_name = self.camera.GetDeviceInfo().GetModelName()
             serial_no = self.camera.GetDeviceInfo().GetSerialNumber()
             return serial_no, camera_name
-        except:
-            raise BaslerERROR("get_cam_info")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_sensor_size(self) -> tuple[int, int]:
         """Return the width and the height of the sensor.
@@ -176,8 +158,8 @@ class CameraBasler():
                 max_width = self.camera.Width.GetMax()
                 self.camera.Close()
                 return max_width, max_height
-        except:
-            raise BaslerERROR("get_sensor_info")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def set_display_mode(self, colormode: str = 'Mono8') -> None:
         """Change the color mode of the converter.
@@ -189,8 +171,8 @@ class CameraBasler():
         mode_converter = get_converter_mode(colormode)
         try:
             self.converter.OutputPixelFormat = mode_converter
-        except:
-            raise BaslerERROR("set_display_mode")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_color_mode(self):
         """Get the color mode.
@@ -212,8 +194,8 @@ class CameraBasler():
                 self.camera.Close()
             self.color_mode = pixelFormat
             return pixelFormat
-        except:
-            raise BaslerERROR("get_colormode")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def set_color_mode(self, colormode: str) -> None:
         """Change the color mode.
@@ -233,9 +215,8 @@ class CameraBasler():
             self.color_mode = colormode
             self.nb_bits_per_pixels = get_bits_per_pixel(colormode)
             self.set_display_mode(colormode)
-        except:
-            raise BaslerERROR("set_colormode")
-
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_image(self) -> numpy.ndarray:
         """Get one image.
@@ -277,11 +258,16 @@ class CameraBasler():
                     images.append(grabResult.Array)
                 grabResult.Release()
             return images
-        except:
-            raise BaslerERROR("get_images")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def __check_range(self, x: int, y: int) -> bool:
         """Check if the coordinates are in the sensor area.
+
+        :param x: Coordinate to evaluate on X-axis.
+        :type x: int
+        :param y: Coordinate to evaluate on Y-axis.
+        :type y: int
 
         :return: true if the coordinates are in the sensor area
         :rtype: bool
@@ -329,8 +315,8 @@ class CameraBasler():
                 self.camera.OffsetY.SetValue(y0)
                 self.camera.Close()
             return True
-        except:
-            raise BaslerERROR("set_aoi")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_aoi(self) -> tuple[int, int, int, int]:
         """Return the area of interest (aoi).
@@ -383,8 +369,8 @@ class CameraBasler():
                 exposure = self.camera.ExposureTime.GetValue()
                 self.camera.Close()
             return exposure
-        except:
-            raise BaslerERROR("get_exposure")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_exposure_range(self) -> tuple[float, float]:
         """Return the range of the exposure time in microseconds.
@@ -404,8 +390,8 @@ class CameraBasler():
                 exposureMax = self.camera.ExposureTime.GetMax()
                 self.camera.Close()
             return exposureMin, exposureMax
-        except:
-            raise BaslerERROR("get_exposure_range")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def set_exposure(self, exposure: float) -> None:
         """Set the exposure time in microseconds.
@@ -421,8 +407,8 @@ class CameraBasler():
                 self.camera.Open()
                 self.camera.ExposureTime.SetValue(exposure)
                 self.camera.Close()
-        except:
-            raise BaslerERROR("set_exposure")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_frame_rate(self) -> float:
         """Return the frame rate.
@@ -442,8 +428,8 @@ class CameraBasler():
                 frameRate = self.camera.AcquisitionFrameRate.GetValue()
                 self.camera.Close()
             return frameRate
-        except:
-            raise BaslerERROR("get_frame_rate")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_frame_rate_range(self):
         """Return the range of the frame rate in frames per second.
@@ -463,8 +449,8 @@ class CameraBasler():
                 frameRateMax = self.camera.AcquisitionFrameRate.GetMax()
                 self.camera.Close()
             return frameRateMin, frameRateMax
-        except:
-            raise BaslerERROR("get_frame_time_range")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def set_frame_rate(self, fps):
         """Set the frame rate in frames per second.
@@ -482,8 +468,8 @@ class CameraBasler():
                 self.camera.AcquisitionFrameRateEnable.SetValue(True)
                 self.camera.AcquisitionFrameRate.SetValue(fps)
                 self.camera.Close()
-        except:
-            raise BaslerERROR("set_frame_rate")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_black_level(self):
         """Return the blacklevel.
@@ -503,9 +489,8 @@ class CameraBasler():
                 BlackLevel = self.camera.BlackLevel.GetValue()
                 self.camera.Close()
             return BlackLevel
-
-        except:
-            raise BaslerERROR("get_black_level")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def get_black_level_range(self) -> tuple[int, int]:
         """Return the range of the black level.
@@ -525,8 +510,8 @@ class CameraBasler():
                 BlackLevelMax = self.camera.BlackLevel.GetMax()
                 self.camera.Close()
             return BlackLevelMin, BlackLevelMax
-        except:
-            raise BaslerERROR("get_black_level_range")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
     def set_black_level(self, black_level) -> bool:
         """Set the blackLevel.
@@ -547,8 +532,8 @@ class CameraBasler():
                 self.camera.BlackLevel.SetValue(black_level)
                 self.camera.Close()
             return True
-        except:
-            raise BaslerERROR("set_black_level")
+        except Exception as e:
+            print("Exception: " + str(e) + "")
 
 
 if __name__ == "__main__":
