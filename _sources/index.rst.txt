@@ -6,7 +6,7 @@
 Camera GUI's documentation
 ##########################
 
-.. caution::
+.. warning::
    This application and its documentation website are still works in progress
 
 **Camera GUI** is a library for industrial camera sensors to develop **graphical user interfaces** based on **PyQt6** in Python.
