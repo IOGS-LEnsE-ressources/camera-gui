@@ -11,16 +11,33 @@ class to communicate with an IDS camera sensor.
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 
+
 .. warning::
 
-    Couche de transport spéciale « uEye » grâce à laquelle les caméras uEye
-    (matchcode « UI- ») sont également utilisables sur la base GenICam
-    et bénéficient des nombreux avantages du nouveau SDK.
-    
-    Veuillez noter qu’en plus d’IDS peak, la dernière version d’IDS Software Suite
-    (4.95 minimum) doit être installée.
+    **IDS peak** (2.8 or higher) and **IDS Sofware Suite** (4.95 or higher) softwares
+    are required on your computer.
 
-@see : https://en.ids-imaging.com/techtipp-details/rapid-prototyping-ids-peak.html
+    **IDS peak IPL** (Image Processing Library) and **Numpy** are required.
+
+.. note::
+
+    To use old IDS generation of cameras (type UI), you need to install **IDS peak** in **custom** mode
+    and add the **uEye Transport Layer** option.
+
+.. note::
+
+    **IDS peak IPL** can be found in the *IDS peak* Python API.
+
+    Installation file is in the directory :file:`INSTALLED_PATH_OF_IDS_PEAK\generic_sdk\ipl\binding\python\wheel\x86_[32|64]`.
+
+    Then run this command in a shell (depending on your python version and computer architecture):
+
+    .. code-block:: bash
+
+        pip install ids_peak_1.2.4.1-cp<version>-cp<version>m-[win32|win_amd64].whl
+
+    Generally *INSTALLED_PATH_OF_IDS_PEAK* is :file:`C:\Program Files\IDS\ids_peak`
+
 @ see : https://www.1stvision.com/cameras/IDS/IDS-manuals/en/index.html
 @ See API DOC : C:\Program Files\IDS\ids_peak\generic_sdk\api\doc\html
 

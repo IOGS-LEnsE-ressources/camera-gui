@@ -1,5 +1,7 @@
-"""
+# -*- coding: utf-8 -*-
+"""new_ids file.
 
+File containing first tests with IDS Peak API.
 
 .. warning::
 
