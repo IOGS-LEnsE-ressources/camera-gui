@@ -209,7 +209,7 @@ class WidgetSlider(QWidget):
         self.update_display()
         self.slider_changed_signal.emit('slider:'+self.signal_name)
 
-    def set_min_max_slider(self, min_val, max_val):
+    def set_min_max_slider(self, min_val: float, max_val: float) -> None:
         """
         Set the minimum and maximum values of the slider.
 
