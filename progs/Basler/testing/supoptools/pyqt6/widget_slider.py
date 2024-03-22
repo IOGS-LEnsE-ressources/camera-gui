@@ -209,7 +209,7 @@ class WidgetSlider(QWidget):
         self.update_display()
         self.slider_changed_signal.emit('slider:'+self.signal_name)
 
-    def set_min_max_slider(self, min_val, max_val):
+    def set_min_max_slider(self, min_val: float, max_val: float) -> None:
         """
         Set the minimum and maximum values of the slider.
 
@@ -248,7 +248,10 @@ class WidgetSlider(QWidget):
         self.units_label.setText(f'{display_units}')
 
     def get_real_value(self):
-        return self.slider.value()/self.ratio_slider
+        if self.integer:
+            return int(self.slider.value()/self.ratio_slider)
+        else:
+            return self.slider.value()/self.ratio_slider
 
     def set_value(self, value):
         self.real_value = value
