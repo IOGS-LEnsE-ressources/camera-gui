@@ -10,14 +10,10 @@
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 """
-
-#### TO REWRITE !!! PEP8 / PEP257
-
 import sys
 
-# Third pary imports
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, 
+    QMainWindow,
     QGridLayout, QVBoxLayout,
     QWidget, QLineEdit, QLabel, QPushButton, QSlider,
     QMessageBox)
@@ -60,35 +56,46 @@ def is_number(value, min_val=0, max_val=0):
         return False
 
 
-class WidgetSlider(QWidget):    
+class WidgetSlider(QWidget):
     """Create a Widget with a slider.
     
     WidgetSlider class to create a widget with a slider and its value.
     Children of QWidget
 
-    :param ratio_slider: Use to display non integer on the Slider.
-        Defaults to 10.0.
-    :type ratio_slider: float
-    
-    .. note::
-        
+    .. attribute:: ratio_slider
+
+        Use to display non integer on the Slider.
+
         For example, with a ratio_slider at 10, the slider
         value of 500 corresponds to a real value of 50.0.
 
+        :type: float
 
-    max_real_value : float
+    .. attribute:: max_real_value
+
         Maximum value of the slider.
-    min_real_value : float
+
+        :type: float
+
+    .. attribute:: min_real_value
+
         Minimum value of the slider.
-    real_value : float
+
+        :type: float
+
+    .. attribute:: real_value
+
         Value of the slider.
+
+        :type: float
 
     """
 
     slider_changed_signal = pyqtSignal(str)
 
-    def __init__(self, name="", percent=False, integer=False, signal_name=""):
-        """
+    def __init__(self, name="", percent: bool = False,
+                 integer: bool = False, signal_name: str = "") -> None:
+        """Default constructor of the class.
         
         :param name: Name of the slider, defaults to "".
         :type name: str, optional
@@ -98,8 +105,6 @@ class WidgetSlider(QWidget):
         :type integer: bool, optional
         :param signal_name: Name of the signal, defaults to "".
         :type percent: str, optional
-        :return: DESCRIPTION
-        :rtype: TYPE
 
         """
         super().__init__(parent=None)
@@ -125,14 +130,14 @@ class WidgetSlider(QWidget):
         self.max_slider_label = QLabel(f'{self.max_real_value}')
         self.min_slider_label = QLabel(f'{self.min_real_value}')
         self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setMinimum(int(self.min_real_value*self.ratio_slider))
-        self.slider.setMaximum(int(self.max_real_value*self.ratio_slider))
-        self.slider.setValue(int(self.real_value*self.ratio_slider))
+        self.slider.setMinimum(int(self.min_real_value * self.ratio_slider))
+        self.slider.setMaximum(int(self.max_real_value * self.ratio_slider))
+        self.slider.setValue(int(self.real_value * self.ratio_slider))
         self.units = ''
         self.units_label = QLabel('')
         self.update_button = QPushButton('Update')
         self.update_button.setEnabled(True)
-        
+
         # Adding graphical objects to the main layout
         self.main_layout.addWidget(self.name_label, 0, 0, 1, 3)
         self.main_layout.addWidget(self.user_value, 0, 3)
@@ -142,13 +147,12 @@ class WidgetSlider(QWidget):
         self.main_layout.addWidget(self.max_slider_label, 1, 4)
         self.main_layout.addWidget(self.update_button, 2, 3, 1, 2)
         self.setLayout(self.main_layout)
-        
+
         for i in range(self.main_layout.rowCount()):
             self.main_layout.setRowStretch(i, 1)
         for i in range(self.main_layout.columnCount()):
             self.main_layout.setColumnStretch(i, 1)
 
-        ''' Events '''
         self.slider.valueChanged.connect(self.slider_changed)
         self.set_value(self.real_value)
         self.update_button.clicked.connect(self.value_changed)
@@ -195,19 +199,19 @@ class WidgetSlider(QWidget):
             self.real_value = self.min_real_value
             self.user_value.setText(str(self.real_value))
             self.real_value = self.min_real_value
-        
+
         if self.integer:
             self.real_value = int(self.real_value)
-        self.slider.setValue(int(self.real_value*self.ratio_slider))
+        self.slider.setValue(int(self.real_value * self.ratio_slider))
         self.update_display()
-        self.slider_changed_signal.emit('update:'+self.signal_name)
+        self.slider_changed_signal.emit('update:' + self.signal_name)
 
     def slider_changed(self, event):
         self.real_value = self.slider.value() / self.ratio_slider
         if self.integer:
             self.real_value = int(self.real_value)
         self.update_display()
-        self.slider_changed_signal.emit('slider:'+self.signal_name)
+        self.slider_changed_signal.emit('slider:' + self.signal_name)
 
     def set_min_max_slider(self, min_val: float, max_val: float) -> None:
         """
@@ -223,11 +227,11 @@ class WidgetSlider(QWidget):
         """
         self.min_real_value = min_val
         self.max_real_value = max_val
-        self.slider.setMinimum(int(self.min_real_value*self.ratio_slider))
+        self.slider.setMinimum(int(self.min_real_value * self.ratio_slider))
         self.min_slider_label.setText(f'{int(self.min_real_value)}')
-        self.slider.setMaximum(int(self.max_real_value*self.ratio_slider))
+        self.slider.setMaximum(int(self.max_real_value * self.ratio_slider))
         self.max_slider_label.setText(f'{int(self.max_real_value)}')
-        self.slider.setValue(int(self.min_real_value*self.ratio_slider))
+        self.slider.setValue(int(self.min_real_value * self.ratio_slider))
         self.update_display()
 
     def set_units(self, units):
@@ -249,14 +253,14 @@ class WidgetSlider(QWidget):
 
     def get_real_value(self):
         if self.integer:
-            return int(self.slider.value()/self.ratio_slider)
+            return int(self.slider.value() / self.ratio_slider)
         else:
-            return self.slider.value()/self.ratio_slider
+            return self.slider.value() / self.ratio_slider
 
     def set_value(self, value):
         self.real_value = value
         self.user_value.setText(str(value))
-        self.slider.setValue(int(self.real_value*self.ratio_slider))
+        self.slider.setValue(int(self.real_value * self.ratio_slider))
 
     def set_ratio(self, value):
         self.ratio_slider = value
@@ -266,32 +270,30 @@ class WidgetSlider(QWidget):
         self.update_display()
 
 
-# -----------------------------------------------------------------------------------------------
-# Only for testing
-class MyWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("Widget Slider test")
-        self.setGeometry(300, 300, 200, 100)
-
-        self.centralWid = QWidget()
-        self.layout = QVBoxLayout()
-
-        self.slider_widget = WidgetSlider()
-        self.slider_widget.set_min_max_slider(20, 50)
-        self.slider_widget.set_units('Hz')
-        self.slider_widget.set_name('Slider to test')
-        self.layout.addWidget(self.slider_widget)
-
-        self.centralWid.setLayout(self.layout)
-        self.setCentralWidget(self.centralWid)
-
-
-# Launching as main for tests
-from PyQt6.QtWidgets import QApplication
-
 if __name__ == '__main__':
+    from PyQt6.QtWidgets import QApplication
+
+
+    class MyWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+
+            self.setWindowTitle("Widget Slider test")
+            self.setGeometry(300, 300, 200, 100)
+
+            self.centralWid = QWidget()
+            self.layout = QVBoxLayout()
+
+            self.slider_widget = WidgetSlider()
+            self.slider_widget.set_min_max_slider(20, 50)
+            self.slider_widget.set_units('Hz')
+            self.slider_widget.set_name('Slider to test')
+            self.layout.addWidget(self.slider_widget)
+
+            self.centralWid.setLayout(self.layout)
+            self.setCentralWidget(self.centralWid)
+
+
     app = QApplication(sys.argv)
     main = MyWindow()
     main.show()
