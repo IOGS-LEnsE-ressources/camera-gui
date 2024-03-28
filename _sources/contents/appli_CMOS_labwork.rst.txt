@@ -52,7 +52,7 @@ The idea is to take a set of raw images for different integration time and to di
 Sensor linearity / Photon noise
 ===============================
 
-
+Spatial and temporal analisys
 
 The CMOS sensor is now placed in front of an integrating sphere in order to be
 uniformly illuminated. The images obtained in this case are often called Flat.
