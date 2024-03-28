@@ -10,6 +10,7 @@
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 """
+
 import sys
 
 from PyQt6.QtWidgets import (
@@ -61,6 +62,12 @@ class WidgetSlider(QWidget):
     
     WidgetSlider class to create a widget with a slider and its value.
     Children of QWidget
+
+    .. attribute:: name
+
+        Name to display as the title.
+
+        :type: str
 
     .. attribute:: ratio_slider
 
@@ -273,7 +280,6 @@ class WidgetSlider(QWidget):
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
 
-
     class MyWindow(QMainWindow):
         def __init__(self):
             super().__init__()
@@ -281,7 +287,7 @@ if __name__ == '__main__':
             self.setWindowTitle("Widget Slider test")
             self.setGeometry(300, 300, 200, 100)
 
-            self.centralWid = QWidget()
+            self.central_widget = QWidget()
             self.layout = QVBoxLayout()
 
             self.slider_widget = WidgetSlider()
@@ -290,8 +296,8 @@ if __name__ == '__main__':
             self.slider_widget.set_name('Slider to test')
             self.layout.addWidget(self.slider_widget)
 
-            self.centralWid.setLayout(self.layout)
-            self.setCentralWidget(self.centralWid)
+            self.central_widget.setLayout(self.layout)
+            self.setCentralWidget(self.central_widget)
 
 
     app = QApplication(sys.argv)

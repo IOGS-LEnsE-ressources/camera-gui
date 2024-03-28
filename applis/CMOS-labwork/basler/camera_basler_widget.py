@@ -64,10 +64,9 @@ class CameraBaslerListWidget(QWidget):
     connected_signal = pyqtSignal(str)
     
     def __init__(self) -> None:
+        """Default constructor of the class.
         """
-        Default constructor of the class.
-        """
-        super().__init__(parent=None) 
+        super().__init__(parent=None)
         # Objects linked to the CameraList object
         self.cam_list = CameraList()
         self.cameras_list = self.cam_list.get_cam_list()

@@ -1,3 +1,4 @@
 __all__ = [
-    "widget_inc_dec",      # refers to the 'widget_inc_dec.py' file
+    "widget_slider",      # refers to the 'widget_slider.py' file
+    "widget_histogram",   # refers to the 'widget_histogram.py' file
 ]
