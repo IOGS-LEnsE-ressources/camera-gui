@@ -76,7 +76,7 @@ html_logo = "_static/assets/logo-ressources_git.png"
 
 html_css_files = [
     'css/lense-ressources.css',
-    'css/links.css',
+    'css/links.css',		'https://iogs-lense.github.io/lense.tech/assets/css/fontawesome/css/all.css'
 ]
 
 
