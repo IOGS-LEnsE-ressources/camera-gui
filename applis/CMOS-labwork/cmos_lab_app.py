@@ -47,7 +47,15 @@ from PyQt6.QtGui import QPixmap
 
 from supoptools.pyqt6 import *
 
-from basler.camera_list import *
+'''
+from basler import *
+from ids import *
+'''
+
+dict_of_brands = {
+    'Basler': 'CameraBaslerParamsWidget',
+    'IDS': 'CameraIdsParamsWidget',
+}
 
 class CmosLabApp(QWidget):
     """Main interface of the CMOS sensor study labwork."""
@@ -56,8 +64,13 @@ class CmosLabApp(QWidget):
         """Default constructor of the class.
         """
         super().__init__(parent=None)
+        self.layout = QVBoxLayout()
 
-        self.basler_button = QPushButton('Basler')
+        self.choice_widget = CameraChoice()
+
+        self.layout.addWidget(self.choice_widget)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
 
 
 class CameraChoice(QWidget):
@@ -68,8 +81,17 @@ class CameraChoice(QWidget):
         """
         super().__init__(parent=None)
 
+        self.layout = QVBoxLayout()
+        self.choice_label = QLabel('Sensor Brand')
+        self.choice_list = QComboBox()
 
-        self.basler_button = QPushButton('Basler')
+        # create list from dict dict_of_brands
+        for item, (brand, camera_widget) in enumerate(dict_of_brands.items()):
+            print(brand)
+
+        self.layout.addWidget(self.choice_label)
+        self.layout.addWidget(self.choice_list)
+        self.setLayout(self.layout)
 
 
 if __name__ == '__main__':
