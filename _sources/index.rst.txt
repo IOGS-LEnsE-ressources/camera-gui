@@ -38,13 +38,18 @@ GUI Tutorials
 	How To use these ressources<contents/how_to_use>
 	PyQt6 widget integration<contents/pyqt6_integration>
 
-
 .. toctree::
 	:maxdepth: 2
 	:caption: Camera Sensors
 
 	Basler Camera<contents/cam_basler>
+	IDS Camera<contents/cam_ids>
 
+.. toctree::
+	:maxdepth: 2
+	:caption: Applications
+	
+	Study of a CMOS sensor<contents/appli_CMOS_labwork>
 
 
 
