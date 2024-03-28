@@ -29,8 +29,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
-from camera_list import CameraList
-from camera_basler import CameraBasler, get_bits_per_pixel
+from .camera_list import CameraList
+from .camera_basler import CameraBasler, get_bits_per_pixel
 
 sys.path.append('../supoptools')
 from images.conversion import *
