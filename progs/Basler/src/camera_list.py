@@ -10,7 +10,8 @@
 """
 from pypylon import pylon
 
-class CameraList():
+
+class CameraList:
     """    
     Class to list Basler camera (all camera in a future evolution)
     
@@ -34,7 +35,7 @@ class CameraList():
     '[[0, 40282239, 'a2A1920-160ucBAS']]'
     
     """
-    
+
     def __init__(self):
         """
         Default constructor of the class.
@@ -43,7 +44,7 @@ class CameraList():
         self.camera_list_str: list[tuple[int, str, str]] = []
         self.nb_cam: int = 0
         self.__create_list()
-        
+
     def __create_list(self) -> None:
         """
         Create the two lists of available cameras (devices and printable list).
@@ -61,14 +62,13 @@ class CameraList():
                 FullModelName, SerNo = FriendlyName[1], int(FriendlyName[2].strip("()"))
                 self.camera_list_str.append([id, SerNo, FullModelName])
                 self.nb_cam += 1
-                
+
     def refresh_list(self) -> None:
         """
         Refresh the list of the connected devices.
         """
         self.__create_list()
-    
-    
+
     def get_nb_of_cam(self) -> int:
         """
         Return the number of connected cameras
@@ -86,7 +86,7 @@ class CameraList():
         :rtype: list
         """
         return self.camera_list_str
-            
+
     def get_cam_device(self, idx: int) -> pylon.TlFactory:
         """
         Return the list containing the ID and a device pypylon object
@@ -99,7 +99,6 @@ class CameraList():
                 return pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(d))
             else:
                 return None
-
 
 
 if __name__ == "__main__":

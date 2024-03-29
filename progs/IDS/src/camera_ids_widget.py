@@ -29,11 +29,18 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
-from camera_list import CameraList
-from camera_ids import CameraIds, get_bits_per_pixel
-
-from supoptools.images.conversion import *
-from supoptools.pyqt6.widget_slider import WidgetSlider
+if __name__ == "__main__":
+    from camera_list import CameraList
+    from camera_ids import CameraIds, get_bits_per_pixel
+    sys.path.append('../supoptools')
+    from images.conversion import *
+    from pyqt6.widget_slider import WidgetSlider
+else:
+    sys.path.append('..')
+    from ids.camera_list import CameraList
+    from ids.camera_ids import CameraIds, get_bits_per_pixel
+    from supoptools.images.conversion import *
+    from supoptools.pyqt6.widget_slider import WidgetSlider
 
 from matplotlib import pyplot as plt
 
@@ -62,8 +69,8 @@ class CameraIdsListWidget(QWidget):
     :type bt_refresh: QPushButton
     """
     
-    connected_signal = pyqtSignal(str)
-    
+    connected = pyqtSignal(str)
+
     def __init__(self) -> None:
         """
         Default constructor of the class.
@@ -132,10 +139,11 @@ class CameraIdsListWidget(QWidget):
         dev = self.cam_list.get_cam_device(cam_id)
         return dev
         
-    def send_signal_connected(self) -> None:
+    def send_signal_connected(self, event) -> None:
         """Send a signal when a camera is selected to be used.
         """
-        self.connected_signal.emit('C')
+        print(event)
+        self.connected.emit('C')
 
 
 class CameraIdsParamsWidget(QWidget):
@@ -410,7 +418,7 @@ class CameraIdsWidget(QWidget):
         self.main_layout.addWidget(self.cameras_list_widget, 0, 0)
         
         # Connect the signal emitted by the ComboList to its action
-        self.cameras_list_widget.connected_signal.connect(self.connect_camera)
+        self.cameras_list_widget.connected.connect(self.connect_camera)
 
         # Camera
         self.camera = None
