@@ -404,12 +404,14 @@ class CameraBaslerWidget(QWidget):
     
     """
 
-    def __init__(self) -> None:
-        """
-        Default constructor of the class.
+    def __init__(self, params_disp: bool=True) -> None:
+        """Default constructor of the class.
+
+        :param params_disp: Displaying the parameters. Default true.
+        :type params_disp: bool
         """
         super().__init__(parent=None)
-        # List of the availables camera
+        # List of the available camera
         self.cameras_list_widget = CameraBaslerListWidget()
         self.main_layout = QGridLayout()
         self.main_layout.addWidget(self.cameras_list_widget, 0, 0)

@@ -46,21 +46,7 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
 from supoptools.pyqt6 import *
-
-from basler.camera_basler_widget import CameraBaslerListWidget
-from basler.camera_basler import CameraBasler
-from ids.camera_ids_widget import CameraIdsListWidget
-from ids.camera_ids import CameraIds
-
-dict_of_brands = {
-    'Select...': 'None',
-    'Basler': CameraBaslerListWidget,
-    'IDS': CameraIdsListWidget,
-}
-cam_from_brands = {
-    'Basler': CameraBasler,
-    'IDS': CameraIds,
-}
+from gui.camera_choice import CameraChoice, dict_of_brands, cam_from_brands
 
 
 class CmosLabApp(QWidget):
@@ -114,7 +100,7 @@ class CmosLabApp(QWidget):
         """
         # Remove the specified number of widgets from the layout
         for idx in range(num):
-            item = self.layout.takeAt(num-idx)
+            item = self.layout.takeAt(num - idx)
             if item.widget():
                 item.widget().deleteLater()
 
@@ -196,7 +182,7 @@ class CameraChoice(QWidget):
         """
         # Remove the specified number of widgets from the layout
         for idx in range(num):
-            item = self.layout.takeAt(num-idx)
+            item = self.layout.takeAt(num - idx)
             if item.widget():
                 item.widget().deleteLater()
 
@@ -229,6 +215,7 @@ if __name__ == '__main__':
                 event.accept()
             else:
                 event.ignore()
+
 
     app = QApplication(sys.argv)
     main = MyWindow()

@@ -31,10 +31,47 @@ def resize_image(im_array: np.ndarray,
     :rtype: numpy.ndarray
 
     """
+    image_rows, image_cols = im_array.shape[:2]
+    row_ratio = new_width / float(image_rows)
+    col_ratio = new_height / float(image_cols)
+    ratio = min(row_ratio, col_ratio)
+    print(ratio)
     resized_image = cv2.resize(im_array,
                                dsize=(new_width, new_height),
+                               fx=ratio, fy=ratio,
                                interpolation=cv2.INTER_CUBIC)
     return resized_image
+
+def resize_image_ratio(pixels: np.ndarray, new_height: int, new_width: int) -> np.ndarray:
+    """Create a new array with a different size, with the same aspect ratio.
+
+    :param pixels: Array of pixels to resize
+    :type pixels: np.ndarray
+    :param new_height: New height of the image.
+    :type new_height: int
+    :param new_width: New width of the image.
+    :type new_width: int
+
+    :return: A resized image.
+    :rtype: np.ndarray
+
+    """
+    height, width = pixels.shape[:2]
+    aspect_ratio = width / height
+    print(f'resize: H={height} / W={width} ')
+
+    # Calculate new size with same aspect_ratio
+    n_width = new_width
+    n_height = int(n_width / aspect_ratio)
+    if n_height > new_height:
+        n_height = new_height
+        n_width = int(n_height * aspect_ratio)
+    else:
+        n_width = new_width
+        n_height = int(n_width / aspect_ratio)
+
+    resized_array = cv2.resize(pixels, (n_width, n_height))
+    return resized_array
 
 
 def array_to_qimage(array: np.ndarray) -> QImage:
