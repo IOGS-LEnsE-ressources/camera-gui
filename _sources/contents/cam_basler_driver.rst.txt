@@ -3,7 +3,7 @@ Basler / Driver
 
 The **driver** is based on the `Pypylon Wrapper <https://github.com/basler/pypylon>`_. 
 
-The source is in the :file:`camera_basler.py` :download:`< <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/camera_basler.py>` file including :
+The source is in the :file:`camera_basler.py` :download:`< <https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/Basler/camera_basler.py>` file including :
 
 * :class:`CameraBasler` class, 
 * :class:`BaslerERROR` class : to process low-level error when accessing the camera, 

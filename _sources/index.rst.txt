@@ -27,7 +27,7 @@ Future updates :
 
 * IDS
 
-The GitHub repository of this project : `Camera GUI <https://github.com/IOGS-LEnsE/camera-gui>`_
+The GitHub repository of this project : `Camera GUI <https://github.com/IOGS-LEnsE-ressources/camera-gui>`_
 
 
 GUI Tutorials
@@ -60,7 +60,7 @@ This is a test.
 
 .. raw:: html
 
-	<span class="linkgit"><a href="http://lense.institutoptique.fr/mine/nucleo-bibliotheques-de-fonctions/"><i class="fa fa-github"></i> Bibliothèques MBED 6</a></span>
+	<span class="linkgit"><a href="https://lense.institutoptique.fr/mine/nucleo-bibliotheques-de-fonctions/"><i class="fa fa-github"></i> Bibliothèques MBED 6</a></span>
 
 
 Help for Sphinx Documentation

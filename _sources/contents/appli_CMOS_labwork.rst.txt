@@ -1,7 +1,7 @@
 Study of a CMOS sensor / Labwork
 ################################
 
-The source code of the application is in the :file:`applis/CMOS-labwork` directory of the GitHub repository of this project : `Camera GUI <https://github.com/IOGS-LEnsE/camera-gui>`_.
+The source code of the application is in the :file:`applis/CMOS-labwork` directory of the GitHub repository of this project : `Camera GUI <https://github.com/IOGS-LEnsE-ressources/camera-gui>`_.
 
 .. note::
 

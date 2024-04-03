@@ -91,7 +91,7 @@ IDS-peak API
 
 The :file:`ids_peak_main_test.py` file from the :file:`progs/IDS/examples/` directory of the repository is an example to check that the **IDS-peak** Python API is correctly installed.
 
-*You can also download this example* :download:`here <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/IDS/examples/ids_peak_main_test.py>`.
+*You can also download this example* :download:`here <https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/IDS/examples/ids_peak_main_test.py>`.
 
 
 You can execute this script by using this command in a shell : :code:`python ids_peak_main_test.py`
