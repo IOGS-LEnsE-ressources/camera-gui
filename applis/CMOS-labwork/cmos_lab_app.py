@@ -45,7 +45,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
-from supoptools.pyqt6 import *
+from supoptools.pyqt6.widget_image_display import WidgetImageDisplay
 from gui.camera_choice import CameraChoice, dict_of_brands, cam_from_brands
 
 
@@ -68,6 +68,8 @@ class CmosLabApp(QWidget):
         self.brand_choice = None
         self.cameras_list_widget = None
         self.camera = None
+
+        self.camera_display_widget = WidgetImageDisplay()
 
     def action_choice(self, event):
         """Action performed when a camera brand is selected."""
