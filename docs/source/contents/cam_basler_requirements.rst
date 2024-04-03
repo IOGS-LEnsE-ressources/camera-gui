@@ -77,7 +77,8 @@ Pypylon extension
 
 The :file:`pypylon_main_test.py` file from the :file:`progs/Basler/examples/` directory of the repository is an example to check that the **pypylon** extension is correctly installed and that the pylon driver is recognized by the Python API.
 
-*You can also download this example* :download:`here <https://github.com/IOGS-LEnsE/camera-gui/blob/main/progs/Basler/examples/pypylon_main_test.py>`.
+*You can also download this example* :download:`here 
+<https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/Basler/examples/pypylon_main_test.py>`.
 
 This file is provided by the development team of the **pypylon** wrapper.
 
