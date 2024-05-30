@@ -1,3 +1,10 @@
+.. warning::
+
+	This page is still under construction.
+	
+	*Complete example* section to modify.
+
+
 IDS / Camera List
 #################
 
