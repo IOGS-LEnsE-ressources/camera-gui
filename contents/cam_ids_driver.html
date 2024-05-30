@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Basler / Driver &mdash; Camera GUI 0.1 documentation</title>
+  <title>IDS / Driver &mdash; Camera GUI 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-toolbox-code.css" />
@@ -28,8 +28,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Basler / Widgets" href="cam_basler_widgets.html" />
-    <link rel="prev" title="Basler / Camera List" href="cam_basler_list.html" /> 
+    <link rel="next" title="IDS / Widgets" href="cam_ids_widgets.html" />
+    <link rel="prev" title="IDS / Camera List" href="cam_ids_list.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,10 +58,11 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="cam_basler.html">Basler Camera</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html">Requirements and test</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html">Basler Camera List</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Basler Driver</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler.html">Basler Camera</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cam_ids.html">IDS Camera</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_requirements.html">Requirements and test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_list.html">IDS Camera List</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">IDS Driver</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#import-the-camerabasler-class">Import the CameraBasler class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#initialize-a-camera">Initialize a camera</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#device-object">Device object</a></li>
@@ -92,11 +93,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#start-a-continuous-shot">Start a continuous shot</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_widgets.html">Basler Widgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html">API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_widgets.html">IDS Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_api.html">API reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="cam_ids.html">IDS Camera</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Applications</span></p>
 <ul>
@@ -117,10 +117,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="cam_basler.html">Basler Camera Sensors</a></li>
-      <li class="breadcrumb-item active">Basler / Driver</li>
+          <li class="breadcrumb-item"><a href="cam_ids.html">IDS Camera Sensors</a></li>
+      <li class="breadcrumb-item active">IDS / Driver</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/contents/cam_basler_driver.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/contents/cam_ids_driver.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -128,24 +128,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="basler-driver">
-<h1>Basler / Driver<a class="headerlink" href="#basler-driver" title="Link to this heading"></a></h1>
-<p>The <strong>driver</strong> is based on the <a class="reference external" href="https://github.com/basler/pypylon">Pypylon Wrapper</a>.</p>
-<p>The source is in the <code class="file docutils literal notranslate"><span class="pre">camera_basler.py</span></code> <a class="reference download external" download="" href="https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/Basler/src/camera_basler.py"><code class="xref download docutils literal notranslate"><span class="pre">&lt;</span></code></a> file including :</p>
+  <div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This page is still under construction.</p>
+<p><em>Device object</em> section to modify.</p>
+<p><em>Camera general informations</em> section to modify.</p>
+<p><em>Complete example</em> section to modify.</p>
+</div>
+<section id="ids-driver">
+<h1>IDS / Driver<a class="headerlink" href="#ids-driver" title="Link to this heading"></a></h1>
+<p>The <strong>driver</strong> is based on the <strong>IDS-peak</strong> software..</p>
+<p>The source is in the <code class="file docutils literal notranslate"><span class="pre">camera_ids.py</span></code> <a class="reference download external" download="" href="https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/IDS/src/camera_ids.py"><code class="xref download docutils literal notranslate"><span class="pre">&lt;</span></code></a> file including :</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CameraBasler</span></code> class,</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">BaslerERROR</span></code> class : to process low-level error when accessing the camera,</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CameraIds</span></code> class,</p></li>
 <li><p><code class="samp docutils literal notranslate"><span class="pre">get_converter_mode(color_mode:</span> <span class="pre">str)</span></code></p></li>
 <li><p><code class="samp docutils literal notranslate"><span class="pre">get_bits_per_pixel(color_mode:</span> <span class="pre">str)</span></code></p></li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>The <code class="file docutils literal notranslate"><span class="pre">camera_basler.py</span></code> must be in the same directory as the Python file containing your script.</p>
+<p>The <code class="file docutils literal notranslate"><span class="pre">camera_ids.py</span></code> must be in the same directory as the Python file containing your script.</p>
 </div>
 <section id="import-the-camerabasler-class">
 <h2>Import the CameraBasler class<a class="headerlink" href="#import-the-camerabasler-class" title="Link to this heading"></a></h2>
-<p>To access <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraBasler</span></code> class and its functions, import the class in your Python code like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">camera_basler</span> <span class="kn">import</span> <span class="n">CameraBasler</span>
+<p>To access <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraIds</span></code> class and its functions, import the class in your Python code like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">camera_ids</span> <span class="kn">import</span> <span class="n">CameraIds</span>
 </pre></div>
 </div>
 </section>
@@ -153,23 +159,22 @@
 <h2>Initialize a camera<a class="headerlink" href="#initialize-a-camera" title="Link to this heading"></a></h2>
 <section id="device-object">
 <h3>Device object<a class="headerlink" href="#device-object" title="Link to this heading"></a></h3>
-<p>First of all, you need to create a device from the <code class="samp docutils literal notranslate"><span class="pre">pypylon</span></code> module like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pypylon</span> <span class="kn">import</span> <span class="n">pylon</span>
-<span class="n">my_cam_dev</span> <span class="o">=</span> <span class="n">pylon</span><span class="o">.</span><span class="n">InstantCamera</span><span class="p">(</span><span class="n">pylon</span><span class="o">.</span><span class="n">TlFactory</span><span class="o">.</span><span class="n">GetInstance</span><span class="p">()</span><span class="o">.</span><span class="n">CreateFirstDevice</span><span class="p">())</span>
+<p>First of all, you need to create a device … :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
 </pre></div>
 </div>
-<p>This script gets the first Basler camera connected device. If no device is connected, it returns an error.</p>
-<p>You can also use the <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraList</span></code> class, as shown in the previous section. The <code class="samp docutils literal notranslate"><span class="pre">get_cam_device()</span></code> method returns a device object that is the same type as the <code class="samp docutils literal notranslate"><span class="pre">pypylon</span></code> module.</p>
+<p>This script gets the first Ids camera connected device. If no device is connected, it returns an error.</p>
+<p>You can also use the <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraList</span></code> class, as shown in the previous section. The <code class="samp docutils literal notranslate"><span class="pre">get_cam_device()</span></code> method returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">ids_peak.Device</span></code> object that is the same type as the <code class="samp docutils literal notranslate"><span class="pre">ids_peak</span></code> module.</p>
 </section>
 <section id="camera-object">
 <h3>Camera object<a class="headerlink" href="#camera-object" title="Link to this heading"></a></h3>
-<p>An instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraBasler</span></code> class creates an object able to communicate with the device.</p>
-<p>To use our driver, you have to create an instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraBasler</span></code> class like this:</p>
+<p>An instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraIds</span></code> class creates an object able to communicate with the device.</p>
+<p>To use our driver, you have to create an instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraIds</span></code> class like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_cam</span> <span class="o">=</span> <span class="n">CameraBasler</span><span class="p">(</span><span class="n">my_cam_dev</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>When you use this constructor, a well-initialized message is written in the console (if the camera is correctly connected and recognized by the system.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_cam</span> <span class="o">=</span> <span class="n">CameraBasler</span><span class="p">(</span><span class="n">my_cam_dev</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_cam</span> <span class="o">=</span> <span class="n">CameraIds</span><span class="p">(</span><span class="n">my_cam_dev</span><span class="p">)</span>
 <span class="go">Device is well initialized.</span>
 </pre></div>
 </div>
@@ -460,8 +465,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cam_basler_list.html" class="btn btn-neutral float-left" title="Basler / Camera List" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cam_basler_widgets.html" class="btn btn-neutral float-right" title="Basler / Widgets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cam_ids_list.html" class="btn btn-neutral float-left" title="IDS / Camera List" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cam_ids_widgets.html" class="btn btn-neutral float-right" title="IDS / Widgets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

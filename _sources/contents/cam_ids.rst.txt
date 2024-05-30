@@ -39,7 +39,7 @@ To facilitate the integration of the **IDS peak** API in the different projects,
 	:maxdepth: 2
 
 	Requirements and test<cam_ids_requirements>
-	Basler Camera List<cam_ids_list>
-	Basler Driver<cam_basler_driver>
-	Basler Widgets<cam_basler_widgets>
-	API reference<cam_basler_api>
+	IDS Camera List<cam_ids_list>
+	IDS Driver<cam_ids_driver>
+	IDS Widgets<cam_ids_widgets>
+	API reference<cam_ids_api>

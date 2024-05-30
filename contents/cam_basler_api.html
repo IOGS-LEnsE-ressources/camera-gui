@@ -58,10 +58,9 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="cam_basler.html">Basler Camera</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="cam_ids.html">IDS Camera</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cam_ids_requirements.html">Requirements and test</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_ids_list.html">Basler Camera List</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cam_basler.html">Basler Camera</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html">Requirements and test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html">Basler Camera List</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html">Basler Driver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cam_basler_widgets.html">Basler Widgets</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">API reference</a><ul>
@@ -78,6 +77,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="cam_ids.html">IDS Camera</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Applications</span></p>
 <ul>
@@ -127,7 +127,7 @@
 </dd>
 </dl>
 <p>Example</p>
-<p>In this example, you create a <a class="reference internal" href="#camera_list.CameraList" title="camera_list.CameraList"><code class="xref py py-class docutils literal notranslate"><span class="pre">CameraList</span></code></a> object, then get the number of Basler cameras connected to your computer (in this case 1 camera is connected) and finally obtain the complete list of the available cameras (in this case a <em>a2A1920-160ucBAS</em> camera with the serial number <em>40282239</em>).</p>
+<p>In this example, you create a <a class="reference internal" href="cam_ids_api.html#camera_list.CameraList" title="camera_list.CameraList"><code class="xref py py-class docutils literal notranslate"><span class="pre">CameraList</span></code></a> object, then get the number of Basler cameras connected to your computer (in this case 1 camera is connected) and finally obtain the complete list of the available cameras (in this case a <em>a2A1920-160ucBAS</em> camera with the serial number <em>40282239</em>).</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">camera_list</span> <span class="kn">import</span> <span class="n">CameraList</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cam_list</span> <span class="o">=</span> <span class="n">CameraList</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cam_list</span><span class="o">.</span><span class="n">get_nb_of_cam</span><span class="p">()</span>

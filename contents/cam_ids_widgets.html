@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Basler / Widgets &mdash; Camera GUI 0.1 documentation</title>
+  <title>IDS / Widgets &mdash; Camera GUI 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-toolbox-code.css" />
@@ -28,8 +28,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API reference" href="cam_basler_api.html" />
-    <link rel="prev" title="Basler / Driver" href="cam_basler_driver.html" /> 
+    <link rel="next" title="API reference" href="cam_ids_api.html" />
+    <link rel="prev" title="IDS / Driver" href="cam_ids_driver.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,15 +58,15 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="cam_basler.html">Basler Camera</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_requirements.html">Requirements and test</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_list.html">Basler Camera List</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_driver.html">Basler Driver</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Basler Widgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cam_basler_api.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cam_basler.html">Basler Camera</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cam_ids.html">IDS Camera</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_requirements.html">Requirements and test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_list.html">IDS Camera List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_driver.html">IDS Driver</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">IDS Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cam_ids_api.html">API reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="cam_ids.html">IDS Camera</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Applications</span></p>
 <ul>
@@ -87,10 +87,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="cam_basler.html">Basler Camera Sensors</a></li>
-      <li class="breadcrumb-item active">Basler / Widgets</li>
+          <li class="breadcrumb-item"><a href="cam_ids.html">IDS Camera Sensors</a></li>
+      <li class="breadcrumb-item active">IDS / Widgets</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/contents/cam_basler_widgets.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/contents/cam_ids_widgets.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -98,12 +98,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="basler-widgets">
-<h1>Basler / Widgets<a class="headerlink" href="#basler-widgets" title="Link to this heading"></a></h1>
+  <section id="ids-widgets">
+<h1>IDS / Widgets<a class="headerlink" href="#ids-widgets" title="Link to this heading"></a></h1>
 <p>To facilitate the integration of the pypylon API in the different projects, we developped :</p>
 <ul class="simple">
-<li><p>a <em>list system</em> to list available cameras, based on the <em>pypylon</em> API,</p></li>
-<li><p>a <em>driver</em> to setup and to access a camera, based on the <em>pypylon</em> API,</p></li>
+<li><p>a <em>list system</em> to list available cameras, based on the <em>IDS-peak</em> API,</p></li>
+<li><p>a <em>driver</em> to setup and to access a camera, based on the <em>IDS-peak</em> API,</p></li>
 <li><p>a set of <em>widgets</em> based on <em>PyQt6</em>, to control and to display images.</p></li>
 </ul>
 <p>This section deals with the <strong>widgets</strong>.</p>
@@ -117,8 +117,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cam_basler_driver.html" class="btn btn-neutral float-left" title="Basler / Driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cam_basler_api.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cam_ids_driver.html" class="btn btn-neutral float-left" title="IDS / Driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cam_ids_api.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

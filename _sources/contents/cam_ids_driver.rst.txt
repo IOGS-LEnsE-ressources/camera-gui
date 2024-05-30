@@ -1,28 +1,38 @@
-Basler / Driver
-###############
+.. warning::
 
-The **driver** is based on the `Pypylon Wrapper <https://github.com/basler/pypylon>`_. 
+	This page is still under construction.
+	
+	*Device object* section to modify.
+	
+	*Camera general informations* section to modify.
+	
+	*Complete example* section to modify.
 
-The source is in the :file:`camera_basler.py` :download:`< <https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/Basler/src/camera_basler.py>` file including :
 
-* :class:`CameraBasler` class, 
-* :class:`BaslerERROR` class : to process low-level error when accessing the camera, 
+IDS / Driver
+############
+
+The **driver** is based on the **IDS-peak** software.. 
+
+The source is in the :file:`camera_ids.py` :download:`< <https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/IDS/src/camera_ids.py>` file including :
+
+* :class:`CameraIds` class, 
 * :samp:`get_converter_mode(color_mode: str)`
 * :samp:`get_bits_per_pixel(color_mode: str)`
 
 
 .. warning::
 
-	The :file:`camera_basler.py` must be in the same directory as the Python file containing your script.
+	The :file:`camera_ids.py` must be in the same directory as the Python file containing your script.
 	
 Import the CameraBasler class
 *****************************
 
-To access :class:`CameraBasler` class and its functions, import the class in your Python code like this:
+To access :class:`CameraIds` class and its functions, import the class in your Python code like this:
 
 .. code-block:: python
 	
-	from camera_basler import CameraBasler
+	from camera_ids import CameraIds
 
 
 Initialize a camera
@@ -31,23 +41,22 @@ Initialize a camera
 Device object
 =============
 
-First of all, you need to create a device from the :samp:`pypylon` module like this:
+First of all, you need to create a device ... :
 
 .. code-block:: python
 
-	from pypylon import pylon
-	my_cam_dev = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+	...
 	
-This script gets the first Basler camera connected device. If no device is connected, it returns an error.
+This script gets the first Ids camera connected device. If no device is connected, it returns an error.
 
-You can also use the :class:`CameraList` class, as shown in the previous section. The :samp:`get_cam_device()` method returns a device object that is the same type as the :samp:`pypylon` module.
+You can also use the :class:`CameraList` class, as shown in the previous section. The :samp:`get_cam_device()` method returns a :class:`ids_peak.Device` object that is the same type as the :samp:`ids_peak` module.
 
 Camera object
 =============
 
-An instance of the :class:`CameraBasler` class creates an object able to communicate with the device.
+An instance of the :class:`CameraIds` class creates an object able to communicate with the device.
 
-To use our driver, you have to create an instance of the :class:`CameraBasler` class like this:
+To use our driver, you have to create an instance of the :class:`CameraIds` class like this:
 
 .. code-block:: python
 
@@ -55,7 +64,7 @@ To use our driver, you have to create an instance of the :class:`CameraBasler` c
 
 When you use this constructor, a well-initialized message is written in the console (if the camera is correctly connected and recognized by the system.
 
->>> my_cam = CameraBasler(my_cam_dev)
+>>> my_cam = CameraIds(my_cam_dev)
 Device is well initialized.
 
 Connected camera
