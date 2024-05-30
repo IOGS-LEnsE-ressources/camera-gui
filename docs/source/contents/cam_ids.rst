@@ -19,7 +19,7 @@ The LEnsE team developed *Python elements* for implementing industrial cameras f
 
     **IDS peak IPL** can be found in the *IDS peak* Python API.
 
-    Installation file is in the directory :file:`INSTALLED_PATH_OF_IDS_PEAK/generic_sdk/ipl\binding\python\wheel\x86_[32|64]`.
+    Installation file is in the directory :file:`INSTALLED_PATH_OF_IDS_PEAK/generic_sdk/ipl/binding/python/wheel/x86_[32|64]`.
 
     Then run this command in a shell (depending on your python version and computer architecture):
 
@@ -27,7 +27,7 @@ The LEnsE team developed *Python elements* for implementing industrial cameras f
 
         pip install ids_peak_1.2.4.1-cp<version>-cp<version>m-[win32|win_amd64].whl
 
-    Generally *INSTALLED_PATH_OF_IDS_PEAK* is :file:`C:\Program Files\IDS\ids_peak`
+    Generally *INSTALLED_PATH_OF_IDS_PEAK* is :file:`C:/Program Files/IDS/ids_peak`
 
 To facilitate the integration of the **IDS peak** API in the different projects, we developped :
 
