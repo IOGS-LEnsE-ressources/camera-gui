@@ -19,7 +19,7 @@ The LEnsE team developed *Python elements* for implementing industrial cameras f
 
     **IDS peak IPL** can be found in the *IDS peak* Python API.
 
-    Installation file is in the directory :file:`INSTALLED_PATH_OF_IDS_PEAK\generic_sdk\ipl\binding\python\wheel\x86_[32|64]`.
+    Installation file is in the directory :file:`INSTALLED_PATH_OF_IDS_PEAK/generic_sdk/ipl\binding\python\wheel\x86_[32|64]`.
 
     Then run this command in a shell (depending on your python version and computer architecture):
 
@@ -39,7 +39,7 @@ To facilitate the integration of the **IDS peak** API in the different projects,
 	:maxdepth: 2
 
 	Requirements and test<cam_ids_requirements>
-	Basler Camera List<cam_basler_list>
+	Basler Camera List<cam_ids_list>
 	Basler Driver<cam_basler_driver>
 	Basler Widgets<cam_basler_widgets>
 	API reference<cam_basler_api>
