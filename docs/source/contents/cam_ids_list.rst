@@ -1,7 +1,7 @@
-Basler / Camera List
-####################
+IDS / Camera List
+#################
 
-The **list** system is based on the `Pypylon Wrapper <https://github.com/basler/pypylon>`_. The class:`CameraList` class is included in the :file:`camera_list.py` :download:`< <https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/Basler/src/camera_list.py>`. It contains methods to create and to display a list of available Basler cameras.
+The **list** system is based on the **IDS-peak** software. The class:`CameraList` class is included in the :file:`camera_list.py` :download:`< <https://github.com/IOGS-LEnsE-ressources/camera-gui/blob/main/progs/IDS/camera_list.py>`. It contains methods to create and to display a list of available Basler cameras.
 
 .. warning::
 
