@@ -49,7 +49,8 @@ GUI Tutorials
 	:maxdepth: 2
 	:caption: Applications
 	
-	Study of a CMOS sensor<contents/appli_CMOS_labwork>
+	Study of a CMOS sensor<contents/applis/appli_CMOS_labwork>
+	Interferometric controls<contents/applis/appli_Zygo_labwork>
 
 
 
