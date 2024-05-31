@@ -1,0 +1,35 @@
+Zygo Lab GUI / IDS Camera
+#########################
+
+Structure of the GUI
+====================
+
+
+
+
+Documentation
+=============
+- Write doc for CameraIds class
+- Test CameraIds class
+
+
+GUI Dev
+=======
+
+Global
+------
+- Create LangDict class to read dict_xx.d (ascii text file) containing displayed informations of the GUI (menu, button...) in different langages. The main idea is to permit to change the langage of the interface very fast. dict_xx.d file will contain two columns (separated by ; for example) : first column corresponds to the dictionnary name of the option (standard and called in the main application), second column corresponds to the translated name of the option in the specific langage (xx=en, fr...). This class could be reused in other GUI of the LEnsE. 
+- Create LEnsELogo class inherited from QWidget to include the logo into a GUInterface.
+
+Camera
+------
+- Modify CameraIds class to make Parameters button as an option (for specific interface, parameters will be display in an other section - Widget) (also update CameraBasler)
+- Create/Modify CameraParameters
+
+Piezo
+-----
+- Find Texas Instrument USB-6001 module API.
+- Create a widget (or driver) class to control it.
+
+GUI
+---

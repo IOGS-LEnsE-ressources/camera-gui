@@ -11,27 +11,8 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
-.. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
-
-*****************
-*  CameraChoice
-*****************
-* Mode
-* FPS
-* Exposure
-*****************
-* AOI   - DRAW
-*  x0   w
-*  y0   h
-*       Params
-*****************
-* Hist AOI
-* X Zoom    Start
-*****************
-* Hist Pixel(s)
-* Params    Start
-* X Hist    X Time
-*****************
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+.. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 
 """
 
@@ -49,7 +30,7 @@ from supoptools.pyqt6.widget_image_display import WidgetImageDisplay
 from gui.camera_choice import CameraChoice, dict_of_brands, cam_from_brands
 
 
-class CmosLabApp(QWidget):
+class ZygoLabApp(QWidget):
     """Main interface of the CMOS sensor study labwork."""
 
     def __init__(self):
@@ -197,7 +178,7 @@ if __name__ == '__main__':
         def __init__(self):
             super().__init__()
 
-            self.setWindowTitle("CMOS-Sensor Labwork APP")
+            self.setWindowTitle("Zygo-IDS Labwork APP")
             self.setGeometry(300, 300, 400, 600)
 
             self.central_widget = CmosLabApp()
