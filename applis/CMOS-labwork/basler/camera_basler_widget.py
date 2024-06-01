@@ -29,18 +29,17 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
+from lensepy.images.conversion import *
+from lensepy.pyqt6.widget_slider import WidgetSlider
+
 if __name__ == "__main__":
     from camera_list import CameraList
     from camera_basler import CameraBasler, get_bits_per_pixel
     sys.path.append('../supoptools')
-    from images.conversion import *
-    from pyqt6.widget_slider import WidgetSlider
 else:
     sys.path.append('..')
     from basler.camera_list import CameraList
     from basler.camera_basler import CameraBasler, get_bits_per_pixel
-    from supoptools.images.conversion import *
-    from supoptools.pyqt6.widget_slider import WidgetSlider
 
 
 class CameraBaslerListWidget(QWidget):

@@ -29,18 +29,17 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
+from lensepy.images.conversion import *
+from lensepy.pyqt6.widget_slider import WidgetSlider
+
 if __name__ == "__main__":
     from camera_list import CameraList
     from camera_basler import CameraBasler, get_bits_per_pixel
     sys.path.append('../supoptools')
-    from images.conversion import *
-    from pyqt6.widget_slider import WidgetSlider
 else:
     sys.path.append('..')
     from basler.camera_list import CameraList
     from basler.camera_basler import CameraBasler, get_bits_per_pixel
-    from supoptools.images.conversion import *
-    from supoptools.pyqt6.widget_slider import WidgetSlider
 
 
 class CameraBaslerListWidget(QWidget):
@@ -140,8 +139,8 @@ class CameraBaslerListWidget(QWidget):
     def send_signal_connected(self, event):
         """Send a signal when a camera is selected to be used.
         """
-        print(event)
-        self.connected.emit('C')
+        cam_id = self.cameras_list_combo.currentIndex()
+        self.connected.emit('cam:'+str(cam_id)+':')
 
 
 class CameraBaslerParamsWidget(QWidget):
@@ -404,12 +403,14 @@ class CameraBaslerWidget(QWidget):
     
     """
 
-    def __init__(self) -> None:
-        """
-        Default constructor of the class.
+    def __init__(self, params_disp: bool=True) -> None:
+        """Default constructor of the class.
+
+        :param params_disp: Displaying the parameters. Default true.
+        :type params_disp: bool
         """
         super().__init__(parent=None)
-        # List of the availables camera
+        # List of the available camera
         self.cameras_list_widget = CameraBaslerListWidget()
         self.main_layout = QGridLayout()
         self.main_layout.addWidget(self.cameras_list_widget, 0, 0)

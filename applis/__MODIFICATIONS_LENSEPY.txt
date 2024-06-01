@@ -3,6 +3,7 @@ SupOpTools libraries updates
 
 If any modification are made in one of the files from a 'supoptools' directory, these modifications must be reported in this document.
 
+The lensepy package must be upgraded.
 
 ----------------------------------------------
 Date 	/  	Developper

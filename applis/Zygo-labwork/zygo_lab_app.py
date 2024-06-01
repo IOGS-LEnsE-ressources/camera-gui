@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
-from supoptools.pyqt6.widget_image_display import WidgetImageDisplay
+from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
 from gui.camera_choice_zygo import CameraChoice, dict_of_brands, cam_from_brands
 
 
