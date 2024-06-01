@@ -36,6 +36,8 @@ Control a piezo actuator
 
 - Analog output (via Texas Instruments USB-6001 device or Nucleo if no API in Python for TI USB-6001) to control the piezo actuator.
 
+See https://github.com/ni/nidaqmx-python
+
 
 Make some calculations
 ======================
