@@ -12,6 +12,8 @@ Documentation
 - Write doc for CameraIds class
 - Test CameraIds class
 
+- Prepare an Installation Procedure (and store all the drivers and apps on an USB key - then in a LEnsE cloud directory or S: ) - from Python to application
+
 
 GUI Dev
 =======
