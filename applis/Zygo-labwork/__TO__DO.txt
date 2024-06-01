@@ -28,7 +28,7 @@ Camera
 
 Piezo
 -----
-- Find Texas Instrument USB-6001 module API.
+- Find Texas Instrument USB-6001 module API. See https://nidaqmx-python.readthedocs.io/en/latest/
 - Create a widget (or driver) class to control it.
 
 GUI
