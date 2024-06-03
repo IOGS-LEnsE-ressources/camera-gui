@@ -438,7 +438,7 @@ class CameraIdsWidget(QWidget):
         # Time management
         self.main_timer = QTimer()
         self.main_timer.stop()
-        self.main_timer.setInterval(100)  # in ms
+        self.main_timer.setInterval(200)  # in ms
         self.main_timer.timeout.connect(self.refresh)
 
         self.setLayout(self.main_layout)
@@ -454,8 +454,9 @@ class CameraIdsWidget(QWidget):
             self.camera = CameraIds(cam_dev)
 
             # Initialize the camera with default parameters
-            self.camera.set_frame_rate(10)
-            self.camera.set_color_mode('Mono8')
+            self.camera.set_frame_rate(2)
+            self.camera.set_color_mode('Mono10')
+            self.camera.set_display_mode('Mono10')
             self.camera.set_exposure(10000)
             self.camera.set_black_level(0)
             # Clear layout with combo list
@@ -520,20 +521,23 @@ class CameraIdsWidget(QWidget):
                 self.camera.start_acquisition()
                 # Get raw image
                 image_array = self.camera.get_image()
-                time.sleep(0.001)
-                '''
+                print(f'Type = {image_array.dtype}')
                 # Get widget size
                 frame_width = self.width() - 30
                 frame_height = self.height() - 120
                 # Depending on the color mode - display only in 8 bits mono
                 nb_bits = get_bits_per_pixel(self.camera.get_color_mode())
+                print(f'NbBits = {nb_bits}')
                 if nb_bits > 8:
                     image_array = image_array.view(np.uint16)
-                    image_array_disp = (image_array / (2 ** (nb_bits - 8))).astype(np.uint8)
+                    # image_array_disp = (image_array / (2 ** (nb_bits - 8))).astype(np.uint8)
                 else:
                     image_array = image_array.view(np.uint8)
-                    image_array_disp = image_array.astype(np.uint8)
+                    image_array_disp = image_array
 
+                print(f'Shape = {image_array_disp.shape}')
+                print(f'Type = {image_array_disp.dtype}')
+                '''
                 # Resize to the display size
                 image_array_disp2 = resize_image(
                     image_array_disp,
@@ -550,6 +554,12 @@ class CameraIdsWidget(QWidget):
                 self.camera_display.setText('No Camera Connected')
         except Exception as e:
             print("Exception - refresh: " + str(e) + "")
+
+    def change_color_mode(self, value:str = 'Mono8') -> bool:
+        """
+        Change the color mode of the camera, if possible
+        """
+        self.camera.set_color_mode(value)
 
     def quit_application(self) -> None:
         """

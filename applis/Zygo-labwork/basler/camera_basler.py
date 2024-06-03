@@ -259,7 +259,7 @@ class CameraBasler:
                 grabResult.Release()
             return images
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - get_image: " + str(e) + "")
 
     def __check_range(self, x: int, y: int) -> bool:
         """Check if the coordinates are in the sensor area.

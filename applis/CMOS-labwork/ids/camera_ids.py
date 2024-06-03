@@ -140,13 +140,19 @@ class CameraIds:
         self.camera = cam_dev
         self.camera_remote = None
         self.data_stream = None
+        self.buffer = None
         self.is_opened = False
 
         # Create a remote of the device (to control it)
         try:
             self.camera_remote = self.camera.RemoteDevice().NodeMaps()[0]
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - camera_remote: " + str(e) + "")
+
+        # Camera informations
+        self.serial_no, self.camera_name = self.get_cam_info()
+        self.width_max, self.height_max = self.get_sensor_size()
+        self.nb_bits_per_pixels: int = 0
 
         # Software trigger of the camera
         try:
@@ -155,18 +161,8 @@ class CameraIds:
             self.camera_remote.FindNode("TriggerMode").SetCurrentEntry("On")
         except Exception as e:
             print("Exception - trigger: " + str(e) + "")
-
-        # Camera informations
-        self.serial_no, self.camera_name = self.get_cam_info()
-        self.width_max, self.height_max = self.get_sensor_size()
-        self.nb_bits_per_pixels: int = 0
-        self.color_mode = 'Mono8'  # default
-        self.set_color_mode('Mono8')
-        self.set_display_mode('Mono8')
-        try:
-            self.camera_remote.FindNode("PixelFormat").SetCurrentEntry("Mono8")
-        except Exception as e:
-            print("Exception - pixel format: " + str(e) + "")
+        if self.init_memory():
+            print('Memory OK')
 
         # AOI size
         self.aoi_x0: int = 0
@@ -175,11 +171,11 @@ class CameraIds:
         self.aoi_height: int = self.height_max
 
         self.set_aoi(self.aoi_x0, self.aoi_y0, self.aoi_width, self.aoi_height)
-        if self.init_memory():
-            print('Memory OK')
-        # Set ROI before alloc if ROI changes
-        if self.alloc_and_announce_buffers():
-            print('Alloc OK')
+
+        # Color mode and buffers
+        self.color_mode = 'Mono8'  # default
+        self.set_color_mode(self.color_mode)    # Also create new buffers
+        self.set_display_mode(self.color_mode)
 
     def init_memory(self) -> bool:
         """
@@ -194,7 +190,7 @@ class CameraIds:
             return True
 
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - init_memory: " + str(e) + "")
             return False
 
     def is_camera_connected(self) -> bool:
@@ -213,7 +209,7 @@ class CameraIds:
             else:
                 return False
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - is_camera_connected: " + str(e) + "")
 
     def alloc_and_announce_buffers(self) -> bool:
         """
@@ -291,7 +287,7 @@ class CameraIds:
             serial_no = self.camera_remote.FindNode("DeviceSerialNumber").Value()
             return serial_no, camera_name
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - get_cam_info: " + str(e) + "")
 
     def get_sensor_size(self) -> tuple[int, int]:
         """Return the width and the height of the sensor.
@@ -308,7 +304,7 @@ class CameraIds:
             max_width = self.camera_remote.FindNode("WidthMax").Value()
             return max_width, max_height
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - get_sensor_size: " + str(e) + "")
 
     def set_display_mode(self, colormode: str = 'Mono8') -> None:
         """Change the color mode of the converter.
@@ -346,7 +342,7 @@ class CameraIds:
         except Exception as e:
             print("Exception - get_color_mode: " + str(e) + "")
 
-    def set_color_mode(self, color_mode: str) -> None:
+    def set_color_mode(self, color_mode: str) -> bool:
         """Change the color mode.
 
         :param color_mode: Color mode to use for the device
@@ -356,12 +352,18 @@ class CameraIds:
         try:
             if self.is_opened:
                 self.stop_acquisition()
-            self.camera_remote.FindNode("PixelFormat").SetCurrentEntry(color_mode)
-            self.color_mode = color_mode
-            self.nb_bits_per_pixels = get_bits_per_pixel(color_mode)
-            # self.set_display_mode(color_mode)
+            try:
+                self.camera_remote.FindNode("PixelFormat").SetCurrentEntry(color_mode)
+                self.color_mode = color_mode
+                self.nb_bits_per_pixels = get_bits_per_pixel(color_mode)
+            except Exception as e:
+                print("Exception - pixel format: " + str(e) + "")
+            self.set_display_mode(color_mode)
+            self.alloc_and_announce_buffers()
+            return True
         except Exception as e:
             print("Exception - set color mode: " + str(e) + "")
+            return False
 
     def get_image(self) -> np.ndarray:
         """Get one image.
@@ -387,7 +389,7 @@ class CameraIds:
             return picture
 
         except Exception as e:
-            print("EXCEPTION - get_image: " + str(e))
+            print("EXCEPTION - get_image IDS: " + str(e))
             ids_peak.Library.Close()
             return -2
 
@@ -646,105 +648,112 @@ class CameraIds:
 
 
 if __name__ == "__main__":
-    '''
-    from camera_list import CameraList
-    
-    # Create a CameraList object
-    cam_list = CameraList()
-    # Print the number of camera connected
-    print(f"Test - get_nb_of_cam : {cam_list.get_nb_of_cam()}")
-    # Collect and print the list of the connected cameras
-    cameras_list = cam_list.get_cam_list()
-    print(f"Test - get_cam_list : {cameras_list}")
-    
-    cam_id = 'a'
-    while cam_id.isdigit() is False:
-        cam_id = input('Enter the ID of the camera to connect :')
-    cam_id = int(cam_id)
-    print(f"Selected camera : {cam_id}")
-    
-    # Create a camera object
-    my_cam_dev = cam_list.get_cam_device(cam_id)
-    '''
-    # Initialize library
-    ids_peak.Library.Initialize()
-    # Device manager
-    device_manager = ids_peak.DeviceManager.Instance()
-    device_manager.Update()
-    device_descriptors = device_manager.Devices()
-    # Open a device
-    if device_descriptors.empty():
-        sys.exit(-1)
-    my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
-
-    my_cam = CameraIds(my_cam_dev)
-
-    if my_cam.start_acquisition():
-        print('Start Acq OK')
-
-    # k = my_cam.is_opened
-    #print(f'Run ? {my_cam.is_opened}')
-    # pict = my_cam.get_image()
-
     try:
-        for k in range(5):
-            plt.figure()
-            # pict = my_cam.get_image()
-            pict = np.ones((3,3))
-            plt.imshow(pict)
-            plt.show()
-    except Exception as e:
-        print("Exception - get_image: " + str(e) + "")
-    '''
-    print(f'W/H = {my_cam.get_sensor_size()}')
+        '''
+        from camera_list import CameraList
+        
+        # Create a CameraList object
+        cam_list = CameraList()
+        # Print the number of camera connected
+        print(f"Test - get_nb_of_cam : {cam_list.get_nb_of_cam()}")
+        # Collect and print the list of the connected cameras
+        cameras_list = cam_list.get_cam_list()
+        print(f"Test - get_cam_list : {cameras_list}")
+        
+        cam_id = 'a'
+        while cam_id.isdigit() is False:
+            cam_id = input('Enter the ID of the camera to connect :')
+        cam_id = int(cam_id)
+        print(f"Selected camera : {cam_id}")
+        
+        # Create a camera object
+        my_cam_dev = cam_list.get_cam_device(cam_id)
+        '''
+        # Initialize library
+        ids_peak.Library.Initialize()
+        # Device manager
+        device_manager = ids_peak.DeviceManager.Instance()
+        device_manager.Update()
+        device_descriptors = device_manager.Devices()
+        # Open a device
+        if device_descriptors.empty():
+            print('No camera connected')
+            sys.exit(-1)
+        my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
 
-    print(f'FPS = {my_cam.get_frame_rate()}')
-    print(f'FPS_range = {my_cam.get_frame_rate_range()}')
-    print(f'FPS change ? {my_cam.set_frame_rate(10)}')
-    print(f'FPS = {my_cam.get_frame_rate()}')
+        my_cam = CameraIds(my_cam_dev)
 
-    print(f'Black Level = {my_cam.get_black_level()}')
-    print(f'Black Level_range = {my_cam.get_black_level_range()}')
-    print(f'Black Level change ? {my_cam.set_black_level(25)}')
-    print(f'Black Level = {my_cam.get_black_level()}')
+        if my_cam.start_acquisition():
+            print('Start Acq OK')
 
-    # Change exposure time
-    print(f'Old Expo = {my_cam.get_exposure()}')
-    my_cam.set_exposure(1000)
-    print(f'New Expo = {my_cam.get_exposure()}')
+        try:
+            for k in range(2):
+                plt.figure()
+                pict = my_cam.get_image()
+                # pict = np.ones((3,3))
+                plt.imshow(pict)
+                plt.show()
 
-    my_cam.stop_acquisition()
-    print(f'Run ? {my_cam.is_opened}')
-    if my_cam.set_aoi(20, 40, 100, 200):
-        print('AOI OK')
-
-    my_cam.start_acquisition()
-    print(f'Run ? {my_cam.is_opened}')
-
-    plt.figure()
-    pict = my_cam.get_image()
-    plt.imshow(pict)
-    plt.show()
-
-    # Check the colormode
-    print(my_cam.get_color_mode())
-    '''
-    '''
-    # Change colormode to Mono12
-    my_cam.set_color_mode('Mono12')
-    my_cam.set_display_mode('Mono12')
-    print(my_cam.get_color_mode())
-    '''
-
-    '''
-    # Different exposure time
-    my_cam.reset_aoi()
+            print(f'Shape PICT {pict.shape}')
+            print(f'Type PICT {pict.dtype}')
+        except Exception as e:
+            print("Exception - get_image: " + str(e) + "")
+        '''
+        print(f'W/H = {my_cam.get_sensor_size()}')
     
-    t_expo = np.linspace(t_min, t_max/10000.0, 11)
-    for i, t in enumerate(t_expo):
-        print(f'\tExpo Time = {t}us')
-        my_cam.set_exposure(t)
-        images = my_cam.get_images()
-        plt.imshow(images[0], interpolation='nearest')
-        plt.show()        
-    '''
+        print(f'FPS = {my_cam.get_frame_rate()}')
+        print(f'FPS_range = {my_cam.get_frame_rate_range()}')
+        print(f'FPS change ? {my_cam.set_frame_rate(10)}')
+        print(f'FPS = {my_cam.get_frame_rate()}')
+    
+        print(f'Black Level = {my_cam.get_black_level()}')
+        print(f'Black Level_range = {my_cam.get_black_level_range()}')
+        print(f'Black Level change ? {my_cam.set_black_level(25)}')
+        print(f'Black Level = {my_cam.get_black_level()}')
+    
+        # Change exposure time
+        print(f'Old Expo = {my_cam.get_exposure()}')
+        my_cam.set_exposure(1000)
+        print(f'New Expo = {my_cam.get_exposure()}')
+    
+        my_cam.stop_acquisition()
+        print(f'Run ? {my_cam.is_opened}')
+        if my_cam.set_aoi(20, 40, 100, 200):
+            print('AOI OK')
+    
+        my_cam.start_acquisition()
+        print(f'Run ? {my_cam.is_opened}')
+    
+        plt.figure()
+        pict = my_cam.get_image()
+        plt.imshow(pict)
+        plt.show()
+    
+        # Check the colormode
+        print(my_cam.get_color_mode())
+        '''
+        # Change colormode to Mono12
+        my_cam.set_color_mode('Mono12')
+        my_cam.set_display_mode('Mono12')
+        print(my_cam.get_color_mode())
+        my_cam.start_acquisition()
+        pict = my_cam.get_image()
+        print(f'Shape PICT {pict.shape}')
+        print(f'Type PICT {pict.dtype}')
+
+
+        '''
+        # Different exposure time
+        my_cam.reset_aoi()
+        
+        t_expo = np.linspace(t_min, t_max/10000.0, 11)
+        for i, t in enumerate(t_expo):
+            print(f'\tExpo Time = {t}us')
+            my_cam.set_exposure(t)
+            images = my_cam.get_images()
+            plt.imshow(images[0], interpolation='nearest')
+            plt.show()        
+        '''
+
+    except Exception as e:
+        print("Exception - main: " + str(e) + "")
