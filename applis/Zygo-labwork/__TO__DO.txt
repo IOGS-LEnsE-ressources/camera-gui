@@ -25,7 +25,7 @@ Global
 
 Camera
 ------
-- Modify CameraIds class to make Parameters button as an option (for specific interface, parameters will be display in an other section - Widget) (also update CameraBasler)
+- Modify CameraIds class to make Parameters button as an option (for specific interface, parameters will be display in an other section - Widget) (also update CameraBasler) - Or specify default parameters in a specific file to read at the begining of the main
 - Create/Modify CameraParameters
 
 Piezo

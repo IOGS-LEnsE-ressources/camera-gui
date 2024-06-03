@@ -580,7 +580,7 @@ class MyMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("CameraIdsWidget Test Window")
         self.setGeometry(100, 100, 500, 400)
-        self.central_widget = CameraIdsWidget(params_disp=False)
+        self.central_widget = CameraIdsWidget(params_disp=True)
         self.setCentralWidget(self.central_widget)
 
     def closeEvent(self, event):
