@@ -37,13 +37,10 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 import sys
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QGridLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox,
+    QMainWindow, QWidget,
+    QVBoxLayout,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer
-from PyQt6.QtGui import QPixmap
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
 from gui.camera_choice import CameraChoice, dict_of_brands, cam_from_brands

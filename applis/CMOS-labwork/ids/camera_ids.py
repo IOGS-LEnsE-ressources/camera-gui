@@ -41,12 +41,12 @@ class to communicate with an IDS camera sensor.
 @ see : https://www.1stvision.com/cameras/IDS/IDS-manuals/en/index.html
 @ See API DOC : C:\Program Files\IDS\ids_peak\generic_sdk\api\doc\html
 
->>> ids_peak.Library.Initialize()
->>> device_manager = ids_peak.DeviceManager.Instance()
->>> device_manager.Update()
->>> device_descriptors = device_manager.Devices()
->>> my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
->>> my_cam = CameraIds(my_cam_dev)
+#>>> ids_peak.Library.Initialize()
+#>>> device_manager = ids_peak.DeviceManager.Instance()
+#>>> device_manager.Update()
+#>>> device_descriptors = device_manager.Devices()
+#>>> my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+#>>> my_cam = CameraIds(my_cam_dev)
 
 """
 import sys
@@ -203,7 +203,7 @@ class CameraIds:
         :return: true if the device could be opened, and then close the device
         :rtype: bool (or error)
 
-        >>> my_cam.is_camera_connected()
+        #>>> my_cam.is_camera_connected()
 
         """
         try:
@@ -281,7 +281,7 @@ class CameraIds:
         :return: the serial number and the name of the camera
         :rtype: tuple[str, str]
 
-        >>> my_cam.get_cam_info
+        #>>> my_cam.get_cam_info
         ('40282239', 'a2A1920-160ucBAS')
 
         """
@@ -299,7 +299,7 @@ class CameraIds:
         :return: the width and the height of the sensor in pixels
         :rtype: tuple[int, int]
 
-        >>> my_cam.get_sensor_size()
+        #>>> my_cam.get_sensor_size()
         (1936, 1216)
 
         """
@@ -332,7 +332,7 @@ class CameraIds:
         :param colormode: Color mode to use for the device
         :type colormode: str, default 'Mono8'
 
-        >>> my_cam.get_color_mode()
+        #>>> my_cam.get_color_mode()
         'Mono8'
 
         """
@@ -471,7 +471,7 @@ class CameraIds:
             and height are the size of the aoi.
         :rtype: tuple[int, int, int, int]
 
-        >>> my_cam.get_aoi()
+        #>>> my_cam.get_aoi()
         (0, 0, 1936, 1216)
 
         """
@@ -489,7 +489,7 @@ class CameraIds:
         :return: True if the aoi is modified
         :rtype: bool
 
-        >>> my_cam.reset_aoi()
+        #>>> my_cam.reset_aoi()
         True
 
         """
@@ -506,7 +506,7 @@ class CameraIds:
         :return: the exposure time in microseconds.
         :rtype: float
 
-        >>> my_cam.get_exposure()
+        #>>> my_cam.get_exposure()
         5000.0
 
         """
@@ -554,7 +554,7 @@ class CameraIds:
         :return: the frame rate.
         :rtype: float
 
-        >>> my_cam.get_frame_rate()
+        #>>> my_cam.get_frame_rate()
         100.0
 
         """
@@ -602,7 +602,7 @@ class CameraIds:
         :return: the black level in gray scale.
         :rtype: float
 
-        >>> my_cam.get_black_level()
+        #>>> my_cam.get_black_level()
         100.0
 
         """
@@ -681,12 +681,21 @@ if __name__ == "__main__":
 
     if my_cam.start_acquisition():
         print('Start Acq OK')
-    for k in range(5):
-        plt.figure()
-        pict = my_cam.get_image()
-        plt.imshow(pict)
-        plt.show()
 
+    # k = my_cam.is_opened
+    #print(f'Run ? {my_cam.is_opened}')
+    # pict = my_cam.get_image()
+
+    try:
+        for k in range(5):
+            plt.figure()
+            # pict = my_cam.get_image()
+            pict = np.ones((3,3))
+            plt.imshow(pict)
+            plt.show()
+    except Exception as e:
+        print("Exception - get_image: " + str(e) + "")
+    '''
     print(f'W/H = {my_cam.get_sensor_size()}')
 
     print(f'FPS = {my_cam.get_frame_rate()}')
@@ -719,7 +728,7 @@ if __name__ == "__main__":
 
     # Check the colormode
     print(my_cam.get_color_mode())
-
+    '''
     '''
     # Change colormode to Mono12
     my_cam.set_color_mode('Mono12')

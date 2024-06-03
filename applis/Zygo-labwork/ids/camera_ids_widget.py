@@ -36,8 +36,6 @@ if __name__ == "__main__":
     from camera_list import CameraList
     from camera_ids import CameraIds, get_bits_per_pixel
 
-    sys.path.append('../supoptools')
-
 else:
     sys.path.append('..')
     from ids.camera_list import CameraList

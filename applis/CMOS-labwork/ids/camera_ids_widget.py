@@ -470,7 +470,7 @@ class CameraIdsWidget(QWidget):
                 self.camera_infos.update_params()
             # Start main timer
             fps = self.camera.get_frame_rate()
-            time_ms = int(1000 / fps + 10)  # 10 ms extra time
+            time_ms = int(1000 / fps + 50)  # 10 ms extra time
             self.main_timer.setInterval(time_ms)  # in ms
             self.main_timer.start()
         except Exception as e:
@@ -520,6 +520,8 @@ class CameraIdsWidget(QWidget):
                 self.camera.start_acquisition()
                 # Get raw image
                 image_array = self.camera.get_image()
+                time.sleep(0.001)
+                '''
                 # Get widget size
                 frame_width = self.width() - 30
                 frame_height = self.height() - 120
@@ -543,6 +545,7 @@ class CameraIdsWidget(QWidget):
 
                 # display it in the cameraDisplay
                 self.camera_display.setPixmap(pmap)
+                '''
             else:
                 self.camera_display.setText('No Camera Connected')
         except Exception as e:

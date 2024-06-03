@@ -681,11 +681,7 @@ if __name__ == "__main__":
 
     if my_cam.start_acquisition():
         print('Start Acq OK')
-    for k in range(5):
-        plt.figure()
-        pict = my_cam.get_image()
-        plt.imshow(pict)
-        plt.show()
+
 
     print(f'W/H = {my_cam.get_sensor_size()}')
 
