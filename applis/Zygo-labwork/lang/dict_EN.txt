@@ -18,3 +18,16 @@ button_options_main_menu; Options
 # --------------------
 
 window_title_camera_settings;
+
+# --------------------
+# MasksMenuWidget
+# --------------------
+
+label_title_masks_menu; Mask Selection
+button_circle_mask; Circle
+button_rectangle_mask; Rectangle
+button_polygon_mask; Polygon
+button_move_mask; Move
+button_erase_mask; Erase
+checkbox_apply_mask; Apply the mask
+checkbox_inverse_mask; Inverse the mask
