@@ -108,6 +108,7 @@ class SliderBlock(QWidget):
         self.sublayout_texts.addWidget(self.label_name)
         self.sublayout_texts.addWidget(self.lineedit_value)
         self.sublayout_texts.addWidget(self.label_unit)
+        self.sublayout_texts.setContentsMargins(0, 0, 0, 0)
         
         self.subwidget_texts.setLayout(self.sublayout_texts)
         
@@ -130,6 +131,7 @@ class SliderBlock(QWidget):
         self.sublayout_slider.addWidget(self.label_min_value)
         self.sublayout_slider.addWidget(self.slider)
         self.sublayout_slider.addWidget(self.label_max_value)
+        self.sublayout_slider.setContentsMargins(0, 0, 0, 0)
         
         self.subwidget_slider.setLayout(self.sublayout_slider)
         
@@ -137,6 +139,7 @@ class SliderBlock(QWidget):
         # ------------
         self.layout.addWidget(self.subwidget_texts)
         self.layout.addWidget(self.subwidget_slider)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
         
     def slider_position_changed(self):

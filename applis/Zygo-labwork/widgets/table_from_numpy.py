@@ -29,6 +29,8 @@ class TableFromNumpy(QTableWidget):
                 item = QTableWidgetItem(str(self.array[i, j]))
                 item.setTextAlignment(
                     Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+                # Définir le drapeau pour rendre les cellules non modifiables
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.table_widget.setItem(i, j, item)
 
         # Disable scroll bars

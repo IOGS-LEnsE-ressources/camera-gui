@@ -46,20 +46,31 @@ class CameraSettings(QWidget):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
         
+        # Title
+        # -----
         self.label_title_camera_settings = QLabel(translate('title_camera_settings'))
         self.label_title_camera_settings.setStyleSheet(styleH1)
         
+        # Camera ID
+        # ---------
         self.subwidget_camera_id = QWidget()
         self.sublayout_camera_id = QHBoxLayout()
+
         self.label_title_camera_id = QLabel(translate("label_title_camera_id"))
         self.label_title_camera_id.setStyleSheet(styleH2)
+
         self.label_value_camera_id = QLabel(translate("label_value_camera_id"))
         self.label_value_camera_id.setStyleSheet(styleH3)
+
         self.sublayout_camera_id.addWidget(self.label_title_camera_id)
         self.sublayout_camera_id.addStretch()
         self.sublayout_camera_id.addWidget(self.label_value_camera_id)
+        self.sublayout_camera_id.setContentsMargins(0, 0, 0, 0)
+
         self.subwidget_camera_id.setLayout(self.sublayout_camera_id)
         
+        # Settings
+        # --------
         self.slider_exposure_time = SliderBlock(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         
         self.layout.addWidget(self.label_title_camera_settings)

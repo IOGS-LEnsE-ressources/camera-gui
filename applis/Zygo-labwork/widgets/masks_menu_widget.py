@@ -66,6 +66,7 @@ class MasksMenu(QWidget):
         self.sublayout_left.addWidget(self.button_rectangle_mask)
         self.sublayout_left.addWidget(self.button_polygon_mask)
         self.sublayout_left.addWidget(self.checkbox_apply_mask)
+        self.sublayout_left.setContentsMargins(0, 0, 0, 0)
         self.subwidget_left.setLayout(self.sublayout_left)
         
         # Second col
@@ -91,14 +92,15 @@ class MasksMenu(QWidget):
         self.sublayout_right.addWidget(self.button_resize_mask)
         self.sublayout_right.addWidget(self.button_erase_mask)
         self.sublayout_right.addWidget(self.checkbox_inverse_mask)
+        self.sublayout_right.setContentsMargins(0, 0, 0, 0)
         self.subwidget_right.setLayout(self.sublayout_right)
         
         # Combined
         # --------
         self.sublayout_masks.addWidget(self.subwidget_left)
         self.sublayout_masks.addWidget(self.subwidget_right)
+        self.sublayout_masks.setContentsMargins(0, 0, 0, 0)
         self.subwidget_masks.setLayout(self.sublayout_masks)
-        
         
         self.layout.addWidget(self.label_title_masks_menu)
         self.layout.addWidget(self.subwidget_masks)
