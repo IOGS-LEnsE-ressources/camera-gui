@@ -27,10 +27,12 @@ Global
 Camera
 ------
 - Create/Modify CameraParameters
+- Test ParamsWidget outside CamWidget and test update params
 
 Piezo
 -----
 - Find Texas Instrument USB-6001 module API. See https://nidaqmx-python.readthedocs.io/en/latest/
+- Find a way to detect if DAQ is connected...
 - Create a widget (or driver) class to control it.
 
 GUI
