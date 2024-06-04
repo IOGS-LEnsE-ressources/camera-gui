@@ -215,9 +215,9 @@ if __name__ == '__main__':
             super().__init__()
             
             # Load French dictionary
-            #dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_FR.txt')
+            #dictionary = load_dictionary('../lang/dict_FR.txt')
             # Load English dictionary
-            dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_EN.txt')
+            dictionary = load_dictionary('../lang/dict_EN.txt')
 
             self.setWindowTitle(translate("window_title_main_menu_widget"))
             self.setGeometry(300, 300, 200, 600)
