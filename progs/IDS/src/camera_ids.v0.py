@@ -16,8 +16,6 @@ class to communicate with an IDS camera sensor.
 
     **IDS peak** (2.8 or higher) and **IDS Sofware Suite** (4.95 or higher) softwares
     are required on your computer.
-    
-    For old IDS camera, IDS peak must be installed in Custom mode with the Transport Layer option.
 
     **IDS peak IPL** (Image Processing Library) and **Numpy** are required.
 
@@ -140,14 +138,27 @@ class CameraIds:
         """Initialize the object."""
         # Camera device
         self.camera = cam_dev
-        self.camera_remote = self.create_remote()
+        self.camera_remote = None
         self.data_stream = None
         self.is_opened = False
+
+        # Create a remote of the device (to control it)
+        try:
+            self.camera_remote = self.camera.RemoteDevice().NodeMaps()[0]
+        except Exception as e:
+            print("Exception: " + str(e) + "")
+
+        # Software trigger of the camera
+        try:
+            self.camera_remote.FindNode("TriggerSelector").SetCurrentEntry("ExposureStart")
+            self.camera_remote.FindNode("TriggerSource").SetCurrentEntry("Software")
+            self.camera_remote.FindNode("TriggerMode").SetCurrentEntry("On")
+        except Exception as e:
+            print("Exception - trigger: " + str(e) + "")
+
         # Camera informations
         self.serial_no, self.camera_name = self.get_cam_info()
-        self.width_max, self.height_max = self.get_sensor_size()    
-        self.trigger()
-
+        self.width_max, self.height_max = self.get_sensor_size()
         self.nb_bits_per_pixels: int = 0
         self.color_mode = 'Mono8'  # default
         self.set_color_mode('Mono8')
@@ -169,61 +180,22 @@ class CameraIds:
         # Set ROI before alloc if ROI changes
         if self.alloc_and_announce_buffers():
             print('Alloc OK')
-    
-    def create_remote(self):
-        try:
-            remote = self.camera.RemoteDevice().NodeMaps()[0]
-            return remote
-        except Exception as e:
-            print("Exception - create_remote: " + str(e) + "")
-            
-    def trigger(self):        
-        # Software trigger of the camera
-        try:
-            self.camera_remote.FindNode("TriggerSelector").SetCurrentEntry("ExposureStart")
-            self.camera_remote.FindNode("TriggerSource").SetCurrentEntry("Software")
-            self.camera_remote.FindNode("TriggerMode").SetCurrentEntry("On")
-        except Exception as e:
-            print("Exception - trigger: " + str(e) + "")
 
-    def free_memory(self) -> None:
-        """
-        Free memory containing the data stream.
-        """
-        self.data_stream = None
-
-    def alloc_memory(self) -> bool:
+    def init_memory(self) -> bool:
         """
         Prepare memory for image acquisition.
         """
         try:
-            # Preparing image acquisition - buffers
             data_streams = self.camera.DataStreams()
             if data_streams.empty():
-                print("No datastream available.")
+                # no data streams available
+                return False
+            self.data_stream = self.camera.DataStreams()[0].OpenDataStream()
+            return True
 
-            self.data_stream = data_streams[0].OpenDataStream()
-            nodemapDataStream = self.data_stream.NodeMaps()[0]
-
-            # Flush queue and prepare all buffers for revoking
-            self.data_stream.Flush(ids_peak.DataStreamFlushMode_DiscardAll)
-
-            # Clear all old buffers
-            for buffer in data_stream.AnnouncedBuffers():
-                self.data_stream.RevokeBuffer(buffer)
-
-            payload_size = remote.FindNode("PayloadSize").Value()
-
-            # Get number of minimum required buffers
-            num_buffers_min_required = self.data_stream.NumBuffersAnnouncedMinRequired()
-
-            # Alloc buffers
-            for count in range(num_buffers_min_required):
-                buffer = self.data_stream.AllocAndAnnounceBuffer(payload_size)
-                data_stream.QueueBuffer(buffer)
         except Exception as e:
-            print("EXCEPTION - alloc_memory: " + str(e))
-
+            print("Exception: " + str(e) + "")
+            return False
 
     def is_camera_connected(self) -> bool:
         """Return the status of the device.
@@ -243,6 +215,33 @@ class CameraIds:
         except Exception as e:
             print("Exception: " + str(e) + "")
 
+    def alloc_and_announce_buffers(self) -> bool:
+        """
+        Memory allocation.
+        """
+        try:
+            if self.data_stream:
+                # Flush queue and prepare all buffers for revoking
+                self.data_stream.Flush(ids_peak.DataStreamFlushMode_DiscardAll)
+
+                # Clear all old buffers
+                for buffer in self.data_stream.AnnouncedBuffers():
+                    self.data_stream.RevokeBuffer(buffer)
+
+                payload_size = self.camera_remote.FindNode("PayloadSize").Value()
+
+                # Get number of minimum required buffers
+                num_buffers_min_required = self.data_stream.NumBuffersAnnouncedMinRequired()
+
+                # Alloc buffers
+                for count in range(num_buffers_min_required):
+                    buffer = self.data_stream.AllocAndAnnounceBuffer(payload_size)
+                    self.data_stream.QueueBuffer(buffer)
+                return True
+
+        except Exception as e:
+            str_error = str(e)
+            return False
 
     def start_acquisition(self) -> bool:
         """
