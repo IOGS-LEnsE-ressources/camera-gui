@@ -5,7 +5,8 @@
 
 @see https://github.com/basler/pypylon
 """
-
+import numpy as np
+import cv2
 from ids_peak import ids_peak
 import ids_peak_ipl.ids_peak_ipl as ids_ipl
  
@@ -28,7 +29,7 @@ if __name__ == '__main__':
 		device = device_manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Control)
 		remote = device.RemoteDevice().NodeMaps()[0]
 		
-		numberOfImagesToGrab = 10
+		numberOfImagesToGrab = 2
 		# Preparing image acquisition - buffers
 		data_streams = device.DataStreams()
 		if data_streams.empty():
@@ -80,6 +81,10 @@ if __name__ == '__main__':
 			print("SizeX: ", picture_shape[1])
 			print("SizeY: ", picture_shape[0])
 			print("Gray value of first pixel: ", picture[0, 0])
+
+			cv2.imshow('image', picture)
+			cv2.waitKey(0)
+			cv2.destroyAllWindows()
 		
 		# Stop Acquisition
 		remote.FindNode("AcquisitionStop").Execute()
