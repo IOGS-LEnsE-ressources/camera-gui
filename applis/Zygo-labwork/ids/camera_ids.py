@@ -16,6 +16,8 @@ class to communicate with an IDS camera sensor.
 
     **IDS peak** (2.8 or higher) and **IDS Sofware Suite** (4.95 or higher) softwares
     are required on your computer.
+    
+    For old IDS camera, IDS peak must be installed in Custom mode with the Transport Layer option.
 
     **IDS peak IPL** (Image Processing Library) and **Numpy** are required.
 
@@ -41,12 +43,12 @@ class to communicate with an IDS camera sensor.
 @ see : https://www.1stvision.com/cameras/IDS/IDS-manuals/en/index.html
 @ See API DOC : C:\Program Files\IDS\ids_peak\generic_sdk\api\doc\html
 
->>> ids_peak.Library.Initialize()
->>> device_manager = ids_peak.DeviceManager.Instance()
->>> device_manager.Update()
->>> device_descriptors = device_manager.Devices()
->>> my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
->>> my_cam = CameraIds(my_cam_dev)
+# >>> ids_peak.Library.Initialize()
+# >>> device_manager = ids_peak.DeviceManager.Instance()
+# >>> device_manager.Update()
+# >>> device_descriptors = device_manager.Devices()
+# >>> my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+# >>> my_cam = CameraIds(my_cam_dev)
 
 """
 import sys
@@ -54,8 +56,6 @@ import numpy as np
 # IDS peak API
 from ids_peak import ids_peak
 import ids_peak_ipl.ids_peak_ipl as ids_ipl
-
-from matplotlib import pyplot as plt
 
 
 def check_value_in(val: int, val_max: int, val_min: int = 0):
@@ -138,16 +138,37 @@ class CameraIds:
         """Initialize the object."""
         # Camera device
         self.camera = cam_dev
-        self.camera_remote = None
+        self.camera_remote = self.create_remote()
         self.data_stream = None
         self.is_opened = False
+        # Camera informations
+        self.serial_no, self.camera_name = self.get_cam_info()
+        self.width_max, self.height_max = self.get_sensor_size()
 
-        # Create a remote of the device (to control it)
+        self.nb_bits_per_pixels: int = 0
+        self.color_mode = 'Mono8'  # default
+        self.set_color_mode('Mono8')
+        # self.set_display_mode('Mono8')
+
+        # AOI size
+        self.aoi_x0: int = 0
+        self.aoi_y0: int = 0
+        self.aoi_width: int = self.width_max
+        self.aoi_height: int = self.height_max
+        self.set_aoi(self.aoi_x0, self.aoi_y0, self.aoi_width, self.aoi_height)
+
+        if self.alloc_memory():
+            print('Alloc OK')
+        self.trigger()
+
+    def create_remote(self):
         try:
-            self.camera_remote = self.camera.RemoteDevice().NodeMaps()[0]
+            remote = self.camera.RemoteDevice().NodeMaps()[0]
+            return remote
         except Exception as e:
-            print("Exception: " + str(e) + "")
-
+            print("Exception - create_remote: " + str(e) + "")
+            
+    def trigger(self):        
         # Software trigger of the camera
         try:
             self.camera_remote.FindNode("TriggerSelector").SetCurrentEntry("ExposureStart")
@@ -156,46 +177,41 @@ class CameraIds:
         except Exception as e:
             print("Exception - trigger: " + str(e) + "")
 
-        # Camera informations
-        self.serial_no, self.camera_name = self.get_cam_info()
-        self.width_max, self.height_max = self.get_sensor_size()
-        self.nb_bits_per_pixels: int = 0
-        self.color_mode = 'Mono8'  # default
-        self.set_color_mode('Mono8')
-        self.set_display_mode('Mono8')
-        try:
-            self.camera_remote.FindNode("PixelFormat").SetCurrentEntry("Mono8")
-        except Exception as e:
-            print("Exception - pixel format: " + str(e) + "")
+    def free_memory(self) -> None:
+        """
+        Free memory containing the data stream.
+        """
+        self.data_stream = None
 
-        # AOI size
-        self.aoi_x0: int = 0
-        self.aoi_y0: int = 0
-        self.aoi_width: int = self.width_max
-        self.aoi_height: int = self.height_max
-
-        self.set_aoi(self.aoi_x0, self.aoi_y0, self.aoi_width, self.aoi_height)
-        if self.init_memory():
-            print('Memory OK')
-        # Set ROI before alloc if ROI changes
-        if self.alloc_and_announce_buffers():
-            print('Alloc OK')
-
-    def init_memory(self) -> bool:
+    def alloc_memory(self) -> bool:
         """
         Prepare memory for image acquisition.
         """
         try:
+            # Preparing image acquisition - buffers
             data_streams = self.camera.DataStreams()
             if data_streams.empty():
-                # no data streams available
-                return False
-            self.data_stream = self.camera.DataStreams()[0].OpenDataStream()
-            return True
+                print("No datastream available.")
+            self.data_stream = data_streams[0].OpenDataStream()
+            nodemapDataStream = self.data_stream.NodeMaps()[0]
 
+            # Flush queue and prepare all buffers for revoking
+            self.data_stream.Flush(ids_peak.DataStreamFlushMode_DiscardAll)
+
+            # Clear all old buffers
+            for buffer in self.data_stream.AnnouncedBuffers():
+                self.data_stream.RevokeBuffer(buffer)
+
+            payload_size = self.camera_remote.FindNode("PayloadSize").Value()
+
+            # Get number of minimum required buffers
+            num_buffers_min_required = self.data_stream.NumBuffersAnnouncedMinRequired()
+            # Alloc buffers
+            for count in range(num_buffers_min_required):
+                buffer = self.data_stream.AllocAndAnnounceBuffer(payload_size)
+                self.data_stream.QueueBuffer(buffer)
         except Exception as e:
-            print("Exception: " + str(e) + "")
-            return False
+            print("EXCEPTION - alloc_memory: " + str(e))
 
     def is_camera_connected(self) -> bool:
         """Return the status of the device.
@@ -203,7 +219,7 @@ class CameraIds:
         :return: true if the device could be opened, and then close the device
         :rtype: bool (or error)
 
-        >>> my_cam.is_camera_connected()
+        # >>> my_cam.is_camera_connected()
 
         """
         try:
@@ -214,34 +230,6 @@ class CameraIds:
                 return False
         except Exception as e:
             print("Exception: " + str(e) + "")
-
-    def alloc_and_announce_buffers(self) -> bool:
-        """
-        Memory allocation.
-        """
-        try:
-            if self.data_stream:
-                # Flush queue and prepare all buffers for revoking
-                self.data_stream.Flush(ids_peak.DataStreamFlushMode_DiscardAll)
-
-                # Clear all old buffers
-                for buffer in self.data_stream.AnnouncedBuffers():
-                    self.data_stream.RevokeBuffer(buffer)
-
-                payload_size = self.camera_remote.FindNode("PayloadSize").Value()
-
-                # Get number of minimum required buffers
-                num_buffers_min_required = self.data_stream.NumBuffersAnnouncedMinRequired()
-
-                # Alloc buffers
-                for count in range(num_buffers_min_required):
-                    buffer = self.data_stream.AllocAndAnnounceBuffer(payload_size)
-                    self.data_stream.QueueBuffer(buffer)
-                return True
-
-        except Exception as e:
-            str_error = str(e)
-            return False
 
     def start_acquisition(self) -> bool:
         """
@@ -258,7 +246,7 @@ class CameraIds:
             str_error = str(e)
             return False
 
-    def stop_acquisition(self) -> None:
+    def stop_acquisition(self) -> bool:
         """Disconnect the camera."""
         try:
             if self.is_opened:
@@ -267,6 +255,7 @@ class CameraIds:
                 self.camera_remote.FindNode("TLParamsLocked").SetValue(0)
                 self.data_stream.StopAcquisition()
                 self.is_opened = False
+            return True
         except Exception as e:
             print("Exception - stop Acq: " + str(e) + "")
 
@@ -274,6 +263,7 @@ class CameraIds:
         """Disconnect the camera.
         """
         self.stop_acquisition()
+        self.free_memory()
 
     def get_cam_info(self) -> tuple[str, str]:
         """Return the serial number and the name.
@@ -281,7 +271,7 @@ class CameraIds:
         :return: the serial number and the name of the camera
         :rtype: tuple[str, str]
 
-        >>> my_cam.get_cam_info
+        # >>> my_cam.get_cam_info
         ('40282239', 'a2A1920-160ucBAS')
 
         """
@@ -291,7 +281,7 @@ class CameraIds:
             serial_no = self.camera_remote.FindNode("DeviceSerialNumber").Value()
             return serial_no, camera_name
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - get_info_cam: " + str(e) + "")
 
     def get_sensor_size(self) -> tuple[int, int]:
         """Return the width and the height of the sensor.
@@ -299,7 +289,7 @@ class CameraIds:
         :return: the width and the height of the sensor in pixels
         :rtype: tuple[int, int]
 
-        >>> my_cam.get_sensor_size()
+        # >>> my_cam.get_sensor_size()
         (1936, 1216)
 
         """
@@ -308,7 +298,7 @@ class CameraIds:
             max_width = self.camera_remote.FindNode("WidthMax").Value()
             return max_width, max_height
         except Exception as e:
-            print("Exception: " + str(e) + "")
+            print("Exception - get_sensor_size: " + str(e) + "")
 
     def set_display_mode(self, colormode: str = 'Mono8') -> None:
         """Change the color mode of the converter.
@@ -332,7 +322,7 @@ class CameraIds:
         :param colormode: Color mode to use for the device
         :type colormode: str, default 'Mono8'
 
-        >>> my_cam.get_color_mode()
+        # >>> my_cam.get_color_mode()
         'Mono8'
 
         """
@@ -361,7 +351,7 @@ class CameraIds:
             self.nb_bits_per_pixels = get_bits_per_pixel(color_mode)
             # self.set_display_mode(color_mode)
         except Exception as e:
-            print("Exception - set color mode: " + str(e) + "")
+            print("Exception - set_color_mode: " + str(e) + "")
 
     def get_image(self) -> np.ndarray:
         """Get one image.
@@ -381,9 +371,8 @@ class CameraIds:
                 buffer.Size(),
                 buffer.Width(),
                 buffer.Height())
-            color_image = raw_image.ConvertTo(get_converter_mode(self.color_mode))
             self.data_stream.QueueBuffer(buffer)
-            picture = color_image.get_numpy_3D()
+            picture = raw_image.get_numpy_3D()
             return picture
 
         except Exception as e:
@@ -459,8 +448,6 @@ class CameraIds:
         self.camera_remote.FindNode("OffsetY").SetValue(self.aoi_y0)
         self.camera_remote.FindNode("Width").SetValue(self.aoi_width)
         self.camera_remote.FindNode("Height").SetValue(self.aoi_height)
-
-        self.alloc_and_announce_buffers()
         return True
 
     def get_aoi(self) -> tuple[int, int, int, int]:
@@ -471,7 +458,7 @@ class CameraIds:
             and height are the size of the aoi.
         :rtype: tuple[int, int, int, int]
 
-        >>> my_cam.get_aoi()
+        # >>> my_cam.get_aoi()
         (0, 0, 1936, 1216)
 
         """
@@ -489,7 +476,7 @@ class CameraIds:
         :return: True if the aoi is modified
         :rtype: bool
 
-        >>> my_cam.reset_aoi()
+        # >>> my_cam.reset_aoi()
         True
 
         """
@@ -506,7 +493,7 @@ class CameraIds:
         :return: the exposure time in microseconds.
         :rtype: float
 
-        >>> my_cam.get_exposure()
+        # >>> my_cam.get_exposure()
         5000.0
 
         """
@@ -554,7 +541,7 @@ class CameraIds:
         :return: the frame rate.
         :rtype: float
 
-        >>> my_cam.get_frame_rate()
+        # >>> my_cam.get_frame_rate()
         100.0
 
         """
@@ -602,7 +589,7 @@ class CameraIds:
         :return: the black level in gray scale.
         :rtype: float
 
-        >>> my_cam.get_black_level()
+        # >>> my_cam.get_black_level()
         100.0
 
         """
@@ -646,26 +633,8 @@ class CameraIds:
 
 
 if __name__ == "__main__":
-    '''
-    from camera_list import CameraList
-    
-    # Create a CameraList object
-    cam_list = CameraList()
-    # Print the number of camera connected
-    print(f"Test - get_nb_of_cam : {cam_list.get_nb_of_cam()}")
-    # Collect and print the list of the connected cameras
-    cameras_list = cam_list.get_cam_list()
-    print(f"Test - get_cam_list : {cameras_list}")
-    
-    cam_id = 'a'
-    while cam_id.isdigit() is False:
-        cam_id = input('Enter the ID of the camera to connect :')
-    cam_id = int(cam_id)
-    print(f"Selected camera : {cam_id}")
-    
-    # Create a camera object
-    my_cam_dev = cam_list.get_cam_device(cam_id)
-    '''
+    import cv2
+
     # Initialize library
     ids_peak.Library.Initialize()
     # Device manager
@@ -678,55 +647,52 @@ if __name__ == "__main__":
     my_cam_dev = device_descriptors[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
 
     my_cam = CameraIds(my_cam_dev)
+    my_cam.start_acquisition()
+    raw_image = my_cam.get_image()
+    cv2.imshow('image', raw_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    print(f'isOpened ?? {my_cam.is_opened}')
+    print(f'W/H = {my_cam.get_sensor_size()}')
+    print(f'isOpened ?? {my_cam.is_opened}')
+
+
+    if my_cam.stop_acquisition():
+        print(f'Acq Stopped')
+
+    # Change exposure time
+    print(f'Old Expo = {my_cam.get_exposure()}')
+    my_cam.set_exposure(10000)
+    print(f'New Expo = {my_cam.get_exposure()}')
+
+    if my_cam.set_aoi(20, 40, 100, 200):
+        print('AOI OK')
+    my_cam.free_memory()
+    my_cam.alloc_memory()
+    my_cam.trigger()
 
     if my_cam.start_acquisition():
-        print('Start Acq OK')
-    for k in range(5):
-        plt.figure()
-        pict = my_cam.get_image()
-        plt.imshow(pict)
-        plt.show()
+        print(f'Acq Started')
+    print(f'Run ? {my_cam.is_opened}')
+    picture = my_cam.get_image()
+    cv2.imshow('image', picture)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    print(f'W/H = {my_cam.get_sensor_size()}')
 
+    '''
     print(f'FPS = {my_cam.get_frame_rate()}')
     print(f'FPS_range = {my_cam.get_frame_rate_range()}')
     print(f'FPS change ? {my_cam.set_frame_rate(10)}')
     print(f'FPS = {my_cam.get_frame_rate()}')
-
     print(f'Black Level = {my_cam.get_black_level()}')
     print(f'Black Level_range = {my_cam.get_black_level_range()}')
     print(f'Black Level change ? {my_cam.set_black_level(25)}')
     print(f'Black Level = {my_cam.get_black_level()}')
 
-    # Change exposure time
-    print(f'Old Expo = {my_cam.get_exposure()}')
-    my_cam.set_exposure(1000)
-    print(f'New Expo = {my_cam.get_exposure()}')
-
-    my_cam.stop_acquisition()
-    print(f'Run ? {my_cam.is_opened}')
-    if my_cam.set_aoi(20, 40, 100, 200):
-        print('AOI OK')
-
-    my_cam.start_acquisition()
-    print(f'Run ? {my_cam.is_opened}')
-
-    plt.figure()
-    pict = my_cam.get_image()
-    plt.imshow(pict)
-    plt.show()
-
-    # Check the colormode
-    print(my_cam.get_color_mode())
 
     '''
-    # Change colormode to Mono12
-    my_cam.set_color_mode('Mono12')
-    my_cam.set_display_mode('Mono12')
-    print(my_cam.get_color_mode())
-    '''
-
     '''
     # Different exposure time
     my_cam.reset_aoi()
@@ -738,4 +704,25 @@ if __name__ == "__main__":
         images = my_cam.get_images()
         plt.imshow(images[0], interpolation='nearest')
         plt.show()        
+    '''
+
+    '''
+    from camera_list import CameraList
+
+    # Create a CameraList object
+    cam_list = CameraList()
+    # Print the number of camera connected
+    print(f"Test - get_nb_of_cam : {cam_list.get_nb_of_cam()}")
+    # Collect and print the list of the connected cameras
+    cameras_list = cam_list.get_cam_list()
+    print(f"Test - get_cam_list : {cameras_list}")
+
+    cam_id = 'a'
+    while cam_id.isdigit() is False:
+        cam_id = input('Enter the ID of the camera to connect :')
+    cam_id = int(cam_id)
+    print(f"Selected camera : {cam_id}")
+
+    # Create a camera object
+    my_cam_dev = cam_list.get_cam_device(cam_id)
     '''

@@ -41,9 +41,6 @@ else:
     from ids.camera_list import CameraList
     from ids.camera_ids import CameraIds, get_bits_per_pixel
 
-from matplotlib import pyplot as plt
-
-
 class CameraIdsListWidget(QWidget):
     """Generate available cameras list.
     
