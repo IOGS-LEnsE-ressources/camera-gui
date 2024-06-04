@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jun  4 09:52:38 2024
-
-@author: LEnsE
-"""
-
-# -*- coding: utf-8 -*-
-"""*menu_widget.py* file.
+"""*main_menu_widget.py* file.
 
 ...
 

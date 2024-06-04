@@ -43,7 +43,7 @@ def load_dictionary(language_path: str) -> None:
 
     # Read the CSV file, ignoring lines starting with '//'
     data = np.genfromtxt(
-        language_path, delimiter=';', dtype=str, comments='//', encoding='UTF-8')
+        language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
 
     # Populate the dictionary with key-value pairs from the CSV file
     for key, value in data:
