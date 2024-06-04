@@ -22,6 +22,7 @@ GUI Dev
 Global
 ------
 - Create LEnsELogo class inherited from QWidget to include the logo into a GUInterface.
+- Move IDS/Basler to a PyPI package.
 
 Camera
 ------
