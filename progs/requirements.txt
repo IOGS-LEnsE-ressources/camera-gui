@@ -1,3 +1,0 @@
-lensepy
-numpy
-pyqt6

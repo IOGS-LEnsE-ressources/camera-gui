@@ -28,29 +28,13 @@ from PyQt6.QtGui import QPixmap
 from slider_block import SliderBlock
 import numpy as np
 from lensepy import load_dictionary, translate
+from lensepy.css import *
 
 # %% To add in lensepy librairy
-# Colors
-# ------
-BLUE_IOGS = '#0A3250'
-ORANGE_IOGS = '#FF960A'
-WHITE = '#000000'
-GRAY = '#727272'
-BLACK = '#FFFFFF'
-
 # Styles
 # ------
-styleH1 = f"font-size:20px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
 styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-no_style = f"background-color:{GRAY}; color:{BLACK}; font-size:15px;"
-
-unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
-actived_button = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
-
-# Translation
-# -----------
-dictionary = {}
 
 # %% Params
 BUTTON_HEIGHT = 60 #px
@@ -91,11 +75,13 @@ if __name__ == '__main__':
     class MyWindow(QMainWindow):
         def __init__(self):
             super().__init__()
-            
+
+            # Translation
+            dictionary = {}
             # Load French dictionary
-            dictionary = load_dictionary('../lang/dict_FR.txt')
+            #dictionary = load_dictionary('../lang/dict_FR.txt')
             # Load English dictionary
-            #dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_EN.txt')
+            dictionary = load_dictionary('../lang/dict_EN.txt')
 
             self.setWindowTitle(translate("window_title_camera_settings"))
             self.setGeometry(300, 300, 400, 600)
