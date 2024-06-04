@@ -427,6 +427,7 @@ class CameraIdsWidget(QWidget):
         super().__init__(parent=None)
         # Camera
         self.display_params = params_disp
+        self.camera = camera
 
         # Graphical objects
         self.camera_display = QLabel('Test')
@@ -623,13 +624,14 @@ class MyMainWindow(QMainWindow):
             print("Camera")
             device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
 
-        self.central_widget = CameraIdsWidget(camera=device, params_disp=False)
-        #self.central_widget = CameraIdsWidget()
+        #self.central_widget = CameraIdsWidget(camera=device, params_disp=False)
+        self.central_widget = CameraIdsWidget()
         self.setCentralWidget(self.central_widget)
+        '''
         self.params = CameraIdsParamsWidget()
         camera = self.central_widget.get_camera()
         self.params.set_camera(camera)
-
+        '''
 
     def closeEvent(self, event):
         """
