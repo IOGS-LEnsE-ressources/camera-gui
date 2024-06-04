@@ -41,11 +41,9 @@ def load_dictionary(language: str) -> None:
     """
     global dictionary
     dictionary = {}
-
     # Read the CSV file, ignoring lines starting with '//'
     data = np.genfromtxt(
         f"lang/dict_{language}.csv", delimiter=';', dtype=str, comments='//')
-
     # Populate the dictionary with key-value pairs from the CSV file
     for key, value in data:
         dictionary[key.strip()] = value.strip()
