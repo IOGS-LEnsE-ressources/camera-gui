@@ -137,10 +137,7 @@ class CameraSettings(QWidget):
         self.sublayout_camera_id.addWidget(self.label_value_camera_id)
         self.subwidget_camera_id.setLayout(self.sublayout_camera_id)
         
-        self.slider_exposure_time = SliderBlock()
-        self.slider_exposure_time.set_min_max_slider(20, 50)
-        self.slider_exposure_time.set_units('ms')
-        self.slider_exposure_time.set_name('Exposure Time')
+        self.slider_exposure_time = SliderBlock(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)

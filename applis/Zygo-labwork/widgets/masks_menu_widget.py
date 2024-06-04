@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""*main_menu_widget.py* file.
+"""*masks_widget.py* file.
 
 ...
 
@@ -20,7 +20,7 @@ import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox, QSlider, QLineEdit,
+    QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
@@ -113,118 +113,79 @@ def translate(key: str) -> str:
         return key
 
 # %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
-
-# %% Is number
-def is_number(value, min_val=0, max_val=0):
-    """
-    Returns true if the value is a number between min and max.
-
-    Parameters
-    ----------
-    value : float
-        Number to test.
-    min_val : float
-        Minimum of the interval to test.
-    max_val : float
-        Maximum of the interval to test.
-
-    Returns
-    -------
-    True if number is between min and max.
-    """
-    min_ok = False
-    max_ok = False
-    value2 = str(value).replace('.', '', 1)
-    value2 = value2.replace('e', '', 1)
-    value2 = value2.replace('-', '', 1)
-    if value2.isdigit():
-        value = float(value)
-        if min_val > max_val:
-            min_val, max_val = max_val, min_val
-        if (min_val != '') and (int(value) >= min_val):
-            min_ok = True
-        if (max_val != '') and (int(value) <= max_val):
-            max_ok = True
-        if min_ok != max_ok:
-            return False
-        else:
-            return True
-    else:
-        return False
+BUTTON_HEIGHT = 30 #px
 
 # %% Widget
-class SliderBlock(QWidget):
-    def __init__(self, name:str, unit:str, min_value:float, max_value:float) -> None: 
+class MasksMenu(QWidget):
+    def __init__(self):
         super().__init__(parent=None)
-        self.min_value = min_value
-        self.max_value = max_value
-        self.value = round(self.min_value + (self.max_value - self.min_value)/3, 2)
-        self.ratio = 100
-        
         self.layout = QVBoxLayout()
         
-        # First line: name, value and unit
-        # --------------------------------
-        self.subwidget_texts = QWidget()
-        self.sublayout_texts = QHBoxLayout()
+        self.label_title_masks_menu = QLabel(translate('label_title_masks_menu'))
+        self.label_title_masks_menu.setStyleSheet(styleH1)
         
-        self.label_name = QLabel(translate(name)+':')
-        self.label_name.setStyleSheet(styleH2)
+        self.subwidget_masks = QWidget()
+        self.sublayout_masks = QHBoxLayout()
+        # First col
+        # ---------
+        self.subwidget_left = QWidget()
+        self.sublayout_left = QVBoxLayout()
         
-        self.lineedit_value = QLineEdit()
-        self.lineedit_value.setText(str(self.value))
-        self.lineedit_value.textChanged.connect(self.input_changed)
+        self.button_circle_mask = QPushButton(translate('button_circle_mask'))
+        self.button_circle_mask.setStyleSheet(unactived_button)
+        self.button_circle_mask.setFixedHeight(BUTTON_HEIGHT)
         
-        self.label_unit = QLabel(unit)
-        self.label_unit.setStyleSheet(styleH3)
+        self.button_rectangle_mask = QPushButton(translate('button_rectangle_mask'))
+        self.button_rectangle_mask.setStyleSheet(unactived_button)
+        self.button_rectangle_mask.setFixedHeight(BUTTON_HEIGHT)
         
-        self.sublayout_texts.addWidget(self.label_name)
-        self.sublayout_texts.addWidget(self.lineedit_value)
-        self.sublayout_texts.addWidget(self.label_unit)
+        self.button_polygon_mask = QPushButton(translate('button_polygon_mask'))
+        self.button_polygon_mask.setStyleSheet(unactived_button)
+        self.button_polygon_mask.setFixedHeight(BUTTON_HEIGHT)
         
-        self.subwidget_texts.setLayout(self.sublayout_texts)
+        self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
         
-        # Second line: slider and min/max
-        # -------------------------------
-        self.subwidget_slider = QWidget()
-        self.sublayout_slider = QHBoxLayout()
+        self.sublayout_left.addWidget(self.button_circle_mask)
+        self.sublayout_left.addWidget(self.button_rectangle_mask)
+        self.sublayout_left.addWidget(self.button_polygon_mask)
+        self.sublayout_left.addWidget(self.checkbox_apply_mask)
+        self.subwidget_left.setLayout(self.sublayout_left)
         
-        self.label_min_value = QLabel(str(self.min_value)+' '+unit)
-        self.label_min_value.setStyleSheet(styleH3)
+        # Second col
+        # ----------
+        self.subwidget_right = QWidget()
+        self.sublayout_right = QVBoxLayout()
         
-        self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setMinimum(int(self.min_value*self.ratio))
-        self.slider.setMaximum(int(self.max_value*self.ratio))
-        self.slider.valueChanged.connect(self.slider_position_changed)
+        self.button_move_mask = QPushButton(translate('button_move_mask'))
+        self.button_move_mask.setStyleSheet(unactived_button)
+        self.button_move_mask.setFixedHeight(BUTTON_HEIGHT)
         
-        self.label_max_value = QLabel(str(self.max_value)+' '+unit)
-        self.label_max_value.setStyleSheet(styleH3)
+        self.button_resize_mask = QPushButton(translate('button_resize_mask'))
+        self.button_resize_mask.setStyleSheet(unactived_button)
+        self.button_resize_mask.setFixedHeight(BUTTON_HEIGHT)
         
-        self.sublayout_slider.addWidget(self.label_min_value)
-        self.sublayout_slider.addWidget(self.slider)
-        self.sublayout_slider.addWidget(self.label_max_value)
+        self.button_erase_mask = QPushButton(translate('button_erase_mask'))
+        self.button_erase_mask.setStyleSheet(unactived_button)
+        self.button_erase_mask.setFixedHeight(BUTTON_HEIGHT)
         
-        self.subwidget_slider.setLayout(self.sublayout_slider)
+        self.checkbox_inverse_mask = QCheckBox(translate('checkbox_inverse_mask'))
         
-        # All combined
-        # ------------
-        self.layout.addWidget(self.subwidget_texts)
-        self.layout.addWidget(self.subwidget_slider)
+        self.sublayout_right.addWidget(self.button_move_mask)
+        self.sublayout_right.addWidget(self.button_resize_mask)
+        self.sublayout_right.addWidget(self.button_erase_mask)
+        self.sublayout_right.addWidget(self.checkbox_inverse_mask)
+        self.subwidget_right.setLayout(self.sublayout_right)
+        
+        # Combined
+        # --------
+        self.sublayout_masks.addWidget(self.subwidget_left)
+        self.sublayout_masks.addWidget(self.subwidget_right)
+        self.subwidget_masks.setLayout(self.sublayout_masks)
+        
+        
+        self.layout.addWidget(self.label_title_masks_menu)
+        self.layout.addWidget(self.subwidget_masks)
         self.setLayout(self.layout)
-        
-    def slider_position_changed(self):
-        self.value = self.slider.value()/self.ratio
-        self.update_block()
-    
-    def input_changed(self):
-        self.value = max(self.min_value, min(self.max_value,float(self.lineedit_value.text())))
-        self.update_block()
-    
-    def update_block(self):
-        self.lineedit_value.setText(str(self.value))
-        self.slider.setValue(int(self.value*self.ratio))
         
 # %% Example
 if __name__ == '__main__':
@@ -239,10 +200,10 @@ if __name__ == '__main__':
             # Load English dictionary
             dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_EN.txt')
 
-            self.setWindowTitle(translate("window_title_slider_block"))
+            self.setWindowTitle(translate("window_title_masks_widget"))
             self.setGeometry(300, 300, 600, 600)
 
-            self.central_widget = SliderBlock(name='name', unit='unit', min_value=4.2, max_value=7.8)
+            self.central_widget = MasksMenu()
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):
