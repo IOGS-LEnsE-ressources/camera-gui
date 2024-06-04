@@ -1,6 +1,10 @@
-// Dictionnaire Français
-// ---------------------
-// MainMenuWidget
+# -*- coding: utf-8 -*-
+# Dictionnaire Français
+#
+# --------------
+# MainMenuWidget
+# --------------
+window_title_main_menu_widget; Zygo: Menu Principal
 label_title_main_menu; Menu
 button_camera_settings_main_menu; Réglages caméra
 button_masks_main_menu; Masques

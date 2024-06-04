@@ -91,7 +91,7 @@ def load_dictionary(language_path: str) -> None:
 
     # Read the CSV file, ignoring lines starting with '//'
     data = np.genfromtxt(
-        language_path, delimiter=';', dtype=str, comments='//', encoding='UTF-8')
+        language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
 
     # Populate the dictionary with key-value pairs from the CSV file
     for key, value in data:
@@ -222,8 +222,10 @@ if __name__ == '__main__':
             
             # Load French dictionary
             dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_FR.txt')
+            # Load English dictionary
+            #dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_EN.txt')
 
-            self.setWindowTitle("Zygo Main Menu Widget")
+            self.setWindowTitle(translate("window_title_main_menu_widget"))
             self.setGeometry(300, 300, 200, 600)
 
             self.central_widget = MainMenuWidget()
