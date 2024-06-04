@@ -31,7 +31,6 @@ from gui.camera_choice_zygo import CameraChoice, dict_of_brands, cam_from_brands
 
 
 class ZygoLabApp(QWidget):
-    """Main interface of the CMOS sensor study labwork."""
 
     def __init__(self):
         """Default constructor of the class.
