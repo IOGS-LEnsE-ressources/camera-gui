@@ -57,8 +57,6 @@ import numpy as np
 from ids_peak import ids_peak
 import ids_peak_ipl.ids_peak_ipl as ids_ipl
 
-from matplotlib import pyplot as plt
-
 
 def check_value_in(val: int, val_max: int, val_min: int = 0):
     """

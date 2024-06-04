@@ -36,15 +36,10 @@ if __name__ == "__main__":
     from camera_list import CameraList
     from camera_ids import CameraIds, get_bits_per_pixel
 
-    sys.path.append('../supoptools')
-
 else:
     sys.path.append('..')
     from ids.camera_list import CameraList
     from ids.camera_ids import CameraIds, get_bits_per_pixel
-
-from matplotlib import pyplot as plt
-
 
 class CameraIdsListWidget(QWidget):
     """Generate available cameras list.
@@ -389,7 +384,7 @@ class CameraIdsWidget(QWidget):
     :param main_layout: Main layout container of the widget.
     :type main_layout: QGridLayout
     :param camera: Device to control
-    :type camera: pylon.TlFactory
+    :type camera: ids_peak.Device
     
     .. note::
         
@@ -409,31 +404,22 @@ class CameraIdsWidget(QWidget):
     
     """
 
-    def __init__(self, params_disp: bool = True) -> None:
+    def __init__(self, camera:  ids_peak.Device = None, params_disp: bool = True, css: str = '') -> None:
         """Default constructor of the class.
 
         :param params_disp: Displaying the parameters. Default true.
         :type params_disp: bool
-
         """
 
         super().__init__(parent=None)
-        # List of the available camera
-        self.cameras_list_widget = CameraIdsListWidget()
-        self.main_layout = QGridLayout()
-        self.main_layout.addWidget(self.cameras_list_widget, 0, 0)
-
-        # Connect the signal emitted by the ComboList to its action
-        self.cameras_list_widget.connected.connect(self.connect_camera)
-
         # Camera
-        self.camera = None
         self.display_params = params_disp
 
         # Graphical objects
         self.camera_display = QLabel('Test')
         if self.display_params:
             self.camera_infos = SmallParamsDisplay(self)
+        self.main_layout = QGridLayout()
 
         # Time management
         self.main_timer = QTimer()
@@ -441,15 +427,37 @@ class CameraIdsWidget(QWidget):
         self.main_timer.setInterval(100)  # in ms
         self.main_timer.timeout.connect(self.refresh)
 
-        self.setLayout(self.main_layout)
+        # List of the available camera
+        if camera is None:
+            print('No Cam')
+            self.camera = None
+            self.cameras_list_widget = CameraIdsListWidget()
+            self.main_layout.addWidget(self.cameras_list_widget, 0, 0)
 
-    def connect_camera(self) -> None:
+            # Connect the signal emitted by the ComboList to its action
+            self.cameras_list_widget.connected.connect(self.connect_camera)
+        else:
+            print('Camera OK')
+            self.camera = camera
+            self.connect_camera(camera=camera)
+
+        self.setLayout(self.main_layout)
+        self.setStyleSheet(css)
+
+    def connect_camera(self, event=None, camera: ids_peak.Device = None) -> None:
         """
         Trigger action when a connected signal from the combo list is emitted.
+
+
         """
         try:
-            # Get the index of the selected camera
-            cam_dev = self.cameras_list_widget.get_selected_camera_dev()
+            if camera is None:
+                print('No Connect')
+                # Get the index of the selected camera
+                cam_dev = self.cameras_list_widget.get_selected_camera_dev()
+            else:
+                cam_dev = camera
+            print(type(cam_dev))
             # Create Camera object
             self.camera = CameraIds(cam_dev)
 
@@ -521,8 +529,8 @@ class CameraIdsWidget(QWidget):
                 # Get raw image
                 image_array = self.camera.get_image()
                 # Get widget size
-                frame_width = self.width() - 30
-                frame_height = self.height() - 120
+                frame_width = self.width()
+                frame_height = self.height()
                 # Depending on the color mode - display only in 8 bits mono
                 nb_bits = get_bits_per_pixel(self.camera.get_color_mode())
                 if nb_bits > 8:
@@ -533,7 +541,7 @@ class CameraIdsWidget(QWidget):
                     image_array_disp = image_array.astype(np.uint8)
 
                 # Resize to the display size
-                image_array_disp2 = resize_image(
+                image_array_disp2 = resize_image_ratio(
                     image_array_disp,
                     frame_width,
                     frame_height)
@@ -580,7 +588,22 @@ class MyMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("CameraIdsWidget Test Window")
         self.setGeometry(100, 100, 500, 400)
-        self.central_widget = CameraIdsWidget(params_disp=False)
+
+        # Init IDS Peak
+        ids_peak.Library.Initialize()
+        # Create a camera manager
+        manager = ids_peak.DeviceManager.Instance()
+        manager.Update()
+
+        if manager.Devices:
+            print("Camera")
+            device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+        else:
+            print("No Camera")
+            return
+
+        self.central_widget = CameraIdsWidget(camera=device, params_disp=False)
+        #self.central_widget = CameraIdsWidget()
         self.setCentralWidget(self.central_widget)
 
     def closeEvent(self, event):
