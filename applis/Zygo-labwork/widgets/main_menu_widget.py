@@ -35,14 +35,21 @@ from PyQt6.QtGui import QPixmap
 
 # %% To add in lensepy librairy
 # Colors
-BLUE_LENSE = '#0A3250'
+BLUE_IOGS = '#0A3250'
+ORANGE_IOGS = '#FF960A'
+WHITE = '#000000'
+GRAY = '#727272'
 BLACK = '#FFFFFF'
 
-ACTIVE_COLOR = '#000000'
-INACTIVE_COLOR = '#FFFFFF'
+styleH1 = f"font-size:20px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
+no_style = f"background-color:{GRAY}; color:{BLACK}; font-size:15px;"
 
-styleH1 = "font-size:16px; padding:7px; color:Navy; border-top: 1px solid Navy;"
-no_style = "background:darkgray; color:white; font-size:15px; font-weight:bold;"
+unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
+actived_button = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
+
+# %% Params
+BUTTON_HEIGHT = 60 #px
+OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Test
 translate = lambda x: x
@@ -53,46 +60,91 @@ class MainMenuWidget(QWidget):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
         
-        self.label_title_menu = QLabel(translate("label_title_menu"))
-        self.label_title_menu.setStyleSheet(styleH1)
-        self.label_title_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_title_main_menu = QLabel(translate("label_title_main_menu"))
+        self.label_title_main_menu.setStyleSheet(styleH1)
+        self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.button_camera_settings_menu = QPushButton(translate("button_camera_settings_menu"))
-        self.button_camera_settings_menu.setStyleSheet(no_style)
-        self.button_camera_settings_menu.clicked.connect(self.button_camera_settings_menu_isClicked)
+        self.button_camera_settings_main_menu = QPushButton(translate("button_camera_settings_main_menu"))
+        self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
+        self.button_camera_settings_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_camera_settings_main_menu.clicked.connect(self.button_camera_settings_main_menu_isClicked)
         
-        self.button_masks_menu = QPushButton(translate("button_masks_menu"))
-        self.button_masks_menu.setStyleSheet(no_style)
-        self.button_masks_menu.clicked.connect(self.button_masks_menu_isClicked)
+        self.button_masks_main_menu = QPushButton(translate("button_masks_main_menu"))
+        self.button_masks_main_menu.setStyleSheet(unactived_button)
+        self.button_masks_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_masks_main_menu.clicked.connect(self.button_masks_main_menu_isClicked)
         
-        self.button_acquisition_menu = QPushButton(translate("button_acquisition_menu"))
-        self.button_acquisition_menu.setStyleSheet(no_style)
-        self.button_acquisition_menu.clicked.connect(self.button_acquisition_menu_isClicked)
+        self.button_acquisition_main_menu = QPushButton(translate("button_acquisition_main_menu"))
+        self.button_acquisition_main_menu.setStyleSheet(unactived_button)
+        self.button_acquisition_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_acquisition_main_menu.clicked.connect(self.button_acquisition_main_menu_isClicked)
         
-        self.button_analyzes_menu = QPushButton(translate("button_analyzes_menu"))
-        self.button_analyzes_menu.setStyleSheet(no_style)
-        self.button_analyzes_menu.clicked.connect(self.button_analyzes_menu_isClicked)
+        self.button_analyzes_main_menu = QPushButton(translate("button_analyzes_main_menu"))
+        self.button_analyzes_main_menu.setStyleSheet(unactived_button)
+        self.button_analyzes_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_analyzes_main_menu.clicked.connect(self.button_analyzes_main_menu_isClicked)
         
-        self.layout.addWidget(self.label_title_menu)
-        self.layout.addWidget(self.button_camera_settings_menu)
-        self.layout.addWidget(self.button_masks_menu)
-        self.layout.addWidget(self.button_acquisition_menu)
-        self.layout.addWidget(self.button_analyzes_menu)
+        self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
+        self.button_options_main_menu.setStyleSheet(unactived_button)
+        self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
+        
+        self.layout.addWidget(self.label_title_main_menu)
+        self.layout.addWidget(self.button_camera_settings_main_menu)
+        self.layout.addWidget(self.button_masks_main_menu)
+        self.layout.addWidget(self.button_acquisition_main_menu)
+        self.layout.addWidget(self.button_analyzes_main_menu)
         self.layout.addStretch()
+        self.layout.addWidget(self.button_options_main_menu)
         self.setLayout(self.layout)
         
-    def button_camera_settings_menu_isClicked(self):
+    def unactive_buttons(self):
+        """ Switches all buttons to inactive style """
+        self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
+        self.button_masks_main_menu.setStyleSheet(unactived_button)
+        self.button_acquisition_main_menu.setStyleSheet(unactived_button)
+        self.button_analyzes_main_menu.setStyleSheet(unactived_button)
+        self.button_options_main_menu.setStyleSheet(unactived_button)        
+        
+    def button_camera_settings_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_camera_settings_main_menu.setStyleSheet(actived_button)
+        
+        # Action
         print("Camera Settings")
         
-    def button_masks_menu_isClicked(self):
+    def button_masks_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_masks_main_menu.setStyleSheet(actived_button)
+        
+        # Action
         print("Masks")
         
-    def button_acquisition_menu_isClicked(self):
+    def button_acquisition_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_acquisition_main_menu.setStyleSheet(actived_button)
+        
+        # Action
         print("Acquisition")
         
-    def button_analyzes_menu_isClicked(self):
+    def button_analyzes_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_analyzes_main_menu.setStyleSheet(actived_button)
+        
+        # Action
         print("Analyzes")
         
+    def button_options_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_options_main_menu.setStyleSheet(actived_button)
+        
+        # Action
+        print("Options")
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
@@ -117,8 +169,6 @@ if __name__ == '__main__':
                                          QMessageBox.StandardButton.No)
 
             if reply == QMessageBox.StandardButton.Yes:
-                if self.central_widget.camera is not None:
-                    self.central_widget.camera.disconnect()
                 event.accept()
             else:
                 event.ignore()
