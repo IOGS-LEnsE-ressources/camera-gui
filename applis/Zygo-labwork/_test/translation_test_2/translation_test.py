@@ -41,9 +41,11 @@ def load_dictionary(language: str) -> None:
     """
     global dictionary
     dictionary = {}
+
     # Read the CSV file, ignoring lines starting with '//'
     data = np.genfromtxt(
         f"lang/dict_{language}.csv", delimiter=';', dtype=str, comments='//')
+
     # Populate the dictionary with key-value pairs from the CSV file
     for key, value in data:
         dictionary[key.strip()] = value.strip()
@@ -63,62 +65,65 @@ def translate(key: str) -> str:
     str
         The translated value corresponding to the key. If the key does not exist, it returns the key itself.
 
-    """
-    if key not in dictionary:
-        dictionary[key] = key
-    return dictionary[key]
+    """    
+    if ('dictionary' in globals()) and (key in dictionary):
+        return dictionary[key]
+    else:
+        return key
+        
 
-
-class LanguageIterator:
-    def __init__(self):
-        self.languages = ['EN', 'FR']
-        self.current_index = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        lang = self.languages[self.current_index]
-        self.current_index = (self.current_index + 1) % len(self.languages)
-        return lang
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.language_iterator = LanguageIterator()
-        load_dictionary('EN')
-
-        self.setWindowTitle("Translector")
-
-        layout = QVBoxLayout()
-
-        self.label = QLabel("Hello, World!")
-        layout.addWidget(self.label)
-
-        self.button = QPushButton("Click me!")
-        self.button.clicked.connect(self.button_clicked)
-        layout.addWidget(self.button)
-
-        container = QWidget()
-        container.setLayout(layout)
-
-        self.setCentralWidget(container)
-
-    def button_clicked(self):
-        lang = next(self.language_iterator)
-        load_dictionary(lang)
-        self.update_labels()
-
-    def update_labels(self):
-        self.setWindowTitle(translate('window_title'))
-        self.label.setText(translate('label'))
-        self.button.setText(translate('button'))
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+if __name__ == '__main__':
+    class LanguageIterator:
+        """ Allows you to alternate languages ​​at each 'next' """
+        def __init__(self):
+            self.languages = ['EN', 'FR']
+            self.current_index = 0
+    
+        def __iter__(self):
+            return self
+    
+        def __next__(self):
+            lang = self.languages[self.current_index]
+            self.current_index = (self.current_index + 1) % len(self.languages)
+            return lang
+    
+    
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.language_iterator = LanguageIterator()
+            load_dictionary('EN')
+    
+            self.setWindowTitle("Translector")
+    
+            layout = QVBoxLayout()
+    
+            self.label = QLabel("Hello, World!")
+            layout.addWidget(self.label)
+    
+            self.button = QPushButton("Click me!")
+            self.button.clicked.connect(self.button_clicked)
+            layout.addWidget(self.button)
+    
+            container = QWidget()
+            container.setLayout(layout)
+    
+            self.setCentralWidget(container)
+    
+        def button_clicked(self):
+            lang = next(self.language_iterator)
+            load_dictionary(lang)
+            self.update_labels()
+    
+        def update_labels(self):
+            self.setWindowTitle(translate('window_title'))
+            self.label.setText(translate('label'))
+            self.button.setText(translate('button'))
+    
+    
+    if __name__ == "__main__":
+        app = QApplication(sys.argv)
+    
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec())
