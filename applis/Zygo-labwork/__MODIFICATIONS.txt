@@ -15,6 +15,13 @@ bla bla bla
 ----------------------------------------------
 
 
+----------------------------------------------
+04/06/2024 	/  	Julien Villemejane
+----------------------------------------------
+Create lensepy and lensecam
+Move CSS styles in lensepy/css.py
+Move IDS and Basler wrappers and widgets in lensecam
+----------------------------------------------
 
 ----------------------------------------------
 31/05/2024 	/  	Julien Villemejane
