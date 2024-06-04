@@ -79,9 +79,9 @@ if __name__ == '__main__':
             # Translation
             dictionary = {}
             # Load French dictionary
-            dictionary = load_dictionary('../lang/dict_FR.txt')
+            #dictionary = load_dictionary('../lang/dict_FR.txt')
             # Load English dictionary
-            #dictionary = load_dictionary('../lang/dict_EN.txt')
+            dictionary = load_dictionary('../lang/dict_EN.txt')
 
             self.setWindowTitle(translate("window_title_camera_settings"))
             self.setGeometry(300, 300, 400, 600)
