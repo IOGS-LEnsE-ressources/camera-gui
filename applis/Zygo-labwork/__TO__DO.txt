@@ -14,19 +14,17 @@ Documentation
 
 - Prepare an Installation Procedure (and store all the drivers and apps on an USB key - then in a LEnsE cloud directory or S: ) - from Python to application
 	/!\ IDS-peak must be installed in Custom Mode with the uEye Transport Layer option /!\
-
+- Doc langDict
 
 GUI Dev
 =======
 
 Global
 ------
-- Create LangDict class to read dict_xx.d (ascii text file) containing displayed informations of the GUI (menu, button...) in different langages. The main idea is to permit to change the langage of the interface very fast. dict_xx.d file will contain two columns (separated by ; for example) : first column corresponds to the dictionnary name of the option (standard and called in the main application), second column corresponds to the translated name of the option in the specific langage (xx=en, fr...). This class could be reused in other GUI of the LEnsE. 
 - Create LEnsELogo class inherited from QWidget to include the logo into a GUInterface.
 
 Camera
 ------
-- Modify CameraIds class to make Parameters button as an option (for specific interface, parameters will be display in an other section - Widget) (also update CameraBasler) - Or specify default parameters in a specific file to read at the begining of the main
 - Create/Modify CameraParameters
 
 Piezo
