@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # English dictionary
-#
+
 # --------------
 # MainMenuWidget
 # --------------
+
 window_title_main_menu_widget; Zygo: Main Menu
 label_title_main_menu; Menu
 button_camera_settings_main_menu; Camera settings
@@ -11,3 +12,9 @@ button_masks_main_menu; Masks
 button_acquisition_main_menu; Acquisition
 button_analyzes_main_menu; Analyzes
 button_options_main_menu; Options
+
+# --------------------
+# CameraSettingsWidget
+# --------------------
+
+window_title_camera_settings;

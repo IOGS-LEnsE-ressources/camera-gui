@@ -19,8 +19,8 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
-    QVBoxLayout, QGridLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox,
+    QVBoxLayout, QHBoxLayout, QGridLayout,
+    QLabel, QComboBox, QPushButton, QCheckBox, QSlider,
     QMessageBox
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
@@ -39,6 +39,8 @@ BLACK = '#FFFFFF'
 # Styles
 # ------
 styleH1 = f"font-size:20px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
+styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
+styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 no_style = f"background-color:{GRAY}; color:{BLACK}; font-size:15px;"
 
 unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
@@ -115,96 +117,29 @@ BUTTON_HEIGHT = 60 #px
 OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
-class MainMenuWidget(QWidget):
-    def __init__(self):
+class SliderBlock(QWidget):
+    def __init__(self, title:str, name:str, unit:str, mini:float, maxi:float) -> None: 
         super().__init__(parent=None)
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
         
-        self.label_title_main_menu = QLabel(translate("label_title_main_menu"))
-        self.label_title_main_menu.setStyleSheet(styleH1)
-        self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value = mini + (maxi-mini)/3
         
-        self.button_camera_settings_main_menu = QPushButton(translate("button_camera_settings_main_menu"))
-        self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
-        self.button_camera_settings_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_camera_settings_main_menu.clicked.connect(self.button_camera_settings_main_menu_isClicked)
+        self.label_title = QLabel(translate(title))
+        self.label_title.setStyleSheet(styleH2)
         
-        self.button_masks_main_menu = QPushButton(translate("button_masks_main_menu"))
-        self.button_masks_main_menu.setStyleSheet(unactived_button)
-        self.button_masks_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_masks_main_menu.clicked.connect(self.button_masks_main_menu_isClicked)
+        self.slider = QSlider()
         
-        self.button_acquisition_main_menu = QPushButton(translate("button_acquisition_main_menu"))
-        self.button_acquisition_main_menu.setStyleSheet(unactived_button)
-        self.button_acquisition_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_acquisition_main_menu.clicked.connect(self.button_acquisition_main_menu_isClicked)
+        self.subwidget_display = QWidget()
+        self.sublayout_display = QHBoxLayout()
+        self.label_name = QLabel(translate(name))
+        self.label_name.setStyleSheet(styleH3)
+        self.sublayout_display.addWidget(self.label_name)
+        self.subwidget_display.setLayout(self.sublayout_display)
         
-        self.button_analyzes_main_menu = QPushButton(translate("button_analyzes_main_menu"))
-        self.button_analyzes_main_menu.setStyleSheet(unactived_button)
-        self.button_analyzes_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_analyzes_main_menu.clicked.connect(self.button_analyzes_main_menu_isClicked)
-        
-        self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
-        self.button_options_main_menu.setStyleSheet(unactived_button)
-        self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
-        
-        self.layout.addWidget(self.label_title_main_menu)
-        self.layout.addWidget(self.button_camera_settings_main_menu)
-        self.layout.addWidget(self.button_masks_main_menu)
-        self.layout.addWidget(self.button_acquisition_main_menu)
-        self.layout.addWidget(self.button_analyzes_main_menu)
-        self.layout.addStretch()
-        self.layout.addWidget(self.button_options_main_menu)
+        self.layout.addWidget(self.label_title, 0, 0)
+        self.layout.addWidget(self.slider, 0, 1)
+        self.layout.addWidget(self.subwidget_display, 1, 0)
         self.setLayout(self.layout)
-        
-    def unactive_buttons(self):
-        """ Switches all buttons to inactive style """
-        self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
-        self.button_masks_main_menu.setStyleSheet(unactived_button)
-        self.button_acquisition_main_menu.setStyleSheet(unactived_button)
-        self.button_analyzes_main_menu.setStyleSheet(unactived_button)
-        self.button_options_main_menu.setStyleSheet(unactived_button)        
-        
-    def button_camera_settings_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_camera_settings_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        print("Camera Settings")
-        
-    def button_masks_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_masks_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        print("Masks")
-        
-    def button_acquisition_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_acquisition_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        print("Acquisition")
-        
-    def button_analyzes_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_analyzes_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        print("Analyzes")
-        
-    def button_options_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_options_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        print("Options")
         
 # %% Example
 if __name__ == '__main__':
@@ -219,10 +154,10 @@ if __name__ == '__main__':
             # Load English dictionary
             dictionary = load_dictionary('C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/lang/dict_EN.txt')
 
-            self.setWindowTitle(translate("window_title_main_menu_widget"))
+            self.setWindowTitle(translate("window_title_slider_block"))
             self.setGeometry(300, 300, 200, 600)
 
-            self.central_widget = MainMenuWidget()
+            self.central_widget = SliderBlock(title="Slider title", name='name', unit='unit', mini=0, maxi=10)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):
