@@ -26,6 +26,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
 import numpy as np
+from lensepy import load_dictionary, translate
 
 # %% To add in lensepy librairy
 # Colors
