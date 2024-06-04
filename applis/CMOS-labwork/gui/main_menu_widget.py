@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
 """*main_menu_widget.py* file.
 
-...
-
-This file is attached to a 1st year of engineer training labwork in photonics.
-Subject : http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
-
-More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
-
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
-
 """
 
+from lensepy import load_dictionary, translate
+from lensepy.css import *
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
@@ -23,11 +16,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
-from PyQt6.QtGui import QPixmap
-import numpy as np
-from lensepy import load_dictionary, translate
-from lensepy.css import *
+from PyQt6.QtCore import Qt, pyqtSignal
 
 # %% To add in lensepy librairy
 # Styles
@@ -41,6 +30,9 @@ OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class MainMenuWidget(QWidget):
+
+    camera_settings_clicked = pyqtSignal(str)
+
     def __init__(self):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
@@ -54,20 +46,20 @@ class MainMenuWidget(QWidget):
         self.button_camera_settings_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_camera_settings_main_menu.clicked.connect(self.button_camera_settings_main_menu_isClicked)
         
-        self.button_masks_main_menu = QPushButton(translate("button_masks_main_menu"))
-        self.button_masks_main_menu.setStyleSheet(unactived_button)
-        self.button_masks_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_masks_main_menu.clicked.connect(self.button_masks_main_menu_isClicked)
+        self.button_aoi_main_menu = QPushButton(translate("button_aoi_main_menu"))
+        self.button_aoi_main_menu.setStyleSheet(unactived_button)
+        self.button_aoi_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_aoi_main_menu.clicked.connect(self.button_aoi_main_menu_isClicked)
+        
+        self.button_live_main_menu = QPushButton(translate("button_live_main_menu"))
+        self.button_live_main_menu.setStyleSheet(unactived_button)
+        self.button_live_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_live_main_menu.clicked.connect(self.button_live_main_menu_isClicked)
         
         self.button_acquisition_main_menu = QPushButton(translate("button_acquisition_main_menu"))
         self.button_acquisition_main_menu.setStyleSheet(unactived_button)
         self.button_acquisition_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_acquisition_main_menu.clicked.connect(self.button_acquisition_main_menu_isClicked)
-        
-        self.button_analyzes_main_menu = QPushButton(translate("button_analyzes_main_menu"))
-        self.button_analyzes_main_menu.setStyleSheet(unactived_button)
-        self.button_analyzes_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_analyzes_main_menu.clicked.connect(self.button_analyzes_main_menu_isClicked)
         
         self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
         self.button_options_main_menu.setStyleSheet(unactived_button)
@@ -76,9 +68,9 @@ class MainMenuWidget(QWidget):
         
         self.layout.addWidget(self.label_title_main_menu)
         self.layout.addWidget(self.button_camera_settings_main_menu)
-        self.layout.addWidget(self.button_masks_main_menu)
+        self.layout.addWidget(self.button_aoi_main_menu)
+        self.layout.addWidget(self.button_live_main_menu)
         self.layout.addWidget(self.button_acquisition_main_menu)
-        self.layout.addWidget(self.button_analyzes_main_menu)
         self.layout.addStretch()
         self.layout.addWidget(self.button_options_main_menu)
         self.setLayout(self.layout)
@@ -86,9 +78,9 @@ class MainMenuWidget(QWidget):
     def unactive_buttons(self):
         """ Switches all buttons to inactive style """
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
-        self.button_masks_main_menu.setStyleSheet(unactived_button)
+        self.button_aoi_main_menu.setStyleSheet(unactived_button)
+        self.button_live_main_menu.setStyleSheet(unactived_button)
         self.button_acquisition_main_menu.setStyleSheet(unactived_button)
-        self.button_analyzes_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setStyleSheet(unactived_button)        
         
     def button_camera_settings_main_menu_isClicked(self):
@@ -97,15 +89,23 @@ class MainMenuWidget(QWidget):
         self.button_camera_settings_main_menu.setStyleSheet(actived_button)
         
         # Action
-        print("Camera Settings")
+        self.camera_settings_clicked.emit('camera_settings')
         
-    def button_masks_main_menu_isClicked(self):
+    def button_aoi_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
-        self.button_masks_main_menu.setStyleSheet(actived_button)
+        self.button_aoi_main_menu.setStyleSheet(actived_button)
         
         # Action
-        print("Masks")
+        print("AOI")
+        
+    def button_live_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_live_main_menu.setStyleSheet(actived_button)
+        
+        # Action
+        print("Live")
         
     def button_acquisition_main_menu_isClicked(self):
         # Change style
@@ -114,14 +114,6 @@ class MainMenuWidget(QWidget):
         
         # Action
         print("Acquisition")
-        
-    def button_analyzes_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_analyzes_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        print("Analyzes")
         
     def button_options_main_menu_isClicked(self):
         # Change style

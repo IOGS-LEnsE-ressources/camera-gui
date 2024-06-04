@@ -43,7 +43,7 @@ from PyQt6.QtWidgets import (
 )
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
-from gui.camera_choice import CameraChoice, dict_of_brands, cam_from_brands
+from gui.camera_choice_widget import CameraChoice, dict_of_brands, cam_from_brands
 
 
 class CmosLabApp(QWidget):
