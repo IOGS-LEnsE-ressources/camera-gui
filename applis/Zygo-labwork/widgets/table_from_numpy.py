@@ -1,11 +1,12 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView
+from PyQt6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView, QMessageBox
 from PyQt6.QtCore import Qt
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
 table_style = f"background-color: {BLACK}; color: {BLUE_IOGS}; font-size: 12px;"
+
 
 class TableFromNumpy(QTableWidget):
     def __init__(self, arr):
@@ -51,10 +52,25 @@ class TableFromNumpy(QTableWidget):
         self.layout.addWidget(self.table_widget)
         self.setLayout(self.layout)
 
+    def closeEvent(self, event):
+        """
+        closeEvent redefinition. Use when the user clicks
+        on the red cross to close the window
+        """
+        reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
 
 if __name__ == '__main__':
-    arr = np.array([['Type', 'A', 'B', 'C'], [
-                   'PV', 1, 2, 3], ['RMS', 4, 5, 6]])
+    load_dictionary('lang/dict_EN.txt')
+    arr = np.array([['', f"{translate('button_circle_mask')}", 'B', 'C'], [
+                   'PV', 1.5, 2.2, 3.9], ['RMS', 4.2, 5.7, 6.5]])
 
     app = QApplication(sys.argv)
     mainWidget = TableFromNumpy(arr=arr)
