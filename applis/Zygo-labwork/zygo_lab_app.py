@@ -26,6 +26,7 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
+from lensecam.ids.camera_ids_widget import CameraIdsWidget
 
 
 class ZygoLabApp(QWidget):

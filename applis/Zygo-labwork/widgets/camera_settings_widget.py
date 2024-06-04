@@ -28,6 +28,8 @@ from PyQt6.QtGui import QPixmap
 from slider_block import SliderBlock
 import numpy as np
 
+from lensepy.pyqt6 import *
+
 # %% To add in lensepy librairy
 # Colors
 # ------

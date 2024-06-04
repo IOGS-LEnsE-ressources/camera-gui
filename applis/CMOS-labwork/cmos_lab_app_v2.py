@@ -19,7 +19,7 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 import sys
 import numpy as np
 from PyQt6.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget
-from ids.camera_ids_widget import CameraIdsWidget
+from lensecam.ids.camera_ids_widget import CameraIdsWidget
 
 # -------------------------------
 
