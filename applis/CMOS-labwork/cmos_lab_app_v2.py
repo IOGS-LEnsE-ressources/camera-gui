@@ -15,11 +15,12 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 """
 
-# Libraries to import
+from lensepy import load_dictionary, translate
+from lensepy.css import *
 import sys
 import numpy as np
 from PyQt6.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget
-from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from gui.camera_choice_widget import CameraChoice
 
 # -------------------------------
 
@@ -44,15 +45,26 @@ class MainWindow(QMainWindow):
 
         # Main Layout
         self.main_layout = QGridLayout()
-        self.camera_widget = CameraIdsWidget()
+        self.title_widget = QWidget()
+        self.main_menu_widget = QWidget()
+        self.camera_widget = CameraChoice()
         self.params_widget = QWidget()
         self.time_graph = QWidget()
         self.histo_graph = QWidget()
 
-        self.main_layout.addWidget(self.camera_widget, 0, 0)
-        self.main_layout.addWidget(self.histo_graph, 0, 1)
-        self.main_layout.addWidget(self.params_widget, 1, 0)
-        self.main_layout.addWidget(self.time_graph, 1, 1)
+        self.main_layout.addWidget(self.title_widget, 0, 1, 1, 3)
+        self.main_layout.addWidget(self.main_menu_widget, 1, 1, 2, 1)
+        self.main_layout.addWidget(self.camera_widget, 1, 1)
+        self.main_layout.addWidget(self.histo_graph, 1, 2)
+        self.main_layout.addWidget(self.params_widget, 2, 1)
+        self.main_layout.addWidget(self.time_graph, 2, 2)
+
+        self.main_layout.setColumnStretch(0,1)
+        self.main_layout.setColumnStretch(1,3)
+        self.main_layout.setColumnStretch(2,3)
+        self.main_layout.setRowStretch(0,1)
+        self.main_layout.setRowStretch(1,3)
+        self.main_layout.setRowStretch(2,2)
 
         self.main_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.main_widget)

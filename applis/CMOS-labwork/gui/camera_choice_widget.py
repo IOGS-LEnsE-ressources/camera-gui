@@ -14,11 +14,10 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton
 )
 from PyQt6.QtCore import pyqtSignal
-
-from basler.camera_basler_widget import CameraBaslerListWidget
-from basler.camera_basler import CameraBasler
-from ids.camera_ids_widget import CameraIdsListWidget
-from ids.camera_ids import CameraIds
+from lensecam.basler.camera_basler_widget import CameraBaslerListWidget
+from lensecam.basler.camera_basler import CameraBasler
+from lensecam.ids.camera_ids_widget import CameraIdsListWidget
+from lensecam.ids.camera_ids import CameraIds
 
 
 dict_of_brands = {
