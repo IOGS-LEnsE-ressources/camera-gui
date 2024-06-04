@@ -27,7 +27,6 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 from PyQt6.QtGui import QPixmap
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
-from gui.camera_choice_zygo import CameraChoice, dict_of_brands, cam_from_brands
 
 
 class ZygoLabApp(QWidget):
@@ -38,36 +37,12 @@ class ZygoLabApp(QWidget):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
 
-        self.choice_widget = CameraChoice()
-        self.choice_widget.selected.connect(self.action_choice)
-
-        self.layout.addWidget(self.choice_widget)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
-        self.brand_choice = None
-        self.cameras_list_widget = None
         self.camera = None
 
         self.camera_display_widget = WidgetImageDisplay()
-
-    def action_choice(self, event):
-        """Action performed when a camera brand is selected."""
-        self.brand_choice = event
-        if event != 'None':
-            self.clearLayout(1)
-            self.cameras_list_widget = dict_of_brands[event]()
-            self.cameras_list_widget.connected.connect(self.action_camera_connected)
-            self.layout.addWidget(self.cameras_list_widget)
-            self.layout.addStretch()
-        else:
-            self.clearLayout(1)
-
-    def action_camera_connected(self, event):
-        """Action performed when a camera is selected."""
-        print(event)
-        cam_dev = self.cameras_list_widget.get_selected_camera_dev()
-        self.camera = cam_from_brands[self.brand_choice](cam_dev)
 
     def refresh_app(self):
         """Action performed for refreshing the display of the app."""
@@ -96,7 +71,6 @@ if __name__ == '__main__':
             super().__init__()
 
             self.setWindowTitle("Zygo-IDS Labwork APP")
-            self.setGeometry(300, 300, 400, 600)
 
             self.central_widget = ZygoLabApp()
             self.setCentralWidget(self.central_widget)
@@ -120,5 +94,5 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     main = MyWindow()
-    main.show()
+    main.showMaximized()
     sys.exit(app.exec())
