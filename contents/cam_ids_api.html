@@ -65,10 +65,7 @@
 <li class="toctree-l2"><a class="reference internal" href="cam_ids_driver.html">IDS Driver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cam_ids_widgets.html">IDS Widgets</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">API reference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#cameralist-class">CameraList class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#camera_list.CameraList"><code class="docutils literal notranslate"><span class="pre">CameraList</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#cameralist-class">CameraList class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cameraids-class">CameraIds class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cameraidswidget-class">CameraIdsWidget class</a></li>
 </ul>
@@ -111,80 +108,6 @@
 <h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
 <section id="cameralist-class">
 <h2>CameraList class<a class="headerlink" href="#cameralist-class" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="camera_list.CameraList">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera_list.</span></span><span class="sig-name descname"><span class="pre">CameraList</span></span><a class="headerlink" href="#camera_list.CameraList" title="Link to this definition"></a></dt>
-<dd><p>Class to list Basler camera (all camera in a future evolution)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>available_cameras</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – List of the devices connected to the computer [id, device]</p></li>
-<li><p><strong>camera_list_str</strong> – List to print of the devices connected to the computer [id, serial number, device name]</p></li>
-<li><p><strong>nb_cam</strong> (<em>int</em>) – Number of connected cameras</p></li>
-</ul>
-</dd>
-</dl>
-<p>Example</p>
-<p>In this example, you create a <a class="reference internal" href="#camera_list.CameraList" title="camera_list.CameraList"><code class="xref py py-class docutils literal notranslate"><span class="pre">CameraList</span></code></a> object, then get the number of Basler cameras connected to your computer (in this case 1 camera is connected) and finally obtain the complete list of the available cameras (in this case a <em>a2A1920-160ucBAS</em> camera with the serial number <em>40282239</em>).</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">camera_list</span> <span class="kn">import</span> <span class="n">CameraList</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cam_list</span> <span class="o">=</span> <span class="n">CameraList</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cam_list</span><span class="o">.</span><span class="n">get_nb_of_cam</span><span class="p">()</span>
-<span class="go">&#39;1&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cameras_list</span> <span class="o">=</span> <span class="n">cam_list</span><span class="o">.</span><span class="n">get_cam_list</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">cameras_list</span><span class="p">)</span>
-<span class="go">&#39;[[0, 40282239, &#39;a2A1920-160ucBAS&#39;]]&#39;</span>
-</pre></div>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="camera_list.CameraList.get_cam_device">
-<span class="sig-name descname"><span class="pre">get_cam_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pypylon.pylon.TlFactory</span></span></span><a class="headerlink" href="#camera_list.CameraList.get_cam_device" title="Link to this definition"></a></dt>
-<dd><p>Return the list containing the ID and a device pypylon object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Device corresponding to the index in the list of available cameras</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>pylon.TlFactory.Device</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="camera_list.CameraList.get_cam_list">
-<span class="sig-name descname"><span class="pre">get_cam_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#camera_list.CameraList.get_cam_list" title="Link to this definition"></a></dt>
-<dd><p>Return the list containing the ID, serial number and name of all cameras connected</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list with ID, Serial Number and Name of each camera connected on the computer [[cam1_id, cam1_ser_no, cam1_name], … ]</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="camera_list.CameraList.get_nb_of_cam">
-<span class="sig-name descname"><span class="pre">get_nb_of_cam</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#camera_list.CameraList.get_nb_of_cam" title="Link to this definition"></a></dt>
-<dd><p>Return the number of connected cameras</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of Basler connected cameras</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="camera_list.CameraList.refresh_list">
-<span class="sig-name descname"><span class="pre">refresh_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#camera_list.CameraList.refresh_list" title="Link to this definition"></a></dt>
-<dd><p>Refresh the list of the connected devices.</p>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 <section id="cameraids-class">
 <h2>CameraIds class<a class="headerlink" href="#cameraids-class" title="Link to this heading"></a></h2>
