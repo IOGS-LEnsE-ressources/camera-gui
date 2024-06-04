@@ -5,7 +5,7 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-table_style = f"background-color: {BLACK}; color: {BLUE_IOGS}; font-size: 12px;"
+table_style = f"background-color: {BLACK}; color: {BLUE_IOGS}; font-size: 15px;"
 
 
 class TableFromNumpy(QTableWidget):
@@ -68,7 +68,7 @@ class TableFromNumpy(QTableWidget):
 
 
 if __name__ == '__main__':
-    load_dictionary('lang/dict_EN.txt')
+    load_dictionary('lang/dict_CN.txt')
     arr = np.array([['', f"{translate('button_circle_mask')}", 'B', 'C'], [
                    'PV', 1.5, 2.2, 3.9], ['RMS', 4.2, 5.7, 6.5]])
 
