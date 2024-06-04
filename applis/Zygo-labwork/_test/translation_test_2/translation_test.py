@@ -7,15 +7,14 @@ import numpy as np
 dictionary = {}
 
 
-def load_dictionary(language: str) -> None:
+def load_dictionary(language_path: str) -> None:
     """
     Load a dictionary from a CSV file based on the specified language.
 
     Parameters
     ----------
     language : str
-        The language code to specify which CSV file to load.
-        The file should be located in the 'lang/' directory and named 'dico_<language>.csv'.
+        The language path to specify which CSV file to load.
 
     Returns
     -------
@@ -44,7 +43,7 @@ def load_dictionary(language: str) -> None:
 
     # Read the CSV file, ignoring lines starting with '//'
     data = np.genfromtxt(
-        f"lang/dict_{language}.csv", delimiter=';', dtype=str, comments='//')
+        language_path, delimiter=';', dtype=str, comments='//')
 
     # Populate the dictionary with key-value pairs from the CSV file
     for key, value in data:
@@ -85,14 +84,14 @@ if __name__ == '__main__':
         def __next__(self):
             lang = self.languages[self.current_index]
             self.current_index = (self.current_index + 1) % len(self.languages)
-            return lang
+            return f"lang/dict_{lang}.csv"
     
     
     class MainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
             self.language_iterator = LanguageIterator()
-            load_dictionary('EN')
+            load_dictionary('lang/dict_EN.csv')
     
             self.setWindowTitle("Translector")
     
