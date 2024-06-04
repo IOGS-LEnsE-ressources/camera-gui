@@ -13,5 +13,5 @@
 numpy
 matplotlib
 pyqt6
-nidaqmx-python
+nidaqmx
 pypylon

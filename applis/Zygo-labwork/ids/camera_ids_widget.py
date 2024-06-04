@@ -156,14 +156,11 @@ class CameraIdsParamsWidget(QWidget):
     """
     params_dict = {'fps': 'FPS', 'expo': 'Exposure Time', 'black': 'Black Level'}
 
-    def __init__(self, parent):
+    def __init__(self):
         """Default constructor of the class.
-        
-        :param parent: Parent widget of this widget.
-        :type parent: SmallParamsDisplay
+
         """
         super().__init__(parent=None)
-        self.parent = parent
         # Camera device
         self.camera = None
         # Main layout
@@ -190,8 +187,8 @@ class CameraIdsParamsWidget(QWidget):
         self.fps_slider.slider_changed_signal.connect(self.update_params)
         self.fps_slider.set_units('frames/s')
         self.fps_slider.set_min_max_slider(5, 50)
-        fps_value = self.parent.camera.get_frame_rate()
-        self.fps_slider.set_value(fps_value)
+        # fps_value = self.camera.get_frame_rate()
+        # self.fps_slider.set_value(fps_value)
         self.main_layout.addWidget(self.fps_slider)
 
         name = CameraIdsParamsWidget.params_dict['expo']
@@ -200,10 +197,10 @@ class CameraIdsParamsWidget(QWidget):
             name=name, signal_name=signal_name, integer=True)
         self.expotime_slider.slider_changed_signal.connect(self.update_params)
         self.expotime_slider.set_units('ms')
-        max_expo = 1000 / fps_value - 1  # in ms
-        self.expotime_slider.set_min_max_slider(1, max_expo)
-        expo_value = self.parent.camera.get_exposure()
-        self.expotime_slider.set_value(expo_value / 1000)
+        # max_expo = 1000 / fps_value - 1  # in ms
+        # self.expotime_slider.set_min_max_slider(1, max_expo)
+        # expo_value = self.parent.camera.get_exposure()
+        # self.expotime_slider.set_value(expo_value / 1000)
         self.main_layout.addWidget(self.expotime_slider)
 
         name = CameraIdsParamsWidget.params_dict['black']
@@ -212,9 +209,9 @@ class CameraIdsParamsWidget(QWidget):
             name=name, signal_name=signal_name, integer=True)
         self.blacklevel_slider.slider_changed_signal.connect(self.update_params)
         self.blacklevel_slider.set_units('LSB')
-        cam_bits_nb = get_bits_per_pixel(self.parent.camera.get_color_mode())
-        max_blacklevel = 2 ** cam_bits_nb - 1
-        self.blacklevel_slider.set_min_max_slider(0, max_blacklevel)
+        # cam_bits_nb = get_bits_per_pixel(self.parent.camera.get_color_mode())
+        # max_blacklevel = 2 ** cam_bits_nb - 1
+        # self.blacklevel_slider.set_min_max_slider(0, max_blacklevel)
         self.main_layout.addWidget(self.blacklevel_slider)
 
         self.setFixedSize(300, 400)
@@ -229,6 +226,22 @@ class CameraIdsParamsWidget(QWidget):
         self.camera = camera
         _, name = self.camera.get_cam_info()
         self.name_label.setText(name + ' Parameters')
+        self.init_params()
+
+    def init_params(self) -> None:
+        """
+
+        """
+        fps_value = self.camera.get_frame_rate()
+        self.fps_slider.set_value(fps_value)
+        max_expo = 1000 / fps_value - 1  # in ms
+        self.expotime_slider.set_min_max_slider(1, max_expo)
+        expo_value = self.camera.get_exposure()
+        self.expotime_slider.set_value(expo_value / 1000)
+        cam_bits_nb = get_bits_per_pixel(self.camera.get_color_mode())
+        max_blacklevel = 2 ** cam_bits_nb - 1
+        self.blacklevel_slider.set_min_max_slider(0, max_blacklevel)
+
 
     def update_params(self, event) -> None:
         """Update parameters."""
@@ -430,7 +443,7 @@ class CameraIdsWidget(QWidget):
         # List of the available camera
         if camera is None:
             print('No Cam')
-            self.camera = None
+            self.cam_dev = None
             self.cameras_list_widget = CameraIdsListWidget()
             self.main_layout.addWidget(self.cameras_list_widget, 0, 0)
 
@@ -438,7 +451,7 @@ class CameraIdsWidget(QWidget):
             self.cameras_list_widget.connected.connect(self.connect_camera)
         else:
             print('Camera OK')
-            self.camera = camera
+            self.cam_dev = camera
             self.connect_camera(camera=camera)
 
         self.setLayout(self.main_layout)
@@ -573,6 +586,12 @@ class CameraIdsWidget(QWidget):
         except Exception as e:
             print("Exception - close/quit: " + str(e) + "")
 
+    def get_camera(self) -> CameraIds:
+        """
+        Return the camera_ids object.
+        """
+        return self.camera
+
 
 class MyMainWindow(QMainWindow):
     """MyMainWindow class, children of QMainWindow.
@@ -607,6 +626,10 @@ class MyMainWindow(QMainWindow):
         self.central_widget = CameraIdsWidget(camera=device, params_disp=False)
         #self.central_widget = CameraIdsWidget()
         self.setCentralWidget(self.central_widget)
+        self.params = CameraIdsParamsWidget()
+        camera = self.central_widget.get_camera()
+        self.params.set_camera(camera)
+
 
     def closeEvent(self, event):
         """
