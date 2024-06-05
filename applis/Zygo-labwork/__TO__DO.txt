@@ -22,12 +22,14 @@ GUI Dev
 Global
 ------
 - If no camera is connected, disable main_menu possibilities (camera_settings...) ?
+- Create a global_default_parameters file ?
 
 Camera
 ------
 - Create/Modify CameraParameters
 - Test ParamsWidget outside CamWidget and test update params
 - Load default parameters (stored in a file ?)
+- Add default parameters (in the same file) for min and max exposure time and black level ??
 
 Piezo
 -----

@@ -94,8 +94,10 @@ class CameraSettingsWidget(QWidget):
         print(f'Slider {event}')
         if self.camera is not None:
             print(f'{self.camera.get_cam_info()}')
-            exposure_time_value = self.slider_exposure_time.get_value()
+            exposure_time_value = self.slider_exposure_time.get_value()*1000
             print(f'ExpoTime Changed ? {self.camera.set_exposure(exposure_time_value)}')
+            print(f'Camera is Here ? {self.camera.is_camera_connected()}')
+            print(f'ExpoTime Range = {self.camera.get_exposure_range()}')
         else:
             print('No Camera Connected')
 
