@@ -36,7 +36,11 @@ BUTTON_HEIGHT = 30 #px
 class MasksMenu(QWidget):
     def __init__(self):
         super().__init__(parent=None)
+        self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout()
+
+        self.master_widget = QWidget()
+        self.master_layout = QVBoxLayout()
         
         self.label_title_masks_menu = QLabel(translate('label_title_masks_menu'))
         self.label_title_masks_menu.setStyleSheet(styleH1)
@@ -104,7 +108,10 @@ class MasksMenu(QWidget):
         
         self.layout.addWidget(self.label_title_masks_menu)
         self.layout.addWidget(self.subwidget_masks)
-        self.setLayout(self.layout)
+
+        self.master_widget.setLayout(self.layout)
+        self.master_layout.addWidget(self.master_widget)
+        self.setLayout(self.master_layout)
         
 # %% Example
 if __name__ == '__main__':

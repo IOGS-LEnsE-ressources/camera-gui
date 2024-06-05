@@ -1,0 +1,2 @@
+- The camera image does not resize properly.
+- Issues with the use of PyQt signals.

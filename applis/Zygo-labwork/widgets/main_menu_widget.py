@@ -47,11 +47,7 @@ class MainMenuWidget(QWidget):
 
         # Signals definition
         # ------------------
-        self.signal_camera_menu_settings = pyqtSignal()
-        self.signal_masks_main_menu = pyqtSignal()
-        self.signal_acquisition_main_menu = pyqtSignal()
-        self.signal_analyzes_main_menu = pyqtSignal()
-        self.signal_options_main_menu = pyqtSignal()
+        ...
 
         # Widgets
         # -------
@@ -114,41 +110,41 @@ class MainMenuWidget(QWidget):
         self.unactive_buttons()
         self.button_camera_settings_main_menu.setStyleSheet(actived_button)
         
-        # Emit signal
-        self.signal_camera_settings_main_menu.emit
-
+        # Action
+        print("Camera Settings")
+        
     def button_masks_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_masks_main_menu.setStyleSheet(actived_button)
         
-        # Emit signal
-        self.signal_masks_main_menu.emit
-
+        # Action
+        print("Masks")
+        
     def button_acquisition_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_acquisition_main_menu.setStyleSheet(actived_button)
         
-        # Emit signal
-        self.signal_acquisition_main_menu.emit
-
+        # Action
+        print("Acquisition")
+        
     def button_analyzes_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_analyzes_main_menu.setStyleSheet(actived_button)
         
-        # Emit signal
-        self.signal_analyzes_main_menu.emit
-
+        # Action
+        print("Analyzes")
+        
     def button_options_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_options_main_menu.setStyleSheet(actived_button)
         
-        # Emit signal
-        self.signal_options_main_menu.emit
-
+        # Action
+        print("Options")
+        
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

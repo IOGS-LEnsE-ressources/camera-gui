@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
+from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QSignalMapper
 from PyQt6.QtGui import QPixmap, QIcon
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
@@ -34,6 +34,7 @@ from lensepy.css import *
 
 from widgets.title_widget import TitleWidget
 from widgets.main_menu_widget import MainMenuWidget
+from widgets.masks_menu_widget import MasksMenu
 
 class ZygoLabApp(QWidget):
 
@@ -72,22 +73,28 @@ class ZygoLabApp(QWidget):
         self.layout.setRowStretch(1, 48)
         self.layout.setRowStretch(2, 48)
 
+        # Title Widget: first row of the grid layout
         self.title_widget = TitleWidget() 
         self.layout.addWidget(self.title_widget, 0, 0, 1, 3)
 
+        # Main Menu Widget: fist column of the grid layout
         self.main_menu_widget = MainMenuWidget()
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
 
+        # Grid (1, 1)
         self.camera_widget = CameraIdsWidget(camera=self.camera, params_disp=False)
         self.layout.addWidget(self.camera_widget, 1, 1)
         self.layout.setAlignment(self.camera_widget, Qt.AlignmentFlag.AlignCenter)
 
+        # Grid (1, 2)
         self.menu_test_12 = MainMenuWidget()
         self.layout.addWidget(self.menu_test_12, 1,2)
 
-        self.menu_test_21 = MainMenuWidget()
-        self.layout.addWidget(self.menu_test_21, 2, 1)
+        # Grid (2, 1)
+        self.masks_menu = MasksMenu()
+        self.layout.addWidget(self.masks_menu, 2, 1)
 
+        # Grid (2, 2)
         self.menu_test_22 = MainMenuWidget()
         self.layout.addWidget(self.menu_test_22, 2, 2)
         
