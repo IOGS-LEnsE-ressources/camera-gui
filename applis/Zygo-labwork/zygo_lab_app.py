@@ -203,4 +203,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyWindow()
     main.showMaximized()
+
+    print(main.central_widget.camera_widget.is_connected())
     sys.exit(app.exec())
