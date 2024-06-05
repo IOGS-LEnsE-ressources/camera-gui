@@ -5,12 +5,6 @@ If any modification are made in one of the files from a 'supoptools' directory, 
 
 The lensepy package must be upgraded.
 
-----------------------------------------------
-Date 	/  	Developper
-----------------------------------------------
-Modification
-bla bla bla
-----------------------------------------------
 
 ----------------------------------------------
 04/06/2024 	/  	Julien Villemejane

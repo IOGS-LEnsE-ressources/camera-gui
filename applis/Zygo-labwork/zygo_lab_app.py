@@ -47,7 +47,7 @@ class ZygoLabApp(QWidget):
         """
         super().__init__(parent=None)
 
-        # Initialyzation of the camera
+        # Initialization of the camera
         # ----------------------------
         # Init IDS Peak
         ids_peak.Library.Initialize()

@@ -1,18 +1,6 @@
 Zygo Lab GUI / IDS Camera
 #########################
 
-If any modification are made in the files from the 'supoptools' or 'ids' directory, these modifications must be reported in :
-- progs/IDS/ directory of this repository (the section of the documentation must be updated)
-- supoptools directory of all the applis of this repository
-- the __MODIFICATIONS_SUPOPTOOLS.txt or __MODIFICATIONS_IDS.txt files must be updated.
-
-
-----------------------------------------------
-Date 	/  	Developper
-----------------------------------------------
-Modification
-bla bla bla
-----------------------------------------------
 
 
 ----------------------------------------------
