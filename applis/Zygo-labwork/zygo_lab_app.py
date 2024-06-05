@@ -42,7 +42,7 @@ from widgets.options_menu_widget import OptionsMenuWidget
 
 class ZygoLabApp(QWidget):
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Default constructor of the class.
         """
         super().__init__(parent=None)
