@@ -55,12 +55,12 @@ class ZygoLabApp(QWidget):
         manager = ids_peak.DeviceManager.Instance()
         manager.Update()
 
-        if manager.Devices:
+        if manager.Devices().empty():
+            print("No Camera")
+            device = None
+        else:
             print("Camera")
             device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
-        else:
-            print("No Camera")
-            return
         self.camera = device
         # ----------------------------
 
@@ -86,6 +86,10 @@ class ZygoLabApp(QWidget):
         # Main Menu Widget: fist column of the grid layout
         self.main_menu_widget = MainMenuWidget()
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
+
+        # Camera Widget: top-left corner
+        self.camera_widget = CameraIdsWidget(self.camera, params_disp=False)
+        self.layout.addWidget(self.camera_widget, 1, 1)
 
         # Other Widgets
         # -------------
@@ -190,7 +194,7 @@ if __name__ == '__main__':
 
             if reply == QMessageBox.StandardButton.Yes:
                 if self.central_widget.camera is not None:
-                    self.central_widget.camera.disconnect()
+                    self.central_widget.camera_widget.disconnect()
                 event.accept()
             else:
                 event.ignore()
