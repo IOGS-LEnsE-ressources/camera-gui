@@ -205,7 +205,8 @@ class AcquisitionMenuWidget(QWidget):
         self.button_simple_acquisition.setStyleSheet(actived_button)
         print('button_simple_acquisition_isClicked')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
-        print(self.camera.get_image())
+        # Maybe it's preferable to send a signal to the main app ??
+        #print(self.camera.get_image())
 
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)

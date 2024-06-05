@@ -3,7 +3,7 @@ Zygo Lab GUI / IDS Camera
 
 Structure of the GUI
 ====================
-
+/!\ Only one camera to manage ! But where ? And signal to the main app ?
 
 Documentation
 =============
