@@ -12,11 +12,16 @@ Modification
 bla bla bla
 ----------------------------------------------
 
-
+----------------------------------------------
+04/06/2024 	/  	Julien Villemejane
+----------------------------------------------
+Create css.py file containing LEnsE / IOGS CSS style for GUI
+Add translate and load_dictionary function to lensepy, for translations.
+----------------------------------------------
 
 ----------------------------------------------
 31/05/2024 	/  	Julien Villemejane
 ----------------------------------------------
-Creation of this document.
+Create this document.
 ----------------------------------------------
 
