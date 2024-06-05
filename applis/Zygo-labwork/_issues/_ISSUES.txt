@@ -1,3 +1,4 @@
 - The camera image does not resize properly.
 - Issues with the use of PyQt signals.
 - [Acquisition Menu Widget] Buttons are not clickable.
+- [Acquisition Menu Widget] DialBox Style

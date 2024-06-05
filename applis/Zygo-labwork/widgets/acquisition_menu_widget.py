@@ -48,6 +48,7 @@ class RemoveFaultsWidget(QWidget):
         
         self.subwidget_faults = QWidget()
         self.sublayout_faults = QHBoxLayout()
+
         # First col
         # ---------
         self.subwidget_left = QWidget()
@@ -103,17 +104,17 @@ class RemoveFaultsWidget(QWidget):
 class AcquisitionMenuWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
-        self.setStyleSheet("background-color: white;")
-        self.layout = QGridLayout()
+        self.layout = QVBoxLayout()
 
         self.master_widget = QWidget()
         self.master_layout = QVBoxLayout()
+        self.master_widget.setStyleSheet("background-color: white;")
         
         # Title
         # -----
         self.label_title_acquisition_menu = QLabel(translate('label_title_acquisition_menu'))
         self.setStyleSheet(styleH1)
-
+        
         # Subwidget to start acquisition
         # ------------------------------
         self.subwidget_start_acquisiton = QWidget()
@@ -135,6 +136,7 @@ class AcquisitionMenuWidget(QWidget):
         # Wedge factor entry
         #-------------------
         self.lineedit_wedge_factor = LineEditBlock('label_wedge_factor', txt='0.5')
+        self.lineedit_wedge_factor.keyPressEvent = self.wedge_factor_is_modified
 
         # Remove faults menu
         # ------------------
@@ -157,7 +159,7 @@ class AcquisitionMenuWidget(QWidget):
         self.sublayout_save_acquisiton.addWidget(self.button_save_phase)
         self.sublayout_save_acquisiton.setContentsMargins(0, 0, 0, 0)
         self.subwidget_save_acquisiton.setLayout(self.sublayout_save_acquisiton)
-
+        
         # Add widgets to the layout
         # -------------------------
         self.layout.addWidget(self.label_title_acquisition_menu)
@@ -167,8 +169,27 @@ class AcquisitionMenuWidget(QWidget):
         self.layout.addWidget(self.subwidget_save_acquisiton)
 
         self.master_widget.setLayout(self.layout)
+
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
+
+    def wedge_factor_is_modified(self, event):
+        if (event.key() == Qt.Key.Key_Return) or (event.key() == Qt.Key.Key_Enter):
+            try:
+                self.wedge_factor = float(self.lineedit_wedge_factor.text())
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet(styleH3)
+                msg_box.information(self, translate('information'), translate('message_wedge_factor_updated'))
+            except ValueError:
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet(styleH3)
+                msg_box.warning(self, translate('error'), translate('message_wedge_factor_error'))
+
+        elif event.key() == Qt.Key.Key_Escape:
+            self.lineedit_wedge_factor.clearFocus()
+        else:
+            # Laissez le QLineEdit gérer les autres touches
+            super().keyPressEvent(event)
 
 # %% Example
 if __name__ == '__main__':
