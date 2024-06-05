@@ -89,7 +89,9 @@ class ZygoLabApp(QWidget):
 
         # Camera Widget: top-left corner
         self.camera_widget = CameraIdsWidget(self.camera, params_disp=False)
+        self.camera_widget.main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.camera_widget, 1, 1)
+
 
         # Other Widgets
         # -------------
