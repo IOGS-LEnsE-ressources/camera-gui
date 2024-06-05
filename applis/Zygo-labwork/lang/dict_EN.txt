@@ -31,3 +31,9 @@ button_move_mask; Move
 button_erase_mask; Erase
 checkbox_apply_mask; Apply the mask
 checkbox_inverse_mask; Inverse the mask
+
+# --------------------
+# TitleWidget
+# --------------------
+label_title; Zygo
+label_subtitle; 1st and 2nd year labwork

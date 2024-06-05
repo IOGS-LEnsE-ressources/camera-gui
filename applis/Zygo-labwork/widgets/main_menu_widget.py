@@ -43,7 +43,22 @@ OPTIONS_BUTTON_HEIGHT = 20 #px
 class MainMenuWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
+        self.setStyleSheet("background-color: white;")
+
+        # Signals definition
+        # ------------------
+        self.signal_camera_menu_settings = pyqtSignal()
+        self.signal_masks_main_menu = pyqtSignal()
+        self.signal_acquisition_main_menu = pyqtSignal()
+        self.signal_analyzes_main_menu = pyqtSignal()
+        self.signal_options_main_menu = pyqtSignal()
+
+        # Widgets
+        # -------
         self.layout = QVBoxLayout()
+
+        self.subwidget = QWidget()
+        self.sublayout = QVBoxLayout()
         
         self.label_title_main_menu = QLabel(translate("label_title_main_menu"))
         self.label_title_main_menu.setStyleSheet(styleH1)
@@ -74,13 +89,16 @@ class MainMenuWidget(QWidget):
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
         
-        self.layout.addWidget(self.label_title_main_menu)
-        self.layout.addWidget(self.button_camera_settings_main_menu)
-        self.layout.addWidget(self.button_masks_main_menu)
-        self.layout.addWidget(self.button_acquisition_main_menu)
-        self.layout.addWidget(self.button_analyzes_main_menu)
-        self.layout.addStretch()
-        self.layout.addWidget(self.button_options_main_menu)
+        self.sublayout.addWidget(self.label_title_main_menu)
+        self.sublayout.addWidget(self.button_camera_settings_main_menu)
+        self.sublayout.addWidget(self.button_masks_main_menu)
+        self.sublayout.addWidget(self.button_acquisition_main_menu)
+        self.sublayout.addWidget(self.button_analyzes_main_menu)
+        self.sublayout.addStretch()
+        self.sublayout.addWidget(self.button_options_main_menu)
+        self.subwidget.setLayout(self.sublayout)
+
+        self.layout.addWidget(self.subwidget)
         self.setLayout(self.layout)
         
     def unactive_buttons(self):
@@ -96,41 +114,41 @@ class MainMenuWidget(QWidget):
         self.unactive_buttons()
         self.button_camera_settings_main_menu.setStyleSheet(actived_button)
         
-        # Action
-        print("Camera Settings")
-        
+        # Emit signal
+        self.signal_camera_settings_main_menu.emit
+
     def button_masks_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_masks_main_menu.setStyleSheet(actived_button)
         
-        # Action
-        print("Masks")
-        
+        # Emit signal
+        self.signal_masks_main_menu.emit
+
     def button_acquisition_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_acquisition_main_menu.setStyleSheet(actived_button)
         
-        # Action
-        print("Acquisition")
-        
+        # Emit signal
+        self.signal_acquisition_main_menu.emit
+
     def button_analyzes_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_analyzes_main_menu.setStyleSheet(actived_button)
         
-        # Action
-        print("Analyzes")
-        
+        # Emit signal
+        self.signal_analyzes_main_menu.emit
+
     def button_options_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
         self.button_options_main_menu.setStyleSheet(actived_button)
         
-        # Action
-        print("Options")
-        
+        # Emit signal
+        self.signal_options_main_menu.emit
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

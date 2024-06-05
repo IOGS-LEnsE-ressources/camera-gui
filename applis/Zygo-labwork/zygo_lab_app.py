@@ -22,13 +22,18 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import pyqtSignal, QTimer, Qt
+from PyQt6.QtGui import QPixmap, QIcon
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from ids_peak import ids_peak
 
+from lensepy import load_dictionary, translate
+from lensepy.css import *
+
+from widgets.title_widget import TitleWidget
+from widgets.main_menu_widget import MainMenuWidget
 
 class ZygoLabApp(QWidget):
 
@@ -36,7 +41,6 @@ class ZygoLabApp(QWidget):
         """Default constructor of the class.
         """
         super().__init__(parent=None)
-        self.layout = QVBoxLayout()
 
         # Initialyzation of the camera
         # ----------------------------
@@ -52,12 +56,41 @@ class ZygoLabApp(QWidget):
         else:
             print("No Camera")
             return
-        self.camera_widget = CameraIdsWidget(camera=device, params_disp=False)
+        self.camera = device
         # ----------------------------
-        self.layout.addWidget(QLabel("Test Camera"))
-        self.layout.addWidget(self.camera_widget)
-        self.layout.addStretch()
+
+        self.layout = QGridLayout()
         self.setLayout(self.layout)
+        
+        # Columns stretch: 10%, 45%, 45%
+        self.layout.setColumnStretch(0, 10)
+        self.layout.setColumnStretch(1, 45)
+        self.layout.setColumnStretch(2, 45)
+        
+        # Rows stretch: 4%, 48%, 48%
+        self.layout.setRowStretch(0, 4)
+        self.layout.setRowStretch(1, 48)
+        self.layout.setRowStretch(2, 48)
+
+        self.title_widget = TitleWidget() 
+        self.layout.addWidget(self.title_widget, 0, 0, 1, 3)
+
+        self.main_menu_widget = MainMenuWidget()
+        self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
+
+        self.camera_widget = CameraIdsWidget(camera=self.camera, params_disp=False)
+        self.layout.addWidget(self.camera_widget, 1, 1)
+        self.layout.setAlignment(self.camera_widget, Qt.AlignmentFlag.AlignCenter)
+
+        self.menu_test_12 = MainMenuWidget()
+        self.layout.addWidget(self.menu_test_12, 1,2)
+
+        self.menu_test_21 = MainMenuWidget()
+        self.layout.addWidget(self.menu_test_21, 2, 1)
+
+        self.menu_test_22 = MainMenuWidget()
+        self.layout.addWidget(self.menu_test_22, 2, 2)
+        
 
     def refresh_app(self):
         """Action performed for refreshing the display of the app."""
@@ -80,12 +113,16 @@ class ZygoLabApp(QWidget):
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
 
-
     class MyWindow(QMainWindow):
         def __init__(self):
             super().__init__()
+            
+            # Define Window title
+            self.setWindowTitle(translate("Zygo-IDS Labwork APP"))
+            self.setWindowIcon(QIcon('assets\IOGS-LEnsE-icon.jpg'))
+            self.setGeometry(50, 50, 700, 700)
 
-            self.setWindowTitle("Zygo-IDS Labwork APP")
+            dictionary = load_dictionary("lang\dict_EN.txt")
 
             self.central_widget = ZygoLabApp()
             self.setCentralWidget(self.central_widget)
