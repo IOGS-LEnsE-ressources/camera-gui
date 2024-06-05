@@ -204,145 +204,13 @@ def unwrap2D(arr: np.array, period: float = 2 * np.pi) -> Tuple[np.array, bool, 
 
     The function unwraps the phase of a 2D array by first unwrapping along the columns and then along the rows.
     It combines these results and handles discrepancies to produce a final unwrapped array.
-
-    Parameters
-    ----------
-    arr : np.array
-        The input 2D array containing phase values.
-    period : float, optional
-        The period of the phase, by default 2π.
-
-    Returns
-    -------
-    Tuple[np.array, bool, list[float]]:
-        unwrapped_arr : np.array
-            The resulting 2D array after phase unwrapping.
-        serious_problem : bool
-            A boolean flag indicating whether a serious problem was detected during the unwrapping process.
-        info : list of float
-            A list containing the following three elements:
-            - standard_deviation_offset (float): The standard deviation of the phase offset values.
-            - initial_offset_error (float): The initial offset error before filtering problematic points.
-            - problematic_points_ratio (float): The ratio of problematic points to the total number of points.
-
-    Notes
-    -----
-    - The function first unwraps the phase along the columns using `unwrap2D_columns_first`.
-    - Then it unwraps the phase along the rows by transposing the array, applying `unwrap2D_columns_first`, and transposing back.
-    - It identifies common points that are not NaN in both unwrapped arrays and calculates the phase offset.
-    - Problematic points are identified where the phase difference exceeds a small threshold.
-    - If the proportion of problematic points or the standard deviation of the phase offset is too high, a serious problem is flagged, and divergent points are removed.
-    - Otherwise, the unwrapped arrays are combined, resolving discrepancies based on column and row derivatives.
-
-    See Also
-    --------
-    unwrap1D : Unwrap phase values of a 1D array while handling NaNs.
-    unwrap2D_columns_first : Unwrap phase values of each column independently.
-    merge_with_offset : Merge two arrays while handling NaN values and calculating offsets.
-    remove_nan_groups : Remove consecutive NaN groups from an array, assuming non-NaN values are connected.
-
-    Examples
-    --------
-    >>> arr = np.array([[0, np.pi/2, np.pi], [np.pi, 3*np.pi/2, 2*np.pi]])
-    >>> unwrapped_arr, serious_problem, info = unwrap2D(arr)
-    >>> unwrapped_arr
-    array([[0.        , 1.57079633, 3.14159265],
-           [3.14159265, 4.71238898, 6.28318531]])
-    >>> serious_problem
-    False
-    >>> info
-    [0.0, 0.0, 0.0]
     """
-    unwrapped_arr_cols_first = unwrap1D(arr, period=period, axis=0)
-    unwrapped_arr_lines_first = unwrap1D(arr, period=period, axis=1)
+    arr_unwrapped_axis_0 = unwrap1D(arr, period, axis=0)
+    arr_unwrapped_axis_1 = unwrap1D(arr, period, axis=1)
 
-    nan_unwrapped_arr_by_cols = np.isnan(unwrapped_arr_cols_first)
-    nan_unwrapped_arr_by_lines = np.isnan(unwrapped_arr_lines_first)
-
-    common_points = (~nan_unwrapped_arr_by_cols) & (~nan_unwrapped_arr_by_lines)  # Non-NaN common points
-
-    phase_offset_values = unwrapped_arr_cols_first[common_points] - unwrapped_arr_lines_first[common_points]
-    mean_phase_offset = np.mean(phase_offset_values)
-    wrapped_phase_offset = period * np.round(mean_phase_offset / period)
-    initial_offset_error = np.abs(wrapped_phase_offset - mean_phase_offset)
-
-    # Identify problematic points
-    problematic_points = np.abs(
-        unwrapped_arr_cols_first - unwrapped_arr_lines_first - wrapped_phase_offset) > period / 10000
-
-    # Recalculate phase offset without problematic points
-    filtered_phase_offset_values = unwrapped_arr_cols_first[common_points & (~problematic_points)] - unwrapped_arr_lines_first[common_points & (~problematic_points)]
-    if len(filtered_phase_offset_values) >= 2:
-        mean_phase_offset = np.mean(filtered_phase_offset_values)
-        wrapped_phase_offset = period * np.round(mean_phase_offset / period)
-        standard_deviation_offset = np.std(filtered_phase_offset_values)
-    else:
-        standard_deviation_offset = np.inf
-
-    num_problematic_points = np.sum(problematic_points)
-    num_common_points = np.sum(common_points)
-    problematic_points_ratio = num_problematic_points / num_common_points
-
-    info = [standard_deviation_offset,
-            initial_offset_error, problematic_points_ratio]
-
-    max_problematic_points_ratio = 0.05
-
-    if problematic_points_ratio > max_problematic_points_ratio or standard_deviation_offset > period / 10000:  # Serious problem
-        serious_problem = True
-        # Remove non-common and divergent points
-        unwrapped_arr = unwrapped_arr_cols_first.copy()
-        unwrapped_arr[~common_points] = np.nan
-        unwrapped_arr[problematic_points] = np.nan
-    else:
-        serious_problem = False
-        # Combine data
-        unwrapped_arr = unwrapped_arr_cols_first.copy()
-        unwrapped_arr[nan_unwrapped_arr_by_cols & (~nan_unwrapped_arr_by_lines)] = unwrapped_arr_lines_first[nan_unwrapped_arr_by_cols & (
-            ~nan_unwrapped_arr_by_lines)] + wrapped_phase_offset
-
-        # Handle divergent common points
-        problematic_indices_i, problematic_indices_j = np.nonzero(
-            problematic_points)
-        num_rows, num_columns = arr.shape
-
-        for idx in range(num_problematic_points):
-            if problematic_indices_i[idx] in [0, num_rows - 1] or problematic_indices_j[idx] in [0, num_columns - 1]:
-                # At the edge of the image
-                unwrapped_arr[problematic_indices_i[idx],
-                              problematic_indices_j[idx]] = np.nan
-            else:
-                # Calculate derivatives
-                col_diffs = np.diff(
-                    unwrapped_arr_cols_first[problematic_indices_i[idx], problematic_indices_j[idx] + np.array([-1, 0, 1])])
-                col_diffs = col_diffs[~np.isnan(col_diffs)]
-                line_diffs = np.diff(
-                    unwrapped_arr_lines_first[problematic_indices_i[idx] + np.array([-1, 0, 1]), problematic_indices_j[idx]])
-                line_diffs = line_diffs[~np.isnan(line_diffs)]
-
-                # Check derivatives for issues
-                col_problem = np.any(np.abs(col_diffs) >
-                                     period) or len(col_diffs) == 0
-                line_problem = np.any(
-                    np.abs(line_diffs) > period) or len(line_diffs) == 0
-
-                if col_problem and line_problem:
-                    # Problem in both directions
-                    unwrapped_arr[problematic_indices_i[idx],
-                                  problematic_indices_j[idx]] = np.nan
-                elif col_problem:
-                    # Problem in unwrapped_arr_cols_first
-                    unwrapped_arr[problematic_indices_i[idx], problematic_indices_j[idx]
-                                  ] = unwrapped_arr_lines_first[problematic_indices_i[idx], problematic_indices_j[idx]] + wrapped_phase_offset
-                elif line_problem:
-                    # Problem in unwrapped_arr_lines_first
-                    pass
-                else:
-                    # Divergence without column or row problem
-                    unwrapped_arr[problematic_indices_i[idx],
-                                  problematic_indices_j[idx]] = np.nan
-
-    return unwrapped_arr, serious_problem, info
+    arr_unwrapped = merge_with_offset(arr_unwrapped_axis_0, arr_unwrapped_axis_1)
+    arr_unwrapped = interpolate_nan_2d(arr_unwrapped)
+    return arr_unwrapped
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
@@ -382,12 +250,15 @@ if __name__ == '__main__':
 
     real_z = 40-(_x**2+_y**2)
     z_wrapped = (real_z % np.pi) - np.pi/2
-    z_unwrapped = unwrap1D(unwrap1D(z_wrapped, axis=0, period=np.pi), axis=1, period=np.pi)
-
+    z_unwrapped = unwrap2D(z_wrapped)
     fig = plt.figure()
     ax = plt.axes(projection='3d')
     ax.plot_surface(_x, _y, real_z)
     ax.plot_surface(_x, _y, z_wrapped)
     ax.plot_surface(_x, _y, z_unwrapped)
+    plt.show()
+
+    plt.figure()
+    plt.plot(x, z_unwrapped[0, :])
     plt.show()
 
