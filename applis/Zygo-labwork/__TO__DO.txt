@@ -21,12 +21,13 @@ GUI Dev
 
 Global
 ------
-
+- If no camera is connected, disable main_menu possibilities (camera_settings...) ?
 
 Camera
 ------
 - Create/Modify CameraParameters
 - Test ParamsWidget outside CamWidget and test update params
+- Load default parameters (stored in a file ?)
 
 Piezo
 -----

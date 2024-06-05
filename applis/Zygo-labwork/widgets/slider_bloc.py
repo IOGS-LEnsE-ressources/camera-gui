@@ -81,7 +81,16 @@ def is_number(value, min_val=0, max_val=0):
 
 # %% Widget
 class SliderBloc(QWidget):
-    def __init__(self, name:str, unit:str, min_value:float, max_value:float) -> None: 
+    """
+
+    """
+
+    slider_changed = pyqtSignal(str)
+
+    def __init__(self, name:str, unit:str, min_value:float, max_value:float) -> None:
+        """
+
+        """
         super().__init__(parent=None)
         self.min_value = min_value
         self.max_value = max_value
@@ -144,6 +153,7 @@ class SliderBloc(QWidget):
         
     def slider_position_changed(self):
         self.value = self.slider.value()/self.ratio
+        self.slider_changed.emit(f'TO CHANGE')
         self.update_block()
     
     def input_changed(self):
@@ -153,6 +163,10 @@ class SliderBloc(QWidget):
     def update_block(self):
         self.lineedit_value.setText(str(self.value))
         self.slider.setValue(int(self.value*self.ratio))
+
+    def get_value(self):
+        """Return the value of the block."""
+        return self.value
         
 # %% Example
 if __name__ == '__main__':

@@ -49,19 +49,7 @@ class ZygoLabApp(QWidget):
 
         # Initialization of the camera
         # ----------------------------
-        # Init IDS Peak
-        ids_peak.Library.Initialize()
-        # Create a camera manager
-        manager = ids_peak.DeviceManager.Instance()
-        manager.Update()
-
-        if manager.Devices().empty():
-            print("No Camera")
-            device = None
-        else:
-            print("Camera")
-            device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
-        self.camera = device
+        self.camera_device = self.init_camera()
         # ----------------------------
 
         self.layout = QGridLayout()
@@ -88,14 +76,14 @@ class ZygoLabApp(QWidget):
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
 
         # Camera Widget: top-left corner
-        self.camera_widget = CameraIdsWidget(self.camera, params_disp=False)
+        self.camera_widget = CameraIdsWidget(self.camera_device, params_disp=False)
         self.camera_widget.main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.camera_widget, 1, 1)
-
+        self.camera = self.camera_widget.camera
 
         # Other Widgets
         # -------------
-        self.camera_settings_widget = CameraSettingsWidget()
+        self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget()
         self.acquisition_menu_widget = AcquisitionMenuWidget()
         self.results_menu_widget = ResultsMenuWidget()
@@ -105,6 +93,24 @@ class ZygoLabApp(QWidget):
         # -------
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
         self.options_menu_widget.signal_language_updated.connect(self.update_labels)
+        self.camera_widget.connected.connect(self.signal_camera_connected_isReceived)
+
+    def init_camera(self) -> ids_peak.Device:
+        """Initialisation of the camera.
+        If no IDS camera, display options to connect a camera"""
+        # Init IDS Peak
+        ids_peak.Library.Initialize()
+        # Create a camera manager
+        manager = ids_peak.DeviceManager.Instance()
+        manager.Update()
+
+        if manager.Devices().empty():
+            print("No Camera")
+            device = None
+        else:
+            print("Camera")
+            device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+        return device
 
     def refresh_app(self):
         """Action performed for refreshing the display of the app."""
@@ -124,6 +130,12 @@ class ZygoLabApp(QWidget):
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+
+    def signal_camera_connected_isReceived(self, event):
+        """Action performed when a camera is connected."""
+        self.camera = self.camera_widget.camera
+        self.camera_settings_widget = CameraSettingsWidget(self.camera)
+        print(f'Connect {event}')
 
     def signal_menu_selected_isReceived(self, event):
         if event == 'camera_settings_main_menu':
@@ -205,6 +217,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyWindow()
     main.showMaximized()
-
-    print(main.central_widget.camera_widget.is_connected())
     sys.exit(app.exec())

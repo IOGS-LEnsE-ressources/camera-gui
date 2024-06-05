@@ -33,6 +33,7 @@ else:
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+from lensecam.ids.camera_ids import CameraIds
 
 # %% To add in lensepy librairy
 # Styles
@@ -46,9 +47,13 @@ OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class CameraSettingsWidget(QWidget):
-    def __init__(self):
+    def __init__(self, camera: CameraIds):
+        """
+
+        """
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
+        self.camera = camera
         
         # Title
         # -----
@@ -76,13 +81,24 @@ class CameraSettingsWidget(QWidget):
         # Settings
         # --------
         self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
+        self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
         
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)
         self.layout.addWidget(self.slider_exposure_time)
         self.layout.addStretch()
         self.setLayout(self.layout)
-        
+
+    def slider_exposure_time_changing(self, event):
+        """Action performed when the exposure time slider changed."""
+        print(f'Slider {event}')
+        if self.camera is not None:
+            print(f'{self.camera.get_cam_info()}')
+            exposure_time_value = self.slider_exposure_time.get_value()
+            print(f'ExpoTime Changed ? {self.camera.set_exposure(exposure_time_value)}')
+        else:
+            print('No Camera Connected')
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
@@ -101,7 +117,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_camera_settings"))
             self.setGeometry(300, 300, 400, 600)
 
-            self.central_widget = CameraSettingsWidget()
+            self.central_widget = CameraSettingsWidget(camera=None)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):
