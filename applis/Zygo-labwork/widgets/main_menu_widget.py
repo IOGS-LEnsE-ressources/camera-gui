@@ -41,13 +41,13 @@ OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class MainMenuWidget(QWidget):
+    # Signals definition
+    # ------------------
+    signal_menu_selected = pyqtSignal(str)
+
     def __init__(self):
         super().__init__(parent=None)
         self.setStyleSheet("background-color: white;")
-
-        # Signals definition
-        # ------------------
-        ...
 
         # Widgets
         # -------
@@ -111,6 +111,7 @@ class MainMenuWidget(QWidget):
         self.button_camera_settings_main_menu.setStyleSheet(actived_button)
         
         # Action
+        self.signal_menu_selected.emit('camera_settings_main_menu')
         print("Camera Settings")
         
     def button_masks_main_menu_isClicked(self):
@@ -119,6 +120,7 @@ class MainMenuWidget(QWidget):
         self.button_masks_main_menu.setStyleSheet(actived_button)
         
         # Action
+        self.signal_menu_selected.emit('masks_main_menu')
         print("Masks")
         
     def button_acquisition_main_menu_isClicked(self):

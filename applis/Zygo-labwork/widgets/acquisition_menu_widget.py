@@ -123,10 +123,12 @@ class AcquisitionMenuWidget(QWidget):
         self.button_simple_acquisition = QPushButton(translate('button_simple_acquisition'))
         self.button_simple_acquisition.setStyleSheet(unactived_button)
         self.button_simple_acquisition.setFixedHeight(BUTTON_HEIGHT)
+        self.button_simple_acquisition.clicked.connect(self.button_simple_acquisition_isClicked)
 
         self.button_repeated_acquisition = QPushButton(translate('button_repeated_acquisition'))
         self.button_repeated_acquisition.setStyleSheet(unactived_button)
         self.button_repeated_acquisition.setFixedHeight(BUTTON_HEIGHT)
+        self.button_repeated_acquisition.clicked.connect(self.button_repeated_acquisition_isClicked)
 
         self.sublayout_start_acquisiton.addWidget(self.button_simple_acquisition)
         self.sublayout_start_acquisiton.addWidget(self.button_repeated_acquisition)
@@ -150,10 +152,12 @@ class AcquisitionMenuWidget(QWidget):
         self.button_see_and_save_images = QPushButton(translate('button_see_and_save_images'))
         self.button_see_and_save_images.setStyleSheet(unactived_button)
         self.button_see_and_save_images.setFixedHeight(BUTTON_HEIGHT)
+        self.button_see_and_save_images.clicked.connect(self.button_see_and_save_images_isClicked)
 
         self.button_save_phase = QPushButton(translate('button_save_phase'))
         self.button_save_phase.setStyleSheet(unactived_button)
         self.button_save_phase.setFixedHeight(BUTTON_HEIGHT)
+        self.button_save_phase.clicked.connect(self.button_save_phase_isClicked)
 
         self.sublayout_save_acquisiton.addWidget(self.button_see_and_save_images)
         self.sublayout_save_acquisiton.addWidget(self.button_save_phase)
@@ -190,6 +194,27 @@ class AcquisitionMenuWidget(QWidget):
         else:
             # Laissez le QLineEdit gérer les autres touches
             super().keyPressEvent(event)
+
+    def button_simple_acquisition_isClicked(self):
+        self.button_simple_acquisition.setStyleSheet(actived_button)
+        print('button_simple_acquisition_isClicked')
+        self.button_simple_acquisition.setStyleSheet(unactived_button)
+
+    def button_repeated_acquisition_isClicked(self):
+        self.button_repeated_acquisition.setStyleSheet(actived_button)
+        print('button_repeated_acquisition_isClicked')
+        self.button_repeated_acquisition.setStyleSheet(unactived_button)
+    
+    
+    def button_see_and_save_images_isClicked(self):
+        self.button_see_and_save_images.setStyleSheet(actived_button)
+        print('button_see_and_save_images_isClicked')
+        self.button_see_and_save_images.setStyleSheet(unactived_button)
+
+    def button_save_phase_isClicked(self):
+        self.button_save_phase.setStyleSheet(actived_button)
+        print('button_save_phase_isClicked')
+        self.button_save_phase.setStyleSheet(unactived_button)
 
 # %% Example
 if __name__ == '__main__':

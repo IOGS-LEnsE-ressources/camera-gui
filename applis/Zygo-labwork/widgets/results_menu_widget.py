@@ -20,7 +20,8 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-from lineedit_block import LineEditBlock
+from combobox_block import ComboBoxBlock
+from table_from_numpy import TableFromNumpy
 
 # %% To add in lensepy library
 # Styles
@@ -44,11 +45,46 @@ class ResultsMenuWidget(QWidget):
         self.master_layout = QVBoxLayout()
         self.master_widget.setStyleSheet("background-color: white;")
         
-        ...
+        # Title
+        # -----
+        self.label_title_results = QLabel(translate('label_title_results'))
+
+        # ComboBox
+        # --------
+        list_choices = [translate('3D_plot')]
+        self.combobox_type_output_plot = ComboBoxBlock(translate('label_output_type'), list_choices)
+
+        # Table results
+        # -------------
+        self.array_no_results = np.array([
+            ['', 1, 2, 3, 4, 5, translate('average')],
+            ['PV', np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+            ['RMS', np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+        ])
+        self.table_results = TableFromNumpy(self.array_no_results)
+
+        # Print button
+        # ------------
+        self.button_print_all_results = QPushButton(translate('button_print_all_results'))
+        self.button_print_all_results.setStyleSheet(unactived_button)
+        self.button_print_all_results.setFixedHeight(BUTTON_HEIGHT)
+        self.button_print_all_results.clicked.connect(self.button_print_all_results_isClicked)
+
+        # Add widgets to the layout
+        # -------------------------
+        self.layout.addWidget(self.label_title_results)
+        self.layout.addWidget(self.combobox_type_output_plot)
+        self.layout.addWidget(self.table_results)
+        self.layout.addWidget(self.button_print_all_results)
 
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
+
+    def button_print_all_results_isClicked(self):
+        self.button_print_all_results.setStyleSheet(actived_button)
+        print('button_print_all_results_isClicked')
+        self.button_print_all_results.setStyleSheet(unactived_button)
 
 
 # %% Example

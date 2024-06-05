@@ -39,4 +39,5 @@ Piezo
 GUI
 ---
 - in TitleWidget (widgets/title_widget.py), find a way to add transparency on the logo.
+  -> Remove the background of the logo (with remove.bg for example, or modify the source file)
 - 

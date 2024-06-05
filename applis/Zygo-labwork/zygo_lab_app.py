@@ -97,6 +97,15 @@ class ZygoLabApp(QWidget):
         # Grid (2, 2)
         self.menu_test_22 = MainMenuWidget()
         self.layout.addWidget(self.menu_test_22, 2, 2)
+
+        self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
+
+    def signal_menu_selected_isReceived(self, event):
+        if event == 'camera_settings_main_menu':
+            print(f"CA MARCHE camera_settings_main_menu")
+
+        elif event == 'masks_main_menu':
+            print(f"CA MARCHE masks_main_menu")
         
 
     def refresh_app(self):
