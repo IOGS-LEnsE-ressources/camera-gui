@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""*results_menu_widget.py* file.
+"""*acquisition_menu_widget.py* file.
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
@@ -21,7 +21,6 @@ from lensepy import load_dictionary, translate
 from lensepy.css import *
 
 from combobox_bloc import ComboBoxBloc
-from table_from_numpy import TableFromNumpy
 
 # %% To add in lensepy library
 # Styles
@@ -35,10 +34,13 @@ styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight
 BUTTON_HEIGHT = 30  # px
 
 # %% Widget
-class ResultsMenuWidget(QWidget):
+class OptionsMenuWidget(QWidget):
+
+    signal_language_updated = pyqtSignal()
+
     def __init__(self):
         super().__init__(parent=None)
-        self.setStyleSheet("background-color: white;")
+
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -48,49 +50,46 @@ class ResultsMenuWidget(QWidget):
         
         # Title
         # -----
-        self.label_title_results = QLabel(translate('label_title_results'))
+        self.label_title_options_menu = QLabel(translate('label_title_options_menu'))
+        self.setStyleSheet(styleH1)
+        
+        # Language Selector
+        # ------------------------------
+        self.list_languages = ['English', 'Français', '中文']
+        self.combobox_language_selection = ComboBoxBloc(translate('label_language_selector'), self.list_languages)
+        self.combobox_language_selection.currentIndexChanged.connect(self.combobox_language_selection_changed)
 
-        # ComboBox
-        # --------
-        list_choices = [translate('3D_plot')]
-        self.combobox_type_output_plot = ComboBoxBloc(translate('label_output_type'), list_choices)
-
-        # Table results
-        # -------------
-        self.array_no_results = np.array([
-            ['', 1, 2, 3, 4, 5, translate('average')],
-            ['PV', np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-            ['RMS', np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
-        ])
-        self.table_results = TableFromNumpy(self.array_no_results)
-
-        # Print button
-        # ------------
-        self.button_print_all_results = QPushButton(translate('button_print_all_results'))
-        self.button_print_all_results.setStyleSheet(unactived_button)
-        self.button_print_all_results.setFixedHeight(BUTTON_HEIGHT)
-        self.button_print_all_results.clicked.connect(self.button_print_all_results_isClicked)
-
+        # Unit Selector
+        # ------------------------------
+        self.list_unit = ['mm', 'λ']
+        self.combobox_unit_selection = ComboBoxBloc(translate('label_unit_selector'), self.list_unit)
+        
         # Add widgets to the layout
         # -------------------------
-        self.layout.addWidget(self.label_title_results)
-        self.layout.addWidget(self.combobox_type_output_plot)
-        self.layout.addWidget(self.table_results)
-        self.layout.addWidget(self.button_print_all_results)
+        self.layout.addWidget(self.label_title_options_menu)
+        self.layout.addWidget(self.combobox_language_selection)
+        self.layout.addWidget(self.combobox_unit_selection)
 
         self.master_widget.setLayout(self.layout)
+
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
-    def button_print_all_results_isClicked(self):
-        self.button_print_all_results.setStyleSheet(actived_button)
-        print('button_print_all_results_isClicked')
-        self.button_print_all_results.setStyleSheet(unactived_button)
-
+    def combobox_language_selection_changed(self, index):
+        self.signal_language_updated.emit()
+        language_selected = self.list_languages[index-1]
+        if language_selected == 'English':
+            dictionary = load_dictionary('lang\dict_EN.txt')
+        elif language_selected == 'Français':
+            dictionary = load_dictionary('lang\dict_FR.txt')
+        elif language_selected == '中文':
+            dictionary = load_dictionary('lang\dict_CN.txt')
+    
 
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
+    from ids_peak import ids_peak
 
     class MyWindow(QMainWindow):
         def __init__(self):
@@ -103,10 +102,10 @@ if __name__ == '__main__':
             # Load English dictionary
             dictionary = load_dictionary('../lang/dict_EN.txt')
 
-            self.setWindowTitle(translate("window_title_main_menu_widget"))
+            self.setWindowTitle(translate("window_title_options_menu_widget"))
             self.setGeometry(300, 300, 800, 200)
 
-            self.central_widget = ResultsMenuWidget()
+            self.central_widget = OptionsMenuWidget()
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

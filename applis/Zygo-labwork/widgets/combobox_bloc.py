@@ -31,14 +31,14 @@ from lensepy.css import *
 # %% To add in lensepy librairy
 # Styles
 # ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
+styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS}; font-weight: bold;"
+styleH3 = f"font-size:15px; color:{BLUE_IOGS}; font-weight: normal"
 
 # Translation
 dictionary = {}
 
 # %% Widget
-class ComboBoxBlock(QWidget):
+class ComboBoxBloc(QWidget):
     def __init__(self, title: str, list_options: list) -> None: 
         super().__init__(parent=None)
         
@@ -48,20 +48,18 @@ class ComboBoxBlock(QWidget):
         self.label.setStyleSheet(styleH2)
 
         self.combobox = QComboBox()
-        self.combobox.addItem('===== '+translate('name_output_type_choice')+' =====')  # Add the placeholder item
+        self.combobox.addItem('===== '+translate('name_output_type_choice')+' =====')
         self.combobox.addItems(list_options)
         self.combobox.setCurrentIndex(0)
-        self.combobox.currentIndexChanged.connect(self.combobox_changed)
+        self.combobox.setStyleSheet(styleH3)
+
+        self.currentIndexChanged = self.combobox.currentIndexChanged
 
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.combobox)
 
         self.setLayout(self.layout)
         self.layout.setContentsMargins(0, 0, 0, 0)
-
-    def combobox_changed(self, index):
-        self.index_selected_option = self.combobox.currentIndex()
-        # print(self.index_selected_option)
 
         
 # %% Example
@@ -82,7 +80,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_combo_box_block"))
             self.setGeometry(300, 300, 600, 600)
 
-            self.central_widget = ComboBoxBlock(title='Title', list_options=['opt1', 'opt2'])
+            self.central_widget = ComboBoxBloc(title='Title', list_options=['opt1', 'opt2'])
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

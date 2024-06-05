@@ -20,7 +20,7 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-from lineedit_block import LineEditBlock
+from lineedit_bloc import LineEditBloc
 
 # %% To add in lensepy library
 # Styles
@@ -104,6 +104,7 @@ class RemoveFaultsWidget(QWidget):
 class AcquisitionMenuWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
+
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -138,7 +139,7 @@ class AcquisitionMenuWidget(QWidget):
 
         # Wedge factor entry
         #-------------------
-        self.lineedit_wedge_factor = LineEditBlock('label_wedge_factor', txt='0.5')
+        self.lineedit_wedge_factor = LineEditBloc('label_wedge_factor', txt='0.5')
         self.lineedit_wedge_factor.keyPressEvent = self.wedge_factor_is_modified
 
         # Remove faults menu
@@ -200,6 +201,7 @@ class AcquisitionMenuWidget(QWidget):
         self.button_simple_acquisition.setStyleSheet(actived_button)
         print('button_simple_acquisition_isClicked')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
+        print(self.camera.get_image())
 
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
@@ -220,6 +222,7 @@ class AcquisitionMenuWidget(QWidget):
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
+    from ids_peak import ids_peak
 
     class MyWindow(QMainWindow):
         def __init__(self):

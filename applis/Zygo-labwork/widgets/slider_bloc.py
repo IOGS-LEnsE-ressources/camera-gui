@@ -80,7 +80,7 @@ def is_number(value, min_val=0, max_val=0):
         return False
 
 # %% Widget
-class SliderBlock(QWidget):
+class SliderBloc(QWidget):
     def __init__(self, name:str, unit:str, min_value:float, max_value:float) -> None: 
         super().__init__(parent=None)
         self.min_value = min_value
@@ -172,7 +172,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_slider_block"))
             self.setGeometry(300, 300, 600, 600)
 
-            self.central_widget = SliderBlock(name='name', unit='unit', min_value=4.2, max_value=7.8)
+            self.central_widget = SliderBloc(name='name', unit='unit', min_value=4.2, max_value=7.8)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

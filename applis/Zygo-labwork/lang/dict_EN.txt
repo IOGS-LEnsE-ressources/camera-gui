@@ -33,6 +33,14 @@ checkbox_apply_mask; Apply the mask
 checkbox_inverse_mask; Inverse the mask
 
 # --------------------
+# OptionsMenuWidget
+# --------------------
+window_title_options_menu_widget; Options Menu
+label_title_options_menu; Options
+label_language_selector; Language
+label_unit_selector; Unit
+
+# --------------------
 # TitleWidget
 # --------------------
 label_title; Zygo

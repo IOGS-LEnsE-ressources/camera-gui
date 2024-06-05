@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
-from slider_block import SliderBlock
+from slider_bloc import SliderBloc
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
@@ -71,7 +71,7 @@ class CameraSettingsWidget(QWidget):
         
         # Settings
         # --------
-        self.slider_exposure_time = SliderBlock(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
+        self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)

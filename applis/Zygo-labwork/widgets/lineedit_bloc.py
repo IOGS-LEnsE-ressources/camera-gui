@@ -38,7 +38,7 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 dictionary = {}
 
 # %% Widget
-class LineEditBlock(QWidget):
+class LineEditBloc(QWidget):
     def __init__(self, title: str, txt:str='') -> None: 
         super().__init__(parent=None)
         
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_line_edit_block"))
             self.setGeometry(300, 300, 600, 600)
 
-            self.central_widget = LineEditBlock(title='Title', txt='HEY !')
+            self.central_widget = LineEditBloc(title='Title', txt='HEY !')
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

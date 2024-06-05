@@ -18,7 +18,7 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QGridLayout,
+    QVBoxLayout, QGridLayout, QHBoxLayout,
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
@@ -38,6 +38,7 @@ from widgets.camera_settings_widget import CameraSettingsWidget
 from widgets.masks_menu_widget import MasksMenuWidget
 from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
+from widgets.options_menu_widget import OptionsMenuWidget
 
 class ZygoLabApp(QWidget):
 
@@ -92,10 +93,12 @@ class ZygoLabApp(QWidget):
         self.masks_menu_widget = MasksMenuWidget()
         self.acquisition_menu_widget = AcquisitionMenuWidget()
         self.results_menu_widget = ResultsMenuWidget()
+        self.options_menu_widget = OptionsMenuWidget()
 
         # Signals
         # -------
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
+        self.options_menu_widget.signal_language_updated.connect(self.update_labels)
 
     def refresh_app(self):
         """Action performed for refreshing the display of the app."""
@@ -140,7 +143,23 @@ class ZygoLabApp(QWidget):
             pass
 
         elif event == 'options_main_menu':
-            pass
+            self.clearLayout(2,1)
+            self.clearLayout(2,2)
+
+            self.layout.addWidget(self.options_menu_widget, 2, 1)
+
+    def update_labels(self, window):
+        # Iterate through all the widgets and sub-widgets of the main window
+        for widget in window.findChildren(QWidget):
+            # Check if the widget is a QLabel
+            if isinstance(widget, QLabel):
+                # Update the text using translate
+                widget.setText(translate(widget.text()))
+
+            # If the widget is a container, recursively call the function
+            if isinstance(widget, (QVBoxLayout, QHBoxLayout, QGridLayout)):
+                for subwidget in widget.findChildren(QWidget):
+                    self.update_labels(subwidget)
 
 
 if __name__ == '__main__':
