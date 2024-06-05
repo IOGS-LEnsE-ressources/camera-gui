@@ -82,9 +82,24 @@ class MainWindow(QMainWindow):
     def camera_settings_action(self, event) -> None:
         if self.camera is None:
             print('No Camera')
-        print(f'Camera Settings {event}')
+        self.clearLayout(2, 1)
         self.params_widget = CameraChoice()
         self.main_layout.addWidget(self.params_widget, 2, 1)
+
+    def clearLayout(self, row: int, column: int) -> None:
+        """Remove widgets from a specific position in the layout.
+
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
+
+        """
+        item = self.main_layout.itemAtPosition(row, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
     def closeEvent(self, event):
         """
