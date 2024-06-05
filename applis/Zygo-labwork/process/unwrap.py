@@ -14,6 +14,7 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 
 import numpy as np
 from typing import Tuple, Optional
+from scipy.interpolate import interp1d
 
 
 def unwrap1D(arr: np.array, period: Optional[float] = 6.2831853072, axis: Optional[int] = 0) -> np.array:
@@ -133,162 +134,69 @@ def merge_with_offset(arr_1: np.array, arr_2: np.array) -> np.array:
     return merger
 
 
-def remove_nan_groups(arr: np.array) -> np.array:
+def interpolate_nan_2d(arr):
     """
-    Remove consecutive NaN groups from an array, assuming non-NaN values are connected.
+    Interpolate NaN values in a 2D numpy array along each row and column.
 
     Parameters
     ----------
     arr : np.ndarray
-        Input array with NaN values.
+        Input 2D array with NaN values.
 
     Returns
     -------
     np.ndarray
-        Array with consecutive NaN groups removed.
+        Array with NaN values interpolated along each row and column.
 
     Notes
     -----
-    This function removes consecutive groups of NaNs from the input array.
-    It assumes that non-NaN values in the input array are connected.
-
-    See Also
-    --------
-    np.finfo(float).eps : The smallest representable positive number for the 'float' data type.
+    This function interpolates NaN values in a 2D numpy array along each row and column using linear interpolation.
 
     Examples
     --------
-    >>> arr = np.array([1.0, np.nan, np.nan, 1.0, 2.0, np.nan, 3.0, np.nan, np.nan, np.nan, 3.0])
-    >>> clean_arr = remove_nan_groups(arr)
-    >>> print(clean_arr)
-    [ 1.  1.  1.  1.  2. nan  3.  3.  3.  3.  3.]
+    >>> arr = np.array([[1.0, np.nan, 2.0],
+    ...                 [np.nan, 3.0, np.nan],
+    ...                 [4.0, 5.0, np.nan]])
+    >>> interpolated_arr = interpolate_nan_2d(arr)
+    >>> print(interpolated_arr)
+    [[1.  1.5 2. ]
+     [2.5 3.  2.5]
+     [4.  5.  5. ]]
+
     """
-    nan_indices = np.where(np.isnan(arr))[0]  # Find the indices of NaN values
-    nan_count = len(nan_indices)
+    # Interpoler sur les lignes
+    interpolated_arr = interpolate_rows(arr)
+    
+    # Interpoler sur les colonnes
+    interpolated_arr = interpolate_rows(interpolated_arr.T).T
+    
+    return interpolated_arr
 
-    if nan_count != 0:
-        # Calculate the differences between NaN indices
-        nan_diff = np.append(np.diff(nan_indices), 0)
-
-        # Create a matrix of indices for consecutive NaNs groups
-        nan_groups = np.zeros((0, 2), dtype=int)
-        j = 0
-        while j < nan_count:
-            nan_groups = np.append(
-                nan_groups, [[nan_indices[j], nan_indices[j]]], axis=0)
-            while j < nan_count and nan_diff[j] == 1:
-                j += 1
-                # Update the ending index of the group
-                nan_groups[-1, 1] = nan_indices[j]
-            j += 1
-
-        # Pre-process groups of NaNs at the beginning or end
-        if nan_groups[0, 0] == 0:
-            nan_groups = nan_groups[1:, :]
-        if len(nan_groups) != 0 and nan_groups[-1, 1] == len(arr):
-            nan_groups = nan_groups[:-1, :]
-
-        # Remove groups of NaNs intersecting a value plateau
-        for group in nan_groups:
-            if abs(arr[group[0] - 1] - arr[group[1] + 1]) < np.finfo(float).eps * 2000:
-                arr[group[0]:group[1] + 1] = arr[group[0] - 1]
-    return arr
-
-
-def unwrap2D_columns_first(arr: np.array, period: Optional[float] = 6.2831853072, axis: Optional[int] = 0) -> np.array:
+def interpolate_rows(arr):
     """
-    Unwrap phase values of each column independently.
+    Interpolate NaN values in a 2D numpy array along each row.
 
     Parameters
     ----------
     arr : np.ndarray
-        Input array containing phase values.
-
-    period : float, optional
-        The period of the phase (default is 2π).
-        This defines the maximum allowed jump between values before unwrapping occurs.
-
-    axis : int, optional
-        The axis along which to unwrap the phase (default is 0).
+        Input 2D array with NaN values.
 
     Returns
     -------
     np.ndarray
-        Unwrapped phase values of each column.
-
-    Notes
-    -----
-    This function unwraps phase values of each column independently.
-
-    It first unwraps the phase values of each column independently using unwrap1D.
-    Then, it identifies a main row with the least NaN values and a secondary row within a certain range from the main row.
-    After that, it unwraps the phase values of the main and secondary rows and calculates the jumps.
-    Next, it removes consecutive NaN groups from the calculated jumps and adjusts them using merge_with_offset.
-    Finally, it applies the adjusted jumps to the entire array to unwrap the phase values.
-
-    See Also
-    --------
-    unwrap1D : Unwrap phase values of a 1D array while handling NaNs.
-
-    Examples
-    --------
-    >>> arr = np.array([[0.5, 1.5, np.nan, 2.5],
-    ...                 [1.0, np.nan, 2.0, 3.0],
-    ...                 [1.5, 2.5, 3.5, 4.5]])
-    >>> unwrapped_arr = unwrap2D_columns_first(arr)
-    >>> print(unwrapped_arr)
-    [[0.5 1.5 nan 2.5]
-     [1.  nan 2.  3. ]
-     [1.5 2.5 3.5 4.5]]
+        Array with NaN values interpolated along each row.
 
     """
-
-    # Unwrap phase values of each column independently
-    unwrapped_arr = unwrap1D(arr, period=period, axis=axis)
-
-    # Get the number of rows in the array
-    number_rows = arr.shape[0]
-
-    # Count the NaN values in each row after unwrapping
-    nan_counts_per_row = np.sum(np.isnan(unwrapped_arr), axis=1)
-
-    # Find the row index with the least NaN values (main row)
-    min_nan_row_index = np.argmin(nan_counts_per_row)
-    main_row = unwrapped_arr[min_nan_row_index]
-
-    # Define the range of rows to consider for finding the secondary row
-    coefficient = 0.025
-    delta_rows = np.ceil(number_rows * coefficient).astype(int)
-    slice_rejected_rows = slice(max(
-        1, min_nan_row_index - delta_rows), min(number_rows, min_nan_row_index + delta_rows))
-    rejected_rows_indices = ~np.isin(
-        np.arange(1, number_rows + 1), slice_rejected_rows)
-
-    # Find the row index with the least NaN values within the defined range (secondary row)
-    min_nan_row_index_excluded = np.argmin(
-        nan_counts_per_row[rejected_rows_indices])
-    if min_nan_row_index_excluded >= min(slice_rejected_rows.stop, number_rows):
-        min_nan_row_index_excluded -= len(
-            range(min(slice_rejected_rows.stop, number_rows), min_nan_row_index_excluded))
-    secondary_row = unwrapped_arr[min_nan_row_index_excluded]
-
-    # Unwrap phase values of the main and secondary rows
-    unwrapped_main_row, unwrapped_secondary_row = unwrap1D(
-        main_row, period=period), unwrap1D(secondary_row, period=period)
-
-    # Calculate the jumps between unwrapped values of the main and secondary rows
-    main_row_jumps, secondary_row_jumps = unwrapped_main_row - \
-        main_row, unwrapped_secondary_row - secondary_row
-
-    # Remove consecutive NaN groups from the jumps and adjust them
-    clean_main_row_jumps = remove_nan_groups(
-        merge_with_offset(main_row_jumps, secondary_row_jumps))
-    clean_main_row_jumps_matrix = np.tile(
-        clean_main_row_jumps, (number_rows, 1))
-
-    # Apply the adjusted jumps to the entire array to unwrap the phase values
-    return unwrapped_arr + clean_main_row_jumps_matrix
-
+    interpolated_arr = np.copy(arr)
+    
+    for i in range(arr.shape[0]):
+        not_nan_mask = ~np.isnan(arr[i])
+        if np.sum(not_nan_mask) > 1:
+            indices = np.arange(arr.shape[1])
+            f = interp1d(indices[not_nan_mask], arr[i, not_nan_mask], kind='linear', fill_value='extrapolate')
+            interpolated_arr[i] = f(indices)
+    
+    return interpolated_arr
 
 def unwrap2D(arr: np.array, period: float = 2 * np.pi) -> Tuple[np.array, bool, list[float]]:
     """
@@ -345,10 +253,8 @@ def unwrap2D(arr: np.array, period: float = 2 * np.pi) -> Tuple[np.array, bool, 
     >>> info
     [0.0, 0.0, 0.0]
     """
-    unwrapped_arr_cols_first = unwrap2D_columns_first(
-        arr)  # Unwrap 2D by columns
-    unwrapped_arr_lines_first = unwrap2D_columns_first(
-        arr.T).T  # Unwrap 2D by rows
+    unwrapped_arr_cols_first = unwrap1D(arr, period=period, axis=0)
+    unwrapped_arr_lines_first = unwrap1D(arr, period=period, axis=1)
 
     nan_unwrapped_arr_by_cols = np.isnan(unwrapped_arr_cols_first)
     nan_unwrapped_arr_by_lines = np.isnan(unwrapped_arr_lines_first)
@@ -456,6 +362,15 @@ if __name__ == '__main__':
     plt.plot(x, y_unwrapped-real_y, ':', label='Constant difference')
     plt.legend()
     plt.show()
+
+    # Test interpolation NaN
+    # ----------------------
+    # Exemple d'utilisation
+    arr = np.array([[1.0, np.nan, 2.0],
+                    [np.nan, 3.0, np.nan],
+                    [4.0, 5.0, np.nan]])
+    interpolated_arr = interpolate_nan_2d(arr)
+    print(interpolated_arr)
 
     # unwrap2D test
     # -------------
