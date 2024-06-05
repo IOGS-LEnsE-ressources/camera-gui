@@ -89,7 +89,6 @@ def unwrap1D(arr: np.array, period: Optional[float] = 6.2831853072, axis: Option
 
     return arr_unwrapped
 
-
 def merge_with_offset(arr_1: np.array, arr_2: np.array) -> np.array:
     """
     Merge two arrays while handling NaN values and calculating offsets.
@@ -118,20 +117,12 @@ def merge_with_offset(arr_1: np.array, arr_2: np.array) -> np.array:
     >>> arr2 = np.array([2.5, np.nan, 3.5, 4.5])
     >>> merged_arr = merge_with_offset(arr1, arr2)
     >>> print(merged_arr)
-    [1.  2. 2.5 4.]
+    [1.75 2.   3.5  4.25]
 
     """
-    nan_mask_arr_1 = np.isnan(arr_1)
-    nan_mask_arr_2 = np.isnan(arr_2)
-    not_nan_mask = (~nan_mask_arr_1) & (~nan_mask_arr_2)
-
-    merger = arr_1.copy()
-    if not_nan_mask.any():
-        offset = np.mean(arr_2[not_nan_mask] - arr_1[not_nan_mask])
-        merger[nan_mask_arr_1 & (~nan_mask_arr_2)] = arr_2[nan_mask_arr_1 & (
-            ~nan_mask_arr_2)] - offset
-    return merger
-
+    # Calculer la moyenne en ignorant les NaN
+    result = np.nanmean(np.stack((arr_1, arr_2)), axis=0)
+    return result
 
 def remove_nan_groups(arr: np.array) -> np.array:
     """
@@ -439,6 +430,12 @@ def unwrap2D(arr: np.array, period: float = 2 * np.pi) -> Tuple[np.array, bool, 
     return unwrapped_arr, serious_problem, info
 
 if __name__ == '__main__':
+
+    arr1 = np.array([1.0, 2.0, np.nan, 4.0])
+    arr2 = np.array([2.5, np.nan, 3.5, 4.5])
+    merged_arr = merge_with_offset(arr1, arr2)
+    print(merged_arr)
+
     import matplotlib.pyplot as plt
     from mpl_toolkits import mplot3d
 
@@ -467,7 +464,8 @@ if __name__ == '__main__':
 
     real_z = 40-(_x**2+_y**2)
     z_wrapped = (real_z % np.pi) - np.pi/2
-    z_unwrapped = unwrap1D(unwrap1D(z_wrapped, axis=0, period=np.pi), axis=1, period=np.pi)
+    #z_unwrapped = unwrap1D(unwrap1D(z_wrapped, axis=0, period=np.pi), axis=1, period=np.pi)
+    z_unwrapped = unwrap2D(z_wrapped, period=np.pi)[0]
 
     fig = plt.figure()
     ax = plt.axes(projection='3d')
