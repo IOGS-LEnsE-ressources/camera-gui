@@ -27,6 +27,7 @@ from PyQt6.QtGui import QPixmap
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from ids_peak import ids_peak
 
 
 class ZygoLabApp(QWidget):
@@ -37,12 +38,26 @@ class ZygoLabApp(QWidget):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
 
+        # Initialyzation of the camera
+        # ----------------------------
+        # Init IDS Peak
+        ids_peak.Library.Initialize()
+        # Create a camera manager
+        manager = ids_peak.DeviceManager.Instance()
+        manager.Update()
+
+        if manager.Devices:
+            print("Camera")
+            device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
+        else:
+            print("No Camera")
+            return
+        self.camera_widget = CameraIdsWidget(camera=device, params_disp=False)
+        # ----------------------------
+        self.layout.addWidget(QLabel("Test Camera"))
+        self.layout.addWidget(self.camera_widget)
         self.layout.addStretch()
         self.setLayout(self.layout)
-
-        self.camera = None
-
-        self.camera_display_widget = WidgetImageDisplay()
 
     def refresh_app(self):
         """Action performed for refreshing the display of the app."""
