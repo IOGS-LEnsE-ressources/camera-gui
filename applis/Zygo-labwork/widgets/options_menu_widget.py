@@ -19,8 +19,10 @@ from PyQt6.QtGui import QPixmap
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
-
-from combobox_bloc import ComboBoxBloc
+if __name__ == '__main__':
+    from combobox_bloc import ComboBoxBloc
+else:
+    from widgets.combobox_bloc import ComboBoxBloc
 
 # %% To add in lensepy library
 # Styles

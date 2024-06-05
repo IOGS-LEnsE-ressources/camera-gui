@@ -5,8 +5,6 @@ Structure of the GUI
 ====================
 
 
-
-
 Documentation
 =============
 - Write doc for CameraIds class

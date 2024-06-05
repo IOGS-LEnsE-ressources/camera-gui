@@ -25,7 +25,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
-from slider_bloc import SliderBloc
+
+if __name__ == '__main__':
+    from slider_bloc import SliderBloc
+else:
+    from widgets.slider_bloc import SliderBloc
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *

@@ -20,7 +20,11 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-from lineedit_bloc import LineEditBloc
+if __name__ == '__main__':
+    from lineedit_bloc import LineEditBloc
+else:
+    from widgets.lineedit_bloc import LineEditBloc
+
 
 # %% To add in lensepy library
 # Styles

@@ -1,4 +1,15 @@
 - The camera image does not resize properly.
 - Issues with the use of PyQt signals.
 - [Acquisition Menu Widget] DialBox Style
+- [Acquisition Menu Widget] Bad ending process when the simple acquisition button is clicked...
 - [Options Menu Widget] ComboBox Style
+
+
+SOLUTIONS
+#########
+
+- To import local modules from main app or specific widget, need to add a test on __name__:
+    if __name__ == '__main__':
+        from slider_bloc import SliderBloc
+    else:
+        from widgets.slider_bloc import SliderBloc

@@ -20,8 +20,13 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-from combobox_bloc import ComboBoxBloc
-from table_from_numpy import TableFromNumpy
+if __name__ == '__main__':
+    from combobox_bloc import ComboBoxBloc
+    from table_from_numpy import TableFromNumpy
+else:
+    from widgets.combobox_bloc import ComboBoxBloc
+    from widgets.table_from_numpy import TableFromNumpy
+
 
 # %% To add in lensepy library
 # Styles
@@ -104,7 +109,7 @@ if __name__ == '__main__':
             dictionary = load_dictionary('../lang/dict_EN.txt')
 
             self.setWindowTitle(translate("window_title_main_menu_widget"))
-            self.setGeometry(300, 300, 800, 200)
+            self.setGeometry(300, 300, 500, 500)
 
             self.central_widget = ResultsMenuWidget()
             self.setCentralWidget(self.central_widget)
