@@ -41,7 +41,7 @@ BUTTON_HEIGHT = 60 #px
 OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
-class CameraSettings(QWidget):
+class CameraSettingsWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
@@ -97,7 +97,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_camera_settings"))
             self.setGeometry(300, 300, 400, 600)
 
-            self.central_widget = CameraSettings()
+            self.central_widget = CameraSettingsWidget()
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

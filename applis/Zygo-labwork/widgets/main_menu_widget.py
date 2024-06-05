@@ -129,6 +129,7 @@ class MainMenuWidget(QWidget):
         self.button_acquisition_main_menu.setStyleSheet(actived_button)
         
         # Action
+        self.signal_menu_selected.emit('acquisition_main_menu')
         print("Acquisition")
         
     def button_analyzes_main_menu_isClicked(self):
@@ -137,6 +138,7 @@ class MainMenuWidget(QWidget):
         self.button_analyzes_main_menu.setStyleSheet(actived_button)
         
         # Action
+        self.signal_menu_selected.emit('analyzes_main_menu')
         print("Analyzes")
         
     def button_options_main_menu_isClicked(self):
@@ -145,6 +147,7 @@ class MainMenuWidget(QWidget):
         self.button_options_main_menu.setStyleSheet(actived_button)
         
         # Action
+        self.signal_menu_selected.emit('options_main_menu')
         print("Options")
         
 # %% Example

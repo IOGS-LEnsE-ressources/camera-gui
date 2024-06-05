@@ -34,7 +34,10 @@ from lensepy.css import *
 
 from widgets.title_widget import TitleWidget
 from widgets.main_menu_widget import MainMenuWidget
-from widgets.masks_menu_widget import MasksMenu
+from widgets.camera_settings_widget import CameraSettingsWidget
+from widgets.masks_menu_widget import MasksMenuWidget
+from widgets.acquisition_menu_widget import AcquisitionMenuWidget
+from widgets.results_menu_widget import ResultsMenuWidget
 
 class ZygoLabApp(QWidget):
 
@@ -73,6 +76,8 @@ class ZygoLabApp(QWidget):
         self.layout.setRowStretch(1, 48)
         self.layout.setRowStretch(2, 48)
 
+        # Permanent Widgets
+        # -----------------
         # Title Widget: first row of the grid layout
         self.title_widget = TitleWidget() 
         self.layout.addWidget(self.title_widget, 0, 0, 1, 3)
@@ -81,49 +86,61 @@ class ZygoLabApp(QWidget):
         self.main_menu_widget = MainMenuWidget()
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
 
-        # Grid (1, 1)
-        self.camera_widget = CameraIdsWidget(camera=self.camera, params_disp=False)
-        self.layout.addWidget(self.camera_widget, 1, 1)
-        self.layout.setAlignment(self.camera_widget, Qt.AlignmentFlag.AlignCenter)
+        # Other Widgets
+        # -------------
+        self.camera_settings_widget = CameraSettingsWidget()
+        self.masks_menu_widget = MasksMenuWidget()
+        self.acquisition_menu_widget = AcquisitionMenuWidget()
+        self.results_menu_widget = ResultsMenuWidget()
 
-        # Grid (1, 2)
-        self.menu_test_12 = MainMenuWidget()
-        self.layout.addWidget(self.menu_test_12, 1,2)
-
-        # Grid (2, 1)
-        self.masks_menu = MasksMenu()
-        self.layout.addWidget(self.masks_menu, 2, 1)
-
-        # Grid (2, 2)
-        self.menu_test_22 = MainMenuWidget()
-        self.layout.addWidget(self.menu_test_22, 2, 2)
-
+        # Signals
+        # -------
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
-
-    def signal_menu_selected_isReceived(self, event):
-        if event == 'camera_settings_main_menu':
-            print(f"CA MARCHE camera_settings_main_menu")
-
-        elif event == 'masks_main_menu':
-            print(f"CA MARCHE masks_main_menu")
-        
 
     def refresh_app(self):
         """Action performed for refreshing the display of the app."""
         pass
 
-    def clearLayout(self, num: int = 1) -> None:
-        """Remove widgets from layout.
+    def clearLayout(self, row: int, column: int) -> None:
+        """Remove widgets from a specific position in the layout.
 
-        :param num: Number of elements to remove. Default: 1.
-        :type num: int
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
 
         """
-        # Remove the specified number of widgets from the layout
-        for idx in range(num):
-            item = self.layout.takeAt(num - idx)
-            if item.widget():
-                item.widget().deleteLater()
+        item = self.layout.itemAtPosition(row, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+    def signal_menu_selected_isReceived(self, event):
+        if event == 'camera_settings_main_menu':
+            self.clearLayout(2,1)
+            self.clearLayout(2,2)
+
+            self.layout.addWidget(self.camera_settings_widget, 2, 1)
+
+        elif event == 'masks_main_menu':
+            self.clearLayout(2,1)
+            self.clearLayout(2,2)
+
+            self.layout.addWidget(self.masks_menu_widget, 2, 1)
+
+        elif event == 'acquisition_main_menu':
+            self.clearLayout(2,1)
+            self.clearLayout(2,2)
+
+            self.layout.addWidget(self.acquisition_menu_widget, 2, 1)
+            self.layout.addWidget(self.results_menu_widget, 2, 2)
+
+        elif event == 'analyzes_main_menu':
+            pass
+
+        elif event == 'options_main_menu':
+            pass
 
 
 if __name__ == '__main__':

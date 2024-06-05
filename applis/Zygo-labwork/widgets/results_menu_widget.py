@@ -40,6 +40,7 @@ class ResultsMenuWidget(QWidget):
         super().__init__(parent=None)
         self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.master_widget = QWidget()
         self.master_layout = QVBoxLayout()

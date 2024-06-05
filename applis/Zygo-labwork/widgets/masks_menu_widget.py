@@ -35,11 +35,12 @@ styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight
 BUTTON_HEIGHT = 30 #px
 
 # %% Widget
-class MasksMenu(QWidget):
+class MasksMenuWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
         self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.master_widget = QWidget()
         self.master_layout = QVBoxLayout()
@@ -135,7 +136,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_masks_widget"))
             self.setGeometry(300, 300, 600, 600)
 
-            self.central_widget = MasksMenu()
+            self.central_widget = MasksMenuWidget()
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

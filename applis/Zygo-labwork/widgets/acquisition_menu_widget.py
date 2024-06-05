@@ -105,6 +105,7 @@ class AcquisitionMenuWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.master_widget = QWidget()
         self.master_layout = QVBoxLayout()
