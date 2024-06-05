@@ -29,6 +29,8 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
+styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight: normal;"
+
 # %% Params
 BUTTON_HEIGHT = 30 #px
 
@@ -65,6 +67,7 @@ class MasksMenu(QWidget):
         self.button_polygon_mask.setFixedHeight(BUTTON_HEIGHT)
         
         self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
+        self.checkbox_apply_mask.setStyleSheet(styleCheckbox)
         
         self.sublayout_left.addWidget(self.button_circle_mask)
         self.sublayout_left.addWidget(self.button_rectangle_mask)
@@ -91,6 +94,7 @@ class MasksMenu(QWidget):
         self.button_erase_mask.setFixedHeight(BUTTON_HEIGHT)
         
         self.checkbox_inverse_mask = QCheckBox(translate('checkbox_inverse_mask'))
+        self.checkbox_inverse_mask.setStyleSheet(styleCheckbox)
         
         self.sublayout_right.addWidget(self.button_move_mask)
         self.sublayout_right.addWidget(self.button_resize_mask)
