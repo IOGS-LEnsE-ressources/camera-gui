@@ -25,6 +25,20 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow,
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
+from gui.camera_settings_widget import CameraSettingsWidget
+from lensecam.ids.camera_ids import CameraIds
+from lensecam.basler.camera_basler import CameraBasler
+from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from lensecam.basler.camera_basler_widget import CameraBaslerWidget
+
+cam_widget_brands = {
+    'Basler': CameraBaslerWidget,
+    'IDS': CameraIdsWidget,
+}
+cam_from_brands = {
+    'Basler': CameraBasler,
+    'IDS': CameraIds,
+}
 
 # -------------------------------
 
@@ -42,6 +56,8 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.camera = None
+        self.camera_device = None
+        self.brand = None
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -80,13 +96,34 @@ class MainWindow(QMainWindow):
         self.main_menu_widget.camera_settings_clicked.connect(self.camera_settings_action)
 
     def camera_settings_action(self, event) -> None:
+        self.clear_layout(2, 1)
         if self.camera is None:
             print('No Camera')
-        self.clearLayout(2, 1)
-        self.params_widget = CameraChoice()
-        self.main_layout.addWidget(self.params_widget, 2, 1)
+            self.params_widget = CameraChoice()
+            self.params_widget.selected.connect(self.action_camera_connected)
+            self.main_layout.addWidget(self.params_widget, 2, 1)
+        else:
+            print('Camera OK')
+            # display camera settings and sliders
+            self.params_widget = CameraSettingsWidget(self.camera)
+            self.main_layout.addWidget(self.params_widget, 2, 1)
 
-    def clearLayout(self, row: int, column: int) -> None:
+    def action_camera_connected(self, event):
+        type_event = event.split(':')[0]
+        if type_event == 'cam':
+            self.brand = event.split(':')[1]
+            self.camera_device = self.params_widget.get_selected_camera()
+            self.camera = cam_from_brands[self.brand](self.camera_device)
+            self.clear_layout(2,1)
+            # self.params_widget = CameraSettingsWidget(self.camera)
+            # self.main_layout.addWidget(self.params_widget, 2, 1)
+            self.clear_layout(1,1)
+            self.camera_widget = cam_widget_brands[self.brand](self.camera_device)
+            self.main_layout.addWidget(self.camera_widget, 1, 1)
+
+
+
+    def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
 
         :param row: Row index of the layout.

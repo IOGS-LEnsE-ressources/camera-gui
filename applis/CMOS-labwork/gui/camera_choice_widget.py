@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
-"""*camera_choice.py* file.
+"""*camera_choice_widget* file.
 
-*camera_choice* file that contains :class::CameraChoice
+*camera_choice_widget* file that contains :class::CameraChoice
 
-.. note:: LEnsE - Institut d'Optique - version 1.0
+This file is attached to a 2nd year of engineer training labwork in photonics.
+Subject : http://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-Detection.EN.pdf
+
+More about the development of this interface :
+https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
+
+.. note:: LEnsE - Institut d'Optique - version 0.1
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
+.. moduleauthor:: Dorian MENDES (Promo 2026)<dorian.mendes@institutoptique.fr>
+
 """
 
 from lensepy import load_dictionary, translate
@@ -36,7 +44,7 @@ cam_list_brands = {
     'Basler': CameraBaslerList,
     'IDS': CameraIdsList,
 }
-dict_of_brands = {
+cam_list_widget_brands = {
     'Select...': 'None',
     'Basler': CameraBaslerListWidget,
     'IDS': CameraIdsListWidget,
@@ -77,14 +85,18 @@ class CameraChoice(QWidget):
         self.brand_refresh_button = QPushButton(translate('brand_refresh_button'))
         self.brand_refresh_button.clicked.connect(self.action_brand_return_button)
 
+        self.cam_choice_widget = QWidget()
+        self.brand_choice = None
+        self.selected_camera = None
+
         self.layout.addWidget(self.label_camera_choice_title, 0, 0)
         self.layout.addWidget(self.brand_choice_label, 1, 0)
         self.layout.addWidget(self.brand_refresh_button, 2, 0)
         self.layout.addWidget(self.brand_choice_list, 3, 0)
         self.layout.addWidget(self.brand_select_button, 4, 0)
         # Add a blank space at the end (spacer)
-        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.layout.addItem(spacer, 5, 0)
+        self.spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.layout.addItem(self.spacer, 5, 0)
 
         self.brand_select_button.setEnabled(False)
         self.setLayout(self.layout)
@@ -92,13 +104,13 @@ class CameraChoice(QWidget):
 
     def init_brand_choice_list(self):
         """Action ..."""
-        # create list from dict dict_of_brands
+        # create list from dict cam_list_widget_brands
         self.brand_choice_list.clear()
-        for item, (brand, camera_widget) in enumerate(dict_of_brands.items()):
+        for item, (brand, camera_widget) in enumerate(cam_list_widget_brands.items()):
             if brand != 'Select...':
                 number_of_cameras = cam_list_brands[brand]().get_nb_of_cam()
                 if number_of_cameras != 0:
-                    text_value = f'{brand}-{number_of_cameras}'
+                    text_value = f'{brand} ({number_of_cameras})'
                     self.brand_choice_list.addItem(text_value)
             else:
                 self.brand_choice_list.addItem(brand)
@@ -108,35 +120,45 @@ class CameraChoice(QWidget):
 
     def action_brand_select_button(self, event) -> None:
         """Action performed when the brand_select button is clicked."""
-        brand_choice = self.brand_choice_list.currentText()
-        brand_choice = brand_choice.split('-')[0]
+        self.brand_choice = self.brand_choice_list.currentText()
+        self.brand_choice = self.brand_choice.split(' (')[0]
         self.clear_layout(3, 0)
         self.clear_layout(4, 0)
         self.selected_label = QLabel()
         self.brand_return_button = QPushButton(translate('brand_return_button'))
         self.brand_return_button.clicked.connect(self.action_brand_return_button)
-        self.selected_label.setText(brand_choice)
+        self.selected_label.setText(self.brand_choice)
         self.layout.addWidget(self.selected_label, 3, 0)
         self.layout.addWidget(self.brand_return_button, 4, 0)
-        self.layout.addStretch()
-        # self.camera dict_of_brands
-        self.layout.addStretch()
+        self.brand_refresh_button.setEnabled(False)
+        self.selected.emit(f'brand:{self.brand_choice}')
+        self.cam_choice_widget = cam_list_widget_brands[self.brand_choice]()
+        self.cam_choice_widget.connected.connect(self.action_camera_selected)
+        self.clear_layout(5, 0)
+        self.layout.addWidget(self.cam_choice_widget, 5, 0)
+        self.layout.addItem(self.spacer, 5, 0)
 
-        self.selected.emit(brand_choice)
+    def action_camera_selected(self, event):
+        self.selected_camera = self.cam_choice_widget.get_selected_camera_dev()
+        self.brand_return_button.setEnabled(False)
+        self.selected.emit(f'cam:{self.brand_choice}:')
+
+    def get_selected_camera(self):
+        return self.selected_camera
 
     def action_brand_return_button(self, event) -> None:
         """Action performed when the brand_return button is clicked."""
         try:
             self.clear_layout(3, 0)
             self.clear_layout(4, 0)
-            # create list from dict dict_of_brands
+            # create list from dict cam_list_widget_brands
             self.brand_choice_list = QComboBox()
             self.brand_choice_list.clear()
-            for item, (brand, camera_widget) in enumerate(dict_of_brands.items()):
+            for item, (brand, camera_widget) in enumerate(cam_list_widget_brands.items()):
                 if brand != 'Select...':
                     number_of_cameras = cam_list_brands[brand]().get_nb_of_cam()
                     if number_of_cameras != 0:
-                        text_value = f'{brand}-{number_of_cameras}'
+                        text_value = f'{brand} ({number_of_cameras})'
                         self.brand_choice_list.addItem(text_value)
                 else:
                     self.brand_choice_list.addItem(brand)
@@ -147,6 +169,9 @@ class CameraChoice(QWidget):
             self.brand_select_button.setEnabled(False)
             self.layout.addWidget(self.brand_choice_list, 3, 0)
             self.layout.addWidget(self.brand_select_button, 4, 0)
+            self.clear_layout(5, 0)
+            self.layout.addItem(self.spacer, 5, 0)
+            self.brand_refresh_button.setEnabled(True)
             self.selected.emit('None')
         except Exception as e:
             print(f'Exception - action_brand_return {e}')
@@ -155,8 +180,8 @@ class CameraChoice(QWidget):
         """Action performed when the combo 'Choice List' item is changed."""
         try:
             selected_item = self.brand_choice_list.currentText()
-            selected_item = selected_item.split('-')[0]
-            if dict_of_brands[selected_item] == 'None':
+            selected_item = selected_item.split(' (')[0]
+            if cam_list_widget_brands[selected_item] == 'None':
                 self.brand_select_button.setEnabled(False)
             else:
                 self.brand_select_button.setEnabled(True)
@@ -177,6 +202,8 @@ class CameraChoice(QWidget):
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+            else:
+                self.layout.removeItem(item)
 
 
 # -------------------------------
