@@ -96,6 +96,7 @@ class SliderBloc(QWidget):
         self.max_value = max_value
         self.value = round(self.min_value + (self.max_value - self.min_value)/3, 2)
         self.ratio = 100
+        self.unit = unit
         
         self.layout = QVBoxLayout()
         
@@ -126,7 +127,7 @@ class SliderBloc(QWidget):
         self.subwidget_slider = QWidget()
         self.sublayout_slider = QHBoxLayout()
         
-        self.label_min_value = QLabel(str(self.min_value)+' '+unit)
+        self.label_min_value = QLabel(str(self.min_value)+' '+self.unit)
         self.label_min_value.setStyleSheet(styleH3)
         
         self.slider = QSlider(Qt.Orientation.Horizontal)
@@ -134,7 +135,7 @@ class SliderBloc(QWidget):
         self.slider.setMaximum(int(self.max_value*self.ratio))
         self.slider.valueChanged.connect(self.slider_position_changed)
         
-        self.label_max_value = QLabel(str(self.max_value)+' '+unit)
+        self.label_max_value = QLabel(str(self.max_value)+' '+self.unit)
         self.label_max_value.setStyleSheet(styleH3)
         
         self.sublayout_slider.addWidget(self.label_min_value)
@@ -167,6 +168,22 @@ class SliderBloc(QWidget):
     def get_value(self):
         """Return the value of the block."""
         return self.value
+
+    def set_value(self, value):
+        """Set the value of the block."""
+        self.value = value
+        self.update_block()
+
+    def set_min_max_slider_values(self, min_value, max_value):
+        """Set the mininmum and the maximum values of the slider.
+
+        """
+        self.min_value = min_value
+        self.slider.setMinimum(int(self.min_value * self.ratio))
+        self.max_value = max_value
+        self.slider.setMaximum(int(self.max_value * self.ratio))
+        self.label_min_value.setText(str(self.min_value)+' '+self.unit)
+        self.label_max_value.setText(str(self.max_value)+' '+self.unit)
         
 # %% Example
 if __name__ == '__main__':

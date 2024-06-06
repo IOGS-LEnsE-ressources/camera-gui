@@ -47,10 +47,14 @@ class ZygoLabApp(QWidget):
         """
         super().__init__(parent=None)
 
+
         # Initialization of the camera
         # ----------------------------
         self.camera_device = self.init_camera()
         # ----------------------------
+        # Initialization of the piezo
+        # ----------------------------
+        # TO DO
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -89,6 +93,18 @@ class ZygoLabApp(QWidget):
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
 
+        # Other Widgets
+        # -------------
+        self.camera_settings_widget = CameraSettingsWidget(self.camera)
+        self.masks_menu_widget = MasksMenuWidget()
+        self.acquisition_menu_widget = AcquisitionMenuWidget()
+        self.results_menu_widget = ResultsMenuWidget()
+        self.options_menu_widget = OptionsMenuWidget()
+
+        # Other initializations
+        # ---------------------
+        self.init_default_camera_settings()
+
         # Signals
         # -------
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
@@ -116,7 +132,7 @@ class ZygoLabApp(QWidget):
         """Action performed for refreshing the display of the app."""
         pass
 
-    def clearLayout(self, row: int, column: int) -> None:
+    def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
 
         :param row: Row index of the layout.
@@ -131,38 +147,53 @@ class ZygoLabApp(QWidget):
             if widget:
                 widget.deleteLater()
 
+    def init_default_camera_settings(self):
+        """Load and initialize default parameters for camera settings from {{FILE}}"""
+        # Load default parameters for camera settings from {{FILE}}
+        real_expo_min = 0
+        real_expo_max = 100
+        real_expo = 10
+        # Init default parameters for camera settings
+        expo_min, expo_max = self.camera.get_exposure_range()
+        if real_expo_max < expo_max//1000 and real_expo_min >= expo_min//1000:
+            self.camera_settings_widget.slider_exposure_time.ratio = 10.0
+            self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min,
+                                                                                       real_expo_max)
+        self.camera.init_default_parameters(exposure=real_expo, frame_rate=20)
+
     def signal_camera_connected_isReceived(self, event):
         """Action performed when a camera is connected."""
         self.camera = self.camera_widget.camera
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
-        print(f'Connect {event}')
+        self.init_default_camera_settings()
 
     def signal_menu_selected_isReceived(self, event):
         if event == 'camera_settings_main_menu':
-            self.clearLayout(2,1)
-            self.clearLayout(2,2)
-
+            self.clear_layout(2, 1)
+            self.clear_layout(2, 2)
+            self.camera_settings_widget.update_parameters()
             self.layout.addWidget(self.camera_settings_widget, 2, 1)
 
         elif event == 'masks_main_menu':
-            self.clearLayout(2,1)
-            self.clearLayout(2,2)
+            self.clear_layout(2, 1)
+            self.clear_layout(2, 2)
 
             self.layout.addWidget(self.masks_menu_widget, 2, 1)
 
         elif event == 'acquisition_main_menu':
-            self.clearLayout(2,1)
-            self.clearLayout(2,2)
+            self.clear_layout(2, 1)
+            self.clear_layout(2, 2)
 
             self.layout.addWidget(self.acquisition_menu_widget, 2, 1)
             self.layout.addWidget(self.results_menu_widget, 2, 2)
 
         elif event == 'analyzes_main_menu':
-            pass
+            self.clear_layout(2, 1)
+            self.clear_layout(2, 2)
 
         elif event == 'options_main_menu':
-            self.clearLayout(2,1)
-            self.clearLayout(2,2)
+            self.clear_layout(2, 1)
+            self.clear_layout(2, 2)
 
             self.layout.addWidget(self.options_menu_widget, 2, 1)
 

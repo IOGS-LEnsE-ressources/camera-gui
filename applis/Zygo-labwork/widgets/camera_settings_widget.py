@@ -93,13 +93,27 @@ class CameraSettingsWidget(QWidget):
         """Action performed when the exposure time slider changed."""
         print(f'Slider {event}')
         if self.camera is not None:
-            print(f'{self.camera.get_cam_info()}')
             exposure_time_value = self.slider_exposure_time.get_value()*1000
-            print(f'ExpoTime Changed ? {self.camera.set_exposure(exposure_time_value)}')
-            print(f'Camera is Here ? {self.camera.is_camera_connected()}')
-            print(f'ExpoTime Range = {self.camera.get_exposure_range()}')
+            self.camera.set_exposure(exposure_time_value)
         else:
             print('No Camera Connected')
+
+    def update_parameters(self, auto_min_max: bool=False) -> None:
+        """Update displayed parameters values, from the camera.
+
+        """
+        if auto_min_max:
+            exposure_min, exposure_max = self.camera.get_exposure_range()
+            self.slider_exposure_time.set_min_max_slider_values(exposure_min//1000, exposure_max//1000)
+        exposure_time = self.camera.get_exposure()
+        self.slider_exposure_time.set_value(exposure_time/1000)
+
+    def set_parameters(self, color_mode:str='Mono8', frame_rate: float=3,
+                       exposure: float=2, black_level:int=10 ):
+        """Useful ?
+
+        """
+        pass
 
 # %% Example
 if __name__ == '__main__':

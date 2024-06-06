@@ -1,7 +1,19 @@
 Zygo Lab GUI / IDS Camera
 #########################
 
-
+----------------------------------------------
+06/06/2024 	/  	Julien Villemejane
+----------------------------------------------
+Add init_default_parameters method to the ZygoLabApp class
+Add update_parameters method to CameraSettingsWidget class
+Add set_min_max_slider_values and set_value methods to the SliderBloc class
+----------------------------------------------
+----------------------------------------------
+05/06/2024 	/  	Julien Villemejane
+----------------------------------------------
+Add init_camera method to the ZygoLabApp class
+Add camera_device and camera attributes to the ZygoLabApp class
+----------------------------------------------
 
 ----------------------------------------------
 04/06/2024 	/  	Julien Villemejane
