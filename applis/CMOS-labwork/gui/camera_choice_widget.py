@@ -19,8 +19,9 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 from PyQt6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
-    QLabel, QComboBox, QPushButton
+    QGridLayout,
+    QLabel, QComboBox, QPushButton,
+    QSpacerItem, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensecam.basler.camera_basler_widget import CameraBaslerListWidget
@@ -55,7 +56,7 @@ class CameraChoice(QWidget):
         """
         super().__init__(parent=None)
 
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
 
         self.label_camera_choice_title = QLabel(translate("label_camera_choice_title"))
         self.label_camera_choice_title.setStyleSheet(styleH1)
@@ -76,13 +77,15 @@ class CameraChoice(QWidget):
         self.brand_refresh_button = QPushButton(translate('brand_refresh_button'))
         self.brand_refresh_button.clicked.connect(self.action_brand_return_button)
 
+        self.layout.addWidget(self.label_camera_choice_title, 0, 0)
+        self.layout.addWidget(self.brand_choice_label, 1, 0)
+        self.layout.addWidget(self.brand_refresh_button, 2, 0)
+        self.layout.addWidget(self.brand_choice_list, 3, 0)
+        self.layout.addWidget(self.brand_select_button, 4, 0)
+        # Add a blank space at the end (spacer)
+        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.layout.addItem(spacer, 5, 0)
 
-        self.layout.addWidget(self.label_camera_choice_title)
-        self.layout.addWidget(self.brand_choice_label)
-        self.layout.addWidget(self.brand_refresh_button)
-        self.layout.addWidget(self.brand_choice_list)
-        self.layout.addWidget(self.brand_select_button)
-        self.layout.addStretch()
         self.brand_select_button.setEnabled(False)
         self.setLayout(self.layout)
         self.init_brand_choice_list()
@@ -107,13 +110,14 @@ class CameraChoice(QWidget):
         """Action performed when the brand_select button is clicked."""
         brand_choice = self.brand_choice_list.currentText()
         brand_choice = brand_choice.split('-')[0]
-        self.clear_layout(3)
+        self.clear_layout(3, 0)
+        self.clear_layout(4, 0)
         self.selected_label = QLabel()
         self.brand_return_button = QPushButton(translate('brand_return_button'))
         self.brand_return_button.clicked.connect(self.action_brand_return_button)
         self.selected_label.setText(brand_choice)
-        self.layout.addWidget(self.selected_label)
-        self.layout.addWidget(self.brand_return_button)
+        self.layout.addWidget(self.selected_label, 3, 0)
+        self.layout.addWidget(self.brand_return_button, 4, 0)
         self.layout.addStretch()
         # self.camera dict_of_brands
         self.layout.addStretch()
@@ -123,7 +127,8 @@ class CameraChoice(QWidget):
     def action_brand_return_button(self, event) -> None:
         """Action performed when the brand_return button is clicked."""
         try:
-            self.clear_layout(3)
+            self.clear_layout(3, 0)
+            self.clear_layout(4, 0)
             # create list from dict dict_of_brands
             self.brand_choice_list = QComboBox()
             self.brand_choice_list.clear()
@@ -140,8 +145,8 @@ class CameraChoice(QWidget):
             self.brand_select_button = QPushButton(translate('brand_select_button'))
             self.brand_select_button.clicked.connect(self.action_brand_select_button)
             self.brand_select_button.setEnabled(False)
-            self.layout.addWidget(self.brand_select_button)
-            self.layout.addStretch()
+            self.layout.addWidget(self.brand_choice_list, 3, 0)
+            self.layout.addWidget(self.brand_select_button, 4, 0)
             self.selected.emit('None')
         except Exception as e:
             print(f'Exception - action_brand_return {e}')
@@ -158,18 +163,20 @@ class CameraChoice(QWidget):
         except Exception as e:
             print(f'Exception - list {e}')
 
-    def clear_layout(self, num: int = 1) -> None:
-        """Remove widgets from layout.
+    def clear_layout(self, row: int, column: int) -> None:
+        """Remove widgets from a specific position in the layout.
 
-        :param num: Number of elements to remove. Default: 1.
-        :type num: int
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
 
         """
-        # Remove the specified number of widgets from the layout
-        for idx in range(num):
-            item = self.layout.takeAt(num-idx+1)
-            if item.widget():
-                item.widget().deleteLater()
+        item = self.layout.itemAtPosition(row, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
 
 # -------------------------------
