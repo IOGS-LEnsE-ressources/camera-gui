@@ -54,6 +54,7 @@ class ResultsMenuWidget(QWidget):
         # Title
         # -----
         self.label_title_results = QLabel(translate('label_title_results'))
+        self.label_title_results.setStyleSheet(styleH1)
 
         # ComboBox
         # --------
@@ -82,6 +83,7 @@ class ResultsMenuWidget(QWidget):
         self.layout.addWidget(self.combobox_type_output_plot)
         self.layout.addWidget(self.table_results)
         self.layout.addWidget(self.button_print_all_results)
+        self.layout.addStretch()
 
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
