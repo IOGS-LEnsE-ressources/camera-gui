@@ -1,11 +1,13 @@
 - Issues with the use of PyQt signals.
-- [Acquisition Menu Widget] DialBox Style
-- [Options Menu Widget] ComboBox Style
 - [Acquisition Menu Widget] Simple Acquisition
     EXCEPTION - get_image: Error-Code: 13 (PEAK_RETURN_CODE_TIMEOUT) | Error-Description: [Function: EventGetData | Error-Code: -1011 (GC_ERR_TIMEOUT) | Error-Text: Wait for event data timed out! Timeout: 1000. -2
     EXCEPTION - get_image: Error-Code: 2 (PEAK_RETURN_CODE_NOT_INITIALIZED) | Error-Description: IDS peak genericAPI library not initialized. Call peak::Library::Initialize() / PEAK_InitializeLibrary() before anything else.
     Exception - get_color_mode: Error-Code: 2 (PEAK_RETURN_CODE_NOT_INITIALIZED) | Error-Description: IDS peak genericAPI library not initialized. Call peak::Library::Initialize() / PEAK_InitializeLibrary() before anything else.
     Exception - refresh: None
+
+STYLES
+- [Acquisition Menu Widget] DialBox Style
+- [Options Menu Widget] ComboBox Style
 
 SOLUTIONS
 #########
