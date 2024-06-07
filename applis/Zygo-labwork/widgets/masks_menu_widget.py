@@ -74,6 +74,8 @@ class MasksMenuWidget(QWidget):
         
         self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
         self.checkbox_apply_mask.setStyleSheet(styleCheckbox)
+        self.checkbox_apply_mask.setChecked(True)
+        self.checkbox_apply_mask.stateChanged.connect(self.checkbox_apply_mask_changed)
         
         self.sublayout_left.addWidget(self.button_circle_mask)
         self.sublayout_left.addWidget(self.button_rectangle_mask)
@@ -101,6 +103,7 @@ class MasksMenuWidget(QWidget):
         
         self.checkbox_inverse_mask = QCheckBox(translate('checkbox_inverse_mask'))
         self.checkbox_inverse_mask.setStyleSheet(styleCheckbox)
+        self.checkbox_inverse_mask.stateChanged.connect(self.checkbox_inverse_mask_changed)
         
         self.sublayout_right.addWidget(self.button_move_mask)
         self.sublayout_right.addWidget(self.button_resize_mask)
@@ -123,6 +126,34 @@ class MasksMenuWidget(QWidget):
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
+    def checkbox_apply_mask_changed(self, state):
+        try:
+            if state == 2:
+                self.mask_unactived, self.mask = self.mask, self.mask_unactived
+            else:
+                self.mask, self.mask_unactived = self.mask_unactived, self.mask
+        except:
+            pass
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.imshow(self.mask)
+        plt.colorbar()
+        plt.show()
+
+    def checkbox_inverse_mask_changed(self, state):
+        try:
+            if state == 2:
+                self.mask_inversed, self.mask = self.mask, self.mask_inversed
+            else:
+                self.mask, self.mask_inversed = self.mask_inversed, self.mask
+        except:
+            pass
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.imshow(self.mask)
+        plt.colorbar()
+        plt.show()
+
     def selection_mask_circle(self):
         if self.parent is not None:
             try:
@@ -130,6 +161,8 @@ class MasksMenuWidget(QWidget):
                 selection_window = SelectionMaskWindow(image, 'Circle')
                 selection_window.exec()
                 self.mask = selection_window.mask
+                self.mask_unactived = np.ones_like(self.mask)
+                self.mask_inversed = 1-self.mask
 
                 import matplotlib.pyplot as plt
                 plt.figure()
@@ -267,7 +300,7 @@ class SelectionMaskWindow(QDialog):
         mask = np.zeros_like(self.image, dtype=np.uint8)
         y, x = np.ogrid[:self.image.shape[0], :self.image.shape[1]]
         mask_area = (x - x_center) ** 2 + (y - y_center) ** 2 <= radius ** 2
-        mask[mask_area] = 255
+        mask[mask_area] = 1
         return mask
     
     def close_window(self):
