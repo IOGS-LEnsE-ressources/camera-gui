@@ -40,6 +40,8 @@ from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
 
+styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
+
 class ZygoLabApp(QWidget):
 
     def __init__(self) -> None:
@@ -87,17 +89,10 @@ class ZygoLabApp(QWidget):
 
         # Other Widgets
         # -------------
+        print(type(self.camera))
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget()
-        self.acquisition_menu_widget = AcquisitionMenuWidget()
-        self.results_menu_widget = ResultsMenuWidget()
-        self.options_menu_widget = OptionsMenuWidget()
-
-        # Other Widgets
-        # -------------
-        self.camera_settings_widget = CameraSettingsWidget(self.camera)
-        self.masks_menu_widget = MasksMenuWidget()
-        self.acquisition_menu_widget = AcquisitionMenuWidget()
+        self.acquisition_menu_widget = AcquisitionMenuWidget(self.camera)
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
 
@@ -123,6 +118,12 @@ class ZygoLabApp(QWidget):
         if manager.Devices().empty():
             print("No Camera")
             device = None
+
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, translate('error'), translate('message_no_cam_error'))
+            print('No cam => Quit')
+            sys.exit(QApplication.instance())
         else:
             print("Camera")
             device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
@@ -133,13 +134,12 @@ class ZygoLabApp(QWidget):
         pass
 
     def clear_layout(self, row: int, column: int) -> None:
-        """Remove widgets from a specific position in the layout.
+        """Remove widgets from a specific position in the layout without deleting them.
 
         :param row: Row index of the layout.
         :type row: int
         :param column: Column index of the layout.
         :type column: int
-
         """
         item = self.layout.itemAtPosition(row, column)
         if item is not None:
@@ -168,33 +168,29 @@ class ZygoLabApp(QWidget):
         self.init_default_camera_settings()
 
     def signal_menu_selected_isReceived(self, event):
+        self.camera_settings_widget = CameraSettingsWidget(self.camera)
+        self.masks_menu_widget = MasksMenuWidget()
+        self.acquisition_menu_widget = AcquisitionMenuWidget(self.camera)
+        self.results_menu_widget = ResultsMenuWidget()
+        self.options_menu_widget = OptionsMenuWidget()
+
+        self.clear_layout(2, 1)
+        self.clear_layout(2, 2)
         if event == 'camera_settings_main_menu':
-            self.clear_layout(2, 1)
-            self.clear_layout(2, 2)
             self.camera_settings_widget.update_parameters()
             self.layout.addWidget(self.camera_settings_widget, 2, 1)
 
         elif event == 'masks_main_menu':
-            self.clear_layout(2, 1)
-            self.clear_layout(2, 2)
-
             self.layout.addWidget(self.masks_menu_widget, 2, 1)
 
         elif event == 'acquisition_main_menu':
-            self.clear_layout(2, 1)
-            self.clear_layout(2, 2)
-
             self.layout.addWidget(self.acquisition_menu_widget, 2, 1)
             self.layout.addWidget(self.results_menu_widget, 2, 2)
 
         elif event == 'analyzes_main_menu':
-            self.clear_layout(2, 1)
-            self.clear_layout(2, 2)
+            pass
 
         elif event == 'options_main_menu':
-            self.clear_layout(2, 1)
-            self.clear_layout(2, 2)
-
             self.layout.addWidget(self.options_menu_widget, 2, 1)
 
     def update_labels(self, window):

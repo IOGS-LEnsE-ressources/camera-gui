@@ -41,6 +41,7 @@ BUTTON_HEIGHT = 30  # px
 class RemoveFaultsWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
+
         self.setStyleSheet(f"background-color: {ORANGE_IOGS};")
         self.layout = QVBoxLayout()
 
@@ -106,8 +107,10 @@ class RemoveFaultsWidget(QWidget):
 
 # %% Widget
 class AcquisitionMenuWidget(QWidget):
-    def __init__(self):
+    def __init__(self, camera=None):
         super().__init__(parent=None)
+
+        self.camera = camera
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -204,15 +207,13 @@ class AcquisitionMenuWidget(QWidget):
     def button_simple_acquisition_isClicked(self):
         self.button_simple_acquisition.setStyleSheet(actived_button)
         print('button_simple_acquisition_isClicked')
+        print(self.camera.get_image())
         self.button_simple_acquisition.setStyleSheet(unactived_button)
-        # Maybe it's preferable to send a signal to the main app ??
-        #print(self.camera.get_image())
 
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
         print('button_repeated_acquisition_isClicked')
         self.button_repeated_acquisition.setStyleSheet(unactived_button)
-    
     
     def button_see_and_save_images_isClicked(self):
         self.button_see_and_save_images.setStyleSheet(actived_button)
