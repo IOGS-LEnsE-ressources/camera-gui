@@ -128,10 +128,6 @@ if __name__ == '__main__':
 
             # Translation
             dictionary = {}
-            # Load French dictionary
-            #dictionary = load_dictionary('../lang/dict_FR.txt')
-            # Load English dictionary
-            dictionary = load_dictionary('../lang/dict_EN.txt')
 
             self.setWindowTitle(translate("window_title_masks_widget"))
             self.setGeometry(300, 300, 600, 600)

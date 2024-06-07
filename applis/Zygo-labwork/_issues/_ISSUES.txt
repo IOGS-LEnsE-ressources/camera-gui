@@ -1,10 +1,6 @@
-- The camera image does not resize properly.
-	--> It's ok for me
 - Issues with the use of PyQt signals.
 - [Acquisition Menu Widget] DialBox Style
-- [Acquisition Menu Widget] Bad ending process when the simple acquisition button is clicked...
 - [Options Menu Widget] ComboBox Style
-- Error when clicking on Masks after Acquisition in the main menu (exit code 0xC0000409)
 - [Acquisition Menu Widget] Simple Acquisition
     EXCEPTION - get_image: Error-Code: 13 (PEAK_RETURN_CODE_TIMEOUT) | Error-Description: [Function: EventGetData | Error-Code: -1011 (GC_ERR_TIMEOUT) | Error-Text: Wait for event data timed out! Timeout: 1000. -2
     EXCEPTION - get_image: Error-Code: 2 (PEAK_RETURN_CODE_NOT_INITIALIZED) | Error-Description: IDS peak genericAPI library not initialized. Call peak::Library::Initialize() / PEAK_InitializeLibrary() before anything else.
@@ -13,7 +9,6 @@
 
 SOLUTIONS
 #########
-
 - To import local modules from main app or specific widget, need to add a test on __name__:
     if __name__ == '__main__':
         from slider_bloc import SliderBloc
