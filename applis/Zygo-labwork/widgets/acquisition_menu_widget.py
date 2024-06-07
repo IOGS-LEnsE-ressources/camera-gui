@@ -107,10 +107,10 @@ class RemoveFaultsWidget(QWidget):
 
 # %% Widget
 class AcquisitionMenuWidget(QWidget):
-    def __init__(self, camera=None):
+    def __init__(self, parent=None):
         super().__init__(parent=None)
 
-        self.camera = camera
+        self.parent = parent
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -207,7 +207,15 @@ class AcquisitionMenuWidget(QWidget):
     def button_simple_acquisition_isClicked(self):
         self.button_simple_acquisition.setStyleSheet(actived_button)
         print('button_simple_acquisition_isClicked')
-        print(self.camera.get_image())
+        if self.parent is not None:
+            try:
+                print(self.parent)
+                pict1 = self.parent.camera_widget.get_image()
+                print(f'Im1 - {pict1[0][0]}')
+                pict2 = self.parent.camera_widget.get_image()
+                print(f'Im2 - {pict2[0][0]}')
+            except Exception as e:
+                print(f'Exception - button_simple_acquisition_isClicked {e}')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
 
     def button_repeated_acquisition_isClicked(self):

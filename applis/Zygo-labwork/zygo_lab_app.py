@@ -89,10 +89,9 @@ class ZygoLabApp(QWidget):
 
         # Other Widgets
         # -------------
-        print(type(self.camera))
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget()
-        self.acquisition_menu_widget = AcquisitionMenuWidget(self.camera)
+        self.acquisition_menu_widget = AcquisitionMenuWidget(parent=self)
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
 
@@ -166,11 +165,12 @@ class ZygoLabApp(QWidget):
         self.camera = self.camera_widget.camera
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.init_default_camera_settings()
+        self.camera.trigger()
 
     def signal_menu_selected_isReceived(self, event):
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget()
-        self.acquisition_menu_widget = AcquisitionMenuWidget(self.camera)
+        self.acquisition_menu_widget = AcquisitionMenuWidget(self)
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
 
