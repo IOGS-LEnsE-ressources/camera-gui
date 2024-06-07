@@ -150,11 +150,11 @@ class ZygoLabApp(QWidget):
     def init_default_camera_settings(self):
         """Load and initialize default parameters for camera settings from {{FILE}}"""
         # Load default parameters for camera settings from {{FILE}}
-        real_expo_min = 0
-        real_expo_max = 100
-        real_expo = 10
+        real_expo_min = 0 # ms
+        real_expo_max = 100 # ms
+        real_expo = 10 # ms
         # Init default parameters for camera settings
-        expo_min, expo_max = self.camera.get_exposure_range()
+        expo_min, expo_max = self.camera.get_exposure_range() # µs
         if real_expo_max < expo_max//1000 and real_expo_min >= expo_min//1000:
             self.camera_settings_widget.slider_exposure_time.ratio = 10.0
             self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min,
