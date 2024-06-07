@@ -128,8 +128,13 @@ class MasksMenuWidget(QWidget):
             try:
                 image = self.parent.camera_widget.get_image()
                 selection_window = SelectionMaskWindow(image, 'Circle')
-                selection_window.show()
+                selection_window.exec()
                 self.mask = selection_window.mask
+
+                import matplotlib.pyplot as plt
+                plt.figure()
+                plt.imshow(self.mask)
+                plt.show()
             except Exception as e:
                 print(f'Exception - selection_mask_circle_isClicked {e}')
 
@@ -143,14 +148,14 @@ class SelectionMaskWindow(QDialog):
         self.qimage = QImage(self.image.data, self.image.shape[1], self.image.shape[0], self.image.strides[0], QImage.Format.Format_Grayscale8)
         self.pixmap = QPixmap.fromImage(self.qimage)
 
+        # Couche pour dessiner les points
+        self.point_layer = QPixmap(self.pixmap.size())
+        self.point_layer.fill(Qt.GlobalColor.transparent)
+
         self.label = QLabel()
         self.label.setPixmap(self.pixmap)
 
-        self.button = QPushButton(translate('OK'))
-        self.button.clicked.connect(self.close_window)  # Connecter le signal clicked à la méthode close_window()
-
         self.layout.addWidget(self.label)
-        self.layout.addWidget(self.button)
         self.setLayout(self.layout)
 
         self.points = []
@@ -159,6 +164,10 @@ class SelectionMaskWindow(QDialog):
 
         if mask_type == 'Circle':
             self.label.mousePressEvent = self.get_points_circle
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
+            self.close_window()
 
     def get_points_circle(self, event):
         if self.can_draw and len(self.points) < 3:  # Vérifier si le dessin est autorisé
@@ -170,32 +179,86 @@ class SelectionMaskWindow(QDialog):
                 self.can_draw = False  # Désactiver le dessin une fois que les trois points ont été sélectionnés
 
     def draw_point(self, x, y):
-        # Create a QPixmap from the current QLabel
-        pixmap = self.label.pixmap()
-        painter = QPainter(pixmap)
-        painter.setPen(QPen(Qt.GlobalColor.red, 5))
+        painter = QPainter(self.point_layer)
+        point_size = 10
+        pen = QPen(Qt.GlobalColor.red, point_size)
+        painter.setPen(pen)
         painter.drawPoint(QPoint(x, y))
         painter.end()
+
+        # Afficher la couche des points
+        combined_pixmap = self.pixmap.copy()
+        painter = QPainter(combined_pixmap)
+        painter.drawPixmap(0, 0, self.point_layer)
+        painter.end()
+
+        self.label.setPixmap(combined_pixmap)
+
+    def find_circle_center(self, x0, y0, x1, y1, x2, y2):
+        mid_x_01 = (x0 + x1) / 2
+        mid_y_01 = (y0 + y1) / 2
+        mid_x_02 = (x0 + x2) / 2
+        mid_y_02 = (y0 + y2) / 2
         
-        # Update the QLabel with the new QPixmap
-        self.label.setPixmap(pixmap)
+        if x0 == x1:
+            slope_perp_01 = None
+            intercept_perp_01 = mid_x_01
+        else:
+            slope_perp_01 = -1 / ((y1 - y0) / (x1 - x0))
+            intercept_perp_01 = mid_y_01 - slope_perp_01 * mid_x_01
+            
+        if x0 == x2:
+            slope_perp_02 = None
+            intercept_perp_02 = mid_x_02
+        else:
+            slope_perp_02 = -1 / ((y2 - y0) / (x2 - x0))
+            intercept_perp_02 = mid_y_02 - slope_perp_02 * mid_x_02
+        
+        if slope_perp_01 is None or slope_perp_02 is None:
+            if slope_perp_01 is None:
+                X = mid_x_01
+                Y = slope_perp_02 * X + intercept_perp_02
+            else:
+                X = mid_x_02
+                Y = slope_perp_01 * X + intercept_perp_01
+        else:
+            X = (intercept_perp_02 - intercept_perp_01) / (slope_perp_01 - slope_perp_02)
+            Y = slope_perp_01 * X + intercept_perp_01
+        
+        return X, Y
 
     def draw_circle(self):
         x0, y0 = self.points[0]
         x1, y1 = self.points[1]
         x2, y2 = self.points[2]
 
-        x_center = (x0+x1+x2)/3
-        y_center = (y0+y1+y2)/3
+        x_center, y_center = self.find_circle_center(x0, y0, x1, y1, x2, y2)
+        x_center = int(x_center)
+        y_center = int(y_center)
         radius = np.sqrt((x_center-x0)**2+(y_center-y0)**2)
+
+        print(f"x0={x0}, y0={y0}")
+        print(f"x1={x1}, y1={y1}")
+        print(f"x2={x2}, y2={y2}")
+        print(f"centre: ({x_center},{y_center})")
+        print(f"dist P1-centre: {np.sqrt((x_center-x0)**2+(y_center-y0)**2)}")
+        print(f"dist P2-centre: {np.sqrt((x_center-x1)**2+(y_center-y1)**2)}")
+        print(f"dist P3-centre: {np.sqrt((x_center-x2)**2+(y_center-y2)**2)}")
+        print(f"rayon: {radius}")
 
         painter = QPainter(self.pixmap)
         pen = QPen(QColor(255, 0, 0), 2)
         painter.setPen(pen)
-        painter.drawEllipse(QPoint(int(x_center), int(y_center)), int(radius), int(radius))
+        painter.drawEllipse(QPoint(x_center, y_center), radius, radius)
         painter.end()
 
-        self.label.setPixmap(self.pixmap)
+        # Afficher le cercle
+        combined_pixmap = self.pixmap.copy()
+        painter = QPainter(combined_pixmap)
+        painter.drawPixmap(0, 0, self.point_layer)
+        painter.end()
+
+        self.label.setPixmap(combined_pixmap)
 
         # Update mask
         self.mask = self.create_circular_mask(x_center, y_center, radius)
@@ -209,6 +272,7 @@ class SelectionMaskWindow(QDialog):
     
     def close_window(self):
         self.accept()
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
