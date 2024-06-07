@@ -19,7 +19,7 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox,
+    QLabel, QComboBox, QPushButton, QCheckBox, QDialog,
     QMessageBox
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QSignalMapper
@@ -48,7 +48,6 @@ class ZygoLabApp(QWidget):
         """Default constructor of the class.
         """
         super().__init__(parent=None)
-
 
         # Initialization of the camera
         # ----------------------------
@@ -102,7 +101,6 @@ class ZygoLabApp(QWidget):
         # Signals
         # -------
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
-        self.options_menu_widget.signal_language_updated.connect(self.update_labels)
         self.camera_widget.connected.connect(self.signal_camera_connected_isReceived)
 
     def init_camera(self) -> ids_peak.Device:
@@ -174,6 +172,8 @@ class ZygoLabApp(QWidget):
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
 
+        self.options_menu_widget.signal_language_updated.connect(self.signal_language_changed_isReceived)
+
         self.clear_layout(2, 1)
         self.clear_layout(2, 2)
         if event == 'camera_settings_main_menu':
@@ -193,18 +193,37 @@ class ZygoLabApp(QWidget):
         elif event == 'options_main_menu':
             self.layout.addWidget(self.options_menu_widget, 2, 1)
 
+    def signal_language_changed_isReceived(self, language_selected):
+        """Handler for the language updated signal."""
+        print(f"Signal received with language selected: {language_selected}")
+        #dictionary.clear()
+        if language_selected == 'English':
+            dictionary = load_dictionary('lang\dict_EN.txt')
+        elif language_selected == 'Français':
+            dictionary = load_dictionary('lang\dict_FR.txt')
+        elif language_selected == '中文':
+            dictionary = load_dictionary('lang\dict_CN.txt')
+
+        self.update_labels(self)
+
     def update_labels(self, window):
+        """Recursively update labels and text in all widgets."""
         # Iterate through all the widgets and sub-widgets of the main window
         for widget in window.findChildren(QWidget):
-            # Check if the widget is a QLabel
-            if isinstance(widget, QLabel):
-                # Update the text using translate
+            # Update labels (QLabel, QPushButton, etc.)
+            if isinstance(widget, (QLabel, QPushButton)):
                 widget.setText(translate(widget.text()))
+
+            # Update titles (QMainWindow, QDialog, etc.)
+            if isinstance(widget, (QMainWindow, QDialog)):
+                widget.setWindowTitle(translate(widget.windowTitle()))
 
             # If the widget is a container, recursively call the function
             if isinstance(widget, (QVBoxLayout, QHBoxLayout, QGridLayout)):
                 for subwidget in widget.findChildren(QWidget):
                     self.update_labels(subwidget)
+
+
 
 
 if __name__ == '__main__':
@@ -218,8 +237,6 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("Zygo-IDS Labwork APP"))
             self.setWindowIcon(QIcon('assets\IOGS-LEnsE-icon.jpg'))
             self.setGeometry(50, 50, 700, 700)
-
-            dictionary = load_dictionary("lang\dict_EN.txt")
 
             self.central_widget = ZygoLabApp()
             self.setCentralWidget(self.central_widget)

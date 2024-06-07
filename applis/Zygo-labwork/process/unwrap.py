@@ -205,12 +205,13 @@ def unwrap2D(arr: np.array, period: float = 2 * np.pi) -> Tuple[np.array, bool, 
     The function unwraps the phase of a 2D array by first unwrapping along the columns and then along the rows.
     It combines these results and handles discrepancies to produce a final unwrapped array.
     """
-    arr_unwrapped_axis_0 = unwrap1D(arr, period, axis=0)
-    arr_unwrapped_axis_1 = unwrap1D(arr, period, axis=1)
+    # arr_unwrapped_axis_0 = unwrap1D(arr, period, axis=0)
+    # arr_unwrapped_axis_1 = unwrap1D(arr, period, axis=1)
 
-    arr_unwrapped = merge_with_offset(arr_unwrapped_axis_0, arr_unwrapped_axis_1)
-    arr_unwrapped = interpolate_nan_2d(arr_unwrapped)
-    return arr_unwrapped
+    # arr_unwrapped = merge_with_offset(arr_unwrapped_axis_0, arr_unwrapped_axis_1)
+    # arr_unwrapped = interpolate_nan_2d(arr_unwrapped)
+    # return arr_unwrapped
+    return unwrap1D(unwrap1D(arr, axis=0, period=period), axis=1, period=period)
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
@@ -250,7 +251,7 @@ if __name__ == '__main__':
 
     real_z = 40-(_x**2+_y**2)
     z_wrapped = (real_z % np.pi) - np.pi/2
-    z_unwrapped = unwrap2D(z_wrapped)
+    z_unwrapped = unwrap2D(z_wrapped, np.pi)
     fig = plt.figure()
     ax = plt.axes(projection='3d')
     ax.plot_surface(_x, _y, real_z)
@@ -258,7 +259,4 @@ if __name__ == '__main__':
     ax.plot_surface(_x, _y, z_unwrapped)
     plt.show()
 
-    plt.figure()
-    plt.plot(x, z_unwrapped[0, :])
-    plt.show()
 

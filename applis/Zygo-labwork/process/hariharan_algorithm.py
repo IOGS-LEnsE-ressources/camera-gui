@@ -67,4 +67,4 @@ def hariharan_algorithm(intensity_1: np.ndarray, intensity_2: np.ndarray, intens
     """
     num = 2 * (intensity_4 - intensity_2)
     denum = 2 * intensity_3 - intensity_5 - intensity_1
-    return np.arctan(num / denum)
+    return np.arctan2(num, denum)

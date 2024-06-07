@@ -37,8 +37,7 @@ BUTTON_HEIGHT = 30  # px
 
 # %% Widget
 class OptionsMenuWidget(QWidget):
-
-    signal_language_updated = pyqtSignal()
+    signal_language_updated = pyqtSignal(str)
 
     def __init__(self):
         super().__init__(parent=None)
@@ -78,14 +77,9 @@ class OptionsMenuWidget(QWidget):
         self.setLayout(self.master_layout)
 
     def combobox_language_selection_changed(self, index):
-        self.signal_language_updated.emit()
         language_selected = self.list_languages[index-1]
-        if language_selected == 'English':
-            dictionary = load_dictionary('lang\dict_EN.txt')
-        elif language_selected == 'Français':
-            dictionary = load_dictionary('lang\dict_FR.txt')
-        elif language_selected == '中文':
-            dictionary = load_dictionary('lang\dict_CN.txt')
+        print(f"Signal emitted with language selected: {language_selected}")
+        self.signal_language_updated.emit(language_selected)
     
 
 # %% Example

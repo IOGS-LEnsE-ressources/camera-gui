@@ -4,6 +4,10 @@
 - [Acquisition Menu Widget] DialBox Style
 - [Options Menu Widget] ComboBox Style
 
+STYLES
+- [Acquisition Menu Widget] DialBox Style
+- [Options Menu Widget] ComboBox Style
+
 SOLUTIONS
 #########
 - To import local modules from main app or specific widget, need to add a test on __name__:
