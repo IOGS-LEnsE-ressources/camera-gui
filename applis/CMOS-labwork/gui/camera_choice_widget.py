@@ -27,7 +27,7 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 from PyQt6.QtWidgets import (
     QWidget,
-    QGridLayout,
+    QGridLayout,QMessageBox,
     QLabel, QComboBox, QPushButton,
     QSpacerItem, QSizePolicy
 )
@@ -57,7 +57,7 @@ cam_from_brands = {
 class CameraChoice(QWidget):
     """Camera Choice."""
 
-    selected = pyqtSignal(str)
+    selected = pyqtSignal(dict)
 
     def __init__(self) -> None:
         """Default constructor of the class.
@@ -92,8 +92,8 @@ class CameraChoice(QWidget):
         self.layout.addWidget(self.label_camera_choice_title, 0, 0)
         self.layout.addWidget(self.brand_choice_label, 1, 0)
         self.layout.addWidget(self.brand_refresh_button, 2, 0)
-        self.layout.addWidget(self.brand_choice_list, 3, 0)
-        self.layout.addWidget(self.brand_select_button, 4, 0)
+        self.layout.addWidget(self.brand_choice_list, 3, 0) # 3,0 choice_list
+        self.layout.addWidget(self.brand_select_button, 4, 0) # 4,0 brand_select_button
         # Add a blank space at the end (spacer)
         self.spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.layout.addItem(self.spacer, 5, 0)
@@ -101,10 +101,12 @@ class CameraChoice(QWidget):
         self.brand_select_button.setEnabled(False)
         self.setLayout(self.layout)
         self.init_brand_choice_list()
+        self.action_brand_return_button(None)
 
     def init_brand_choice_list(self):
         """Action ..."""
         # create list from dict cam_list_widget_brands
+        print('Init')
         self.brand_choice_list.clear()
         for item, (brand, camera_widget) in enumerate(cam_list_widget_brands.items()):
             if brand != 'Select...':
@@ -115,42 +117,46 @@ class CameraChoice(QWidget):
             else:
                 self.brand_choice_list.addItem(brand)
         self.brand_choice_list.currentIndexChanged.connect(self.action_brand_choice_list)
-        self.brand_select_button.clicked.connect(self.action_brand_select_button)
         self.brand_select_button.setEnabled(False)
+        self.brand_select_button.clicked.connect(self.action_brand_select_button)
 
     def action_brand_select_button(self, event) -> None:
         """Action performed when the brand_select button is clicked."""
+        print('Action_brand_select')
+        self.clear_layout(5, 0)
+        self.clear_layout(4, 0)
+        self.clear_layout(3, 0)
         self.brand_choice = self.brand_choice_list.currentText()
         self.brand_choice = self.brand_choice.split(' (')[0]
-        self.clear_layout(3, 0)
-        self.clear_layout(4, 0)
         self.selected_label = QLabel()
         self.brand_return_button = QPushButton(translate('brand_return_button'))
         self.brand_return_button.clicked.connect(self.action_brand_return_button)
         self.selected_label.setText(self.brand_choice)
-        self.layout.addWidget(self.selected_label, 3, 0)
-        self.layout.addWidget(self.brand_return_button, 4, 0)
+        self.layout.addWidget(self.selected_label, 3, 0) # 3,0 choice_list
+        self.layout.addWidget(self.brand_return_button, 4, 0) # 4,0 brand_select_button
         self.brand_refresh_button.setEnabled(False)
-        self.selected.emit(f'brand:{self.brand_choice}')
+        dict_brand = {'brand': self.brand_choice}
+        self.selected.emit(dict_brand)
         self.cam_choice_widget = cam_list_widget_brands[self.brand_choice]()
         self.cam_choice_widget.connected.connect(self.action_camera_selected)
-        self.clear_layout(5, 0)
         self.layout.addWidget(self.cam_choice_widget, 5, 0)
-        self.layout.addItem(self.spacer, 5, 0)
+        self.layout.addItem(self.spacer, 6, 0)
 
     def action_camera_selected(self, event):
-        self.selected_camera = self.cam_choice_widget.get_selected_camera_dev()
+        print('action_camera')
+        selected_camera = self.cam_choice_widget.get_selected_camera_dev()
         self.brand_return_button.setEnabled(False)
-        self.selected.emit(f'cam:{self.brand_choice}:')
-
-    def get_selected_camera(self):
-        return self.selected_camera
+        dict_brand = {'brand': self.brand_choice, 'cam_dev': selected_camera}
+        self.selected.emit(dict_brand)
 
     def action_brand_return_button(self, event) -> None:
         """Action performed when the brand_return button is clicked."""
+        print('action_brand_return')
         try:
-            self.clear_layout(3, 0)
+            self.clear_layout(6, 0)
+            self.clear_layout(5, 0)
             self.clear_layout(4, 0)
+            self.clear_layout(3, 0)
             # create list from dict cam_list_widget_brands
             self.brand_choice_list = QComboBox()
             self.brand_choice_list.clear()
@@ -169,10 +175,10 @@ class CameraChoice(QWidget):
             self.brand_select_button.setEnabled(False)
             self.layout.addWidget(self.brand_choice_list, 3, 0)
             self.layout.addWidget(self.brand_select_button, 4, 0)
-            self.clear_layout(5, 0)
             self.layout.addItem(self.spacer, 5, 0)
             self.brand_refresh_button.setEnabled(True)
-            self.selected.emit('None')
+            dict_brand = {}
+            self.selected.emit(dict_brand)
         except Exception as e:
             print(f'Exception - action_brand_return {e}')
 
@@ -205,7 +211,6 @@ class CameraChoice(QWidget):
             else:
                 self.layout.removeItem(item)
 
-
 # -------------------------------
 # Launching as main for tests
 if __name__ == "__main__":
@@ -230,6 +235,20 @@ if __name__ == "__main__":
             # Main Widget
             self.main_widget = CameraChoice()
             self.setCentralWidget(self.main_widget)
+
+        def closeEvent(self, event):
+            """
+            closeEvent redefinition. Use when the user clicks
+            on the red cross to close the window
+            """
+            reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
+                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                         QMessageBox.StandardButton.No)
+
+            if reply == QMessageBox.StandardButton.Yes:
+                event.accept()
+            else:
+                event.ignore()
 
     app = QApplication(sys.argv)
 

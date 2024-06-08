@@ -1,0 +1,4 @@
+CMOS-Labwork Issues
+===================
+
+NOT TESTED WITH BASLER CAMERA

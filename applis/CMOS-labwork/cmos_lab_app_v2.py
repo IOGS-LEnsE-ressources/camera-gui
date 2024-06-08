@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
         self.main_layout.addWidget(self.camera_widget, 1, 1)
         self.main_layout.addWidget(self.histo_graph, 1, 2)
-        self.main_layout.addWidget(self.params_widget, 2, 1)
+        self.main_layout.addWidget(self.params_widget, 2, 1)  # params_widget
         self.main_layout.addWidget(self.time_graph, 2, 2)
 
         self.main_layout.setColumnStretch(0,1)
@@ -109,19 +109,18 @@ class MainWindow(QMainWindow):
             self.main_layout.addWidget(self.params_widget, 2, 1)
 
     def action_camera_connected(self, event):
-        type_event = event.split(':')[0]
-        if type_event == 'cam':
-            self.brand = event.split(':')[1]
-            self.camera_device = self.params_widget.get_selected_camera()
-            self.camera = cam_from_brands[self.brand](self.camera_device)
-            self.clear_layout(2,1)
-            # self.params_widget = CameraSettingsWidget(self.camera)
-            # self.main_layout.addWidget(self.params_widget, 2, 1)
-            self.clear_layout(1,1)
-            self.camera_widget = cam_widget_brands[self.brand](self.camera_device)
-            self.main_layout.addWidget(self.camera_widget, 1, 1)
-
-
+        print(f'Connection : {event}')
+        if "cam_dev" in event:
+            self.brand = event['brand']
+            print(self.brand)
+            self.camera_device = event['cam_dev']
+            self.clear_layout(2,1) # params_widget
+            self.clear_layout(1,1)   # camera_widget
+            #self.camera = cam_from_brands[self.brand](self.camera_device)
+            #self.camera_widget = cam_widget_brands[self.brand](self.camera_device)
+            #self.main_layout.addWidget(self.camera_widget, 1, 1)
+            #self.params_widget = CameraSettingsWidget(self.camera)
+            #self.main_layout.addWidget(self.params_widget, 2, 1)
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
@@ -132,11 +131,16 @@ class MainWindow(QMainWindow):
         :type column: int
 
         """
-        item = self.main_layout.itemAtPosition(row, column)
-        if item is not None:
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        try:
+            item = self.main_layout.itemAtPosition(row, column)
+            if item is not None:
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+                else:
+                    self.main_layout.removeItem(item)
+        except Exception as e:
+            print(f'Exception - clear_layout {e}')
 
     def closeEvent(self, event):
         """
