@@ -57,7 +57,7 @@ cam_from_brands = {
 class CameraChoice(QWidget):
     """Camera Choice."""
 
-    selected = pyqtSignal(dict)
+    selected = pyqtSignal(str)
 
     def __init__(self) -> None:
         """Default constructor of the class.
@@ -122,7 +122,7 @@ class CameraChoice(QWidget):
 
     def action_brand_select_button(self, event) -> None:
         """Action performed when the brand_select button is clicked."""
-        print('Action_brand_select')
+        print('action_brand_select')
         self.clear_layout(5, 0)
         self.clear_layout(4, 0)
         self.clear_layout(3, 0)
@@ -135,12 +135,15 @@ class CameraChoice(QWidget):
         self.layout.addWidget(self.selected_label, 3, 0) # 3,0 choice_list
         self.layout.addWidget(self.brand_return_button, 4, 0) # 4,0 brand_select_button
         self.brand_refresh_button.setEnabled(False)
-        dict_brand = {'brand': self.brand_choice}
-        self.selected.emit(dict_brand)
+        self.layout.addItem(self.spacer, 5, 0)
+        self.selected.emit('brand:'+self.brand_choice)
+        '''
         self.cam_choice_widget = cam_list_widget_brands[self.brand_choice]()
+        self.camera_list = self.cam_choice_widget.cam_list
         self.cam_choice_widget.connected.connect(self.action_camera_selected)
         self.layout.addWidget(self.cam_choice_widget, 5, 0)
         self.layout.addItem(self.spacer, 6, 0)
+        '''
 
     def action_camera_selected(self, event):
         print('action_camera')
@@ -177,8 +180,7 @@ class CameraChoice(QWidget):
             self.layout.addWidget(self.brand_select_button, 4, 0)
             self.layout.addItem(self.spacer, 5, 0)
             self.brand_refresh_button.setEnabled(True)
-            dict_brand = {}
-            self.selected.emit(dict_brand)
+            self.selected.emit('nobrand:')
         except Exception as e:
             print(f'Exception - action_brand_return {e}')
 
@@ -232,6 +234,7 @@ if __name__ == "__main__":
             super().__init__()
             # Define Window title
             self.setWindowTitle("LEnsE - Test")
+            cameras_list = []
             # Main Widget
             self.main_widget = CameraChoice()
             self.setCentralWidget(self.main_widget)

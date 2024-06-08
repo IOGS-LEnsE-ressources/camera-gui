@@ -2,3 +2,9 @@ CMOS-Labwork Issues
 ===================
 
 NOT TESTED WITH BASLER CAMERA
+
+- [CMOS_lab_app_v2] Error when using Settings widget from brand directory (in lensecam) (Update parameters)
+- [Camera_settings_widget] Not developed for Basler !
+    -> Modify lensecam (CameraIDS and CameraBasler) to have the same methods
+    -> (or) Create a CameraSettingsWidget for each brand !
+    -> (or) Use Settings widget from brand directory (in lensecam)
