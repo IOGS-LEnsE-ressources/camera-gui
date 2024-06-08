@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+# Dictionnaire français
+#
+# Global information
+# ------------------
+version; D_FR_0.1
+label_title; Etude d'un capteur CMOS
+label_subtitle; Développé par le LEnsE
+# --------------
+# MainMenuWidget
+# --------------
+label_title_main_menu; Menu
+button_camera_settings_main_menu; Paramètres Camera
+button_aoi_main_menu; Choix Zone Intérêt
+button_live_main_menu; Affichage spatial
+button_acquisition_main_menu; Acquisition temporelle
+button_options_main_menu; Options Interface
+# --------------
+# CameraSettingsWidget
+# --------------
+label_camera_choice_title; Choix de la caméra
+brand_choice_label; Marque de la caméra
+brand_refresh_button; Mise à jour liste
+brand_select_button; Valider la marque

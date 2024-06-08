@@ -15,9 +15,10 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 """
 
-from lensepy import load_dictionary, translate
+from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 import sys
+import os
 import numpy as np
 from PyQt6.QtWidgets import (QApplication, QMainWindow,
                              QGridLayout, QWidget,
@@ -63,6 +64,16 @@ class MainWindow(QMainWindow):
         self.camera_list = None
         self.camera_device = None
         self.brand = None
+        self.default_parameters = {}
+
+        # Init default parameters
+        print(f"CMOS App {dictionary['version']}")
+        self.default = self.init_default_parameters()
+        if self.default:
+            if 'language' in self.default_parameters:
+                file_name_dict = './lang/dict_'+str(self.default_parameters['language'])+'.txt'
+                load_dictionary(file_name_dict)
+                print('Dict OK')
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -71,7 +82,7 @@ class MainWindow(QMainWindow):
 
         # Main Layout
         self.main_layout = QGridLayout()
-        self.title_widget = TitleWidget()
+        self.title_widget = TitleWidget(dictionary)
         self.main_menu_widget = MainMenuWidget()
         self.camera_widget = QWidget()
         self.camera_widget.setStyleSheet("background-color: lightblue;")
@@ -99,6 +110,60 @@ class MainWindow(QMainWindow):
 
         # Events
         self.main_menu_widget.camera_settings_clicked.connect(self.camera_settings_action)
+
+    def load_file(self, file_path: str) -> dict:
+        """
+        Load parameter from a CSV file.
+
+        Parameters
+        ----------
+        file_path : str
+            The file path to specify which CSV file to load.
+
+        Returns
+        -------
+        dict containing 'key_1': 'language_word_1'
+
+        Notes
+        -----
+        This function reads a CSV file that contains key-value pairs separated by semicolons (';')
+        and stores them in a global dictionary variable. The CSV file may contain comments
+        prefixed by '#', which will be ignored.
+
+        The file should have the following format:
+            # comment
+            # comment
+            key_1 ; language_word_1
+            key_2 ; language_word_2
+
+        The function will strip any leading or trailing whitespace from the keys and values.
+
+        See Also
+        --------
+        numpy.genfromtxt : Load data from a text file, with missing values handled as specified.
+        """
+        dictionary_loaded = {}
+        if os.path.exists(file_path):
+            # Read the CSV file, ignoring lines starting with '//'
+            data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
+            # Populate the dictionary with key-value pairs from the CSV file
+            for key, value in data:
+                dictionary_loaded[key.strip()] = value.strip()
+            return dictionary_loaded
+        else:
+            print('File error')
+            return {}
+
+    def init_default_parameters(self) -> bool:
+        """Initialize default parameters from default_config.txt file"""
+        file_path = './default_config.txt'
+        if os.path.exists(file_path):
+            self.default_parameters = self.load_file(file_path)
+            if 'language' in self.default_parameters:
+                print(self.default_parameters['language'])
+            return True
+        else:
+            return False
 
     def camera_settings_action(self, event) -> None:
         self.clear_layout(2, 1)
@@ -152,6 +217,7 @@ class MainWindow(QMainWindow):
                     self.main_layout.removeItem(item)
         except Exception as e:
             print(f'Exception - clear_layout {e}')
+
 
     def closeEvent(self, event):
         """

@@ -2,6 +2,15 @@ CMOS Lab GUI / IDS or Basler Camera
 ###################################
 
 ----------------------------------------------
+08/06/2024 	/  	Julien Villemejane
+----------------------------------------------
+Modify lensepy / load_dictionary, translate
+Add lensepy / dictionary as global variable
+Need to import : from lensepy import load_dictionary, translate, dictionary
+Need to load the dictionary : load_dictionary('path_to_file')
+----------------------------------------------
+
+----------------------------------------------
 05/06/2024 	/  	Julien Villemejane
 ----------------------------------------------
 Test CameraChoice (in CMOS Lab App) with IDS Camera

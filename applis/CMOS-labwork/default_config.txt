@@ -1,0 +1,5 @@
+# -*- coding: utf-8 -*-
+# Default Parameters
+
+language; FR
+languages; FR,EN

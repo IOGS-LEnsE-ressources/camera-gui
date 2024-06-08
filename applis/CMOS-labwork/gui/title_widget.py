@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
-from lensepy import load_dictionary, translate
+from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 
 # %% To add in lensepy librairy
@@ -30,11 +30,11 @@ OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class TitleWidget(QWidget):
-    def __init__(self):
+    def __init__(self, dictionary_in=None):
         super().__init__(parent=None)
         self.layout = QGridLayout()
-        
-        self.label_title = QLabel(translate("label_title"))
+
+        self.label_title = QLabel(translate('label_title'))
         self.label_title.setStyleSheet(styleH1)
         self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -56,7 +56,6 @@ class TitleWidget(QWidget):
 
         self.setLayout(self.layout)
 
-        
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

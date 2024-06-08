@@ -29,7 +29,7 @@ from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from ids_peak import ids_peak
 
-from lensepy import load_dictionary, translate
+from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 
 from widgets.title_widget import TitleWidget
@@ -56,6 +56,7 @@ class ZygoLabApp(QWidget):
         # Initialization of the piezo
         # ----------------------------
         # TO DO
+        #load_dictionary('./lang/dict_FR.txt')
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -198,11 +199,11 @@ class ZygoLabApp(QWidget):
         print(f"Signal received with language selected: {language_selected}")
         #dictionary.clear()
         if language_selected == 'English':
-            dictionary = load_dictionary('lang\dict_EN.txt')
+            load_dictionary('lang\dict_EN.txt')
         elif language_selected == 'Français':
-            dictionary = load_dictionary('lang\dict_FR.txt')
+            load_dictionary('lang\dict_FR.txt')
         elif language_selected == '中文':
-            dictionary = load_dictionary('lang\dict_CN.txt')
+            load_dictionary('lang\dict_CN.txt')
 
         self.update_labels(self)
 
