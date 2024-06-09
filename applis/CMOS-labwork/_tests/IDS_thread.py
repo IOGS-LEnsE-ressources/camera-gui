@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QPushButton
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtCore import QThread, pyqtSignal
 import numpy as np
@@ -26,18 +26,22 @@ class CameraThread(QThread):
         self.camera.start_acquisition()
 
     def run(self):
+        print('Start')
         while self.running:
             # Acquisition de l'image de la caméra
+            image_array = self.camera.get_image()
+            self.image_acquired.emit(image_array)
+            '''
             buffer = self.camera.datastream.waitForNextBuffer(1000)
             if buffer:
                 image_array = buffer.getImage()
                 self.image_acquired.emit(image_array)
                 buffer.queueBuffer()
+            '''
 
     def stop(self):
         self.running = False
         self.camera.stop_acquisition()
-        self.wait()
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -55,12 +59,25 @@ class MainWindow(QMainWindow):
         self.label = QLabel(self)
         self.label.resize(800, 600)
 
+        self.start_button = QPushButton('Start')
+        self.start_button.clicked.connect(self.action_start)
+        self.stop_button = QPushButton('Stop')
+        self.stop_button.clicked.connect(self.action_stop)
+
         layout = QVBoxLayout()
         layout.addWidget(self.label)
+        layout.addWidget(self.start_button)
+        layout.addWidget(self.stop_button)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+    def action_start(self, event):
+        self.camera_thread.start()
+
+    def action_stop(self, event):
+        self.camera_thread.stop()
 
     def update_image(self, image_array):
         height, width, channel = image_array.shape

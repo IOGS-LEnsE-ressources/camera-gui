@@ -28,8 +28,10 @@ from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
 from gui.camera_settings_widget import CameraSettingsWidget
 from lensecam.ids.camera_ids import CameraIds
+from _tests.camera_ids import CameraIds
 from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsWidget, CameraIdsParamsWidget
+from _tests.camera_ids_widget import CameraIdsWidget, CameraIdsParamsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget, CameraBaslerParamsWidget
 
 cam_widget_brands = {
