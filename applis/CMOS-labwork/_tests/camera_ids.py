@@ -56,6 +56,7 @@ import numpy as np
 import cv2
 from ids_peak import ids_peak
 import ids_peak_ipl.ids_peak_ipl as ids_ipl
+from lensecam.ids.camera_ids_widget import CameraIdsListWidget
 
 def get_bits_per_pixel(color_mode: str) -> int:
     """Return the number of bits per pixel.
@@ -72,6 +73,26 @@ def get_bits_per_pixel(color_mode: str) -> int:
         'Mono12': 12,
         'RGB8': 8
     }[color_mode]
+
+def check_value_in(val: int, val_max: int, val_min: int = 0):
+    """
+    Check if a value is in a range.
+
+    :param val: Value to check.
+    :type val: int
+    :param val_max: Maximum value of the range.
+    :type val: int
+    :param val_min: Minimum value of the range. Default 0.
+    :type val: int
+
+    :return: true if the coordinates are in the sensor area
+    :rtype: bool
+
+    """
+    if val_min <= val <= val_max:
+        return True
+    else:
+        return False
 
 
 class CameraIds:
@@ -220,6 +241,73 @@ class CameraIds:
         else:
             return None
 
+    def get_exposure(self) -> float:
+        """Return the exposure time in microseconds.
+
+        :return: the exposure time in microseconds.
+        :rtype: float
+
+        # >>> my_cam.get_exposure()
+        5000.0
+
+        """
+        try:
+            return self.camera_remote.FindNode("ExposureTime").Value()
+        except Exception as e:
+            print("Exception - get exposure time: " + str(e) + "")
+
+    def get_exposure_range(self) -> tuple[float, float]:
+        """Return the range of the exposure time in microseconds.
+
+        :return: the minimum and the maximum value
+            of the exposure time in microseconds.
+        :rtype: tuple[float, float]
+
+        """
+        try:
+            exposure_min = self.camera_remote.FindNode("ExposureTime").Minimum()
+            exposure_max = self.camera_remote.FindNode("ExposureTime").Maximum()
+            return exposure_min, exposure_max
+        except Exception as e:
+            print("Exception - get range exposure time: " + str(e) + "")
+
+    def set_exposure(self, exposure: float) -> bool:
+        """Set the exposure time in microseconds.
+
+        :param exposure: exposure time in microseconds.
+        :type exposure: int
+
+        :return: Return true if the exposure time changed.
+        :rtype: bool
+        """
+        try:
+            expo_min, expo_max = self.get_exposure_range()
+            if check_value_in(exposure, expo_max, expo_min):
+                self.camera_remote.FindNode("ExposureTime").SetValue(exposure)
+                return True
+            return False
+        except Exception as e:
+            print("Exception - set exposure time: " + str(e) + "")
+
+
+    def __check_range(self, x: int, y: int) -> bool:
+        """Check if the coordinates are in the sensor area.
+
+        :param x: Coordinate to evaluate on X-axis.
+        :type x: int
+        :param y: Coordinate to evaluate on Y-axis.
+        :type y: int
+
+        :return: true if the coordinates are in the sensor area
+        :rtype: bool
+
+        """
+        if 0 <= x <= self.width_max and 0 <= y <= self.height_max:
+            return True
+        else:
+            return False
+
+
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
@@ -239,9 +327,10 @@ class CameraThread(QThread):
         self.camera = camera
 
     def stop(self):
-        self.running = False
-        self.camera.stop_acquisition()
-        self.camera.free_memory()
+        if self.camera.camera_acquiring is True:
+            self.running = False
+            self.camera.stop_acquisition()
+            self.camera.free_memory()
 
     def run(self):
         """
@@ -253,7 +342,7 @@ class CameraThread(QThread):
 
         """
         try:
-            if self.running is False:
+            if self.camera.camera_acquiring is False:
                 print('First')
                 self.camera.init_camera()
                 self.camera.alloc_memory()
@@ -263,26 +352,71 @@ class CameraThread(QThread):
                 image_array = self.camera.get_image()
                 self.image_acquired.emit(image_array)
         except Exception as e:
-            print(f'Thread Running - Execption - {e}')
+            print(f'Thread Running - Exception - {e}')
 
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QGridLayout
 from lensepy.images.conversion import resize_image_ratio, array_to_qimage
 
 class CameraIdsWidget(QWidget):
+    """CameraIdsWidget class, children of QWidget.
 
-    def __init__(self, camera: CameraIds = None):
+    Class to integrate an IDS camera into a PyQt6 graphical interface.
+
+    :param cameras_list_widget: Widget containing a ComboBox with the list of available cameras.
+    :type cameras_list_widget: CameraIdsListWidget
+    :param main_layout: Main layout container of the widget.
+    :type main_layout: QGridLayout
+    :param camera: Device to control
+    :type camera: CameraIds
+
+    .. note::
+
+        The camera is initialized with the following parameters :
+
+        * Exposure time = 10 ms
+        * FPS = 10
+        * Black Level = 0
+        * Color Mode = 'Mono12' (if possible)
+
+    :param camera_display: Area to display the camera image
+    :type camera_display: QLabel
+    :param camera_infos: Area to display camera informations (FPS, expotime...)
+    :type camera_infos: SmallParamsDisplay
+    :param main_timer: timer object to manage display refresh
+    :type main_timer: QTimer
+
+    """
+    connected = pyqtSignal(str)
+
+    def __init__(self, camera: CameraIds = None, params_disp=False):
         super().__init__(parent=None)
-        self.initUI()
+        # Camera
+        self.display_params = params_disp
         self.camera = camera
+        # GUI
+        self.initUI()
 
     def set_camera(self, camera: CameraIds):
         self.camera = camera
 
     def initUI(self):
         self.camera_display = QLabel('Image')
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
         self.layout.addWidget(self.camera_display)
         self.setLayout(self.layout)
+
+        if self.camera is None:
+            print('No Cam')
+            self.cameras_list_widget = CameraIdsListWidget()
+            self.layout.addWidget(self.cameras_list_widget, 0, 0)
+            # Connect the signal emitted by the ComboList to its action
+            self.cameras_list_widget.connected.connect(self.connect_camera)
+        else:
+            print('Camera OK')
+            self.set_camera(camera=self.camera)
+
+    def connect_camera(self, event):
+        print(event)
 
 
 class Remote(QWidget):
@@ -306,11 +440,14 @@ class Remote(QWidget):
         self.stop_acq_button.clicked.connect(self.action_button)
         self.start_acq_button = QPushButton('Start Acq')
         self.start_acq_button.clicked.connect(self.action_button)
+        self.expo_button = QPushButton('Expo')
+        self.expo_button.clicked.connect(self.action_button)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.get_image_button)
         self.layout.addWidget(self.start_acq_button)
         self.layout.addWidget(self.stop_acq_button)
+        self.layout.addWidget(self.expo_button)
 
         self.setLayout(self.layout)
 
@@ -322,6 +459,8 @@ class Remote(QWidget):
             self.transmitted.emit('start')
         if button == self.stop_acq_button:
             self.transmitted.emit('stop')
+        if button == self.expo_button:
+            self.transmitted.emit('expo')
 
 
 from PyQt6.QtWidgets import QMainWindow
@@ -386,7 +525,11 @@ class MainWindow(QMainWindow):
             self.camera_thread.start()
         elif event == 'stop':
             print('Stop')
+            self.camera_widget.camera.set_exposure(10000)
             self.camera_thread.stop()
+        elif event == 'expo':
+            print(f'Expo {self.camera_widget.camera.get_exposure()}')
+            self.camera_widget.camera.set_exposure(20000)
 
     def set_camera(self, camera: CameraIds):
         """

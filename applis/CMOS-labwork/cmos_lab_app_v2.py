@@ -28,11 +28,13 @@ from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
 from gui.camera_settings_widget import CameraSettingsWidget
 from lensecam.ids.camera_ids import CameraIds
-from _tests.camera_ids import CameraIds
 from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsWidget, CameraIdsParamsWidget
-from _tests.camera_ids_widget import CameraIdsWidget, CameraIdsParamsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget, CameraBaslerParamsWidget
+
+# Testing !
+from _tests.camera_ids import CameraIds, CameraThread, CameraIdsWidget
+from _tests.camera_ids_widget import CameraIdsParamsWidget
 
 cam_widget_brands = {
     'Basler': CameraBaslerWidget,
@@ -65,6 +67,7 @@ class MainWindow(QMainWindow):
         self.camera = None
         self.camera_list = None
         self.camera_device = None
+        self.camera_thread = CameraThread()
         self.brand = None
         self.default_parameters = {}
 

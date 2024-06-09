@@ -8,3 +8,5 @@ NOT TESTED WITH BASLER CAMERA
     -> Modify lensecam (CameraIDS and CameraBasler) to have the same methods
     -> (or) Create a CameraSettingsWidget for each brand !
     -> (or) Use Settings widget from brand directory (in lensecam)
+
+- [_tests/camera_ids.py] Exception when stopping thread !
