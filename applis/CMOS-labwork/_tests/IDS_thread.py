@@ -4,6 +4,7 @@ from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtCore import QThread, pyqtSignal
 import numpy as np
 from ids_peak import ids_peak
+from lensecam.ids.camera_ids import CameraIds
 
 class CameraThread(QThread):
     image_acquired = pyqtSignal(np.ndarray)
@@ -11,6 +12,7 @@ class CameraThread(QThread):
     def __init__(self):
         super().__init__()
         self.running = True
+        self.camera = None
         self.init_camera()
 
     def init_camera(self):
@@ -20,14 +22,13 @@ class CameraThread(QThread):
         self.device_manager = ids_peak.DeviceManager.Instance()
         self.device_manager.Update()
         self.device = self.device_manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
-        self.nodemap = self.device.remoteDevice().nodeMap()
-        self.datastream = self.device.dataStreams().create()
-        self.datastream.startAcquisition()
+        self.camera = CameraIds(self.device)
+        self.camera.start_acquisition()
 
     def run(self):
         while self.running:
             # Acquisition de l'image de la caméra
-            buffer = self.datastream.waitForNextBuffer(1000)
+            buffer = self.camera.datastream.waitForNextBuffer(1000)
             if buffer:
                 image_array = buffer.getImage()
                 self.image_acquired.emit(image_array)
@@ -35,8 +36,7 @@ class CameraThread(QThread):
 
     def stop(self):
         self.running = False
-        self.datastream.stopAcquisition()
-        self.device.close()
+        self.camera.stop_acquisition()
         self.wait()
 
 class MainWindow(QMainWindow):
