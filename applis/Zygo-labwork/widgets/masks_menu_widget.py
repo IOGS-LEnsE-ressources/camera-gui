@@ -112,6 +112,7 @@ class MasksMenuWidget(QWidget):
         self.button_erase_mask = QPushButton(translate('button_erase_mask'))
         self.button_erase_mask.setStyleSheet(unactived_button)
         self.button_erase_mask.setFixedHeight(BUTTON_HEIGHT)
+        self.button_erase_mask.clicked.connect(self.button_erase_mask_isClicked)
 
         self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
         self.checkbox_apply_mask.setStyleSheet(styleCheckbox)
@@ -273,6 +274,31 @@ class MasksMenuWidget(QWidget):
         if self.index_mask_selected >= 0 and self.index_mask_selected < len(self.list_masks):
             self.mask_selected = self.list_masks[self.index_mask_selected]
             print(f"self.index_mask_selected: {self.index_mask_selected}")
+
+    def button_erase_mask_isClicked(self):
+        if self.index_mask_selected == -1:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+            self.checkbox_apply_mask.setChecked(True)
+            return None
+        
+        elif len(self.list_masks) > 0:
+            reply = QMessageBox.question(self, translate('erase'), translate('confirmation_erase_mask_question'),
+                                            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                            QMessageBox.StandardButton.No)
+
+            if reply == QMessageBox.StandardButton.Yes:
+                del self.list_masks[self.index_mask_selected]
+                del self.list_original_masks[self.index_mask_selected]
+                self.index_mask_selected -= 1
+
+                self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
+                self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet(styleH3)
+                msg_box.information(self, translate('information'), translate('message_mask_erased_information'))
 
 
 class SelectionMaskWindow(QDialog):

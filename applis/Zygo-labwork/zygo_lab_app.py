@@ -155,8 +155,7 @@ class ZygoLabApp(QWidget):
         expo_min, expo_max = self.camera.get_exposure_range() # µs
         if real_expo_max < expo_max//1000 and real_expo_min >= expo_min//1000:
             self.camera_settings_widget.slider_exposure_time.ratio = 10.0
-            self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min,
-                                                                                       real_expo_max)
+            self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min, real_expo_max)
         self.camera.init_default_parameters(exposure=real_expo, frame_rate=20)
 
     def signal_camera_connected_isReceived(self, event):
