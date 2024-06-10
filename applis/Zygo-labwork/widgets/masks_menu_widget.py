@@ -47,9 +47,17 @@ class MasksMenuWidget(QWidget):
         super().__init__(parent=None)
 
         self.parent = parent
-        self.list_masks = []
-        self.list_original_masks = []
-        self.mask_unactived = None
+
+        if self.parent is None:
+            self.mask = None
+            self.list_masks = []
+            self.list_original_masks = []
+            self.mask_unactived = None
+        else:
+            self.mask = self.parent.mask
+            self.list_masks = self.parent.list_masks
+            self.list_original_masks = self.parent.list_original_masks
+            self.mask_unactived = self.parent.mask_unactived
         self.index_mask_selected = -1
 
         self.setStyleSheet("background-color: white;")
@@ -85,7 +93,7 @@ class MasksMenuWidget(QWidget):
         self.button_polygon_mask.setFixedHeight(BUTTON_HEIGHT)
         self.button_polygon_mask.clicked.connect(self.selection_mask_polygon)
 
-        self.combobox_select_mask = ComboBoxBloc(translate('mask_selected'), [])
+        self.combobox_select_mask = ComboBoxBloc(translate('mask_selected'), map(str,list(range(1, len(self.list_masks)+1))))
         self.combobox_select_mask.currentIndexChanged.connect(self.combobox_mask_selected_changed)
         
         self.sublayout_left.addWidget(self.button_circle_mask)

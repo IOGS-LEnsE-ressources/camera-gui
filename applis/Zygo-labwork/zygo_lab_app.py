@@ -58,6 +58,13 @@ class ZygoLabApp(QWidget):
         # TO DO
         #load_dictionary('./lang/dict_FR.txt')
 
+        # Initialisation of the mask selection attributes
+        # -----------------------------------------------
+        self.mask = None
+        self.list_masks = []
+        self.list_original_masks = []
+        self.mask_unactived = None
+
         self.layout = QGridLayout()
         self.setLayout(self.layout)
         
@@ -166,6 +173,12 @@ class ZygoLabApp(QWidget):
         self.camera.trigger()
 
     def signal_menu_selected_isReceived(self, event):
+        # Save information of the mask
+        self.mask = self.masks_menu_widget.mask
+        self.list_masks = self.masks_menu_widget.list_masks
+        self.list_original_masks = self.masks_menu_widget.list_original_masks
+        self.mask_unactived = self.masks_menu_widget.mask_unactived
+
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget(self)
         self.acquisition_menu_widget = AcquisitionMenuWidget(self)

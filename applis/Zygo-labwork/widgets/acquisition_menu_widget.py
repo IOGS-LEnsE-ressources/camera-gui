@@ -210,10 +210,26 @@ class AcquisitionMenuWidget(QWidget):
         if self.parent is not None:
             try:
                 print(self.parent)
-                pict1 = self.parent.camera_widget.get_image()
-                print(f'Im1 - {pict1[0][0]}')
-                pict2 = self.parent.camera_widget.get_image()
-                print(f'Im2 - {pict2[0][0]}')
+                image = self.parent.camera_widget.get_image()
+                mask = self.parent.mask
+                
+                if mask is None:
+                    msg_box = QMessageBox()
+                    msg_box.setStyleSheet(styleH3)
+                    msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+                    self.button_simple_acquisition.setStyleSheet(unactived_button)  
+                    return None
+
+                import matplotlib.pyplot as plt
+                plt.figure()
+                plt.title('Raw image')
+                plt.imshow(image)
+                plt.show()
+
+                plt.figure()
+                plt.title('Image * mask')
+                plt.imshow(image*mask)
+                plt.show()
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
