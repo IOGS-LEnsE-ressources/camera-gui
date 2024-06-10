@@ -40,6 +40,8 @@ from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
 
+from process.initialization_parameters import *
+
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 class ZygoLabApp(QWidget):
@@ -48,6 +50,10 @@ class ZygoLabApp(QWidget):
         """Default constructor of the class.
         """
         super().__init__(parent=None)
+
+        # Default settings
+        # ----------------
+        default_settings_dict = read_default_parameters('config.txt')
 
         # Initialization of the camera
         # ----------------------------

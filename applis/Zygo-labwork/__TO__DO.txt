@@ -29,6 +29,7 @@ Camera
 - Create/Modify CameraParameters
 - Test ParamsWidget outside CamWidget and test update params
 - Load default parameters (stored in a file ?)
+  -> See 'process' folder
 - Add default parameters (in the same file) for min and max exposure time and black level ??
 
 Piezo

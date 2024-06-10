@@ -7,7 +7,10 @@
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
 
-import sys
+import sys, os
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+sys.path.append(parent_dir)
+
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -19,6 +22,9 @@ from PyQt6.QtGui import QPixmap
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+
+from process.hariharan_algorithm import hariharan_algorithm
+from process.acquisition_images import get_phase
 
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
@@ -209,30 +215,26 @@ class AcquisitionMenuWidget(QWidget):
         print('button_simple_acquisition_isClicked')
         if self.parent is not None:
             try:
-                print(self.parent)
-                image = self.parent.camera_widget.get_image()
                 mask = self.parent.mask
-                
                 if mask is None:
                     msg_box = QMessageBox()
                     msg_box.setStyleSheet(styleH3)
                     msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
+                
+                wrapped_phase, images = get_phase(self.parent.camera_widget)
+                unwrapped_phase = ...
 
                 import matplotlib.pyplot as plt
                 plt.figure()
-                plt.title('Raw image')
-                plt.imshow(image)
-                plt.show()
+                plt.imshow(unwrapped_phase)
 
-                plt.figure()
-                plt.title('Image * mask')
-                plt.imshow(image*mask)
-                plt.show()
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
+
+    
 
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
