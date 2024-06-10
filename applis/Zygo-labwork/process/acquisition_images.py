@@ -5,6 +5,7 @@ else:
 
 def get_phase(parent):
     images = []
+    mask = parent.mask
     try:
         parent.camera_thread.stop()
         parent.camera.init_camera()
@@ -15,20 +16,21 @@ def get_phase(parent):
             raw_array = parent.camera_widget.camera.get_image()
             images.append(raw_array)
             # Piezo add phase (wait until it's done)
+
     except Exception as e:
         print(f'Exception Phase - {e}')
-    '''
+
     import matplotlib.pyplot as plt
     plt.figure()
     plt.title('Raw image')
-    plt.imshow(image)
+    plt.imshow(raw_array)
     plt.show()
 
     plt.figure()
     plt.title('Image * mask')
-    plt.imshow(image*mask)
+    plt.imshow(raw_array*mask)
     plt.show()
-    '''
+
     parent.camera.stop_acquisition()
     parent.camera.free_memory()
     parent.camera_thread.start()
