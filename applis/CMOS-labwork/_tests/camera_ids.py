@@ -478,12 +478,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("IDS Camera Display")
         self.setGeometry(100, 100, 800, 600)
 
-        self.layout = QVBoxLayout()
-        self.camera_widget = CameraIdsWidget()
-        self.layout.addWidget(self.camera_widget)
+        self.layout = QGridLayout()
+        self.camera_widget = None
         self.remote = Remote()
         self.remote.transmitted.connect(self.action_remote)
-        self.layout.addWidget(self.remote)
+        self.layout.addWidget(self.remote, 2, 0)
 
         self.central_widget = QWidget()
         self.central_widget.setLayout(self.layout)
@@ -536,6 +535,8 @@ class MainWindow(QMainWindow):
 
         """
         self.camera_thread.set_camera(camera)
+        self.camera_widget = CameraIdsWidget(camera)
+        self.layout.addWidget(self.camera_widget, 1, 0)
 
     def update_image(self, image_array):
         try:
@@ -570,7 +571,6 @@ if __name__ == "__main__":
     # Test with a Thread
     app = QApplication(sys.argv)
     main_window = MainWindow()
-    main_window.camera_widget.set_camera(camera_ids)
     main_window.set_camera(camera_ids)
     main_window.show()
     sys.exit(app.exec())
