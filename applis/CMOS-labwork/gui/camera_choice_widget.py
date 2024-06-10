@@ -19,12 +19,6 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
 from PyQt6.QtWidgets import (
     QWidget,
     QGridLayout,QMessageBox,
@@ -34,11 +28,16 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensecam.basler.camera_basler_widget import CameraBaslerListWidget
 from lensecam.basler.camera_basler import CameraBasler
-from lensecam.ids.camera_ids_widget import CameraIdsListWidget
+from lensecam.ids.camera_ids_widget0 import CameraIdsListWidget
 from lensecam.ids.camera_ids import CameraIds
 from lensecam.ids.camera_list import CameraList as CameraIdsList
 from lensecam.basler.camera_list import CameraList as CameraBaslerList
 
+# %% To add in lensepy librairy
+# Styles
+# ------
+styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
+styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 cam_list_brands = {
     'Basler': CameraBaslerList,

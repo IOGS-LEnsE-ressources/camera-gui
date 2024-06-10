@@ -1,8 +1,7 @@
 - Issues with the use of PyQt signals.
-- Start of the main app :
-    Exception - trigger: Error-Code: 4 (PEAK_RETURN_CODE_BAD_ACCESS) | Error-Description: Node is not writable. : AccessException thrown in node 'AcquisitionMode' while calling 'AcquisitionMode.SetIntValue()' (file 'EnumerationT.h', line 84)
 - [Acquisition Menu Widget] DialBox Style
 - [Options Menu Widget] ComboBox Style
+- [Acquisition Simple] Exception - update_image Unknown C++ exception from OpenCV code
 
 STYLES
 - [Acquisition Menu Widget] DialBox Style

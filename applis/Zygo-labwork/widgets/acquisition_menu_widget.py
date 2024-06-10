@@ -222,13 +222,14 @@ class AcquisitionMenuWidget(QWidget):
                     msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
-                
-                wrapped_phase, images = get_phase(self.parent.camera_widget)
-                unwrapped_phase = ...
 
+                wrapped_phase, images = get_phase(self.parent)
+                '''
+                unwrapped_phase = ...
                 import matplotlib.pyplot as plt
                 plt.figure()
                 plt.imshow(unwrapped_phase)
+                '''
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')

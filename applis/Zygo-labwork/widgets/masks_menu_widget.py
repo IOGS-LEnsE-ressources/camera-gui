@@ -29,6 +29,7 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 import cv2
+from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 
 if __name__ == '__main__':
     from combobox_bloc import ComboBoxBloc
@@ -203,10 +204,34 @@ class MasksMenuWidget(QWidget):
         plt.colorbar()
         plt.show()
 
+    def get_image(self) -> np.ndarray:
+        self.parent.camera_thread.stop()
+        self.parent.camera.init_camera()
+        self.parent.camera.alloc_memory()
+        self.parent.camera.start_acquisition()
+        raw_array = self.parent.camera_widget.camera.get_image()
+        '''
+        frame_width = self.parent.camera_widget.width()
+        frame_height = self.parent.camera_widget.height()
+        # Resize to the display size
+        image_array_disp2 = resize_image_ratio(raw_array, frame_width, frame_height)
+        # Convert the frame into an image
+        image = array_to_qimage(image_array_disp2)
+        # display it in the cameraDisplay
+        self.camera_widget.camera_display.setPixmap(pmap)
+        self.camera_widget.camera.stop_acquisition()
+        self.camera_widget.camera.free_memory()
+        '''
+        self.parent.camera.stop_acquisition()
+        self.parent.camera_widget.camera.free_memory()
+        self.parent.camera_thread.start()
+        return raw_array
+
     def selection_mask_circle(self):
         if self.parent is not None:
+            print(self.parent)
             try:
-                image = self.parent.camera_widget.get_image()
+                image = self.get_image()
                 selection_window = SelectionMaskWindow(image, 'Circle')
                 selection_window.exec()
                 mask = selection_window.mask
@@ -232,7 +257,7 @@ class MasksMenuWidget(QWidget):
     def selection_mask_rectangle(self):
         if self.parent is not None:
             try:
-                image = self.parent.camera_widget.get_image()
+                image = self.get_image()
                 selection_window = SelectionMaskWindow(image, 'Rectangle')
                 selection_window.exec()
                 mask = selection_window.mask
@@ -256,7 +281,7 @@ class MasksMenuWidget(QWidget):
     def selection_mask_polygon(self):
         if self.parent is not None:
             try:
-                image = self.parent.camera_widget.get_image()
+                image = self.get_image()
                 selection_window = SelectionMaskWindow(image, 'Polygon')
                 selection_window.exec()
                 mask = selection_window.mask
@@ -428,40 +453,44 @@ class SelectionMaskWindow(QDialog):
         return X, Y
 
     def draw_circle(self):
-        x0, y0 = self.points[-3]
-        x1, y1 = self.points[-2]
-        x2, y2 = self.points[-1]
+        try:
+            x0, y0 = self.points[-3]
+            x1, y1 = self.points[-2]
+            x2, y2 = self.points[-1]
 
-        x_center, y_center = self.find_circle_center(x0, y0, x1, y1, x2, y2)
-        x_center = int(x_center)
-        y_center = int(y_center)
-        radius = np.sqrt((x_center-x0)**2+(y_center-y0)**2)
+            x_center, y_center = self.find_circle_center(x0, y0, x1, y1, x2, y2)
+            x_center = int(x_center)
+            y_center = int(y_center)
+            radius = int(np.sqrt((x_center-x0)**2+(y_center-y0)**2))
 
-        print(f"x0={x0}, y0={y0}")
-        print(f"x1={x1}, y1={y1}")
-        print(f"x2={x2}, y2={y2}")
-        print(f"centre: ({x_center},{y_center})")
-        print(f"dist P1-centre: {np.sqrt((x_center-x0)**2+(y_center-y0)**2)}")
-        print(f"dist P2-centre: {np.sqrt((x_center-x1)**2+(y_center-y1)**2)}")
-        print(f"dist P3-centre: {np.sqrt((x_center-x2)**2+(y_center-y2)**2)}")
-        print(f"rayon: {radius}")
+            print(f"x0={x0}, y0={y0}")
+            print(f"x1={x1}, y1={y1}")
+            print(f"x2={x2}, y2={y2}")
+            print(f"centre: ({x_center},{y_center})")
+            print(f"dist P1-centre: {np.sqrt((x_center-x0)**2+(y_center-y0)**2)}")
+            print(f"dist P2-centre: {np.sqrt((x_center-x1)**2+(y_center-y1)**2)}")
+            print(f"dist P3-centre: {np.sqrt((x_center-x2)**2+(y_center-y2)**2)}")
+            print(f"rayon: {radius}")
 
-        painter = QPainter(self.pixmap)
-        pen = QPen(QColor(255, 0, 0), 2)
-        painter.setPen(pen)
-        painter.drawEllipse(QPoint(x_center, y_center), radius, radius)
-        painter.end()
+            painter = QPainter(self.pixmap)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            pen = QPen(QColor(255, 0, 0), 2)
+            painter.setPen(pen)
+            painter.drawEllipse(QPoint(x_center, y_center), radius, radius)
+            painter.end()
 
-        # Afficher le cercle
-        combined_pixmap = self.pixmap.copy()
-        painter = QPainter(combined_pixmap)
-        painter.drawPixmap(0, 0, self.point_layer)
-        painter.end()
+            # Afficher le cercle
+            combined_pixmap = self.pixmap.copy()
+            painter = QPainter(combined_pixmap)
+            painter.drawPixmap(0, 0, self.point_layer)
+            painter.end()
 
-        self.label.setPixmap(combined_pixmap)
+            self.label.setPixmap(combined_pixmap)
 
-        # Update mask
-        self.mask = self.create_circular_mask(x_center, y_center, radius)
+            # Update mask
+            self.mask = self.create_circular_mask(x_center, y_center, radius)
+        except Exception as e:
+            print(f'Exception - circle_mask_draw {e}')
 
     def draw_rectangle(self):
         x1, y1 = self.points[-2]

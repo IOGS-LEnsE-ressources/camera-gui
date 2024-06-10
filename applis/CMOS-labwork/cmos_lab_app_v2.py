@@ -28,16 +28,14 @@ from PyQt6.QtGui import QImage, QPixmap
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
-from gui.camera_settings_widget import CameraSettingsWidget
 from lensecam.ids.camera_ids import CameraIds
+from lensecam.camera_thread import CameraThread
 from lensecam.basler.camera_basler import CameraBasler
-from lensecam.ids.camera_ids_widget import CameraIdsWidget, CameraIdsParamsWidget
+from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from lensecam.ids.camera_ids_widget0 import CameraIdsParamsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget, CameraBaslerParamsWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 
-# Testing !
-from _tests.camera_ids import CameraIds, CameraThread, CameraIdsWidget
-from _tests.camera_ids_widget import CameraIdsParamsWidget
 
 cam_widget_brands = {
     'Basler': CameraBaslerWidget,
@@ -205,8 +203,10 @@ class MainWindow(QMainWindow):
             print('CMOS camera_connected')
             self.clear_layout(2,1)   # params_widget
             self.camera = self.camera_widget.camera
+            print(self.camera)
             self.camera.init_camera(self.camera.camera_device)
             self.camera_thread.set_camera(self.camera)
+            self.camera_widget.camera_display_params.update_params()
             # Init default param
             if 'exposure' in self.default_parameters:
                 print(self.default_parameters['exposure'])

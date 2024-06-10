@@ -27,10 +27,13 @@ from PyQt6.QtGui import QPixmap, QIcon
 
 from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from lensecam.ids.camera_ids import CameraIds
+from lensecam.camera_thread import CameraThread
 from ids_peak import ids_peak
 
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
+from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 
 from widgets.title_widget import TitleWidget
 from widgets.main_menu_widget import MainMenuWidget
@@ -58,6 +61,8 @@ class ZygoLabApp(QWidget):
         # Initialization of the camera
         # ----------------------------
         self.camera_device = self.init_camera()
+        self.camera = CameraIds()
+        self.camera.init_camera(self.camera_device)
         # ----------------------------
         # Initialization of the piezo
         # ----------------------------
@@ -95,10 +100,10 @@ class ZygoLabApp(QWidget):
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
 
         # Camera Widget: top-left corner
-        self.camera_widget = CameraIdsWidget(self.camera_device, params_disp=False)
-        self.camera_widget.main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.camera_widget = CameraIdsWidget(self.camera, params_disp=False)
+        self.camera_widget.camera_display_params.update_params()
+        self.camera_widget.camera_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.camera_widget, 1, 1)
-        self.camera = self.camera_widget.camera
 
         # Other Widgets
         # -------------
@@ -110,12 +115,14 @@ class ZygoLabApp(QWidget):
 
         # Other initializations
         # ---------------------
-        self.init_default_camera_settings()
+        self.camera_thread = CameraThread()
+        self.camera_thread.set_camera(self.camera)
+        self.camera_thread.image_acquired.connect(self.thread_update_image)
+        self.camera_thread.start()
 
         # Signals
         # -------
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
-        self.camera_widget.connected.connect(self.signal_camera_connected_isReceived)
 
     def init_camera(self) -> ids_peak.Device:
         """Initialisation of the camera.
@@ -158,25 +165,26 @@ class ZygoLabApp(QWidget):
             if widget:
                 widget.deleteLater()
 
-    def init_default_camera_settings(self):
-        """Load and initialize default parameters for camera settings from {{FILE}}"""
-        # Load default parameters for camera settings from {{FILE}}
-        real_expo_min = 0 # ms
-        real_expo_max = 100 # ms
-        real_expo = 10 # ms
-        # Init default parameters for camera settings
-        expo_min, expo_max = self.camera.get_exposure_range() # µs
-        if real_expo_max < expo_max//1000 and real_expo_min >= expo_min//1000:
-            self.camera_settings_widget.slider_exposure_time.ratio = 10.0
-            self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min, real_expo_max)
-        self.camera.init_default_parameters(exposure=real_expo, frame_rate=20)
-
-    def signal_camera_connected_isReceived(self, event):
-        """Action performed when a camera is connected."""
-        self.camera = self.camera_widget.camera
-        self.camera_settings_widget = CameraSettingsWidget(self.camera)
-        self.init_default_camera_settings()
-        self.camera.trigger()
+    def thread_update_image(self, image_array):
+        """Action performed when the live acquisition (via CameraThread) is running."""
+        try:
+            frame_width = self.camera_widget.width()
+            frame_height = self.camera_widget.height()
+            print(image_array.shape)
+            print(image_array.dtype)
+            if self.camera_thread.running:
+                # Resize to the display size
+                image_array_disp2 = resize_image_ratio(
+                    image_array,
+                    frame_width,
+                    frame_height)
+                # Convert the frame into an image
+                image = array_to_qimage(image_array_disp2)
+                pmap = QPixmap(image)
+                # display it in the cameraDisplay
+                self.camera_widget.camera_display.setPixmap(pmap)
+        except Exception as e:
+            print(f'Exception - update_image {e}')
 
     def signal_menu_selected_isReceived(self, event):
         # Save information of the mask

@@ -91,7 +91,6 @@ class CameraSettingsWidget(QWidget):
 
     def slider_exposure_time_changing(self, event):
         """Action performed when the exposure time slider changed."""
-        print(f'Slider {event}')
         if self.camera is not None:
             exposure_time_value = self.slider_exposure_time.get_value()*1000
             self.camera.set_exposure(exposure_time_value)

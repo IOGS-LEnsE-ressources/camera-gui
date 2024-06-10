@@ -3,13 +3,21 @@ if __name__ == '__main__':
 else:
     from process.hariharan_algorithm import *
 
-def get_phase(camera_widget):
+def get_phase(parent):
     images = []
-    for _ in range(5):
-        image = camera_widget.get_image()
-        images.append(image)
-        # Piezo add phase (wait until it's done)
-
+    try:
+        parent.camera_thread.stop()
+        parent.camera.init_camera()
+        parent.camera.alloc_memory()
+        parent.camera.start_acquisition()
+        for i in range(5):
+            print(f'Image {i}')
+            raw_array = parent.camera_widget.camera.get_image()
+            images.append(raw_array)
+            # Piezo add phase (wait until it's done)
+    except Exception as e:
+        print(f'Exception Phase - {e}')
+    '''
     import matplotlib.pyplot as plt
     plt.figure()
     plt.title('Raw image')
@@ -20,5 +28,8 @@ def get_phase(camera_widget):
     plt.title('Image * mask')
     plt.imshow(image*mask)
     plt.show()
-
+    '''
+    parent.camera.stop_acquisition()
+    parent.camera.free_memory()
+    parent.camera_thread.start()
     return hariharan_algorithm(*images), images

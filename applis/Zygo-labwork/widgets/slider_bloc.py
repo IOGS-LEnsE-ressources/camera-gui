@@ -154,7 +154,7 @@ class SliderBloc(QWidget):
         
     def slider_position_changed(self):
         self.value = self.slider.value()/self.ratio
-        self.slider_changed.emit(f'TO CHANGE')
+        self.slider_changed.emit(f'slider')
         self.update_block()
     
     def input_changed(self):
