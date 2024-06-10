@@ -28,8 +28,15 @@ from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+import cv2
+
+if __name__ == '__main__':
+    from combobox_bloc import ComboBoxBloc
+else:
+    from widgets.combobox_bloc import ComboBoxBloc
 
 styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight: normal;"
+styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 # %% Params
 BUTTON_HEIGHT = 30 #px
@@ -40,6 +47,10 @@ class MasksMenuWidget(QWidget):
         super().__init__(parent=None)
 
         self.parent = parent
+        self.list_masks = []
+        self.list_original_masks = []
+        self.mask_unactived = None
+        self.index_mask_selected = -1
 
         self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout()
@@ -67,20 +78,21 @@ class MasksMenuWidget(QWidget):
         self.button_rectangle_mask = QPushButton(translate('button_rectangle_mask'))
         self.button_rectangle_mask.setStyleSheet(unactived_button)
         self.button_rectangle_mask.setFixedHeight(BUTTON_HEIGHT)
+        self.button_rectangle_mask.clicked.connect(self.selection_mask_rectangle)
         
         self.button_polygon_mask = QPushButton(translate('button_polygon_mask'))
         self.button_polygon_mask.setStyleSheet(unactived_button)
         self.button_polygon_mask.setFixedHeight(BUTTON_HEIGHT)
-        
-        self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
-        self.checkbox_apply_mask.setStyleSheet(styleCheckbox)
-        self.checkbox_apply_mask.setChecked(True)
-        self.checkbox_apply_mask.stateChanged.connect(self.checkbox_apply_mask_changed)
+        self.button_polygon_mask.clicked.connect(self.selection_mask_polygon)
+
+        self.combobox_select_mask = ComboBoxBloc(translate('mask_selected'), [])
+        self.combobox_select_mask.currentIndexChanged.connect(self.combobox_mask_selected_changed)
         
         self.sublayout_left.addWidget(self.button_circle_mask)
         self.sublayout_left.addWidget(self.button_rectangle_mask)
         self.sublayout_left.addWidget(self.button_polygon_mask)
-        self.sublayout_left.addWidget(self.checkbox_apply_mask)
+        self.sublayout_left.addWidget(self.combobox_select_mask)
+        self.sublayout_left.addStretch()
         self.sublayout_left.setContentsMargins(0, 0, 0, 0)
         self.subwidget_left.setLayout(self.sublayout_left)
         
@@ -100,6 +112,11 @@ class MasksMenuWidget(QWidget):
         self.button_erase_mask = QPushButton(translate('button_erase_mask'))
         self.button_erase_mask.setStyleSheet(unactived_button)
         self.button_erase_mask.setFixedHeight(BUTTON_HEIGHT)
+
+        self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
+        self.checkbox_apply_mask.setStyleSheet(styleCheckbox)
+        self.checkbox_apply_mask.setChecked(True)
+        self.checkbox_apply_mask.stateChanged.connect(self.checkbox_apply_mask_changed)
         
         self.checkbox_inverse_mask = QCheckBox(translate('checkbox_inverse_mask'))
         self.checkbox_inverse_mask.setStyleSheet(styleCheckbox)
@@ -108,7 +125,9 @@ class MasksMenuWidget(QWidget):
         self.sublayout_right.addWidget(self.button_move_mask)
         self.sublayout_right.addWidget(self.button_resize_mask)
         self.sublayout_right.addWidget(self.button_erase_mask)
+        self.sublayout_right.addWidget(self.checkbox_apply_mask)
         self.sublayout_right.addWidget(self.checkbox_inverse_mask)
+        self.sublayout_right.addStretch()
         self.sublayout_right.setContentsMargins(0, 0, 0, 0)
         self.subwidget_right.setLayout(self.sublayout_right)
         
@@ -127,27 +146,48 @@ class MasksMenuWidget(QWidget):
         self.setLayout(self.master_layout)
 
     def checkbox_apply_mask_changed(self, state):
+        print('checkbox_apply_mask_changed')
+        if self.index_mask_selected == -1:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+            self.checkbox_apply_mask.setChecked(True)
+            return None
         try:
-            if state == 2:
-                self.mask_unactived, self.mask = self.mask, self.mask_unactived
-            else:
-                self.mask, self.mask_unactived = self.mask_unactived, self.mask
-        except:
-            pass
+            if self.index_mask_selected is not None:
+                if state == 0:
+                    self.list_masks[self.index_mask_selected] = self.mask_unactived
+                else:
+                    self.list_masks[self.index_mask_selected] = self.list_original_masks[self.index_mask_selected]
+            
+            print(f'Updated self.list_masks: {self.list_masks}')
+        except Exception as e:
+            print(f'Exception - checkbox_apply_mask_changed {e}')
+
+        self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+        if np.all(self.mask == 0):
+            self.mask = 1-self.mask
+
         import matplotlib.pyplot as plt
+
         plt.figure()
         plt.imshow(self.mask)
         plt.colorbar()
         plt.show()
 
+
+
     def checkbox_inverse_mask_changed(self, state):
-        try:
-            if state == 2:
-                self.mask_inversed, self.mask = self.mask, self.mask_inversed
-            else:
-                self.mask, self.mask_inversed = self.mask_inversed, self.mask
-        except:
-            pass
+        if self.index_mask_selected == -1:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+            self.checkbox_apply_mask.setChecked(False)
+            return None
+        self.mask_selected = 1-self.mask_selected
+        self.list_masks[self.index_mask_selected] = self.mask_selected
+        self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+
         import matplotlib.pyplot as plt
         plt.figure()
         plt.imshow(self.mask)
@@ -160,16 +200,80 @@ class MasksMenuWidget(QWidget):
                 image = self.parent.camera_widget.get_image()
                 selection_window = SelectionMaskWindow(image, 'Circle')
                 selection_window.exec()
-                self.mask = selection_window.mask
-                self.mask_unactived = np.ones_like(self.mask)
-                self.mask_inversed = 1-self.mask
+                mask = selection_window.mask
+                self.list_masks.append(mask)
+                self.list_original_masks.append(mask)
+
+                self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
+                self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+
+                if self.mask_unactived == None:
+                    print("Unactived mask SET")
+                    self.mask_unactived = np.zeros_like(self.mask)
+
+                import matplotlib.pyplot as plt
+                plt.figure()
+                plt.imshow(self.mask)
+                plt.show()
+
+                print(f"Nb masks: {len(self.list_masks)}")
+            except Exception as e:
+                print(f'Exception - selection_mask_circle_isClicked {e}')
+
+    def selection_mask_rectangle(self):
+        if self.parent is not None:
+            try:
+                image = self.parent.camera_widget.get_image()
+                selection_window = SelectionMaskWindow(image, 'Rectangle')
+                selection_window.exec()
+                mask = selection_window.mask
+                self.list_masks.append(mask)
+                self.list_original_masks.append(mask)
+
+                self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
+                self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+
+                if self.mask_unactived == None:
+                    print("Unactived mask SET")
+                    self.mask_unactived = np.zeros_like(self.mask)
+                
+                import matplotlib.pyplot as plt
+                plt.figure()
+                plt.imshow(self.mask)
+                plt.show()
+            except Exception as e:
+                print(f'Exception - selection_mask_rectangle_isClicked {e}')
+
+    def selection_mask_polygon(self):
+        if self.parent is not None:
+            try:
+                image = self.parent.camera_widget.get_image()
+                selection_window = SelectionMaskWindow(image, 'Polygon')
+                selection_window.exec()
+                mask = selection_window.mask
+                self.list_masks.append(mask)
+                self.list_original_masks.append(mask)
+
+                self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
+                self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+
+                if self.mask_unactived == None:
+                    print("Unactived mask SET")
+                    self.mask_unactived = np.zeros_like(self.mask)
 
                 import matplotlib.pyplot as plt
                 plt.figure()
                 plt.imshow(self.mask)
                 plt.show()
             except Exception as e:
-                print(f'Exception - selection_mask_circle_isClicked {e}')
+                print(f'Exception - selection_mask_polygon_isClicked {e}')
+
+    def combobox_mask_selected_changed(self, index):
+        self.index_mask_selected = index - 1
+        if self.index_mask_selected >= 0 and self.index_mask_selected < len(self.list_masks):
+            self.mask_selected = self.list_masks[self.index_mask_selected]
+            print(f"self.index_mask_selected: {self.index_mask_selected}")
+
 
 class SelectionMaskWindow(QDialog):
     def __init__(self, image, mask_type):
@@ -181,7 +285,6 @@ class SelectionMaskWindow(QDialog):
         self.qimage = QImage(self.image.data, self.image.shape[1], self.image.shape[0], self.image.strides[0], QImage.Format.Format_Grayscale8)
         self.pixmap = QPixmap.fromImage(self.qimage)
 
-        # Couche pour dessiner les points
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
 
@@ -193,23 +296,53 @@ class SelectionMaskWindow(QDialog):
 
         self.points = []
         self.mask = np.zeros_like(self.image, dtype=np.uint8)
-        self.can_draw = True  # Variable pour indiquer si le dessin est autorisé
 
         if mask_type == 'Circle':
+            print('Circle')
             self.label.mousePressEvent = self.get_points_circle
+        elif mask_type == 'Rectangle':
+            print('Rectangle')
+            self.label.mousePressEvent = self.get_points_rectangle
+        elif mask_type == 'Polygon':
+            print('Polygon')
+            self.label.mousePressEvent = self.get_points_polygon
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             self.close_window()
 
     def get_points_circle(self, event):
-        if self.can_draw and len(self.points) < 3:  # Vérifier si le dessin est autorisé
+        self.can_draw = True
+        if self.can_draw and len(self.points) < 3:
             pos = event.pos()
             self.points.append((pos.x(), pos.y()))
             self.draw_point(pos.x(), pos.y())
             if len(self.points) == 3:
                 self.draw_circle()
-                self.can_draw = False  # Désactiver le dessin une fois que les trois points ont été sélectionnés
+                self.can_draw = False
+
+    def get_points_rectangle(self, event):
+        self.can_draw = True
+        if self.can_draw and len(self.points) < 2:
+            pos = event.pos()
+            self.points.append((pos.x(), pos.y()))
+            self.draw_point(pos.x(), pos.y())
+            if len(self.points) == 2:
+                self.draw_rectangle()
+                self.can_draw = False
+
+    def get_points_polygon(self, event):
+        limit = 10 # px
+
+        self.can_draw = True
+        if self.can_draw:
+            pos = event.pos()
+            self.points.append((pos.x(), pos.y()))
+            self.draw_point(pos.x(), pos.y())
+
+            if len(self.points)>1 and (self.points[-1][0] - self.points[0][0])**2+(self.points[-1][1] - self.points[0][1])**2 < limit**2:
+                self.draw_polygon()
+                self.can_draw = False
 
     def draw_point(self, x, y):
         painter = QPainter(self.point_layer)
@@ -261,9 +394,9 @@ class SelectionMaskWindow(QDialog):
         return X, Y
 
     def draw_circle(self):
-        x0, y0 = self.points[0]
-        x1, y1 = self.points[1]
-        x2, y2 = self.points[2]
+        x0, y0 = self.points[-3]
+        x1, y1 = self.points[-2]
+        x2, y2 = self.points[-1]
 
         x_center, y_center = self.find_circle_center(x0, y0, x1, y1, x2, y2)
         x_center = int(x_center)
@@ -296,11 +429,68 @@ class SelectionMaskWindow(QDialog):
         # Update mask
         self.mask = self.create_circular_mask(x_center, y_center, radius)
 
+    def draw_rectangle(self):
+        x1, y1 = self.points[-2]
+        x2, y2 = self.points[-1]
+
+        print(f"x1={x1}, y1={y1}")
+        print(f"x2={x2}, y2={y2}")
+
+        painter = QPainter(self.pixmap)
+        pen = QPen(QColor(255, 0, 0), 2)
+        painter.setPen(pen)
+        painter.drawRect(x1, y1, (x2-x1), (y2-y1))
+        painter.end()
+
+        # Afficher le cercle
+        combined_pixmap = self.pixmap.copy()
+        painter = QPainter(combined_pixmap)
+        painter.drawPixmap(0, 0, self.point_layer)
+        painter.end()
+
+        self.label.setPixmap(combined_pixmap)
+
+        # Update mask
+        self.mask = self.create_rectangular_mask(x1, y1, x2, y2)
+
+    def draw_polygon(self):
+        points = [QPoint(self.points[i][0], self.points[i][1]) for i in range(len(self.points))]
+
+        painter = QPainter(self.pixmap)
+        pen = QPen(QColor(255, 0, 0), 2)
+        painter.setPen(pen)
+        painter.drawPolygon(points)
+        painter.end()
+
+        # Afficher le cercle
+        combined_pixmap = self.pixmap.copy()
+        painter = QPainter(combined_pixmap)
+        painter.drawPixmap(0, 0, self.point_layer)
+        painter.end()
+
+        self.label.setPixmap(combined_pixmap)
+
+        # Update mask
+        self.mask = self.create_polygonal_mask()
+
     def create_circular_mask(self, x_center, y_center, radius):
         mask = np.zeros_like(self.image, dtype=np.uint8)
         y, x = np.ogrid[:self.image.shape[0], :self.image.shape[1]]
         mask_area = (x - x_center) ** 2 + (y - y_center) ** 2 <= radius ** 2
         mask[mask_area] = 1
+        return mask
+    
+    def create_rectangular_mask(self, x1, y1, x2, y2):
+        mask = np.zeros_like(self.image, dtype=np.uint8)
+        mask[y1:y2, x1:x2] = 1
+        mask[y1:y2, x2:x1] = 1
+        mask[y2:y1, x2:x1] = 1
+        mask[y2:y1, x1:x2] = 1
+        return mask
+    
+    def create_polygonal_mask(self):
+        mask = np.zeros_like(self.image, dtype=np.uint8)
+        cv2.fillPoly(mask, [np.array(self.points)], 1)
         return mask
     
     def close_window(self):

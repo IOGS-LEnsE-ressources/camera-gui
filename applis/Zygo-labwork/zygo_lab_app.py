@@ -199,11 +199,11 @@ class ZygoLabApp(QWidget):
         print(f"Signal received with language selected: {language_selected}")
         #dictionary.clear()
         if language_selected == 'English':
-            load_dictionary('lang\dict_EN.txt')
+            dictionaray = load_dictionary('lang\dict_EN.txt')
         elif language_selected == 'Français':
-            load_dictionary('lang\dict_FR.txt')
+            dictionaray = load_dictionary('lang\dict_FR.txt')
         elif language_selected == '中文':
-            load_dictionary('lang\dict_CN.txt')
+            dictionaray = load_dictionary('lang\dict_CN.txt')
 
         self.update_labels(self)
 

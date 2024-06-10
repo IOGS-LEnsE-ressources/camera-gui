@@ -49,8 +49,8 @@ class ComboBoxBloc(QWidget):
 
         self.combobox = QComboBox()
         self.combobox.addItem('===== '+translate('name_output_type_choice')+' =====')
-        self.combobox.addItems(list_options)
         self.combobox.setCurrentIndex(0)
+        self.combobox.addItems(list_options)
         self.combobox.setStyleSheet(styleH3)
 
         self.currentIndexChanged = self.combobox.currentIndexChanged
@@ -60,6 +60,12 @@ class ComboBoxBloc(QWidget):
 
         self.setLayout(self.layout)
         self.layout.setContentsMargins(0, 0, 0, 0)
+
+    def update_options(self, list_options):
+        self.combobox.clear()
+        self.combobox.addItem('===== '+translate('name_output_type_choice')+' =====')
+        self.combobox.setCurrentIndex(0)
+        self.combobox.addItems(list_options)
 
         
 # %% Example
