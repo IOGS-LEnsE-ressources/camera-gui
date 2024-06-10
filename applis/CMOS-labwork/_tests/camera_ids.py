@@ -58,6 +58,10 @@ from ids_peak import ids_peak
 import ids_peak_ipl.ids_peak_ipl as ids_ipl
 from lensecam.ids.camera_ids_widget import CameraIdsListWidget
 
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QGridLayout
+from lensepy.images.conversion import array_to_qimage, resize_image_ratio
+
+
 def get_bits_per_pixel(color_mode: str) -> int:
     """Return the number of bits per pixel.
 
@@ -166,15 +170,22 @@ class CameraIds:
         except Exception as e:
             print("Exception - get_sensor_size: " + str(e) + "")
 
-    def init_camera(self):
+    def init_camera(self, camera_device=None ):
         """"""
-        if self.camera_connected:
-            self.camera_remote = device.RemoteDevice().NodeMaps()[0]
+        if camera_device is None:
+            if self.camera_connected:
+                print('Remote OK')
+                self.camera_remote = self.camera_device.RemoteDevice().NodeMaps()[0]
+        else:
+            self.camera_device = camera_device
+            print('Remote OK - cam_dev')
+            self.camera_remote = camera_device.RemoteDevice().NodeMaps()[0]
+            self.camera_connected = True
 
     def alloc_memory(self) -> bool:
         """Alloc the memory to get an image from the camera."""
         if self.camera_connected:
-            data_streams = device.DataStreams()
+            data_streams = self.camera_device.DataStreams()
             if data_streams.empty():
                 print("No datastream available.")
                 return False
@@ -207,11 +218,14 @@ class CameraIds:
     def start_acquisition(self):
         """Start acquisition"""
         if self.camera_acquiring is False:
-            self.data_stream.StartAcquisition(ids_peak.AcquisitionStartMode_Default)
-            self.camera_remote.FindNode("TLParamsLocked").SetValue(1)
-            self.camera_remote.FindNode("AcquisitionStart").Execute()
-            self.camera_remote.FindNode("AcquisitionStart").WaitUntilDone()
-            self.camera_acquiring = True
+            try:
+                self.data_stream.StartAcquisition(ids_peak.AcquisitionStartMode_Default)
+                self.camera_remote.FindNode("TLParamsLocked").SetValue(1)
+                self.camera_remote.FindNode("AcquisitionStart").Execute()
+                self.camera_remote.FindNode("AcquisitionStart").WaitUntilDone()
+                self.camera_acquiring = True
+            except Exception as e:
+                print(f'Exception start_acquisition {e}')
 
     def stop_acquisition(self):
         """Stop acquisition"""
@@ -343,20 +357,16 @@ class CameraThread(QThread):
         """
         try:
             if self.camera.camera_acquiring is False:
-                print('First')
                 self.camera.init_camera()
                 self.camera.alloc_memory()
                 self.camera.start_acquisition()
                 self.running = True
             while self.running:
-                print('Run')
                 image_array = self.camera.get_image()
                 self.image_acquired.emit(image_array)
         except Exception as e:
             print(f'Thread Running - Exception - {e}')
 
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QGridLayout
-from lensepy.images.conversion import resize_image_ratio, array_to_qimage
 
 class CameraIdsWidget(QWidget):
     """CameraIdsWidget class, children of QWidget.
@@ -394,6 +404,7 @@ class CameraIdsWidget(QWidget):
         # Camera
         self.display_params = params_disp
         self.camera = camera
+        self.camera_connected = False
         # GUI
         self.initUI()
 
@@ -403,13 +414,13 @@ class CameraIdsWidget(QWidget):
     def initUI(self):
         self.camera_display = QLabel('Image')
         self.layout = QGridLayout()
-        self.layout.addWidget(self.camera_display)
+        self.layout.addWidget(self.camera_display, 0, 0)
         self.setLayout(self.layout)
 
         if self.camera is None:
             print('No Cam')
             self.cameras_list_widget = CameraIdsListWidget()
-            self.layout.addWidget(self.cameras_list_widget, 0, 0)
+            self.layout.addWidget(self.cameras_list_widget, 1, 0)
             # Connect the signal emitted by the ComboList to its action
             self.cameras_list_widget.connected.connect(self.connect_camera)
         else:
@@ -417,7 +428,32 @@ class CameraIdsWidget(QWidget):
             self.set_camera(camera=self.camera)
 
     def connect_camera(self, event):
-        print(event)
+        try:
+            cam_dev = self.cameras_list_widget.get_selected_camera_dev()
+            self.camera = CameraIds(cam_dev)
+            self.camera_connected = True
+            self.clear_layout(1, 0)
+            print(cam_dev)
+            self.connected.emit('cam')
+        except Exception as e:
+            print(f'Exception - connect_camera {e}')
+
+    def clear_layout(self, row: int, column: int) -> None:
+        """Remove widgets from a specific position in the layout.
+
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
+
+        """
+        item = self.layout.itemAtPosition(row, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            else:
+                self.layout.removeItem(item)
 
 
 class Remote(QWidget):
@@ -492,20 +528,19 @@ class MainWindow(QMainWindow):
     def action_remote(self, event):
         if event == 'get':
             try:
+                print('Get Image OK')
                 self.camera_widget.camera.init_camera()
                 self.camera_widget.camera.alloc_memory()
                 self.camera_widget.camera.start_acquisition()
                 raw_array = self.camera_widget.camera.get_image()
-                self.camera_widget.camera.stop_acquisition()
-                self.camera_widget.camera.free_memory()
                 # Depending on the color mode - display only in 8 bits mono
                 nb_bits = 8 #get_bits_per_pixel(self.camera.get_color_mode())
                 if nb_bits > 8:
                     image_array = raw_array.view(np.uint16)
                     image_array_disp = (image_array / (2 ** (nb_bits - 8))).astype(np.uint8)
                 else:
-                    image_array = raw_array.view(np.uint8)
-                    image_array_disp = image_array.astype(np.uint8)
+                    image_array_disp = raw_array
+                print(image_array_disp.dtype)
                 frame_width = self.camera_widget.width()
                 frame_height = self.camera_widget.height()
                 # Resize to the display size
@@ -518,6 +553,8 @@ class MainWindow(QMainWindow):
                 pmap = QPixmap(image)
                 # display it in the cameraDisplay
                 self.camera_widget.camera_display.setPixmap(pmap)
+                self.camera_widget.camera.stop_acquisition()
+                self.camera_widget.camera.free_memory()
             except Exception as e:
                 print("Exception - action_get_image: " + str(e) + "")
         elif event == 'start':
@@ -525,7 +562,7 @@ class MainWindow(QMainWindow):
             self.camera_thread.start()
         elif event == 'stop':
             print('Stop')
-            self.camera_widget.camera.set_exposure(10000)
+            self.camera_widget.camera.set_exposure(1000)
             self.camera_thread.stop()
         elif event == 'expo':
             print(f'Expo {self.camera_widget.camera.get_exposure()}')

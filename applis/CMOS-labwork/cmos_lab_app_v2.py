@@ -23,6 +23,8 @@ import numpy as np
 from PyQt6.QtWidgets import (QApplication, QMainWindow,
                              QGridLayout, QWidget,
                              QMessageBox)
+from PyQt6.QtGui import QImage, QPixmap
+
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
@@ -31,6 +33,7 @@ from lensecam.ids.camera_ids import CameraIds
 from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsWidget, CameraIdsParamsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget, CameraBaslerParamsWidget
+from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 
 # Testing !
 from _tests.camera_ids import CameraIds, CameraThread, CameraIdsWidget
@@ -68,6 +71,7 @@ class MainWindow(QMainWindow):
         self.camera_list = None
         self.camera_device = None
         self.camera_thread = CameraThread()
+        self.camera_thread.image_acquired.connect(self.thread_update_image)
         self.brand = None
         self.default_parameters = {}
 
@@ -197,10 +201,43 @@ class MainWindow(QMainWindow):
             self.main_layout.addWidget(self.camera_widget, 1, 1)
 
     def action_camera_connected(self, event):
-        self.clear_layout(2,1)   # params_widget
-        self.camera = self.camera_widget.camera
-        self.params_widget = cam_params_widget_brands[self.brand](self)
-        self.main_layout.addWidget(self.params_widget, 2, 1)
+        try:
+            print('CMOS camera_connected')
+            self.clear_layout(2,1)   # params_widget
+            self.camera = self.camera_widget.camera
+            self.camera.init_camera(self.camera.camera_device)
+            self.camera_thread.set_camera(self.camera)
+            # Init default param
+            if 'exposure' in self.default_parameters:
+                print(self.default_parameters['exposure'])
+                self.camera.set_exposure(int(self.default_parameters['exposure']))
+            print(f'Exposure = {self.camera.get_exposure()}')
+
+            #self.params_widget = cam_params_widget_brands[self.brand](self)
+            
+            self.main_layout.addWidget(self.params_widget, 2, 1)
+
+            self.camera_thread.start()
+        except Exception as e:
+            print(f'Exception - action_camera_connected {e}')
+
+    def thread_update_image(self, image_array):
+        """Action performed when the live acquisition (via CameraThread) is running."""
+        try:
+            frame_width = self.camera_widget.width()
+            frame_height = self.camera_widget.height()
+            # Resize to the display size
+            image_array_disp2 = resize_image_ratio(
+                image_array,
+                frame_width,
+                frame_height)
+            # Convert the frame into an image
+            image = array_to_qimage(image_array_disp2)
+            pmap = QPixmap(image)
+            # display it in the cameraDisplay
+            self.camera_widget.camera_display.setPixmap(pmap)
+        except Exception as e:
+            print(f'Exception - update_image {e}')
 
 
     def clear_layout(self, row: int, column: int) -> None:
