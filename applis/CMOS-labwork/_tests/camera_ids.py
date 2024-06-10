@@ -349,6 +349,7 @@ class CameraThread(QThread):
                 self.camera.start_acquisition()
                 self.running = True
             while self.running:
+                print('Run')
                 image_array = self.camera.get_image()
                 self.image_acquired.emit(image_array)
         except Exception as e:

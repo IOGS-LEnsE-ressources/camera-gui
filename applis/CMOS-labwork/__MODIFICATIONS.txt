@@ -2,6 +2,14 @@ CMOS Lab GUI / IDS or Basler Camera
 ###################################
 
 ----------------------------------------------
+09/06/2024 	/  	Julien Villemejane
+----------------------------------------------
+Local version of camera_ids including Thread
+/!\ Need to redesign lensecam (camera_ids and widgets...)
+/!\ Still an issue when stop live acquisition
+----------------------------------------------
+
+----------------------------------------------
 08/06/2024 	/  	Julien Villemejane
 ----------------------------------------------
 Modify lensepy / load_dictionary, translate
