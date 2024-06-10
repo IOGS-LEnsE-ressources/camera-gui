@@ -3,3 +3,4 @@
 
 language; FR
 languages; FR,EN
+exposure; 300
