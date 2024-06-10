@@ -214,7 +214,7 @@ class MainWindow(QMainWindow):
             print(f'Exposure = {self.camera.get_exposure()}')
 
             #self.params_widget = cam_params_widget_brands[self.brand](self)
-            
+
             self.main_layout.addWidget(self.params_widget, 2, 1)
 
             self.camera_thread.start()
