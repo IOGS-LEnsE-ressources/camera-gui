@@ -40,6 +40,8 @@ from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
 
+from process.initialization_parameters import *
+
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 class ZygoLabApp(QWidget):
@@ -49,6 +51,10 @@ class ZygoLabApp(QWidget):
         """
         super().__init__(parent=None)
 
+        # Default settings
+        # ----------------
+        default_settings_dict = read_default_parameters('config.txt')
+
         # Initialization of the camera
         # ----------------------------
         self.camera_device = self.init_camera()
@@ -57,6 +63,13 @@ class ZygoLabApp(QWidget):
         # ----------------------------
         # TO DO
         #load_dictionary('./lang/dict_FR.txt')
+
+        # Initialisation of the mask selection attributes
+        # -----------------------------------------------
+        self.mask = None
+        self.list_masks = []
+        self.list_original_masks = []
+        self.mask_unactived = None
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -155,8 +168,7 @@ class ZygoLabApp(QWidget):
         expo_min, expo_max = self.camera.get_exposure_range() # µs
         if real_expo_max < expo_max//1000 and real_expo_min >= expo_min//1000:
             self.camera_settings_widget.slider_exposure_time.ratio = 10.0
-            self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min,
-                                                                                       real_expo_max)
+            self.camera_settings_widget.slider_exposure_time.set_min_max_slider_values(real_expo_min, real_expo_max)
         self.camera.init_default_parameters(exposure=real_expo, frame_rate=20)
 
     def signal_camera_connected_isReceived(self, event):
@@ -167,6 +179,12 @@ class ZygoLabApp(QWidget):
         self.camera.trigger()
 
     def signal_menu_selected_isReceived(self, event):
+        # Save information of the mask
+        self.mask = self.masks_menu_widget.mask
+        self.list_masks = self.masks_menu_widget.list_masks
+        self.list_original_masks = self.masks_menu_widget.list_original_masks
+        self.mask_unactived = self.masks_menu_widget.mask_unactived
+
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget(self)
         self.acquisition_menu_widget = AcquisitionMenuWidget(self)
@@ -199,11 +217,11 @@ class ZygoLabApp(QWidget):
         print(f"Signal received with language selected: {language_selected}")
         #dictionary.clear()
         if language_selected == 'English':
-            load_dictionary('lang\dict_EN.txt')
+            dictionaray = load_dictionary('lang\dict_EN.txt')
         elif language_selected == 'Français':
-            load_dictionary('lang\dict_FR.txt')
+            dictionaray = load_dictionary('lang\dict_FR.txt')
         elif language_selected == '中文':
-            load_dictionary('lang\dict_CN.txt')
+            dictionaray = load_dictionary('lang\dict_CN.txt')
 
         self.update_labels(self)
 

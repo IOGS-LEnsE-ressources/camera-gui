@@ -29,6 +29,7 @@ Camera
 - Create/Modify CameraParameters
 - Test ParamsWidget outside CamWidget and test update params
 - Load default parameters (stored in a file ?)
+  -> See 'process' folder
 - Add default parameters (in the same file) for min and max exposure time and black level ??
 
 Piezo
@@ -41,4 +42,4 @@ GUI
 ---
 - in TitleWidget (widgets/title_widget.py), find a way to add transparency on the logo.
   -> Remove the background of the logo (with remove.bg for example, or modify the source file)
-- 
+- Find a way to display the action of the mask on the image.
