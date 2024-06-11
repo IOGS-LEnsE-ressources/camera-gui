@@ -92,9 +92,9 @@ class PiezoCalibrationWidget(QWidget):
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
-    def button_start_calibration_isClicked(self):
+    def button_start_calibration_isClicked(self, N=10):
         self.button_start_calibration.setStyleSheet(actived_button)
-        self.images = []
+        images_for_all_voltages = []
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
@@ -115,14 +115,23 @@ class PiezoCalibrationWidget(QWidget):
             for voltage in ramp:
                 print(voltage)
                 task.write(voltage)
-                self.parent.camera_thread.stop()
-                self.parent.camera.init_camera()
-                self.parent.camera.alloc_memory()
-                self.parent.camera.start_acquisition()
-                raw_array = self.parent.camera_widget.camera.get_image().copy()
-                self.images.append(raw_array)
-                self.parent.camera.stop_acquisition()
-                self.parent.camera.free_memory()
+
+                # We repeat the calibration N times
+                for i in range(N):
+                    self.parent.camera_thread.stop()
+                    self.parent.camera.init_camera()
+                    self.parent.camera.alloc_memory()
+                    self.parent.camera.start_acquisition()
+                    if i == 0:
+                        raw_array = self.parent.camera_widget.camera.get_image().copy()/N
+                    else:
+                        raw_array = raw_array + self.parent.camera_widget.camera.get_image().copy()/N
+                    self.parent.camera.stop_acquisition()
+                    self.parent.camera.free_memory()
+                images_for_all_voltages.append(raw_array)
+            images_for_all_voltages = np.array(images_for_all_voltages)
+            phase = np.mean(np.diff(images_for_all_voltages), axis=0)
+            print(phase.shape)
             # Arrêter la tâche
             task.stop()
 
