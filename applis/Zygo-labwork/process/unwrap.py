@@ -78,7 +78,7 @@ def unwrap1D(arr: np.array, period: Optional[float] = 6.2831853072, axis: Option
         valid_data = column[valid_idx]
 
         # Compute differences and identify jumps
-        diffs = np.diff(valid_data, prepend=valid_data[0])
+        diffs = np.diff(valid_data, prepend=0)
         jumps = -np.round(diffs / period) * period
 
         # Apply jumps
@@ -90,173 +90,160 @@ def unwrap1D(arr: np.array, period: Optional[float] = 6.2831853072, axis: Option
 
     return arr_unwrapped
 
+def unwrap2D(Ph: np.ndarray):
+    def unwrap2Dc(Ph: np.ndarray):
+        def supprimeNaN(x1: np.ndarray, x2: np.ndarray):
+            in1 = np.isnan(x1)
+            in2 = np.isnan(x2)
+            both = (~in1) & (~in2)
 
-def merge_with_offset(arr_1: np.array, arr_2: np.array) -> np.array:
-    """
-    Merge two arrays while handling NaN values and calculating offsets.
+            offset = np.mean(x2[both] - x1[both])
+            y = x1.copy()
+            y[in1 & (~in2)] = x2[in1 & (~in2)] - offset
 
-    Parameters
-    ----------
-    arr_1 : np.ndarray
-        First input array.
+            k = np.where(np.isnan(y))[0]
+            Lk = len(k)
 
-    arr_2 : np.ndarray
-        Second input array.
+            if Lk != 0:
+                dk = np.diff(k)
+                dk = np.append(dk, 0)
 
-    Returns
-    -------
-    np.ndarray
-        Merged array with NaN values handled and offsets calculated.
+                iDF = np.zeros((0, 2))
+                j = 0
+                while j < Lk:
+                    iDF = np.append(iDF, [[k[j], k[j]]], axis=0)
+                    while j < Lk and dk[j] == 1:
+                        j += 1
+                        iDF[-1, 1] = k[j]
+                    j += 1
 
-    Notes
-    -----
-    This function merges two arrays while handling NaN values and calculating offsets to adjust for differences between the arrays.
-    When both arrays have NaN values at the same position, indicating missing or undefined values, the resulting merged array will also have a NaN at that position.
+                if iDF[0, 0] == 0:
+                    iDF = iDF[1:]
 
-    Examples
-    --------
-    >>> arr1 = np.array([1.0, 2.0, np.nan, 4.0])
-    >>> arr2 = np.array([2.5, np.nan, 3.5, 4.5])
-    >>> merged_arr = merge_with_offset(arr1, arr2)
-    >>> print(merged_arr)
-    [1.  2. 2.5 4.]
+                if len(iDF) > 0 and iDF[-1, 1] == len(x1) - 1:
+                    iDF = iDF[:-1]
 
-    """
-    nan_mask_arr_1 = np.isnan(arr_1)
-    nan_mask_arr_2 = np.isnan(arr_2)
-    not_nan_mask = (~nan_mask_arr_1) & (~nan_mask_arr_2)
+                for j in range(len(iDF)):
+                    if abs(y[iDF[j, 0] - 1] - y[iDF[j, 1] + 1]) < 1e-10:
+                        y[iDF[j, 0]:iDF[j, 1] + 1] = y[iDF[j, 0] - 1]
+            return y
 
-    merger = arr_1.copy()
-    if not_nan_mask.any():
-        offset = np.mean(arr_2[not_nan_mask] - arr_1[not_nan_mask])
-        merger[nan_mask_arr_1 & (~nan_mask_arr_2)] = arr_2[nan_mask_arr_1 & (
-            ~nan_mask_arr_2)] - offset
-    return merger
+        PhD = unwrap1D(Ph)
+        N = Ph.shape[0]
+        isnPh = np.isnan(Ph)
+        nbNaNparLigne = np.sum(isnPh, axis=1)
 
+        l1 = np.argmin(nbNaNparLigne)
+        L1 = PhD[l1]
+        coef = 0.025
+        delta = int(np.ceil(N * coef))
+        i_rej = np.arange(max(1, l1 - delta), min(N, l1 + delta))
+        k_rej = np.setdiff1d(np.arange(N), i_rej)
+        l2 = np.argmin(nbNaNparLigne[k_rej])
+        if l2 > min(i_rej):
+            l2 += len(i_rej)
+        L2 = PhD[l2]
 
-def interpolate_nan_2d(arr):
-    """
-    Interpolate NaN values in a 2D numpy array along each row and column.
+        LD1 = unwrap1D(L1)
+        sautL1 = LD1 - L1
+        LD2 = unwrap1D(L2)
+        sautL2 = LD2 - L2
 
-    Parameters
-    ----------
-    arr : np.ndarray
-        Input 2D array with NaN values.
+        sautLsN = supprimeNaN(sautL1, sautL2)
 
-    Returns
-    -------
-    np.ndarray
-        Array with NaN values interpolated along each row and column.
+        sautM = np.outer(np.ones(N), sautLsN)
 
-    Notes
-    -----
-    This function interpolates NaN values in a 2D numpy array along each row and column using linear interpolation.
+        PhD = PhD + sautM
+        return PhD
 
-    Examples
-    --------
-    >>> arr = np.array([[1.0, np.nan, 2.0],
-    ...                 [np.nan, 3.0, np.nan],
-    ...                 [4.0, 5.0, np.nan]])
-    >>> interpolated_arr = interpolate_nan_2d(arr)
-    >>> print(interpolated_arr)
-    [[1.  1.5 2. ]
-     [2.5 3.  2.5]
-     [4.  5.  5. ]]
+    PhDc = unwrap2Dc(Ph)
+    PhDl = unwrap2Dc(Ph.T).T
+    isnPh = np.isnan(Ph)
+    isnPl = np.isnan(Ph.T).T
 
-    """
-    # Interpoler sur les lignes
-    interpolated_arr = interpolate_rows(arr)
-    
-    # Interpoler sur les colonnes
-    interpolated_arr = interpolate_rows(interpolated_arr.T).T
-    
-    return interpolated_arr
+    both = (~isnPh) & (~isnPl)
 
-def interpolate_rows(arr):
-    """
-    Interpolate NaN values in a 2D numpy array along each row.
+    Voffset = PhDc[both] - PhDl[both]
+    offsetBrut = np.mean(Voffset)
+    offset = 2 * PI * round(offsetBrut / (2 * PI))
+    ecarto = abs(offset - offsetBrut)
 
-    Parameters
-    ----------
-    arr : np.ndarray
-        Input 2D array with NaN values.
+    pb = np.abs(PhDc - PhDl - offset) > PI / 10000
 
-    Returns
-    -------
-    np.ndarray
-        Array with NaN values interpolated along each row.
+    Voffset = PhDc[both[:]&~pb[:]] - PhDl[both[:]&~pb[:]]
+    if len(Voffset) >=2:
+        offsetBrut = np.mean(Voffset)
+        offset = 2*PI*np.round(offsetBrut/(2*PI))
+        ecarttype = np.std(Voffset)
+    else:
+        ecarttype = np.inf
 
-    """
-    interpolated_arr = np.copy(arr)
-    
-    for i in range(arr.shape[0]):
-        not_nan_mask = ~np.isnan(arr[i])
-        if np.sum(not_nan_mask) > 1:
-            indices = np.arange(arr.shape[1])
-            f = interp1d(indices[not_nan_mask], arr[i, not_nan_mask], kind='linear', fill_value='extrapolate')
-            interpolated_arr[i] = f(indices)
-    
-    return interpolated_arr
+    NbPPb = np.sum(pb)
+    NbBoth = np.sum(both)
+    rapp = NbPPb / NbBoth
 
-def unwrap2D(arr: np.array, period: float = 2 * np.pi) -> Tuple[np.array, bool, list[float]]:
-    """
-    Perform 2D phase unwrapping on a given 2D array.
+    ecarttype = np.std(Voffset)  # Calcul de l'écart-type
 
-    The function unwraps the phase of a 2D array by first unwrapping along the columns and then along the rows.
-    It combines these results and handles discrepancies to produce a final unwrapped array.
-    """
-    # arr_unwrapped_axis_0 = unwrap1D(arr, period, axis=0)
-    # arr_unwrapped_axis_1 = unwrap1D(arr, period, axis=1)
+    info = [ecarto, ecarttype, rapp]
 
-    # arr_unwrapped = merge_with_offset(arr_unwrapped_axis_0, arr_unwrapped_axis_1)
-    # arr_unwrapped = interpolate_nan_2d(arr_unwrapped)
-    # return arr_unwrapped
-    return unwrap1D(unwrap1D(arr, axis=0, period=period), axis=1, period=period)
+    tauxMaxPtsDiff = 0.05
+
+    if rapp > tauxMaxPtsDiff or ecarttype > PI / 10000:
+        Pb = True
+        PhD = PhDc.copy()
+        PhD[~both] = np.nan
+        PhD[pb] = np.nan
+    else:
+        Pb = False
+        PhD = PhDc.copy()
+        PhD[isnPh & (~isnPl)] = PhDl[isnPh & (~isnPl)] + offset
+
+        k, m = np.where(pb)
+        for idx in range(len(k)):
+            if k[idx] in [0, Ph.shape[0] - 1] or m[idx] in [0, Ph.shape[1] - 1]:
+                PhD[k[idx], m[idx]] = np.nan
+            else:
+                errc = np.diff(PhDc[k[idx], m[idx] + (-1, 0, 1)])
+                errc = errc[~np.isnan(errc)]
+                errl = np.diff(PhDl[k[idx] + (-1, 0, 1), m[idx]])
+                errl = errl[~np.isnan(errl)]
+
+                Pbc = np.any(np.abs(errc) > PI)
+                Pbl = np.any(np.abs(errl) > PI)
+
+                if Pbc and Pbl:
+                    PhD[k[idx], m[idx]] = np.nan
+                elif Pbc:
+                    PhD[k[idx], m[idx]] = PhDl[k[idx], m[idx]] + offset
+                elif Pbl:
+                    pass
+                else:
+                    PhD[k[idx], m[idx]] = np.nan
+                    
+    return PhD, Pb, info, both, pb
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    from mpl_toolkits import mplot3d
+    import scipy
+    def read_mat_file(file_path):
+        data = scipy.io.loadmat(file_path)
+        return data
 
-    # unwrap1D test
-    # -------------
-    x = np.linspace(-10, 10, 500)
-    real_y = 40 - x**2
-    y_wrapped = (real_y % np.pi) - np.pi/2
-    y_unwrapped = unwrap1D(y_wrapped, period=np.pi)
+    def split_3d_array(array_3d):
+        # Ensure the array has the expected shape
+        if array_3d.shape[2] != 5:
+            raise ValueError("The loaded array does not have the expected third dimension size of 5.")
+        
+        # Extract the 2D arrays
+        arrays = [array_3d[:, :, i].astype(float) for i in range(5)]
+        return arrays
 
-    plt.figure()
-    plt.plot(x, real_y, label='Real')
-    plt.plot(x, y_wrapped, label='Wrapped')
-    plt.plot(x, y_unwrapped, label='Unwrapped')
-    plt.plot(x, y_unwrapped-real_y, ':', label='Constant difference')
-    plt.legend()
-    plt.show()
+    data = read_mat_file("C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/_data/imgs2.mat")
+    images = data['Imgs']
+    images = split_3d_array(images)
 
-    # Test interpolation NaN
-    # ----------------------
-    # Exemple d'utilisation
-    arr = np.array([[1.0, np.nan, 2.0],
-                    [np.nan, 3.0, np.nan],
-                    [4.0, 5.0, np.nan]])
-    interpolated_arr = interpolate_nan_2d(arr)
-    print(interpolated_arr)
-
-    # unwrap2D test
-    # -------------
-    import matplotlib.pyplot as plt
-    from mpl_toolkits import mplot3d
-
-    y = np.linspace(-10, 10, 500)
-    _x, _y = np.meshgrid(x,y)
-
-    real_z = 40-(_x**2+_y**2)
-    z_wrapped = (real_z % np.pi) - np.pi/2
-    z_unwrapped = unwrap2D(z_wrapped, np.pi)
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    ax.plot_surface(_x, _y, real_z)
-    ax.plot_surface(_x, _y, z_wrapped)
-    ax.plot_surface(_x, _y, z_unwrapped)
-    plt.show()
-
-
+    mask = np.zeros_like(images[0])
+    mask[400:1200, 790:1900] = 1
+    mask[200:400, 950:1600] = 1
+    mask[300:400, 880:1800] = 1
+    mask[1200:1400, 1350:1750] = 1
+    
