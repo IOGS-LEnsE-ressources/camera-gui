@@ -50,6 +50,8 @@ class PiezoCalibrationWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=None)
 
+        self.parent = parent
+
         # Layout
         # ------
         self.layout = QVBoxLayout()
@@ -97,10 +99,8 @@ class PiezoCalibrationWidget(QWidget):
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
         num_steps = 100  # Nombre de pas dans la rampe
-        duration = 4  # Durée totale de la rampe en secondes
 
         # Calcul des paramètres de la rampe
-        step_duration = duration / num_steps
         ramp = np.linspace(start_voltage, end_voltage, num_steps)
 
         # Créer une tâche pour générer la rampe de tension
@@ -113,6 +113,7 @@ class PiezoCalibrationWidget(QWidget):
 
             # Générer la rampe de tension en écrivant chaque valeur successivement
             for voltage in ramp:
+                print(voltage)
                 task.write(voltage)
                 self.parent.camera_thread.stop()
                 self.parent.camera.init_camera()
@@ -122,10 +123,10 @@ class PiezoCalibrationWidget(QWidget):
                 self.images.append(raw_array)
                 self.parent.camera.stop_acquisition()
                 self.parent.camera.free_memory()
-                time.sleep(step_duration)
             # Arrêter la tâche
             task.stop()
 
+        self.button_start_calibration.setStyleSheet(unactived_button)
         
 
 # %% Example
