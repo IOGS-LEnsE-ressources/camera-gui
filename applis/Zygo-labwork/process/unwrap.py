@@ -14,7 +14,8 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 
 import numpy as np
 from typing import Tuple, Optional
-from scipy.interpolate import interp1d
+
+PI = np.pi
 
 
 def unwrap1D(arr: np.array, period: Optional[float] = 6.2831853072, axis: Optional[int] = 0) -> np.array:
@@ -223,9 +224,67 @@ def unwrap2D(Ph: np.ndarray):
     return PhD, Pb, info, both, pb
 
 if __name__ == '__main__':
-    import scipy
+    from scipy.io import loadmat
+    from scipy.ndimage import gaussian_filter, uniform_filter
+    from scipy.interpolate import griddata
+    from matplotlib import pyplot as plt
+
+    from hariharan_algorithm import hariharan_algorithm
+
+    def selection_surface_utile(mask):
+        a, b = mask.shape
+
+        xmin = 0
+        while xmin < a and np.sum(mask[xmin, :]) == 0:
+            xmin += 1
+
+        xmax = a - 1
+        while xmax > 0 and np.sum(mask[xmax, :]) == 0:
+            xmax -= 1
+
+        ymin = 0
+        while ymin < b and np.sum(mask[:, ymin]) == 0:
+            ymin += 1
+
+        ymax = b - 1
+        while ymax > 0 and np.sum(mask[:, ymax]) == 0:
+            ymax -= 1
+
+        mask_select = mask[xmin:xmax+1, ymin:ymax+1]
+
+        return mask_select, xmin, xmax, ymin, ymax
+
+    def suppression_bord(phi, p):
+        a, b = phi.shape
+
+        phi2 = np.full((a + 20, b + 20), np.nan)
+        phi2[10:a + 10, 10:b + 10] = phi
+
+        MatrixNaN = 100 * np.isnan(phi2)
+
+        # Utilisation du filtre moyen (équivalent à fspecial('average', p) en MATLAB)
+        H = np.ones((p, p)) / (p * p)
+        maskinverse = uniform_filter(MatrixNaN, size=p)
+
+        maskinverse[maskinverse != 0] = 1
+
+        for i in range(a + 20):
+            for j in range(b + 20):
+                if maskinverse[i, j] != 0:
+                    phi2[i, j] = np.nan
+
+        MatrixNotNaN = ~np.isnan(phi2)
+
+        mask, xmin, xmax, ymin, ymax = selection_surface_utile(MatrixNotNaN)
+
+        phi2 = phi2[xmin:xmax, ymin:ymax]
+
+        return phi2
+
+    sigma = 3
+
     def read_mat_file(file_path):
-        data = scipy.io.loadmat(file_path)
+        data = loadmat(file_path)
         return data
 
     def split_3d_array(array_3d):
@@ -246,4 +305,24 @@ if __name__ == '__main__':
     mask[200:400, 950:1600] = 1
     mask[300:400, 880:1800] = 1
     mask[1200:1400, 1350:1750] = 1
-    
+
+    for image in images:
+        image[mask==0] = np.nan
+        image = image[400:1200, 750:1900]
+
+    images_filtrees = list(map(lambda x:gaussian_filter(x, sigma), images))
+    phase = hariharan_algorithm(*images_filtrees)
+
+    unwrapped_phase, _, info, both, pb = unwrap2D(phase)
+    unwrapped_phase *= -1
+
+    phi = suppression_bord(unwrapped_phase, 3)
+    phi = phi - np.nanmean(phi)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x = np.arange(phi.shape[1]); y = np.arange(phi.shape[0])
+    x, y = np.meshgrid(x, y)
+    # Tracé de la surface
+    ax.plot_surface(x, y, phi, cmap='magma')
+    plt.show()
