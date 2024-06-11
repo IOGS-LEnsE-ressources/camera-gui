@@ -209,7 +209,7 @@ class MasksMenuWidget(QWidget):
         self.parent.camera.init_camera()
         self.parent.camera.alloc_memory()
         self.parent.camera.start_acquisition()
-        raw_array = self.parent.camera_widget.camera.get_image()
+        raw_array = self.parent.camera_widget.camera.get_image().copy()
         '''
         frame_width = self.parent.camera_widget.width()
         frame_height = self.parent.camera_widget.height()
@@ -226,6 +226,7 @@ class MasksMenuWidget(QWidget):
         self.parent.camera.stop_acquisition()
         self.parent.camera.free_memory()
         self.parent.camera_thread.start()
+
         return raw_array
 
     def selection_mask_circle(self):

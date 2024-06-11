@@ -13,9 +13,12 @@ def get_phase(parent):
         parent.camera.start_acquisition()
         for i in range(5):
             print(f'Image {i}')
-            raw_array = parent.camera_widget.camera.get_image()
+            raw_array = parent.camera_widget.camera.get_image().copy()
             images.append(raw_array)
             # Piezo add phase (wait until it's done)
+
+        parent.camera.stop_acquisition()
+        parent.camera.free_memory()
 
     except Exception as e:
         print(f'Exception Phase - {e}')
@@ -31,7 +34,5 @@ def get_phase(parent):
     plt.imshow(raw_array*mask)
     plt.show()
 
-    parent.camera.stop_acquisition()
-    parent.camera.free_memory()
     parent.camera_thread.start()
     return hariharan_algorithm(*images), images
