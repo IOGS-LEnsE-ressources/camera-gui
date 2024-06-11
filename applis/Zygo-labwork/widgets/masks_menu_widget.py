@@ -243,7 +243,7 @@ class MasksMenuWidget(QWidget):
                 self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
                 self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
-                if self.mask_unactived == None:
+                if self.mask_unactived is None:
                     print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
@@ -269,7 +269,7 @@ class MasksMenuWidget(QWidget):
                 self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
                 self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
-                if self.mask_unactived == None:
+                if self.mask_unactived is None:
                     print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
                 
@@ -293,7 +293,7 @@ class MasksMenuWidget(QWidget):
                 self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
                 self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
-                if self.mask_unactived == None:
+                if self.mask_unactived is None:
                     print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
