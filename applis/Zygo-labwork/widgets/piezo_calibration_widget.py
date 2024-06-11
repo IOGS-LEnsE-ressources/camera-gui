@@ -18,16 +18,17 @@ from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
 import numpy as np
 
-from x_y_chart_widget import XYChartWidget
-
-from lensecam.ids.camera_ids_widget import CameraIdsWidget
-from lensecam.ids.camera_ids import CameraIds
-from lensecam.camera_thread import CameraThread
-from ids_peak import ids_peak
+if __name__ == '__main__':
+    from x_y_chart_widget import XYChartWidget
+else:
+    from widgets.x_y_chart_widget import XYChartWidget
 
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
+
+import nidaqmx
+import time
 
 # %% To add in lensepy library
 # Styles
@@ -40,10 +41,13 @@ styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight
 # %% Params
 BUTTON_HEIGHT = 30  # px
 
+local_system = nidaqmx.system.System.local()
+driver_version = local_system.driver_version
+
 # %% Widget
 class PiezoCalibrationWidget(QWidget):
    
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__(parent=None)
 
         # Layout
@@ -61,34 +65,24 @@ class PiezoCalibrationWidget(QWidget):
         # -----
         self.label_title_calibration_menu = QLabel(translate('label_title_calibration_menu'))
         self.setStyleSheet(styleH1)
-        
-        # Camera
-        # ------
-        self.camera_device = self.init_camera()
-        self.camera = CameraIds()
-        self.camera.init_camera(self.camera_device)
-        self.camera_widget = CameraIdsWidget(self.camera)
-        self.camera_widget.camera_display_params.update_params()
-        self.camera_widget.camera_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Graph
         # -----
         self.graph_calibration = XYChartWidget()
         self.graph_calibration.set_background('white')
+        self.graph_calibration.set_x_label('Voltage (V)')
+        self.graph_calibration.set_y_label('Phase (°)')
+        self.graph_calibration.refresh_chart()
 
         # Button
         # ------
         self.button_start_calibration = QPushButton(translate('button_start_calibration'))
         self.button_start_calibration.setStyleSheet(unactived_button)
-        
-        # Create a horizontal layout for the camera and the graph
-        self.horizontal_layout = QHBoxLayout()
-        self.horizontal_layout.addWidget(self.camera_widget)
-        self.horizontal_layout.addWidget(self.graph_calibration)
+        self.button_start_calibration.clicked.connect(self.button_start_calibration_isClicked)
 
         # Add widgets to the main layout
         self.layout.addWidget(self.label_title_calibration_menu)
-        self.layout.addLayout(self.horizontal_layout)
+        self.layout.addWidget(self.graph_calibration)
         self.layout.addWidget(self.button_start_calibration)
 
         self.master_widget.setLayout(self.layout)
@@ -96,54 +90,43 @@ class PiezoCalibrationWidget(QWidget):
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
-        # Other initializations
-        # ---------------------
-        self.camera_thread = CameraThread()
-        self.camera_thread.set_camera(self.camera)
-        self.camera_thread.image_acquired.connect(self.thread_update_image)
-        self.camera_thread.start()
-    
-    def init_camera(self) -> ids_peak.Device:
-        """Initialisation of the camera.
-        If no IDS camera, display options to connect a camera"""
-        # Init IDS Peak
-        ids_peak.Library.Initialize()
-        # Create a camera manager
-        manager = ids_peak.DeviceManager.Instance()
-        manager.Update()
+    def button_start_calibration_isClicked(self):
+        self.button_start_calibration.setStyleSheet(actived_button)
+        self.images = []
 
-        if manager.Devices().empty():
-            print("No Camera")
-            device = None
+        start_voltage = 0  # Tension de départ en volts
+        end_voltage = 5 # Tension finale en volts
+        num_steps = 100  # Nombre de pas dans la rampe
+        duration = 4  # Durée totale de la rampe en secondes
 
-            msg_box = QMessageBox()
-            msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, translate('error'), translate('message_no_cam_error'))
-            print('No cam => Quit')
-            sys.exit(QApplication.instance())
-        else:
-            print("Camera")
-            device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
-        return device
-    
-    def thread_update_image(self, image_array):
-        """Action performed when the live acquisition (via CameraThread) is running."""
-        try:
-            frame_width = self.camera_widget.width()
-            frame_height = self.camera_widget.height()
-            if self.camera_thread.running:
-                # Resize to the display size
-                image_array_disp2 = resize_image_ratio(
-                    image_array,
-                    frame_width,
-                    frame_height)
-                # Convert the frame into an image
-                image = array_to_qimage(image_array_disp2)
-                pmap = QPixmap(image)
-                # display it in the cameraDisplay
-                self.camera_widget.camera_display.setPixmap(pmap)
-        except Exception as e:
-            print(f'Exception - update_image {e}')
+        # Calcul des paramètres de la rampe
+        step_duration = duration / num_steps
+        ramp = np.linspace(start_voltage, end_voltage, num_steps)
+
+        # Créer une tâche pour générer la rampe de tension
+        with nidaqmx.Task() as task:
+            # Ajouter un canal de sortie analogique
+            task.ao_channels.add_ao_voltage_chan("Dev1/ao1", min_val=start_voltage, max_val=end_voltage)
+
+            # Démarrer la tâche
+            task.start()
+
+            # Générer la rampe de tension en écrivant chaque valeur successivement
+            for voltage in ramp:
+                task.write(voltage)
+                self.parent.camera_thread.stop()
+                self.parent.camera.init_camera()
+                self.parent.camera.alloc_memory()
+                self.parent.camera.start_acquisition()
+                raw_array = self.parent.camera_widget.camera.get_image().copy()
+                self.images.append(raw_array)
+                self.parent.camera.stop_acquisition()
+                self.parent.camera.free_memory()
+                time.sleep(step_duration)
+            # Arrêter la tâche
+            task.stop()
+
+        
 
 # %% Example
 if __name__ == '__main__':

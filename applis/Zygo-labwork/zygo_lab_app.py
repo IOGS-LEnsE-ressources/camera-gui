@@ -42,6 +42,7 @@ from widgets.masks_menu_widget import MasksMenuWidget
 from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
+from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 
 from process.initialization_parameters import *
 
@@ -217,6 +218,9 @@ class ZygoLabApp(QWidget):
 
         elif event == 'options_main_menu':
             self.layout.addWidget(self.options_menu_widget, 2, 1)
+
+            self.piezo_calibration_widget = PiezoCalibrationWidget(self)
+            self.layout.addWidget(self.piezo_calibration_widget)
 
     def signal_language_changed_isReceived(self, language_selected):
         """Handler for the language updated signal."""
