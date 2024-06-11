@@ -65,8 +65,10 @@ def daq_ramp(val_min, val_max, duration=1, step_nb=100):
 
 daq_ramp(0, 5, 1)
 
+'''
 # Test 2
 if set_daq_output(3):
     print('OK')
 else:
     print('NOT OK')
+'''

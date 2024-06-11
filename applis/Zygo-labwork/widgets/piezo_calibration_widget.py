@@ -8,6 +8,8 @@
 """
 
 import sys
+
+import cv2
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -92,17 +94,24 @@ class PiezoCalibrationWidget(QWidget):
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
-    def button_start_calibration_isClicked(self, N=10):
+    def button_start_calibration_isClicked(self):
         self.button_start_calibration.setStyleSheet(actived_button)
-        images_for_all_voltages = []
+        image_for_all_voltages = []
+        number_measures = 10
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
         num_steps = 100  # Nombre de pas dans la rampe
 
+        # Stop thread
+
+        self.parent.camera_thread.stop()
+        self.parent.camera.init_camera()
+        self.parent.camera.alloc_memory()
+        self.parent.camera.start_acquisition()
+
         # Calcul des paramètres de la rampe
         ramp = np.linspace(start_voltage, end_voltage, num_steps)
-
         # Créer une tâche pour générer la rampe de tension
         with nidaqmx.Task() as task:
             # Ajouter un canal de sortie analogique
@@ -111,31 +120,47 @@ class PiezoCalibrationWidget(QWidget):
             # Démarrer la tâche
             task.start()
 
-            # Générer la rampe de tension en écrivant chaque valeur successivement
-            for voltage in ramp:
-                print(voltage)
-                task.write(voltage)
+            import matplotlib.pyplot as plt
 
-                # We repeat the calibration N times
-                for i in range(N):
-                    self.parent.camera_thread.stop()
-                    self.parent.camera.init_camera()
-                    self.parent.camera.alloc_memory()
-                    self.parent.camera.start_acquisition()
-                    if i == 0:
-                        raw_array = self.parent.camera_widget.camera.get_image().copy()/N
-                    else:
-                        raw_array = raw_array + self.parent.camera_widget.camera.get_image().copy()/N
-                    self.parent.camera.stop_acquisition()
-                    self.parent.camera.free_memory()
-                images_for_all_voltages.append(raw_array)
-            images_for_all_voltages = np.array(images_for_all_voltages)
-            phase = np.mean(np.diff(images_for_all_voltages), axis=0)
-            print(phase.shape)
+            n, m, p = (self.parent.camera_widget.camera.get_image().copy()).shape
+            x_min, x_max = n // 4, 3 * n // 4
+            y_min, y_max = m // 4, 3 * m // 4
+            average_for_all_voltages = []
+
+            # Générer la rampe de tension en écrivant chaque valeur successivement
+            for i in range(number_measures):
+                image_for_all_voltages = []
+                for j,voltage in enumerate(ramp):
+                    print(f"{i + 1}e mesure | V={voltage}/{end_voltage}")
+                    task.write(voltage)
+                    time.sleep(0.1)
+                    raw_array = self.parent.camera_widget.camera.get_image().copy()[x_min:x_max, y_min:y_max]/number_measures
+                    image_for_all_voltages.append(raw_array)
+                average_for_all_voltages.append(image_for_all_voltages)
+            average_for_all_voltages = np.mean(np.array(average_for_all_voltages), axis=0)
+
+            print(average_for_all_voltages)
+            plt.figure()
+            plt.imshow(raw_array)
+            plt.show()
+            average_for_all_voltages = np.squeeze(np.array(average_for_all_voltages))
+            differences = np.array(list(map(lambda img:average_for_all_voltages[0]-img, average_for_all_voltages)))
+            phase = np.mean(np.mean(differences, axis=2), axis=1)
+
+            print('FIN')
+            plt.figure()
+            plt.plot(ramp, phase)
+            plt.show()
+
+            task.write(0)
+
             # Arrêter la tâche
             task.stop()
 
         self.button_start_calibration.setStyleSheet(unactived_button)
+        self.parent.camera.stop_acquisition()
+        self.parent.camera.free_memory()
+        self.parent.camera_thread.start()
         
 
 # %% Example
