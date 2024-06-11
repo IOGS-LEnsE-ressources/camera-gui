@@ -15,6 +15,18 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 """
 
+
+"""
+Try modify Clock Freq (and framerate ??)
+Probable Issue with set_frame_rate ??
+
+
+print(f'F(Hz) = {self.camera_remote.FindNode("DeviceClockFrequency").Value()}')
+self.camera_remote.FindNode("DeviceClockFrequency").SetValue(5000000)
+print(f'F(Hz) = {self.camera_remote.FindNode("DeviceClockFrequency").Value()}')
+
+"""
+
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 import sys
@@ -28,14 +40,16 @@ from PyQt6.QtGui import QImage, QPixmap
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
+from gui.x_y_chart_widget import XYChartWidget
 from lensecam.ids.camera_ids import CameraIds
 from lensecam.camera_thread import CameraThread
 from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
-from lensecam.ids.camera_ids_widget0 import CameraIdsParamsWidget
-from lensecam.basler.camera_basler_widget import CameraBaslerWidget, CameraBaslerParamsWidget
+from lensecam.basler.camera_basler_widget import CameraBaslerWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
+from gui.camera_settings_widget import CameraSettingsWidget
 
+from enum import Enum
 
 cam_widget_brands = {
     'Basler': CameraBaslerWidget,
@@ -45,12 +59,16 @@ cam_from_brands = {
     'Basler': CameraBasler,
     'IDS': CameraIds,
 }
-cam_params_widget_brands = {
-    'Basler': CameraBaslerParamsWidget,
-    'IDS': CameraIdsParamsWidget,
-}
 
 # -------------------------------
+
+class Modes(Enum):
+    NOMODE = 0
+    SETTINGS = 1
+    LIVE = 2
+    SPACE = 3
+    TIME = 4
+
 
 class MainWindow(QMainWindow):
     """
@@ -71,7 +89,17 @@ class MainWindow(QMainWindow):
         self.camera_thread = CameraThread()
         self.camera_thread.image_acquired.connect(self.thread_update_image)
         self.brand = None
+        # Parameters
         self.default_parameters = {}
+        self.mode = Modes.NOMODE
+        # Data to display
+        self.image_x = []   # 4 random pixels in the AOI - X coordinate
+        self.image_y = []   # 4 random pixels in the AOI - Y coordinate
+        self.x_time = None
+        self.x_time_cpt = 0
+        self.y_time = None
+        self.x_histo = None
+        self.y_histo = None
 
         # Init default parameters
         print(f"CMOS App {dictionary['version']}")
@@ -80,7 +108,6 @@ class MainWindow(QMainWindow):
             if 'language' in self.default_parameters:
                 file_name_dict = './lang/dict_'+str(self.default_parameters['language'])+'.txt'
                 load_dictionary(file_name_dict)
-                print('Dict OK')
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -90,7 +117,7 @@ class MainWindow(QMainWindow):
         # Main Layout
         self.main_layout = QGridLayout()
         self.title_widget = TitleWidget(dictionary)
-        self.main_menu_widget = MainMenuWidget()
+        self.main_menu_widget = MainMenuWidget(self)
         self.camera_widget = QWidget()
         self.camera_widget.setStyleSheet("background-color: lightblue;")
         self.params_widget = QWidget()
@@ -166,8 +193,6 @@ class MainWindow(QMainWindow):
         file_path = './default_config.txt'
         if os.path.exists(file_path):
             self.default_parameters = self.load_file(file_path)
-            if 'language' in self.default_parameters:
-                print(self.default_parameters['language'])
             return True
         else:
             return False
@@ -175,24 +200,23 @@ class MainWindow(QMainWindow):
     def camera_settings_action(self, event) -> None:
         self.clear_layout(2, 1)
         if self.camera is None:
-            print('No Camera')
             self.params_widget = CameraChoice()
             self.params_widget.selected.connect(self.action_brand_selected)
             self.main_layout.addWidget(self.params_widget, 2, 1)
         else:
-            print('Camera OK')
             # display camera settings and sliders
-            self.params_widget = cam_params_widget_brands[self.brand](self)
+            self.mode = Modes.SETTINGS
+            self.rand_pixels()
+            self.params_widget = CameraSettingsWidget(self.camera)
             self.main_layout.addWidget(self.params_widget, 2, 1)
+
 
     def action_brand_selected(self, event):
         type_event = event.split(':')[0]
         if type_event == 'nobrand':
             self.clear_layout(1, 1)  # camera_widget
-            print('No Brand')
         elif type_event == 'brand':
             self.brand = event.split(':')[1]
-            print(self.brand)
             self.clear_layout(1,1)   # camera_widget
             self.camera_widget = cam_widget_brands[self.brand](params_disp=False)
             self.camera_widget.connected.connect(self.action_camera_connected)
@@ -200,23 +224,25 @@ class MainWindow(QMainWindow):
 
     def action_camera_connected(self, event):
         try:
-            print('CMOS camera_connected')
             self.clear_layout(2,1)   # params_widget
+            self.clear_layout(1,2)   # histo_graph
             self.camera = self.camera_widget.camera
-            print(self.camera)
             self.camera.init_camera(self.camera.camera_device)
+            self.camera.set_frame_rate(1)
             self.camera_thread.set_camera(self.camera)
             self.camera_widget.camera_display_params.update_params()
             # Init default param
             if 'exposure' in self.default_parameters:
-                print(self.default_parameters['exposure'])
                 self.camera.set_exposure(int(self.default_parameters['exposure']))
-            print(f'Exposure = {self.camera.get_exposure()}')
 
-            #self.params_widget = cam_params_widget_brands[self.brand](self)
-
+            self.params_widget = CameraSettingsWidget(self.camera)
             self.main_layout.addWidget(self.params_widget, 2, 1)
-
+            self.histo_graph = XYChartWidget()
+            self.histo_graph.set_background('white')
+            self.main_layout.addWidget(self.histo_graph, 1, 2)
+            self.rand_pixels()
+            print(f'Random Pixels : {self.image_x} / {self.image_y}')
+            self.mode = Modes.SETTINGS
             self.camera_thread.start()
         except Exception as e:
             print(f'Exception - action_camera_connected {e}')
@@ -226,6 +252,7 @@ class MainWindow(QMainWindow):
         try:
             frame_width = self.camera_widget.width()
             frame_height = self.camera_widget.height()
+            # self.process_data(image_array)
             # Resize to the display size
             image_array_disp2 = resize_image_ratio(
                 image_array,
@@ -239,6 +266,32 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f'Exception - update_image {e}')
 
+    def process_data(self, image_array):
+        if self.mode == Modes.SETTINGS:
+            if self.x_time is None:
+                self.x_time = np.array([0])
+                self.y_time = [np.zeros(0) for _ in range(4)]
+            else:
+                self.x_time = np.append(self.x_time, self.x_time_cpt)
+            self.x_time_cpt += 1
+            self.y_time[0] = np.append(self.y_time[0], image_array[self.image_x[0], self.image_y[0]])
+            self.y_time[1] = np.append(self.y_time[1], image_array[self.image_x[1], self.image_y[1]])
+            self.y_time[2] = np.append(self.y_time[2], image_array[self.image_x[2], self.image_y[2]])
+            self.y_time[3] = np.append(self.y_time[3], image_array[self.image_x[3], self.image_y[3]])
+
+            self.histo_graph.set_data(self.x_time, self.y_time)
+            self.histo_graph.refresh_chart()
+
+    def rand_pixels(self):
+        # TO DO : in the AOI !
+        min_val = 200
+        max_val = 300
+        # Reset old coordinates
+        self.image_x = []
+        self.image_y = []
+        for i in range(4):
+            self.image_x.append(np.random.randint(min_val, max_val + 1))
+            self.image_y.append(np.random.randint(min_val, max_val + 1))
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.

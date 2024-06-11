@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """*camera_settings_widget.py* file.
 
-*camera_settings_widget* file that contains :class::CameraSettingsWidget
-
 This file is attached to a 1st year of engineer training labwork in photonics.
 Subject : http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
 
@@ -23,14 +21,12 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
-from PyQt6.QtGui import QPixmap
 
 if __name__ == '__main__':
     from slider_bloc import SliderBloc
 else:
     from gui.slider_bloc import SliderBloc
-import numpy as np
+
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
@@ -42,8 +38,9 @@ styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 # %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
+BUTTON_HEIGHT = 60  # px
+OPTIONS_BUTTON_HEIGHT = 20  # px
+
 
 # %% Widget
 class CameraSettingsWidget(QWidget):
@@ -54,12 +51,12 @@ class CameraSettingsWidget(QWidget):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
         self.camera = camera
-        
+
         # Title
         # -----
         self.label_title_camera_settings = QLabel(translate('title_camera_settings'))
         self.label_title_camera_settings.setStyleSheet(styleH1)
-        
+
         # Camera ID
         # ---------
         self.subwidget_camera_id = QWidget()
@@ -77,47 +74,61 @@ class CameraSettingsWidget(QWidget):
         self.sublayout_camera_id.setContentsMargins(0, 0, 0, 0)
 
         self.subwidget_camera_id.setLayout(self.sublayout_camera_id)
-        
+
         # Settings
         # --------
         self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
-        
+
+        self.slider_frame_rate = SliderBloc(name='name_slider_frame_rate', unit='fps', min_value=1, max_value=10)
+        self.slider_frame_rate.slider_changed.connect(self.slider_frame_rate_changing)
+
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)
         self.layout.addWidget(self.slider_exposure_time)
+        self.layout.addWidget(self.slider_frame_rate)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
     def slider_exposure_time_changing(self, event):
         """Action performed when the exposure time slider changed."""
-        print(f'Slider {event}')
         if self.camera is not None:
-            exposure_time_value = self.slider_exposure_time.get_value()*1000
+            exposure_time_value = self.slider_exposure_time.get_value() * 1000
             self.camera.set_exposure(exposure_time_value)
         else:
             print('No Camera Connected')
 
-    def update_parameters(self, auto_min_max: bool=False) -> None:
+    def slider_frame_rate_changing(self, event):
+        """Action performed when the exposure time slider changed."""
+        if self.camera is not None:
+            frame_rate_value = self.slider_frame_rate.get_value()
+            print(self.camera.set_frame_rate(frame_rate_value))
+
+        else:
+            print('No Camera Connected')
+
+    def update_parameters(self, auto_min_max: bool = False) -> None:
         """Update displayed parameters values, from the camera.
 
         """
         if auto_min_max:
             exposure_min, exposure_max = self.camera.get_exposure_range()
-            self.slider_exposure_time.set_min_max_slider_values(exposure_min//1000, exposure_max//1000)
+            self.slider_exposure_time.set_min_max_slider_values(exposure_min // 1000, exposure_max // 1000)
         exposure_time = self.camera.get_exposure()
-        self.slider_exposure_time.set_value(exposure_time/1000)
+        self.slider_exposure_time.set_value(exposure_time / 1000)
 
-    def set_parameters(self, color_mode:str='Mono8', frame_rate: float=3,
-                       exposure: float=2, black_level:int=10 ):
+    def set_parameters(self, color_mode: str = 'Mono8', frame_rate: float = 3,
+                       exposure: float = 2, black_level: int = 10):
         """Useful ?
 
         """
         pass
 
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
+
 
     class MyWindow(QMainWindow):
         def __init__(self):
@@ -126,7 +137,7 @@ if __name__ == '__main__':
             # Translation
             dictionary = {}
             # Load French dictionary
-            #dictionary = load_dictionary('../lang/dict_FR.txt')
+            # dictionary = load_dictionary('../lang/dict_FR.txt')
             # Load English dictionary
             dictionary = load_dictionary('../lang/dict_EN.txt')
 
