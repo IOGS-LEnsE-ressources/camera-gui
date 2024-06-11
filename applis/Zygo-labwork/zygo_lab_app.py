@@ -170,8 +170,6 @@ class ZygoLabApp(QWidget):
         try:
             frame_width = self.camera_widget.width()
             frame_height = self.camera_widget.height()
-            print(image_array.shape)
-            print(image_array.dtype)
             if self.camera_thread.running:
                 # Resize to the display size
                 image_array_disp2 = resize_image_ratio(

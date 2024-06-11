@@ -222,8 +222,9 @@ class MasksMenuWidget(QWidget):
         self.camera_widget.camera.stop_acquisition()
         self.camera_widget.camera.free_memory()
         '''
+        print(f'Image Get_ MASKS {raw_array.shape}')
         self.parent.camera.stop_acquisition()
-        self.parent.camera_widget.camera.free_memory()
+        self.parent.camera.free_memory()
         self.parent.camera_thread.start()
         return raw_array
 
