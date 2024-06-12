@@ -33,10 +33,11 @@ class MainMenuWidget(QWidget):
 
     camera_settings_clicked = pyqtSignal(str)
 
-    def __init__(self):
-        super().__init__(parent=None)
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
         self.layout = QVBoxLayout()
-        
+        self.parent = parent
+
         self.label_title_main_menu = QLabel(translate("label_title_main_menu"))
         self.label_title_main_menu.setStyleSheet(styleH1)
         self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)

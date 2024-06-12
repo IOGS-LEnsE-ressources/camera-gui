@@ -217,10 +217,12 @@ class ZygoLabApp(QWidget):
             pass
 
         elif event == 'options_main_menu':
+            self.clear_layout(1, 2)
+
             self.layout.addWidget(self.options_menu_widget, 2, 1)
 
             self.piezo_calibration_widget = PiezoCalibrationWidget(self)
-            self.layout.addWidget(self.piezo_calibration_widget)
+            self.layout.addWidget(self.piezo_calibration_widget, 1, 2, 2, 1)
 
     def signal_language_changed_isReceived(self, language_selected):
         """Handler for the language updated signal."""
