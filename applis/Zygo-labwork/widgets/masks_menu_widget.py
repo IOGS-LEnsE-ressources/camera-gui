@@ -340,9 +340,12 @@ class SelectionMaskWindow(QDialog):
     def __init__(self, image, mask_type):
         super().__init__()
 
+        # print(self.width(), self.height()) # Window size
+
         self.layout = QVBoxLayout()
 
         self.image = image
+
         self.qimage = QImage(self.image.data, self.image.shape[1], self.image.shape[0], self.image.strides[0], QImage.Format.Format_Grayscale8)
         self.pixmap = QPixmap.fromImage(self.qimage)
 

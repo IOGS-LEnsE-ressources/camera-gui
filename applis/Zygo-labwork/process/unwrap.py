@@ -15,6 +15,8 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 import numpy as np
 from typing import Tuple, Optional
 
+from scipy.ndimage import gaussian_filter, uniform_filter
+
 PI = np.pi
 
 
@@ -223,63 +225,62 @@ def unwrap2D(Ph: np.ndarray):
                     
     return PhD, Pb, info, both, pb
 
+def selection_surface_utile(mask):
+    a, b = mask.shape
+
+    xmin = 0
+    while xmin < a and np.sum(mask[xmin, :]) == 0:
+        xmin += 1
+
+    xmax = a - 1
+    while xmax > 0 and np.sum(mask[xmax, :]) == 0:
+        xmax -= 1
+
+    ymin = 0
+    while ymin < b and np.sum(mask[:, ymin]) == 0:
+        ymin += 1
+
+    ymax = b - 1
+    while ymax > 0 and np.sum(mask[:, ymax]) == 0:
+        ymax -= 1
+
+    mask_select = mask[xmin:xmax+1, ymin:ymax+1]
+
+    return mask_select, xmin, xmax, ymin, ymax
+
+def suppression_bord(phi, p):
+    a, b = phi.shape
+
+    phi2 = np.full((a + 20, b + 20), np.nan)
+    phi2[10:a + 10, 10:b + 10] = phi
+
+    MatrixNaN = 100 * np.isnan(phi2)
+
+    # Utilisation du filtre moyen (équivalent à fspecial('average', p) en MATLAB)
+    H = np.ones((p, p)) / (p * p)
+    maskinverse = uniform_filter(MatrixNaN, size=p)
+
+    maskinverse[maskinverse != 0] = 1
+
+    for i in range(a + 20):
+        for j in range(b + 20):
+            if maskinverse[i, j] != 0:
+                phi2[i, j] = np.nan
+
+    MatrixNotNaN = ~np.isnan(phi2)
+
+    mask, xmin, xmax, ymin, ymax = selection_surface_utile(MatrixNotNaN)
+
+    phi2 = phi2[xmin:xmax, ymin:ymax]
+
+    return phi2
+
 if __name__ == '__main__':
     from scipy.io import loadmat
-    from scipy.ndimage import gaussian_filter, uniform_filter
     from scipy.interpolate import griddata
     from matplotlib import pyplot as plt
 
     from hariharan_algorithm import hariharan_algorithm
-
-    def selection_surface_utile(mask):
-        a, b = mask.shape
-
-        xmin = 0
-        while xmin < a and np.sum(mask[xmin, :]) == 0:
-            xmin += 1
-
-        xmax = a - 1
-        while xmax > 0 and np.sum(mask[xmax, :]) == 0:
-            xmax -= 1
-
-        ymin = 0
-        while ymin < b and np.sum(mask[:, ymin]) == 0:
-            ymin += 1
-
-        ymax = b - 1
-        while ymax > 0 and np.sum(mask[:, ymax]) == 0:
-            ymax -= 1
-
-        mask_select = mask[xmin:xmax+1, ymin:ymax+1]
-
-        return mask_select, xmin, xmax, ymin, ymax
-
-    def suppression_bord(phi, p):
-        a, b = phi.shape
-
-        phi2 = np.full((a + 20, b + 20), np.nan)
-        phi2[10:a + 10, 10:b + 10] = phi
-
-        MatrixNaN = 100 * np.isnan(phi2)
-
-        # Utilisation du filtre moyen (équivalent à fspecial('average', p) en MATLAB)
-        H = np.ones((p, p)) / (p * p)
-        maskinverse = uniform_filter(MatrixNaN, size=p)
-
-        maskinverse[maskinverse != 0] = 1
-
-        for i in range(a + 20):
-            for j in range(b + 20):
-                if maskinverse[i, j] != 0:
-                    phi2[i, j] = np.nan
-
-        MatrixNotNaN = ~np.isnan(phi2)
-
-        mask, xmin, xmax, ymin, ymax = selection_surface_utile(MatrixNotNaN)
-
-        phi2 = phi2[xmin:xmax, ymin:ymax]
-
-        return phi2
 
     sigma = 3
 

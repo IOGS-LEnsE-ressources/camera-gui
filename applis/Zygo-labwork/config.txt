@@ -1,3 +1,4 @@
 # -*- coding: utf-8 -*-
 # Configuration file of Zygo Lab App
 Language; French
+Piezo_voltage; 0.80,1.62,2.43,3.24,4.05

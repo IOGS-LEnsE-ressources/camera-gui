@@ -23,8 +23,8 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-from process.hariharan_algorithm import hariharan_algorithm
-from process.acquisition_images import get_phase
+from process.unwrap import unwrap2D, suppression_bord
+from process.acquisition_images import get_phase, check_alpha
 
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
@@ -223,7 +223,26 @@ class AcquisitionMenuWidget(QWidget):
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
 
-                wrapped_phase, images = get_phase(self.parent)
+                wrapped_phase, images = get_phase(self.parent, sigma_gaussian_filter=3)
+                average_alpha, std_alpha = check_alpha(images)
+                
+                if average_alpha<86 or average_alpha>94 or std_alpha>8:
+                    msg_box = QMessageBox()
+                    msg_box.setStyleSheet(styleH3)
+                    msg_box.warning(self, translate('error'), translate('message_alpha_error'))
+                    self.button_simple_acquisition.setStyleSheet(unactived_button)  
+                    return None
+                else:
+                    unwrapped_phase = unwrap2D(wrapped_phase)[0]
+                    unwrapped_phase = suppression_bord(unwrapped_phase, 3)
+                    unwrapped_phase = unwrapped_phase - np.nanmean(unwrapped_phase)
+
+                    import matplotlib.pyplot as plt
+                    plt.figure()
+                    plt.imshow(unwrapped_phase)
+                    plt.colorbar()
+                    plt.show()
+
                 '''
                 unwrapped_phase = ...
                 import matplotlib.pyplot as plt
