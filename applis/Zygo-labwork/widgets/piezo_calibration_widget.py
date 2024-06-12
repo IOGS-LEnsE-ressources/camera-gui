@@ -50,7 +50,6 @@ driver_version = local_system.driver_version
 
 # %% Widget
 class PiezoCalibrationWidget(QWidget):
-   
     def __init__(self, parent=None):
         super().__init__(parent=None)
 
@@ -99,11 +98,11 @@ class PiezoCalibrationWidget(QWidget):
     def button_start_calibration_isClicked(self):
         self.button_start_calibration.setStyleSheet(actived_button)
         image_for_all_voltages = []
-        number_measures = 3
+        number_measures = 5
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
-        num_steps = 50  # Nombre de pas dans la rampe
+        num_steps = 100  # Nombre de pas dans la rampe
 
         # Stop thread
 
@@ -133,7 +132,7 @@ class PiezoCalibrationWidget(QWidget):
             for i in range(number_measures):
                 image_for_all_voltages = []
                 for j,voltage in enumerate(ramp):
-                    print(f"{i + 1}e mesure | V={voltage}/{end_voltage}")
+                    print(f"{i + 1}e mesure | V={voltage:.2f}/{end_voltage:.2f}")
                     task.write(voltage)
                     time.sleep(0.1)
                     raw_array = self.parent.camera_widget.camera.get_image().copy()[x_min:x_max, y_min:y_max]/number_measures
@@ -141,24 +140,29 @@ class PiezoCalibrationWidget(QWidget):
                 average_for_all_voltages.append(image_for_all_voltages)
             average_for_all_voltages = np.mean(np.array(average_for_all_voltages), axis=0)
 
-            print(average_for_all_voltages)
+            print(average_for_all_voltages, f"average_for_all_voltages.shape {average_for_all_voltages.shape}")
             plt.figure()
             plt.imshow(raw_array, 'gray')
             plt.show()
+
             average_for_all_voltages = np.squeeze(np.array(average_for_all_voltages))
             phi = np.array(list(map(lambda img:1-img/average_for_all_voltages[0], average_for_all_voltages)))
-            phase = np.rad2deg(np.arccos(np.mean(np.mean(phi, axis=2), axis=1)/np.max(phi))-PI/2)
+            phase = np.rad2deg(np.arcsin(np.mean(np.mean(phi/np.max(phi, axis=0), axis=2), axis=1))-PI/2)
+            #phase = np.mean(np.mean(phi, axis=2), axis=1)
+            print(phase.shape)
 
-            diff_phase = np.diff(phase, prepend=0)
+            phase -= phase[0]
+
+            diff_phase = np.abs(np.diff(phase, prepend=0))
+            
+            #phase[0] = 0
             for i in range(1, len(phase)):
-                if diff_phase[i] <0:
-                    phase[i] = phase[i-1] - diff_phase[i]
-                else:
-                    phase[i] = phase[i-1] + diff_phase[i]
+                phase[i] = phase[i-1] + diff_phase[i]
 
+            phase = 2*phase
             task.write(0)
 
-            # Arrêter la tâche
+            ## Arrêter la tâche
             task.stop()
 
         self.parent.camera.stop_acquisition()
