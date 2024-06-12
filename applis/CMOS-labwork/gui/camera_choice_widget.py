@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensecam.basler.camera_basler_widget import CameraBaslerListWidget
 from lensecam.basler.camera_basler import CameraBasler
-from lensecam.ids.camera_ids_widget0 import CameraIdsListWidget
+from lensecam.ids.camera_ids_widget import CameraIdsListWidget
 from lensecam.ids.camera_ids import CameraIds
 from lensecam.ids.camera_list import CameraList as CameraIdsList
 from lensecam.basler.camera_list import CameraList as CameraBaslerList
