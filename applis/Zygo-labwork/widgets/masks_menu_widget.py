@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import (
     QMessageBox
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QPoint
-from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor
+from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor, QGuiApplication
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
@@ -234,9 +234,23 @@ class MasksMenuWidget(QWidget):
             print(self.parent)
             try:
                 image = self.get_image()
+                image_width = image.shape[1]
+                image_height = image.shape[0]
+
+                screen = QGuiApplication.primaryScreen()
+                screen_size = screen.size()
+                screen_width = screen_size.width()
+                screen_height = screen_size.height()
+
+                display_rate = 0.90*min(1, screen_width/image_width, screen_height/image_height)
+
+                image = cv2.resize(image, (0, 0), fx = display_rate, fy = display_rate, interpolation=cv2.INTER_AREA)
                 selection_window = SelectionMaskWindow(image, 'Circle')
                 selection_window.exec()
                 mask = selection_window.mask
+
+                mask = cv2.resize(mask, (image_width, image_height), interpolation=cv2.INTER_CUBIC)
+
                 self.list_masks.append(mask)
                 self.list_original_masks.append(mask)
 
@@ -250,6 +264,7 @@ class MasksMenuWidget(QWidget):
                 import matplotlib.pyplot as plt
                 plt.figure()
                 plt.imshow(self.mask)
+                plt.axis('equal')
                 plt.show()
 
                 print(f"Nb masks: {len(self.list_masks)}")
@@ -260,9 +275,22 @@ class MasksMenuWidget(QWidget):
         if self.parent is not None:
             try:
                 image = self.get_image()
+                image_width = image.shape[1]
+                image_height = image.shape[0]
+
+                screen = QGuiApplication.primaryScreen()
+                screen_size = screen.size()
+                screen_width = screen_size.width()
+                screen_height = screen_size.height()
+
+                display_rate = 0.90*min(1, screen_width/image_width, screen_height/image_height)
+
+                image = cv2.resize(image, (0, 0), fx = display_rate, fy = display_rate, interpolation=cv2.INTER_AREA)
                 selection_window = SelectionMaskWindow(image, 'Rectangle')
                 selection_window.exec()
                 mask = selection_window.mask
+
+                mask = cv2.resize(mask, (image_width, image_height), interpolation=cv2.INTER_CUBIC)
                 self.list_masks.append(mask)
                 self.list_original_masks.append(mask)
 
@@ -284,9 +312,22 @@ class MasksMenuWidget(QWidget):
         if self.parent is not None:
             try:
                 image = self.get_image()
+                image_width = image.shape[1]
+                image_height = image.shape[0]
+
+                screen = QGuiApplication.primaryScreen()
+                screen_size = screen.size()
+                screen_width = screen_size.width()
+                screen_height = screen_size.height()
+
+                display_rate = 0.90*min(1, screen_width/image_width, screen_height/image_height)
+
+                image = cv2.resize(image, (0, 0), fx = display_rate, fy = display_rate, interpolation=cv2.INTER_AREA)
                 selection_window = SelectionMaskWindow(image, 'Polygon')
                 selection_window.exec()
                 mask = selection_window.mask
+
+                mask = cv2.resize(mask, (image_width, image_height), interpolation=cv2.INTER_CUBIC)
                 self.list_masks.append(mask)
                 self.list_original_masks.append(mask)
 

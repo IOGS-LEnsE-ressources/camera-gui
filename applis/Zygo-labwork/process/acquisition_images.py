@@ -38,7 +38,7 @@ def get_phase(parent, sigma_gaussian_filter=3):
                 
                 task.write(voltages[i])
                 time.sleep(0.1)
-                raw_array = parent.camera_widget.camera.get_image().copy()
+                raw_array = parent.camera_widget.camera.get_image().copy().squeeze()
                 plt.imshow(raw_array*mask, 'gray')
                 images.append(raw_array*mask)
             plt.show()

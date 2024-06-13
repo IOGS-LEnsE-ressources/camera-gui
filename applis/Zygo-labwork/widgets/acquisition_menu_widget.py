@@ -20,17 +20,21 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
 import numpy as np
+from scipy.interpolate import griddata
+
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
 from process.unwrap import unwrap2D, suppression_bord
 from process.acquisition_images import get_phase, check_alpha
+from process.surface_statistics import statistique_surface
 
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
 else:
     from widgets.lineedit_bloc import LineEditBloc
 
+PI = np.pi
 
 # %% To add in lensepy library
 # Styles
@@ -249,6 +253,43 @@ class AcquisitionMenuWidget(QWidget):
                 plt.figure()
                 plt.imshow(unwrapped_phase)
                 '''
+                phi = unwrapped_phase/(2*PI)
+
+                PV, RMS = statistique_surface(phi)
+
+                not_nan_indices = np.where(~np.isnan(phi))
+
+                # Récupérez les valeurs non-nan et leurs coordonnées
+                values = phi[not_nan_indices]
+                x = not_nan_indices[0]
+                y = not_nan_indices[1]
+
+                # Générer une grille de points pour l'interpolation
+                x_grid, y_grid = np.meshgrid(np.linspace(0, phi.shape[1], 300), np.linspace(0, phi.shape[0], 300))
+
+                # Interpolez les valeurs manquantes
+                interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic')
+
+                # Affichage de l'interpolation
+                plt.figure()
+                plt.title('Interpolated values')
+                plt.imshow(interpolated_values, cmap='magma')
+                plt.colorbar()
+                plt.show()
+
+                # Affichage en 3D de l'interpolation
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+                ax.set_title(f"PV={PV*self.wedge_factor:.4f} λ | RMS={RMS*self.wedge_factor:.4f} λ")
+
+                x = np.arange(interpolated_values.shape[0])
+                y = np.arange(interpolated_values.shape[1])
+                x, y = np.meshgrid(x, y)
+
+                # Tracé de la surface
+                ax.plot_surface(x, y, interpolated_values, cmap='magma')
+                plt.show()
+
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
