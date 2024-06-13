@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Surface3DWidget for displaying data on a 3D surface.
+"""ContourWidget for displaying contour lines of a surface in 2D.
 
 ---------------------------------------
 (c) 2024 - LEnsE - Institut d'Optique
@@ -17,28 +17,28 @@ Authors
 from PyQt6.QtWidgets import QApplication
 import numpy as np
 import sys
-from matplotlib import cm
+import matplotlib.pyplot as plt
 
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
-import pyqtgraph.opengl as gl
+import pyqtgraph as pg
 
 from lensepy.css import *
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 
-class Surface3DWidget(QWidget):
+class ContourWidget(QWidget):
     """
-    Widget used to display data in a 3D surface chart.
-    Children of QWidget - QWidget can be put in another widget and / or window
+    Widget used to display contour lines of a surface chart.
+    Children of QWidget - QWidget can be put in another widget and/or window
     ---
 
     Attributes
     ----------
     title : str
         title of the chart
-    plot_chart_widget : GLViewWidget
+    plot_chart_widget : PlotWidget
         pyQtGraph Widget to display chart
     plot_x_data : Numpy array
         value to display on X axis
@@ -63,7 +63,7 @@ class Surface3DWidget(QWidget):
 
     def __init__(self):
         """
-        Initialisation of the 3D surface chart.
+        Initialisation of the 2D contour chart.
 
         """
         super().__init__()
@@ -83,7 +83,7 @@ class Surface3DWidget(QWidget):
         self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.info_label.setStyleSheet(styleH3)
 
-        self.plot_chart_widget = gl.GLViewWidget()  # pyQtGraph 3D widget
+        self.plot_chart_widget = pg.PlotWidget()  # pyQtGraph 2D widget
 
         # Increase the height of the plot chart widget
         self.plot_chart_widget.setMinimumWidth(400)
@@ -95,10 +95,9 @@ class Surface3DWidget(QWidget):
         self.plot_z_data = np.array([])
 
         # No data at initialization
-        self.surface_plot = None
-        self.set_axis_and_ticks_color()
-        self.master_widget.setLayout(self.layout)
+        self.contour_plot = None
 
+        self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
@@ -127,91 +126,6 @@ class Surface3DWidget(QWidget):
         self.plot_y_data = y_axis
         self.plot_z_data = z_axis
 
-    def set_axis_and_ticks_color(self, axis_color=BLUE_IOGS, ticks_color=BLUE_IOGS):
-        """
-        Set the color of the axes and their ticks.
-
-        Parameters
-        ----------
-        axis_color : str
-            Color for the axes in CSS color format (e.g., '#0000FF').
-        ticks_color : str
-            Color for the ticks in CSS color format (e.g., '#FF0000').
-
-        Returns
-        -------
-        None.
-        """
-        # GLViewWidget doesn't have a straightforward way to set axis and tick colors
-        pass
-
-    def apply_colormap(self, z_values):
-        """
-        Apply a colormap to the Z values.
-
-        Parameters
-        ----------
-        z_values : Numpy array
-            Z values of the surface.
-
-        Returns
-        -------
-        colors : Numpy array
-            Colors corresponding to the Z values.
-        """
-        norm = (z_values - z_values.min()) / (z_values.max() - z_values.min())
-        colormap = cm.get_cmap('magma')
-        colors = colormap(norm)
-        return colors
-
-    def adjust_camera_position(self):
-        """
-        Adjust camera position to fit the data nicely.
-        """
-        x_min, x_max = self.plot_x_data.min(), self.plot_x_data.max()
-        y_min, y_max = self.plot_y_data.min(), self.plot_y_data.max()
-        z_min, z_max = self.plot_z_data.min(), self.plot_z_data.max()
-
-        # Calculate center of the plot
-        center_x = (x_min + x_max) / 2
-        center_y = (y_min + y_max) / 2
-        center_z = (z_min + z_max) / 2
-
-        # Calculate distance for camera position
-        distance = max(x_max - x_min, y_max - y_min, z_max - z_min) * 2
-
-        # Set camera position
-        self.plot_chart_widget.setCameraPosition(
-            distance=distance,
-            azimuth=0,  # Adjust azimuth as needed
-            elevation=90,  # Adjust elevation as needed
-            center=(center_x, center_y, center_z),
-            up=(0, 0, 1)  # Adjust up vector as needed
-        )
-
-    def adjust_camera_position(self):
-        """
-        Adjust camera position to fit the data nicely.
-        """
-        x_min, x_max = self.plot_x_data.min(), self.plot_x_data.max()
-        y_min, y_max = self.plot_y_data.min(), self.plot_y_data.max()
-        z_min, z_max = self.plot_z_data.min(), self.plot_z_data.max()
-
-        # Calculate center of the plot
-        center_x = (x_min + x_max) / 2
-        center_y = (y_min + y_max) / 2
-        center_z = (z_min + z_max) / 2
-
-        # Calculate distance for camera position
-        distance = max(x_max - x_min, y_max - y_min, z_max - z_min) * 2
-
-        # Set camera position
-        self.plot_chart_widget.setCameraPosition(
-            distance=distance,
-            azimuth=0,  # Adjust azimuth as needed
-            elevation=15  # Adjust elevation as needed
-        )
-
     def refresh_chart(self):
         """
         Refresh the data of the chart.
@@ -220,37 +134,28 @@ class Surface3DWidget(QWidget):
         -------
         None.
         """
-        if self.surface_plot:
-            self.plot_chart_widget.removeItem(self.surface_plot)
+        if self.contour_plot:
+            self.plot_chart_widget.clear()
 
         x = self.plot_x_data
         y = self.plot_y_data
         z = self.plot_z_data
 
-        vertices = np.vstack([x.ravel(), y.ravel(), z.ravel()]).T
-        faces = []
-        face_colors = []
-        rows, cols = x.shape
+        # Create a contour plot using matplotlib
+        fig, ax = plt.subplots()
+        CS = ax.contour(x, y, z, levels=10)
+        
+        for collection in CS.collections:
+            path = collection.get_paths()
+            for p in path:
+                vertices = p.vertices
+                self.plot_chart_widget.plot(vertices[:, 0], vertices[:, 1], pen=BLUE_IOGS)
 
-        z_colors = self.apply_colormap(z)  # Get the colors for the z values
+        plt.close(fig)
 
-        for i in range(rows - 1):
-            for j in range(cols - 1):
-                faces.append([i * cols + j, i * cols +
-                             j + 1, (i + 1) * cols + j])
-                faces.append([(i + 1) * cols + j, i * cols +
-                             j + 1, (i + 1) * cols + j + 1])
-
-                face_colors.append(z_colors[i, j, :])
-                face_colors.append(z_colors[i, j, :])
-
-        faces = np.array(faces)
-        face_colors = np.array(face_colors)
-
-        self.surface_plot = gl.GLMeshItem(
-            vertexes=vertices, faces=faces, faceColors=face_colors, smooth=False, drawEdges=False)
-        self.plot_chart_widget.addItem(self.surface_plot)
-        self.adjust_camera_position()  # Adjust camera position after adding item
+        self.plot_chart_widget.setXRange(x.min(), x.max())
+        self.plot_chart_widget.setYRange(y.min(), y.max())
+        self.plot_chart_widget.setAspectLocked(True)  # Lock the aspect ratio to ensure orthonormal graph
         self.adjustSize()
 
     def set_title(self, title):
@@ -301,7 +206,7 @@ class Surface3DWidget(QWidget):
         None.
 
         """
-        self.plot_chart_widget.setBackgroundColor(css_color)
+        self.plot_chart_widget.setBackground(css_color)
         self.setStyleSheet("background:" + css_color + ";")
 
     def clear_graph(self):
@@ -339,9 +244,9 @@ class Surface3DWidget(QWidget):
         None
 
         """
-        # self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
-        # self.layout.addWidget(self.info_label)
+        self.layout.addWidget(self.info_label)
 
 
 # -----------------------------------------------------------------------------------------------
@@ -350,23 +255,21 @@ class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("3D Surface Chart")
+        self.setWindowTitle("2D Contour Chart")
         self.setGeometry(100, 100, 800, 600)
 
         self.centralWid = QWidget()
         self.layout = QVBoxLayout()
 
-        self.chart_widget = Surface3DWidget()
-        self.chart_widget.set_title('')
-        self.chart_widget.set_information('')
+        self.chart_widget = ContourWidget()
+        self.chart_widget.set_title('Contour Plot')
+        self.chart_widget.set_information('Contour plot of a 2D function')
         self.layout.addWidget(self.chart_widget)
 
         x = np.linspace(-10, 10, 100)
         y = np.linspace(-10, 10, 100)
         x, y = np.meshgrid(x, y)
         z = np.sin(np.sqrt(x**2+y**2))
-
-        z *= (x.max()-x.min())*.75 /(z.max()-z.min())
 
         self.chart_widget.set_background('lightgray')
 
@@ -384,4 +287,3 @@ if __name__ == '__main__':
     main = MyWindow()
     main.show()
     sys.exit(app.exec())
-
