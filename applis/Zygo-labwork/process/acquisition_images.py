@@ -13,9 +13,9 @@ def get_phase(parent, sigma_gaussian_filter=3):
     images = []
     mask = parent.mask
     if __name__ == '__main__':
-        str_voltages = read_default_parameters('./config.txt')['Piezo_voltage']
+        str_voltages = read_default_parameters('./config.txt')['Piezo voltage']
     else:
-        str_voltages = read_default_parameters('config.txt')['Piezo_voltage']
+        str_voltages = read_default_parameters('config.txt')['Piezo voltage']
     voltages = list(str_voltages.split(','))
     
     try:
@@ -29,19 +29,19 @@ def get_phase(parent, sigma_gaussian_filter=3):
             parent.camera.alloc_memory()
             parent.camera.start_acquisition()
 
-            import matplotlib.pyplot as plt
-            plt.new_figure_manager
+            #import matplotlib.pyplot as plt
+            #plt.new_figure_manager
 
             for i in range(5):
-                plt.subplot(1,5,i+1)
+                #plt.subplot(1,5,i+1)
                 print(f'Image {i}')
                 
                 task.write(voltages[i])
                 time.sleep(0.1)
                 raw_array = parent.camera_widget.camera.get_image().copy().squeeze()
-                plt.imshow(raw_array*mask, 'gray')
+                #plt.imshow(raw_array*mask, 'gray')
                 images.append(raw_array*mask)
-            plt.show()
+            #plt.show()
                 
 
             parent.camera.stop_acquisition()
@@ -55,11 +55,13 @@ def get_phase(parent, sigma_gaussian_filter=3):
     except Exception as e:
         print(f'Exception Phase - {e}')
 
+    """
     import matplotlib.pyplot as plt
     plt.figure()
     plt.title('Filtered image')
     plt.imshow(images_filtrees[0], 'gray')
     plt.show()
+    """
 
     parent.camera_thread.start()
     return hariharan_algorithm(*images_filtrees), images_filtrees
@@ -71,6 +73,7 @@ def check_alpha(images):
     average_alpha = np.nanmean(alpha)
     std_alpha = np.std(alpha)
     
+    """
     import matplotlib.pyplot as plt
     plt.figure()
     plt.hist(alpha.ravel(),100)
@@ -78,6 +81,7 @@ def check_alpha(images):
     plt.axvline(average_alpha-std_alpha, color='k')
     plt.axvline(average_alpha+std_alpha, color='k')
     plt.show()
+    """
 
     print(f"alpha = {average_alpha} °")
     return average_alpha, std_alpha

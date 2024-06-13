@@ -40,11 +40,11 @@ class TitleWidget(QWidget):
         self.subwidget = QWidget()
         self.sublayout = QGridLayout()
 
-        self.label_title = QLabel(translate("label_title"))
+        self.label_title = QLabel("Contrôle interférométrique & Analyseur de front d'onde ZYGO")
         self.label_title.setStyleSheet(styleH1)
         self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.label_subtitle = QLabel(translate("label_subtitle"))
+        self.label_subtitle = QLabel("Travaux pratiques de 1A et 2AP")
         self.label_subtitle.setStyleSheet(styleH2)
         self.label_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 

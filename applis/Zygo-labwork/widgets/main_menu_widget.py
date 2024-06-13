@@ -56,31 +56,31 @@ class MainMenuWidget(QWidget):
         self.subwidget = QWidget()
         self.sublayout = QVBoxLayout()
         
-        self.label_title_main_menu = QLabel(translate("label_title_main_menu"))
+        self.label_title_main_menu = QLabel('Menu')
         self.label_title_main_menu.setStyleSheet(styleH1)
         self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.button_camera_settings_main_menu = QPushButton(translate("button_camera_settings_main_menu"))
+        self.button_camera_settings_main_menu = QPushButton("Réglages caméra")
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
         self.button_camera_settings_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_camera_settings_main_menu.clicked.connect(self.button_camera_settings_main_menu_isClicked)
         
-        self.button_masks_main_menu = QPushButton(translate("button_masks_main_menu"))
+        self.button_masks_main_menu = QPushButton("Masques")
         self.button_masks_main_menu.setStyleSheet(unactived_button)
         self.button_masks_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_masks_main_menu.clicked.connect(self.button_masks_main_menu_isClicked)
         
-        self.button_acquisition_main_menu = QPushButton(translate("button_acquisition_main_menu"))
+        self.button_acquisition_main_menu = QPushButton("Acquisition")
         self.button_acquisition_main_menu.setStyleSheet(unactived_button)
         self.button_acquisition_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_acquisition_main_menu.clicked.connect(self.button_acquisition_main_menu_isClicked)
         
-        self.button_analyzes_main_menu = QPushButton(translate("button_analyzes_main_menu"))
+        self.button_analyzes_main_menu = QPushButton("Analyses")
         self.button_analyzes_main_menu.setStyleSheet(unactived_button)
         self.button_analyzes_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_analyzes_main_menu.clicked.connect(self.button_analyzes_main_menu_isClicked)
         
-        self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
+        self.button_options_main_menu = QPushButton("Options")
         self.button_options_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)

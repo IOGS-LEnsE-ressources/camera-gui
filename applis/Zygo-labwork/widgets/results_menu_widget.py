@@ -53,26 +53,27 @@ class ResultsMenuWidget(QWidget):
         
         # Title
         # -----
-        self.label_title_results = QLabel(translate('label_title_results'))
+        self.label_title_results = QLabel("Résultats")
         self.label_title_results.setStyleSheet(styleH1)
 
         # ComboBox
         # --------
-        list_choices = [translate('3D_plot')]
-        self.combobox_type_output_plot = ComboBoxBloc(translate('label_output_type'), list_choices)
+        list_choices = ["Graph 3D"]
+        self.combobox_type_output_plot = ComboBoxBloc("Type de graph", list_choices)
 
         # Table results
         # -------------
         self.array_no_results = np.array([
-            ['', 1, 2, 3, 4, 5, translate('average')],
+            ['', 1, 2, 3, 4, 5, 'Moyenne'],
             ['PV', np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
             ['RMS', np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
         ])
-        self.table_results = TableFromNumpy(self.array_no_results)
+        self.array = self.array_no_results.copy()
+        self.table_results = TableFromNumpy(self.array)
 
         # Print button
         # ------------
-        self.button_print_all_results = QPushButton(translate('button_print_all_results'))
+        self.button_print_all_results = QPushButton("Enregistrer tous les résultats")
         self.button_print_all_results.setStyleSheet(unactived_button)
         self.button_print_all_results.setFixedHeight(BUTTON_HEIGHT)
         self.button_print_all_results.clicked.connect(self.button_print_all_results_isClicked)

@@ -58,7 +58,7 @@ class RemoveFaultsWidget(QWidget):
         self.master_widget = QWidget()
         self.master_layout = QVBoxLayout()
         
-        self.label_title_remove_faults_menu = QLabel(translate('label_title_remove_faults_menu'))
+        self.label_title_remove_faults_menu = QLabel("Soustraitre les défauts")
         self.label_title_remove_faults_menu.setStyleSheet(styleH1)
         
         self.subwidget_faults = QWidget()
@@ -69,13 +69,13 @@ class RemoveFaultsWidget(QWidget):
         self.subwidget_left = QWidget()
         self.sublayout_left = QVBoxLayout()
 
-        self.checkbox_remove_tilt = QCheckBox(translate('checkbox_remove_tilt'))
+        self.checkbox_remove_tilt = QCheckBox("Retirer le tilt")
         self.checkbox_remove_tilt.setStyleSheet(styleCheckbox)
 
-        self.checkbox_remove_defocus = QCheckBox(translate('checkbox_remove_defocus'))
+        self.checkbox_remove_defocus = QCheckBox("Retirer l'autofocus")
         self.checkbox_remove_defocus.setStyleSheet(styleCheckbox)
 
-        self.checkbox_remove_spherical_aberration = QCheckBox(translate('checkbox_remove_spherical_aberration'))
+        self.checkbox_remove_spherical_aberration = QCheckBox("Retirer l'abération sphérique")
         self.checkbox_remove_spherical_aberration.setStyleSheet(styleCheckbox)
         
         self.sublayout_left.addWidget(self.checkbox_remove_tilt)
@@ -89,10 +89,10 @@ class RemoveFaultsWidget(QWidget):
         self.subwidget_right = QWidget()
         self.sublayout_right = QVBoxLayout()
         
-        self.checkbox_remove_astigmatism = QCheckBox(translate('checkbox_remove_astigmatism'))
+        self.checkbox_remove_astigmatism = QCheckBox("Retirer l'astigmatisme")
         self.checkbox_remove_astigmatism.setStyleSheet(styleCheckbox)
 
-        self.checkbox_remove_coma = QCheckBox(translate('checkbox_remove_coma'))
+        self.checkbox_remove_coma = QCheckBox("Retirer la coma")
         self.checkbox_remove_coma.setStyleSheet(styleCheckbox)
 
 
@@ -122,6 +122,11 @@ class AcquisitionMenuWidget(QWidget):
 
         self.parent = parent
 
+        if self.parent is None or not hasattr(self.parent, 'wedge_factor'):
+            self.wedge_factor = 1
+        else:
+                self.wedge_factor = self.parent.wedge_factor
+
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -131,7 +136,7 @@ class AcquisitionMenuWidget(QWidget):
         
         # Title
         # -----
-        self.label_title_acquisition_menu = QLabel(translate('label_title_acquisition_menu'))
+        self.label_title_acquisition_menu = QLabel("Acquisition")
         self.setStyleSheet(styleH1)
         
         # Subwidget to start acquisition
@@ -139,12 +144,12 @@ class AcquisitionMenuWidget(QWidget):
         self.subwidget_start_acquisiton = QWidget()
         self.sublayout_start_acquisiton = QHBoxLayout()
 
-        self.button_simple_acquisition = QPushButton(translate('button_simple_acquisition'))
+        self.button_simple_acquisition = QPushButton("Acquisition unique")
         self.button_simple_acquisition.setStyleSheet(unactived_button)
         self.button_simple_acquisition.setFixedHeight(BUTTON_HEIGHT)
         self.button_simple_acquisition.clicked.connect(self.button_simple_acquisition_isClicked)
 
-        self.button_repeated_acquisition = QPushButton(translate('button_repeated_acquisition'))
+        self.button_repeated_acquisition = QPushButton("Acquisition répétée")
         self.button_repeated_acquisition.setStyleSheet(unactived_button)
         self.button_repeated_acquisition.setFixedHeight(BUTTON_HEIGHT)
         self.button_repeated_acquisition.clicked.connect(self.button_repeated_acquisition_isClicked)
@@ -156,7 +161,7 @@ class AcquisitionMenuWidget(QWidget):
 
         # Wedge factor entry
         #-------------------
-        self.lineedit_wedge_factor = LineEditBloc('label_wedge_factor', txt='0.5')
+        self.lineedit_wedge_factor = LineEditBloc("Wedge factor", txt=str(self.wedge_factor))
         self.lineedit_wedge_factor.keyPressEvent = self.wedge_factor_is_modified
 
         # Remove faults menu
@@ -168,12 +173,12 @@ class AcquisitionMenuWidget(QWidget):
         self.subwidget_save_acquisiton = QWidget()
         self.sublayout_save_acquisiton = QHBoxLayout()
 
-        self.button_see_and_save_images = QPushButton(translate('button_see_and_save_images'))
+        self.button_see_and_save_images = QPushButton("Voir et enregistrer les images")
         self.button_see_and_save_images.setStyleSheet(unactived_button)
         self.button_see_and_save_images.setFixedHeight(BUTTON_HEIGHT)
         self.button_see_and_save_images.clicked.connect(self.button_see_and_save_images_isClicked)
 
-        self.button_save_phase = QPushButton(translate('button_save_phase'))
+        self.button_save_phase = QPushButton("Enregistrer la phase")
         self.button_save_phase.setStyleSheet(unactived_button)
         self.button_save_phase.setFixedHeight(BUTTON_HEIGHT)
         self.button_save_phase.clicked.connect(self.button_save_phase_isClicked)
@@ -202,11 +207,11 @@ class AcquisitionMenuWidget(QWidget):
                 self.wedge_factor = float(self.lineedit_wedge_factor.text())
                 msg_box = QMessageBox()
                 msg_box.setStyleSheet(styleH3)
-                msg_box.information(self, translate('information'), translate('message_wedge_factor_updated'))
+                msg_box.information(self, "Information", "Le wedge factor a bien été modifié.")
             except ValueError:
                 msg_box = QMessageBox()
                 msg_box.setStyleSheet(styleH3)
-                msg_box.warning(self, translate('error'), translate('message_wedge_factor_error'))
+                msg_box.warning(self, "Erreur", "Le wedge factor doit être un nombre réel.")
 
         elif event.key() == Qt.Key.Key_Escape:
             self.lineedit_wedge_factor.clearFocus()
@@ -223,7 +228,7 @@ class AcquisitionMenuWidget(QWidget):
                 if mask is None:
                     msg_box = QMessageBox()
                     msg_box.setStyleSheet(styleH3)
-                    msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+                    msg_box.warning(self, "Erreur", "Vous devez définir un masque.")
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
 
@@ -233,7 +238,7 @@ class AcquisitionMenuWidget(QWidget):
                 if average_alpha<86 or average_alpha>94 or std_alpha>8:
                     msg_box = QMessageBox()
                     msg_box.setStyleSheet(styleH3)
-                    msg_box.warning(self, translate('error'), translate('message_alpha_error'))
+                    msg_box.warning(self, "Erreur", f"α={average_alpha} °: il vaut mieux reprendre la mesure ou attendre que le laser se stabilise.")
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
                 else:
@@ -241,55 +246,20 @@ class AcquisitionMenuWidget(QWidget):
                     unwrapped_phase = suppression_bord(unwrapped_phase, 3)
                     unwrapped_phase = unwrapped_phase - np.nanmean(unwrapped_phase)
 
-                    import matplotlib.pyplot as plt
-                    plt.figure()
-                    plt.imshow(unwrapped_phase)
-                    plt.colorbar()
-                    plt.show()
+                self.phase = unwrapped_phase/(2*PI)
 
-                '''
-                unwrapped_phase = ...
-                import matplotlib.pyplot as plt
-                plt.figure()
-                plt.imshow(unwrapped_phase)
-                '''
-                phi = unwrapped_phase/(2*PI)
+                PV, RMS = statistique_surface(self.phase)
+                
+                array = np.array([
+                    ['', 1, 2, 3, 4, 5, 'Moyenne'],
+                    ['PV (λ)', round(PV, 4), np.nan, np.nan, np.nan, np.nan, round(PV, 4)],
+                    ['RMS (λ)', round(RMS, 4), np.nan, np.nan, np.nan, np.nan, round(RMS, 4)]
+                ])
 
-                PV, RMS = statistique_surface(phi)
+                self.parent.results_menu_widget.array = array
+                self.parent.results_menu_widget.table_results.update_table(array)
 
-                not_nan_indices = np.where(~np.isnan(phi))
-
-                # Récupérez les valeurs non-nan et leurs coordonnées
-                values = phi[not_nan_indices]
-                x = not_nan_indices[0]
-                y = not_nan_indices[1]
-
-                # Générer une grille de points pour l'interpolation
-                x_grid, y_grid = np.meshgrid(np.linspace(0, phi.shape[1], 300), np.linspace(0, phi.shape[0], 300))
-
-                # Interpolez les valeurs manquantes
-                interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic')
-
-                # Affichage de l'interpolation
-                plt.figure()
-                plt.title('Interpolated values')
-                plt.imshow(interpolated_values, cmap='magma')
-                plt.colorbar()
-                plt.show()
-
-                # Affichage en 3D de l'interpolation
-                fig = plt.figure()
-                ax = fig.add_subplot(111, projection='3d')
-                ax.set_title(f"PV={PV*self.wedge_factor:.4f} λ | RMS={RMS*self.wedge_factor:.4f} λ")
-
-                x = np.arange(interpolated_values.shape[0])
-                y = np.arange(interpolated_values.shape[1])
-                x, y = np.meshgrid(x, y)
-
-                # Tracé de la surface
-                ax.plot_surface(x, y, interpolated_values, cmap='magma')
-                plt.show()
-
+                self.display_phase_3d(self.phase)
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
@@ -300,6 +270,58 @@ class AcquisitionMenuWidget(QWidget):
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
         print('button_repeated_acquisition_isClicked')
+
+        if self.parent is not None:
+            try:
+                mask = self.parent.mask
+                if mask is None:
+                    msg_box = QMessageBox()
+                    msg_box.setStyleSheet(styleH3)
+                    msg_box.warning(self, "Erreur", "Vous devez définir un masque.")
+                    self.button_repeated_acquisition.setStyleSheet(unactived_button)  
+                    return None
+
+                all_PV = []
+                all_RMS = []
+
+                for i in range(5):
+                    wrapped_phase, images = get_phase(self.parent, sigma_gaussian_filter=3)
+                    average_alpha, std_alpha = check_alpha(images)
+                    
+                    if average_alpha<86 or average_alpha>94 or std_alpha>8:
+                        msg_box = QMessageBox()
+                        msg_box.setStyleSheet(styleH3)
+                        msg_box.warning(self, "Erreur", f"α={average_alpha} °: il vaut mieux reprendre la mesure ou attendre que le laser se stabilise.")
+                        self.button_repeated_acquisition.setStyleSheet(unactived_button)  
+                        return None
+                    else:
+                        unwrapped_phase = unwrap2D(wrapped_phase)[0]
+                        unwrapped_phase = suppression_bord(unwrapped_phase, 3)
+                        unwrapped_phase = unwrapped_phase - np.nanmean(unwrapped_phase)
+
+                    self.phase = unwrapped_phase/(2*PI)
+
+                    PV, RMS = statistique_surface(self.phase)
+
+                    all_PV.append(PV)
+                    all_RMS.append(RMS)
+
+                self.display_phase_3d(self.phase)
+                    
+                array = np.array([
+                    ['', 1, 2, 3, 4, 5, 'Moyenne'],
+                    ['PV (λ)', round(all_PV[0], 4), round(all_PV[1], 4), round(all_PV[2], 4), round(all_PV[3], 4), round(all_PV[4], 4), round(np.mean(all_PV), 4)],
+                    ['RMS (λ)', round(all_RMS[0], 4), round(all_RMS[1], 4), round(all_RMS[2], 4), round(all_RMS[3], 4), round(all_RMS[4], 4), round(np.mean(all_RMS), 4)]
+                ])
+
+                self.parent.results_menu_widget.array = array
+                self.parent.results_menu_widget.table_results.update_table(array)
+
+                self.display_phase_3d(self.phase)
+
+            except Exception as e:
+                print(f'Exception - button_simple_acquisition_isClicked {e}')
+
         self.button_repeated_acquisition.setStyleSheet(unactived_button)
     
     def button_see_and_save_images_isClicked(self):
@@ -311,6 +333,28 @@ class AcquisitionMenuWidget(QWidget):
         self.button_save_phase.setStyleSheet(actived_button)
         print('button_save_phase_isClicked')
         self.button_save_phase.setStyleSheet(unactived_button)
+
+    def display_phase_3d(self, phase):
+        import matplotlib.pyplot as plt
+        not_nan_indices = np.where(~np.isnan(phase))
+
+        values = phase[not_nan_indices]
+        x = not_nan_indices[0]
+        y = not_nan_indices[1]
+
+        x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
+
+        interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic')
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        x = np.arange(interpolated_values.shape[0])
+        y = np.arange(interpolated_values.shape[1])
+        x, y = np.meshgrid(x, y)
+
+        ax.plot_surface(x, y, interpolated_values, cmap='magma')
+        plt.show()
 
 # %% Example
 if __name__ == '__main__':

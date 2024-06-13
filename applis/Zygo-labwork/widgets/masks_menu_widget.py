@@ -68,7 +68,7 @@ class MasksMenuWidget(QWidget):
         self.master_widget = QWidget()
         self.master_layout = QVBoxLayout()
         
-        self.label_title_masks_menu = QLabel(translate('label_title_masks_menu'))
+        self.label_title_masks_menu = QLabel("Gestion des masques")
         self.label_title_masks_menu.setStyleSheet(styleH1)
         
         self.subwidget_masks = QWidget()
@@ -79,22 +79,22 @@ class MasksMenuWidget(QWidget):
         self.subwidget_left = QWidget()
         self.sublayout_left = QVBoxLayout()
         
-        self.button_circle_mask = QPushButton(translate('button_circle_mask'))
+        self.button_circle_mask = QPushButton("Circulaire")
         self.button_circle_mask.setStyleSheet(unactived_button)
         self.button_circle_mask.setFixedHeight(BUTTON_HEIGHT)
         self.button_circle_mask.clicked.connect(self.selection_mask_circle)
         
-        self.button_rectangle_mask = QPushButton(translate('button_rectangle_mask'))
+        self.button_rectangle_mask = QPushButton("Rectangulaire")
         self.button_rectangle_mask.setStyleSheet(unactived_button)
         self.button_rectangle_mask.setFixedHeight(BUTTON_HEIGHT)
         self.button_rectangle_mask.clicked.connect(self.selection_mask_rectangle)
         
-        self.button_polygon_mask = QPushButton(translate('button_polygon_mask'))
+        self.button_polygon_mask = QPushButton("Polygonal")
         self.button_polygon_mask.setStyleSheet(unactived_button)
         self.button_polygon_mask.setFixedHeight(BUTTON_HEIGHT)
         self.button_polygon_mask.clicked.connect(self.selection_mask_polygon)
 
-        self.combobox_select_mask = ComboBoxBloc(translate('mask_selected'), map(str,list(range(1, len(self.list_masks)+1))))
+        self.combobox_select_mask = ComboBoxBloc("Masque sélectionné", map(str,list(range(1, len(self.list_masks)+1))))
         self.combobox_select_mask.currentIndexChanged.connect(self.combobox_mask_selected_changed)
         
         self.sublayout_left.addWidget(self.button_circle_mask)
@@ -110,33 +110,34 @@ class MasksMenuWidget(QWidget):
         self.subwidget_right = QWidget()
         self.sublayout_right = QVBoxLayout()
         
-        self.button_move_mask = QPushButton(translate('button_move_mask'))
-        self.button_move_mask.setStyleSheet(unactived_button)
-        self.button_move_mask.setFixedHeight(BUTTON_HEIGHT)
-        
-        self.button_resize_mask = QPushButton(translate('button_resize_mask'))
-        self.button_resize_mask.setStyleSheet(unactived_button)
-        self.button_resize_mask.setFixedHeight(BUTTON_HEIGHT)
-        
-        self.button_erase_mask = QPushButton(translate('button_erase_mask'))
+        self.button_erase_mask = QPushButton("Supprimer le masque")
         self.button_erase_mask.setStyleSheet(unactived_button)
         self.button_erase_mask.setFixedHeight(BUTTON_HEIGHT)
         self.button_erase_mask.clicked.connect(self.button_erase_mask_isClicked)
 
-        self.checkbox_apply_mask = QCheckBox(translate('checkbox_apply_mask'))
+        self.button_erase_all_masks = QPushButton("Supprimer tous les masques")
+        self.button_erase_all_masks.setStyleSheet(unactived_button)
+        self.button_erase_all_masks.setFixedHeight(BUTTON_HEIGHT)
+        self.button_erase_all_masks.clicked.connect(self.button_erase_all_masks_isClicked)
+
+        self.checkbox_apply_mask = QCheckBox("Appliquer le masque")
         self.checkbox_apply_mask.setStyleSheet(styleCheckbox)
         self.checkbox_apply_mask.setChecked(True)
         self.checkbox_apply_mask.stateChanged.connect(self.checkbox_apply_mask_changed)
         
-        self.checkbox_inverse_mask = QCheckBox(translate('checkbox_inverse_mask'))
+        self.checkbox_inverse_mask = QCheckBox("Inverser le masque")
         self.checkbox_inverse_mask.setStyleSheet(styleCheckbox)
         self.checkbox_inverse_mask.stateChanged.connect(self.checkbox_inverse_mask_changed)
+
+        self.checkbox_inverse_merged_mask = QCheckBox("Inverser la fusion des masques")
+        self.checkbox_inverse_merged_mask.setStyleSheet(styleCheckbox)
+        self.checkbox_inverse_merged_mask.stateChanged.connect(self.checkbox_inverse_merged_mask_changed)
         
-        self.sublayout_right.addWidget(self.button_move_mask)
-        self.sublayout_right.addWidget(self.button_resize_mask)
         self.sublayout_right.addWidget(self.button_erase_mask)
+        self.sublayout_right.addWidget(self.button_erase_all_masks)
         self.sublayout_right.addWidget(self.checkbox_apply_mask)
         self.sublayout_right.addWidget(self.checkbox_inverse_mask)
+        self.sublayout_right.addWidget(self.checkbox_inverse_merged_mask)
         self.sublayout_right.addStretch()
         self.sublayout_right.setContentsMargins(0, 0, 0, 0)
         self.subwidget_right.setLayout(self.sublayout_right)
@@ -160,7 +161,7 @@ class MasksMenuWidget(QWidget):
         if self.index_mask_selected == -1:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+            msg_box.warning(self, "Erreur", "Veuillez sélectionner un masque.")
             self.checkbox_apply_mask.setChecked(True)
             return None
         try:
@@ -181,17 +182,15 @@ class MasksMenuWidget(QWidget):
         import matplotlib.pyplot as plt
 
         plt.figure()
-        plt.imshow(self.mask)
+        plt.imshow(self.mask, cmap='RdYlGn')
         plt.colorbar()
         plt.show()
-
-
 
     def checkbox_inverse_mask_changed(self, state):
         if self.index_mask_selected == -1:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+            msg_box.warning(self, "Erreur", "Veuillez sélectionner un masque.")
             self.checkbox_apply_mask.setChecked(False)
             return None
         self.mask_selected = 1-self.mask_selected
@@ -200,7 +199,16 @@ class MasksMenuWidget(QWidget):
 
         import matplotlib.pyplot as plt
         plt.figure()
-        plt.imshow(self.mask)
+        plt.imshow(self.mask, cmap='RdYlGn')
+        plt.colorbar()
+        plt.show()
+
+    def checkbox_inverse_merged_mask_changed(self, state):
+        self.mask = 1-self.mask
+
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.imshow(self.mask, cmap='RdYlGn')
         plt.colorbar()
         plt.show()
 
@@ -263,7 +271,7 @@ class MasksMenuWidget(QWidget):
 
                 import matplotlib.pyplot as plt
                 plt.figure()
-                plt.imshow(self.mask)
+                plt.imshow(self.mask, cmap='RdYlGn')
                 plt.axis('equal')
                 plt.show()
 
@@ -340,7 +348,7 @@ class MasksMenuWidget(QWidget):
 
                 import matplotlib.pyplot as plt
                 plt.figure()
-                plt.imshow(self.mask)
+                plt.imshow(self.mask, cmap='RdYlGn')
                 plt.show()
             except Exception as e:
                 print(f'Exception - selection_mask_polygon_isClicked {e}')
@@ -355,12 +363,12 @@ class MasksMenuWidget(QWidget):
         if self.index_mask_selected == -1:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, translate('error'), translate('message_no_mask_selected_error'))
+            msg_box.warning(self, "Erreur", "Veuillez sélectionner un masque.")
             self.checkbox_apply_mask.setChecked(True)
             return None
         
         elif len(self.list_masks) > 0:
-            reply = QMessageBox.question(self, translate('erase'), translate('confirmation_erase_mask_question'),
+            reply = QMessageBox.question(self, "Suppression du masque", "Voulez-vous supprimer ce masque ?",
                                             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                             QMessageBox.StandardButton.No)
 
@@ -370,11 +378,34 @@ class MasksMenuWidget(QWidget):
                 self.index_mask_selected -= 1
 
                 self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
-                self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+                self.mask = self.mask_unactived
 
                 msg_box = QMessageBox()
                 msg_box.setStyleSheet(styleH3)
-                msg_box.information(self, translate('information'), translate('message_mask_erased_information'))
+                msg_box.information(self, "Information", "Masque supprimé avec succès.")
+
+    def button_erase_all_masks_isClicked(self):
+        reply = QMessageBox.question(self, "Suppression des masques", "Voulez-vous supprimer tous les masques ?",
+                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                        QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.combobox_select_mask.setCursor(1)
+
+            self.checkbox_apply_mask.setChecked(True)
+            self.checkbox_inverse_mask.setChecked(False)
+            self.checkbox_inverse_merged_mask.setChecked(False)
+
+            self.list_masks.clear()
+            self.list_original_masks.clear()
+            self.index_mask_selected = -1
+
+            self.combobox_select_mask.update_options(map(str,list(range(1, len(self.list_masks)+1))))
+            self.mask = np.logical_or.reduce(self.list_masks).astype(int)
+
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.information(self, "Information", "Masques supprimés avec succès.")
 
 
 class SelectionMaskWindow(QDialog):

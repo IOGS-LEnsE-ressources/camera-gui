@@ -55,20 +55,18 @@ class ZygoLabApp(QWidget):
         """
         super().__init__(parent=None)
 
-        # Default settings
-        # ----------------
-        default_settings_dict = read_default_parameters('config.txt')
-
         # Initialization of the camera
         # ----------------------------
         self.camera_device = self.init_camera()
         self.camera = CameraIds()
         self.camera.init_camera(self.camera_device)
-        # ----------------------------
-        # Initialization of the piezo
-        # ----------------------------
-        # TO DO
-        #load_dictionary('./lang/dict_FR.txt')
+        
+        # Default settings
+        # ----------------
+        default_settings_dict = read_default_parameters('config.txt')
+        default_exposure = float(default_settings_dict['Exposure time']) # ms
+        default_exposure *= 1000 # µs
+        self.camera.set_exposure(default_exposure)
 
         # Initialisation of the mask selection attributes
         # -----------------------------------------------
@@ -140,7 +138,7 @@ class ZygoLabApp(QWidget):
 
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, translate('error'), translate('message_no_cam_error'))
+            msg_box.warning(self, 'Erreur', 'Aucune caméra connectée')
             print('No cam => Quit')
             sys.exit(QApplication.instance())
         else:
@@ -192,6 +190,9 @@ class ZygoLabApp(QWidget):
         self.list_original_masks = self.masks_menu_widget.list_original_masks
         self.mask_unactived = self.masks_menu_widget.mask_unactived
 
+        # Save information wedge factor
+        self.wedge_factor = self.acquisition_menu_widget.wedge_factor
+
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget(self)
         self.acquisition_menu_widget = AcquisitionMenuWidget(self)
@@ -235,7 +236,7 @@ class ZygoLabApp(QWidget):
         elif language_selected == '中文':
             dictionaray = load_dictionary('lang\dict_CN.txt')
 
-        self.update_labels(self)
+        #self.update_labels(self)
 
     def update_labels(self, window):
         """Recursively update labels and text in all widgets."""

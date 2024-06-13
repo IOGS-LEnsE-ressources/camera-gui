@@ -57,7 +57,7 @@ class CameraSettingsWidget(QWidget):
         
         # Title
         # -----
-        self.label_title_camera_settings = QLabel(translate('title_camera_settings'))
+        self.label_title_camera_settings = QLabel("Paramètres de la caméra")
         self.label_title_camera_settings.setStyleSheet(styleH1)
         
         # Camera ID
@@ -65,7 +65,7 @@ class CameraSettingsWidget(QWidget):
         self.subwidget_camera_id = QWidget()
         self.sublayout_camera_id = QHBoxLayout()
 
-        self.label_title_camera_id = QLabel(translate("label_title_camera_id"))
+        self.label_title_camera_id = QLabel("Camera ID")
         self.label_title_camera_id.setStyleSheet(styleH2)
 
         self.label_value_camera_id = QLabel(translate("label_value_camera_id"))
@@ -80,7 +80,7 @@ class CameraSettingsWidget(QWidget):
         
         # Settings
         # --------
-        self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
+        self.slider_exposure_time = SliderBloc(name="Temps d'exposition", unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
         
         self.layout.addWidget(self.label_title_camera_settings)
