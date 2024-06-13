@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""ImageWidget for displaying 2D images with a specified colormap in a pyQtGraph widget.
+"""
+ImageWidget for displaying 2D images with a specified colormap in a pyQtGraph widget.
 
 ---------------------------------------
 (c) 2024 - LEnsE - Institut d'Optique
@@ -11,7 +12,7 @@ Modifications
 
 Authors
 -------
-    Dorian MENDES (Promo 2026)
+    Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
@@ -21,70 +22,76 @@ import sys
 import pyqtgraph as pg
 import matplotlib.cm as cm
 
-from lensepy.css import *
+from lensepy.css import *  # Import CSS styles if needed
 
+# CSS style for the widget
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
+
 
 class ImageWidget(QWidget):
     """
     Widget used to display 2D images with a specified colormap.
-    Inherits from QWidget - can be placed in another widget and/or window
-    ---
 
     Attributes
     ----------
     title : str
-        title of the chart
-    plot_widget : GraphicsLayoutWidget
-        pyQtGraph Widget to display the image
-    image_item : ImageItem
+        Title of the image display widget.
+    plot_widget : pg.GraphicsLayoutWidget
+        pyQtGraph widget to display the image
+    image_item : pg.ImageItem
         pyQtGraph ImageItem to display the image data
 
     Methods
     -------
-    set_image_data(image_data):
+    set_image_data(image_data: np.ndarray) -> None
         Set the image data to display.
-    set_title(title):
-        Set the title of the chart.
-    set_information(infos):
-        Set informations in the informations label of the chart.
-    set_background(css_color):
-        Modify the background color of the widget.
+    set_title(title: str) -> None
+        Set the title of the image display widget.
+    set_information(infos: str) -> None
+        Set information text displayed below the image.
+    set_background(css_color: str) -> None
+        Set the background color of the widget.
+    clear_graph() -> None
+        Clear the image display widget.
+    disable_chart() -> None
+        Erase all widgets from the layout.
+    enable_chart() -> None
+        Enable and display all widgets in the layout.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the image display widget.
-
         """
         super().__init__()
-        self.title = ''  # Title of the chart
-        self.layout = QVBoxLayout()  # Main layout of the QWidget
+        self.title: str = ''  # Initialize title as an empty string
+        self.layout: QVBoxLayout = QVBoxLayout()  # Create a vertical layout for the widget
 
-        self.master_layout = QVBoxLayout()
-        self.master_widget = QWidget()
+        self.master_layout: QVBoxLayout = QVBoxLayout()  # Create a master layout for the widget
+        self.master_widget: QWidget = QWidget()  # Create a master widget to hold the layout
 
-        # Title label
-        self.title_label = QLabel(self.title)
+        # Title label setup
+        self.title_label: QLabel = QLabel(self.title)
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_label.setStyleSheet(styleH1)
 
-        # Option label
-        self.info_label = QLabel('')
+        # Information label setup
+        self.info_label: QLabel = QLabel('')
         self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.info_label.setStyleSheet(styleH3)
 
-        self.plot_widget = pg.GraphicsLayoutWidget()  # pyQtGraph GraphicsLayoutWidget
-
-        # Increase the height of the plot widget
+        # pyQtGraph GraphicsLayoutWidget setup
+        self.plot_widget: pg.GraphicsLayoutWidget = pg.GraphicsLayoutWidget()
         self.plot_widget.setMinimumWidth(400)
         self.plot_widget.setMinimumHeight(400)
 
-        self.image_item = pg.ImageItem()
-        self.view_box = self.plot_widget.addViewBox()  # Add a ViewBox to the layout
-        self.view_box.addItem(self.image_item)
-        self.view_box.setAspectLocked(True)  # Lock the aspect ratio to ensure orthonormal graph
+        # ImageItem setup
+        self.image_item: pg.ImageItem = pg.ImageItem()
+        self.view_box: pg.ViewBox = self.plot_widget.addViewBox()  # Add a ViewBox to the GraphicsLayoutWidget
+        self.view_box.addItem(self.image_item)  # Add the ImageItem to the ViewBox
+        self.view_box.setAspectLocked(True)  # Lock the aspect ratio to ensure the image displays correctly
 
+        # Set up the layout hierarchy
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
@@ -92,67 +99,91 @@ class ImageWidget(QWidget):
         # Enable chart to add widgets to the layout
         self.enable_chart()
 
-    def set_image_data(self, image_data):
+    def set_image_data(self, image_data: np.ndarray) -> None:
         """
         Set the image data to display.
 
         Parameters
         ----------
-        image_data : 2D Numpy array
-            Image data to display.
+        image_data : np.ndarray
+            2D array of image data.
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        See Also
+        --------
+        matplotlib.cm.get_cmap : Function to retrieve a colormap.
+
+        Notes
+        -----
+        This method applies the 'Magma' colormap from matplotlib to the input image data,
+        enhancing visualization by mapping scalar values to colors.
         """
-        # Apply colormap
-        colormap = cm.get_cmap('magma')  # Get the 'Magma' colormap from matplotlib
-        colored_image = colormap(image_data)  # Apply colormap to the image data
+        # Apply colormap 'Magma' from matplotlib to the image data
+        colormap = cm.get_cmap('magma')
+        colored_image = colormap(image_data)
 
-        # Set the colored image to the ImageItem
+        # Set the colored image data to the ImageItem
         self.image_item.setImage(colored_image)
 
-        # Adjust view range to fit the image
+        # Adjust the view range to fit the image
         self.view_box.autoRange()
 
-    def set_title(self, title):
+    def set_title(self, title: str) -> None:
         """
-        Set the title of the chart.
+        Set the title of the image display widget.
 
         Parameters
         ----------
         title : str
-            Title of the chart.
+            Title of the image display widget.
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method updates the title displayed at the top of the widget.
+
+        See Also
+        --------
+        QLabel.setText : Method to set text for QLabel.
         """
         self.title = title
         self.title_label.setText(self.title)
 
-    def set_information(self, infos):
+    def set_information(self, infos: str) -> None:
         """
-        Set informations in the informations label of the chart.
-        (bottom)
+        Set information text displayed below the image.
 
         Parameters
         ----------
         infos : str
-            Informations to display.
+            Information to display below the image.
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method updates the information text displayed below the image.
+
+        See Also
+        --------
+        QLabel.setText : Method to set text for QLabel.
         """
         self.info_label.setText(infos)
 
-    def set_background(self, css_color):
+    def set_background(self, css_color: str) -> None:
         """
-        Modify the background color of the widget.
+        Set the background color of the widget.
 
         Parameters
         ----------
@@ -161,31 +192,47 @@ class ImageWidget(QWidget):
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method updates the background color of the widget using CSS styles.
+
+        See Also
+        --------
+        QWidget.setStyleSheet : Method to set stylesheet for QWidget.
         """
         self.plot_widget.setBackground(css_color)
         self.setStyleSheet("background:" + css_color + ";")
 
-    def clear_graph(self):
+    def clear_graph(self) -> None:
         """
-        Clear the main chart of the widget.
+        Clear the image display widget.
 
         Returns
         -------
         None
+            No return value.
 
+        Notes
+        -----
+        This method clears the displayed image and resets the widget.
         """
         self.image_item.clear()
 
-    def disable_chart(self):
+    def disable_chart(self) -> None:
         """
-        Erase all the widget of the layout.
+        Erase all widgets from the layout.
 
         Returns
         -------
         None
+            No return value.
 
+        Notes
+        -----
+        This method removes all widgets from the layout, effectively disabling the chart display.
         """
         count = self.layout.count()
         for i in reversed(range(count)):
@@ -193,14 +240,18 @@ class ImageWidget(QWidget):
             widget = item.widget()
             widget.deleteLater()
 
-    def enable_chart(self):
+    def enable_chart(self) -> None:
         """
-        Display all the widget of the layout.
+        Enable and display all widgets in the layout.
 
         Returns
         -------
         None
+            No return value.
 
+        Notes
+        -----
+        This method ensures all necessary widgets are added and displayed in the layout.
         """
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_widget)
@@ -208,7 +259,7 @@ class ImageWidget(QWidget):
 
 
 # -----------------------------------------------------------------------------------------------
-# Only for testing
+# Example usage of the ImageWidget class
 class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -238,7 +289,6 @@ class MyWindow(QMainWindow):
 
 
 # Launching as main for tests
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyWindow()

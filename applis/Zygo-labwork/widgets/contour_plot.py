@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""ContourWidget for displaying contour lines of a surface in 2D.
+"""
+ContourWidget for displaying contour lines of a surface in 2D.
 
 ---------------------------------------
 (c) 2024 - LEnsE - Institut d'Optique
@@ -11,19 +12,18 @@ Modifications
 
 Authors
 -------
-    Dorian MENDES (Promo 2026)
+    Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
 
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
+from PyQt6.QtCore import Qt
 import numpy as np
 import sys
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # Import matplotlib for contour plotting
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt
-import pyqtgraph as pg
+import pyqtgraph as pg  # Import pyqtgraph for PyQt integration
 
-from lensepy.css import *
+from lensepy.css import *  # Import CSS styles if needed
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
@@ -31,72 +31,77 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 class ContourWidget(QWidget):
     """
     Widget used to display contour lines of a surface chart.
-    Children of QWidget - QWidget can be put in another widget and/or window
-    ---
 
     Attributes
     ----------
     title : str
-        title of the chart
-    plot_chart_widget : PlotWidget
-        pyQtGraph Widget to display chart
-    plot_x_data : Numpy array
-        value to display on X axis
-    plot_y_data : Numpy array
-        value to display on Y axis
-    plot_z_data : Numpy array
-        value to display on Z axis
+        Title of the contour plot widget.
+    plot_chart_widget : pg.PlotWidget
+        pyQtGraph PlotWidget to display the contour plot.
+    plot_x_data : np.ndarray
+        X-axis values to display.
+    plot_y_data : np.ndarray
+        Y-axis values to display.
+    plot_z_data : np.ndarray
+        Z-axis values to display.
+    contour_plot : matplotlib.contour.QuadContourSet or None
+        Contour plot object.
 
     Methods
     -------
-    set_data(x_axis, y_axis, z_axis):
-        Set the X, Y and Z axis data to display on the chart.
-    refresh_chart():
-        Refresh the data of the chart.
-    set_title(title):
-        Set the title of the chart.
-    set_information(infos):
-        Set informations in the informations label of the chart.
-    set_background(css_color):
-        Modify the background color of the widget.
+    set_data(x_axis: np.ndarray, y_axis: np.ndarray, z_axis: np.ndarray) -> None
+        Set the X, Y, and Z axis data to display on the contour plot.
+    refresh_chart() -> None
+        Refresh the data and display the contour plot.
+    set_title(title: str) -> None
+        Set the title of the contour plot.
+    set_information(infos: str) -> None
+        Set information text displayed below the contour plot.
+    set_background(css_color: str) -> None
+        Set the background color of the widget.
+    clear_graph() -> None
+        Clear the contour plot.
+    disable_chart() -> None
+        Remove all widgets from the layout.
+    enable_chart() -> None
+        Add and display all widgets in the layout.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialisation of the 2D contour chart.
-
+        Initialize the 2D contour plot widget.
         """
         super().__init__()
-        self.title = ''  # Title of the chart
-        self.layout = QVBoxLayout()  # Main layout of the QWidget
+        self.title: str = ''  # Initialize title as an empty string
+        self.layout: QVBoxLayout = QVBoxLayout()  # Create a vertical layout for the widget
 
-        self.master_layout = QVBoxLayout()
-        self.master_widget = QWidget()
+        self.master_layout: QVBoxLayout = QVBoxLayout()  # Create a master layout for the widget
+        self.master_widget: QWidget = QWidget()  # Create a master widget to hold the layout
 
-        # Title label
-        self.title_label = QLabel(self.title)
+        # Title label setup
+        self.title_label: QLabel = QLabel(self.title)
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_label.setStyleSheet(styleH1)
 
-        # Option label
-        self.info_label = QLabel('')
+        # Information label setup
+        self.info_label: QLabel = QLabel('')
         self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.info_label.setStyleSheet(styleH3)
 
-        self.plot_chart_widget = pg.PlotWidget()  # pyQtGraph 2D widget
-
-        # Increase the height of the plot chart widget
+        # pyQtGraph PlotWidget setup
+        self.plot_chart_widget: pg.PlotWidget = pg.PlotWidget()
         self.plot_chart_widget.setMinimumWidth(400)
         self.plot_chart_widget.setMinimumHeight(400)
 
-        # Create Numpy array for X, Y, and Z data
-        self.plot_x_data = np.array([])
-        self.plot_y_data = np.array([])
-        self.plot_z_data = np.array([])
+        # Initialize Numpy arrays for X, Y, and Z data
+        self.plot_x_data: np.ndarray = np.array([])
+        self.plot_y_data: np.ndarray = np.array([])
+        self.plot_z_data: np.ndarray = np.array([])
 
-        # No data at initialization
+        # Initialize contour plot object to None
         self.contour_plot = None
 
+        # Set up the layout hierarchy
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
@@ -104,35 +109,44 @@ class ContourWidget(QWidget):
         # Enable chart to add widgets to the layout
         self.enable_chart()
 
-    def set_data(self, x_axis, y_axis, z_axis):
+    def set_data(self, x_axis: np.ndarray, y_axis: np.ndarray, z_axis: np.ndarray) -> None:
         """
-        Set the X, Y, and Z axis data to display on the chart.
+        Set the X, Y, and Z axis data to display on the contour plot.
 
         Parameters
         ----------
-        x_axis : Numpy array
+        x_axis : np.ndarray
             X-axis values to display.
-        y_axis : Numpy array
+        y_axis : np.ndarray
             Y-axis values to display.
-        z_axis : Numpy array
+        z_axis : np.ndarray
             Z-axis values to display.
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method sets the data for the X, Y, and Z axes that will be used to generate the contour plot.
         """
         self.plot_x_data = x_axis
         self.plot_y_data = y_axis
         self.plot_z_data = z_axis
 
-    def refresh_chart(self):
+    def refresh_chart(self) -> None:
         """
-        Refresh the data of the chart.
+        Refresh the data and display the contour plot.
 
         Returns
         -------
-        None.
+        None
+            No return value.
+
+        Notes
+        -----
+        This method refreshes the contour plot using the current X, Y, and Z data.
         """
         if self.contour_plot:
             self.plot_chart_widget.clear()
@@ -158,43 +172,50 @@ class ContourWidget(QWidget):
         self.plot_chart_widget.setAspectLocked(True)  # Lock the aspect ratio to ensure orthonormal graph
         self.adjustSize()
 
-    def set_title(self, title):
+    def set_title(self, title: str) -> None:
         """
-        Set the title of the chart.
+        Set the title of the contour plot.
 
         Parameters
         ----------
         title : str
-            Title of the chart.
+            Title of the contour plot.
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method updates the title displayed at the top of the contour plot widget.
         """
         self.title = title
         self.title_label.setText(self.title)
 
-    def set_information(self, infos):
+    def set_information(self, infos: str) -> None:
         """
-        Set informations in the informations label of the chart.
-        (bottom)
+        Set information text displayed below the contour plot.
 
         Parameters
         ----------
         infos : str
-            Informations to display.
+            Information to display below the contour plot.
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method updates the information text displayed below the contour plot.
         """
         self.info_label.setText(infos)
 
-    def set_background(self, css_color):
+    def set_background(self, css_color: str) -> None:
         """
-        Modify the background color of the widget.
+        Set the background color of the widget.
 
         Parameters
         ----------
@@ -203,31 +224,43 @@ class ContourWidget(QWidget):
 
         Returns
         -------
-        None.
+        None
+            No return value.
 
+        Notes
+        -----
+        This method updates the background color of the widget using CSS styles.
         """
         self.plot_chart_widget.setBackground(css_color)
         self.setStyleSheet("background:" + css_color + ";")
 
-    def clear_graph(self):
+    def clear_graph(self) -> None:
         """
-        Clear the main chart of the widget.
+        Clear the contour plot.
 
         Returns
         -------
         None
+            No return value.
 
+        Notes
+        -----
+        This method clears the displayed contour plot.
         """
         self.plot_chart_widget.clear()
 
-    def disable_chart(self):
+    def disable_chart(self) -> None:
         """
-        Erase all the widget of the layout.
+        Remove all widgets from the layout.
 
         Returns
         -------
         None
+            No return value.
 
+        Notes
+        -----
+        This method removes all widgets from the layout, effectively disabling the contour plot.
         """
         count = self.layout.count()
         for i in reversed(range(count)):
@@ -235,14 +268,18 @@ class ContourWidget(QWidget):
             widget = item.widget()
             widget.deleteLater()
 
-    def enable_chart(self):
+    def enable_chart(self) -> None:
         """
-        Display all the widget of the layout.
+        Add and display all widgets in the layout.
 
         Returns
         -------
         None
+            No return value.
 
+        Notes
+        -----
+        This method ensures all necessary widgets are added and displayed in the layout.
         """
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
@@ -250,7 +287,7 @@ class ContourWidget(QWidget):
 
 
 # -----------------------------------------------------------------------------------------------
-# Only for testing
+# Example usage of the ContourWidget class
 class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -281,7 +318,6 @@ class MyWindow(QMainWindow):
 
 
 # Launching as main for tests
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyWindow()

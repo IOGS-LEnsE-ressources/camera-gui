@@ -12,8 +12,8 @@ Modifications
 
 Authors
 -------
-    Julien VILLEMEJANE
-    Dorian MENDES (Promo 2026)
+    Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+    Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 
 """
 
@@ -33,44 +33,58 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 class XYChartWidget(QWidget):
     """
     Widget used to display data in a 2D chart - X and Y axis.
-    Children of QWidget - QWidget can be put in another widget and / or window
-    ---
-    
+    Inherits from QWidget.
+
     Attributes
     ----------
     title : str
-        title of the chart
+        Title of the chart.
     plot_chart_widget : PlotWidget
-        pyQtGraph Widget to display chart
+        PyQtGraph PlotWidget to display the chart.
     plot_chart : PlotWidget.plot
-        plot object of the pyQtGraph widget
-    plot_x_data : Numpy array
-        value to display on X axis
-    plot_y_data : Numpy array
-        value to display on Y axis
-    line_color : CSS color
-        color of the line in the graph - default #0A3250
+        Plot object of the PyQtGraph widget.
+    plot_x_data : np.ndarray
+        Data values for the X axis.
+    plot_y_data : np.ndarray
+        Data values for the Y axis.
+    line_color : str
+        Color of the line in the graph (CSS format, e.g., '#0A3250').
     line_width : float
-        width of the line in the graph - default 1
-    
+        Width of the line in the graph (default 1).
+
     Methods
     -------
     set_data(x_axis, y_axis):
         Set the X and Y axis data to display on the chart.
+    set_x_label(label, color=BLUE_IOGS):
+        Set the label and color for the X axis.
+    set_y_label(label, color=BLUE_IOGS):
+        Set the label and color for the Y axis.
+    set_axis_and_ticks_color(axis_color=BLUE_IOGS, ticks_color=BLUE_IOGS):
+        Set the color of the axes, their ticks, and labels.
     refresh_chart():
         Refresh the data of the chart.
+    update_infos(val=True):
+        Update the information displayed below the chart.
     set_title(title):
         Set the title of the chart.
     set_information(infos):
-        Set informations in the informations label of the chart.
+        Set additional information below the chart.
     set_background(css_color):
-        Modify the background color of the widget.
+        Set the background color of the widget.
+    clear_graph():
+        Clear the main chart of the widget.
+    disable_chart():
+        Remove all widgets from the layout.
+    enable_chart():
+        Add and display all widgets in the layout.
+    set_line_color_width(color, width):
+        Set the color and width of the line in the graph.
     """
 
     def __init__(self):
         """
-        Initialisation of the time-dependent chart.
-
+        Initialize the XYChartWidget.
         """
         super().__init__()
         self.title = ''  # Title of the chart
@@ -89,25 +103,24 @@ class XYChartWidget(QWidget):
         self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.info_label.setStyleSheet(styleH3)
 
-        self.plot_chart_widget = PlotWidget()  # pyQtGraph widget
-        # Create Numpy array for X and Y data
-        self.plot_x_data = np.array([])
-        self.plot_y_data = np.array([])
+        self.plot_chart_widget = PlotWidget()  # PyQtGraph widget
+        self.plot_x_data = np.array([])  # Initialize X data
+        self.plot_y_data = np.array([])  # Initialize Y data
 
-        # No data at initialization
+        # Initialize plot with dummy data
         self.plot_chart = self.plot_chart_widget.plot([0])
-        self.set_axis_and_ticks_color()
-        self.master_widget.setLayout(self.layout)
 
-        self.master_layout.addWidget(self.master_widget)
-        self.setLayout(self.master_layout)
-
-        # Width and color of line in the graph
+        # Set default line color and width
         self.line_color = ORANGE_IOGS
         self.line_width = 1
 
-        # Enable chart to add widgets to the layout
-        self.enable_chart()
+        self.set_axis_and_ticks_color()  # Set initial axis and ticks color
+
+        self.master_widget.setLayout(self.layout)
+        self.master_layout.addWidget(self.master_widget)
+        self.setLayout(self.master_layout)
+
+        self.enable_chart()  # Enable chart to add widgets to the layout
 
     def set_data(self, x_axis, y_axis):
         """
@@ -115,46 +128,52 @@ class XYChartWidget(QWidget):
 
         Parameters
         ----------
-        x_axis : Numpy array
-            X-axis value to display.
-        y_axis : Numpy array
-            Y-axis value to display.
+        x_axis : np.ndarray
+            X-axis values to display.
+        y_axis : np.ndarray
+            Y-axis values to display.
 
         Returns
         -------
-        None.
-
+        None
+            No return value.
         """
         self.plot_x_data = x_axis
         self.plot_y_data = y_axis
 
     def set_x_label(self, label, color=BLUE_IOGS):
         """
-        Set the label of the X axis.
+        Set the label and color of the X axis.
 
         Parameters
         ----------
         label : str
             Label for the X axis.
+        color : str, optional
+            Color of the label in CSS format (default is BLUE_IOGS).
 
         Returns
         -------
-        None.
+        None
+            No return value.
         """
         self.plot_chart_widget.setLabel('bottom', label, color=color)
 
     def set_y_label(self, label, color=BLUE_IOGS):
         """
-        Set the label of the Y axis.
+        Set the label and color of the Y axis.
 
         Parameters
         ----------
         label : str
             Label for the Y axis.
+        color : str, optional
+            Color of the label in CSS format (default is BLUE_IOGS).
 
         Returns
         -------
-        None.
+        None
+            No return value.
         """
         self.plot_chart_widget.setLabel('left', label, color=color)
 
@@ -164,14 +183,15 @@ class XYChartWidget(QWidget):
 
         Parameters
         ----------
-        axis_color : str
-            Color for the axes in CSS color format (e.g., '#0000FF').
-        ticks_color : str
-            Color for the ticks in CSS color format (e.g., '#FF0000').
+        axis_color : str, optional
+            Color for the axes in CSS format (default is BLUE_IOGS).
+        ticks_color : str, optional
+            Color for the ticks in CSS format (default is BLUE_IOGS).
 
         Returns
         -------
-        None.
+        None
+            No return value.
         """
         # Set the pen for the X and Y axes
         axis_pen = mkPen(color=axis_color, width=2)
@@ -187,15 +207,14 @@ class XYChartWidget(QWidget):
         self.plot_chart_widget.getAxis('bottom').setTextPen(axis_pen)
         self.plot_chart_widget.getAxis('left').setTextPen(axis_pen)
 
-
     def refresh_chart(self):
         """
-        Refresh the data of the chart. 
+        Refresh the data displayed on the chart.
 
         Returns
         -------
-        None.
-
+        None
+            No return value.
         """
         self.plot_chart_widget.removeItem(self.plot_chart)
         self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
@@ -205,18 +224,18 @@ class XYChartWidget(QWidget):
 
     def update_infos(self, val=True):
         """
-        Update mean and standard deviation data and display.
+        Update the information displayed below the chart.
 
         Parameters
         ----------
-        val : bool
-            True to display mean and standard deviation.
-            False to display "acquisition in progress".
+        val : bool, optional
+            If True, display mean and standard deviation; otherwise, indicate "acquisition in progress".
+            Default is True.
 
         Returns
         -------
         None
-
+            No return value.
         """
         if val:
             mean_d = round(np.mean(self.plot_y_data), 2)
@@ -232,46 +251,45 @@ class XYChartWidget(QWidget):
         Parameters
         ----------
         title : str
-            Title of the chart.
+            Title for the chart.
 
         Returns
         -------
-        None.
-
+        None
+            No return value.
         """
         self.title = title
         self.title_label.setText(self.title)
 
     def set_information(self, infos):
         """
-        Set informations in the informations label of the chart.
-        (bottom)
+        Set additional information below the chart.
 
         Parameters
         ----------
         infos : str
-            Informations to display.
+            Information to display.
 
         Returns
         -------
-        None.
-
+        None
+            No return value.
         """
         self.info_label.setText(infos)
 
     def set_background(self, css_color):
         """
-        Modify the background color of the widget.
+        Set the background color of the widget.
 
         Parameters
         ----------
         css_color : str
-            Color in CSS style.
+            Color in CSS format.
 
         Returns
         -------
-        None.
-
+        None
+            No return value.
         """
         self.plot_chart_widget.setBackground(css_color)
         self.setStyleSheet("background:" + css_color + ";")
@@ -283,18 +301,18 @@ class XYChartWidget(QWidget):
         Returns
         -------
         None
-
+            No return value.
         """
         self.plot_chart_widget.clear()
 
     def disable_chart(self):
         """
-        Erase all the widget of the layout.
+        Remove all widgets from the layout.
 
         Returns
         -------
         None
-
+            No return value.
         """
         count = self.layout.count()
         for i in reversed(range(count)):
@@ -304,21 +322,35 @@ class XYChartWidget(QWidget):
 
     def enable_chart(self):
         """
-        Display all the widget of the layout.
+        Add and display all widgets in the layout.
 
         Returns
         -------
         None
-
+            No return value.
         """
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
         self.layout.addWidget(self.info_label)
 
     def set_line_color_width(self, color, width):
+        """
+        Set the color and width of the line in the graph.
+
+        Parameters
+        ----------
+        color : str
+            Color of the line in CSS format (e.g., '#FF0000').
+        width : float
+            Width of the line.
+
+        Returns
+        -------
+        None
+            No return value.
+        """
         self.line_color = color
         self.line_width = width
-
 
 # -----------------------------------------------------------------------------------------------
 # Only for testing
@@ -359,3 +391,4 @@ if __name__ == '__main__':
     main = MyWindow()
     main.show()
     sys.exit(app.exec())
+
