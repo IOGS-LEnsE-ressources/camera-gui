@@ -59,7 +59,7 @@ class ResultsMenuWidget(QWidget):
         # ComboBox
         # --------
         list_choices = ["Graph 3D"]
-        self.combobox_type_output_plot = ComboBoxBloc("Type de graph", list_choices)
+        self.combobox_type_output_plot = ComboBoxBloc("Type de graphe", list_choices)
 
         # Table results
         # -------------

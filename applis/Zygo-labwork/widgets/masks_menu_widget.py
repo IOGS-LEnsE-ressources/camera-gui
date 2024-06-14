@@ -59,6 +59,9 @@ class MasksMenuWidget(QWidget):
             self.list_masks = self.parent.list_masks
             self.list_original_masks = self.parent.list_original_masks
             self.mask_unactived = self.parent.mask_unactived
+
+            if hasattr(self.parent, 'image'):
+                self.image = self.parent.image
         self.index_mask_selected = -1
 
         self.setStyleSheet("background-color: white;")
@@ -179,12 +182,14 @@ class MasksMenuWidget(QWidget):
         if np.all(self.mask == 0):
             self.mask = 1-self.mask
 
-        import matplotlib.pyplot as plt
+        self.update_display_mask()
+
+        """import matplotlib.pyplot as plt
 
         plt.figure()
         plt.imshow(self.mask, cmap='RdYlGn')
         plt.colorbar()
-        plt.show()
+        plt.show()"""
 
     def checkbox_inverse_mask_changed(self, state):
         if self.index_mask_selected == -1:
@@ -197,20 +202,24 @@ class MasksMenuWidget(QWidget):
         self.list_masks[self.index_mask_selected] = self.mask_selected
         self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
-        import matplotlib.pyplot as plt
+        self.update_display_mask()
+
+        """import matplotlib.pyplot as plt
         plt.figure()
         plt.imshow(self.mask, cmap='RdYlGn')
         plt.colorbar()
-        plt.show()
+        plt.show()"""
 
     def checkbox_inverse_merged_mask_changed(self, state):
         self.mask = 1-self.mask
 
-        import matplotlib.pyplot as plt
+        self.update_display_mask()
+
+        """import matplotlib.pyplot as plt
         plt.figure()
         plt.imshow(self.mask, cmap='RdYlGn')
         plt.colorbar()
-        plt.show()
+        plt.show()"""
 
     def get_image(self) -> np.ndarray:
         self.parent.camera_thread.stop()
@@ -235,6 +244,7 @@ class MasksMenuWidget(QWidget):
         self.parent.camera.free_memory()
         self.parent.camera_thread.start()
 
+        self.image = raw_array
         return raw_array
 
     def selection_mask_circle(self):
@@ -269,11 +279,13 @@ class MasksMenuWidget(QWidget):
                     print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
-                import matplotlib.pyplot as plt
+                self.update_display_mask()
+
+                """import matplotlib.pyplot as plt
                 plt.figure()
                 plt.imshow(self.mask, cmap='RdYlGn')
                 plt.axis('equal')
-                plt.show()
+                plt.show()"""
 
                 print(f"Nb masks: {len(self.list_masks)}")
             except Exception as e:
@@ -308,11 +320,13 @@ class MasksMenuWidget(QWidget):
                 if self.mask_unactived is None:
                     print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
+
+                self.update_display_mask()
                 
-                import matplotlib.pyplot as plt
+                """import matplotlib.pyplot as plt
                 plt.figure()
                 plt.imshow(self.mask)
-                plt.show()
+                plt.show()"""
             except Exception as e:
                 print(f'Exception - selection_mask_rectangle_isClicked {e}')
 
@@ -346,10 +360,12 @@ class MasksMenuWidget(QWidget):
                     print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
-                import matplotlib.pyplot as plt
+                """import matplotlib.pyplot as plt
                 plt.figure()
                 plt.imshow(self.mask, cmap='RdYlGn')
-                plt.show()
+                plt.show()"""
+
+                self.update_display_mask()
             except Exception as e:
                 print(f'Exception - selection_mask_polygon_isClicked {e}')
 
@@ -384,13 +400,16 @@ class MasksMenuWidget(QWidget):
                 msg_box.setStyleSheet(styleH3)
                 msg_box.information(self, "Information", "Masque supprimé avec succès.")
 
+            self.mask = 1-self.mask_unactived
+            self.update_display_mask()
+
     def button_erase_all_masks_isClicked(self):
         reply = QMessageBox.question(self, "Suppression des masques", "Voulez-vous supprimer tous les masques ?",
                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                         QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.combobox_select_mask.setCursor(1)
+            #self.combobox_select_mask.setCursor(1)
 
             self.checkbox_apply_mask.setChecked(True)
             self.checkbox_inverse_mask.setChecked(False)
@@ -406,6 +425,16 @@ class MasksMenuWidget(QWidget):
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
             msg_box.information(self, "Information", "Masques supprimés avec succès.")
+
+            self.mask = 1-self.mask_unactived
+            self.update_display_mask()
+
+    def update_display_mask(self):
+        try:
+            self.parent.display_mask_widget.set_image_data(np.squeeze(self.image), np.squeeze(self.mask)*255, colormap_name1='gray', colormap_name2='RdYlGn', alpha=0.4)
+            self.parent.display_mask_widget
+        except Exception as e:
+            print(f"update_display_mask - {e}")
 
 
 class SelectionMaskWindow(QDialog):

@@ -43,8 +43,12 @@ from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
 from widgets.piezo_calibration_widget import PiezoCalibrationWidget
+from widgets.x_y_z_chart_widget import Surface3DWidget
+from widgets.imshow_pyqtgraph import ImageWidget
 
 from process.initialization_parameters import *
+
+import numpy as np
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
@@ -67,6 +71,7 @@ class ZygoLabApp(QWidget):
         default_exposure = float(default_settings_dict['Exposure time']) # ms
         default_exposure *= 1000 # µs
         self.camera.set_exposure(default_exposure)
+        self.camera.set_black_level(63)
 
         # Initialisation of the mask selection attributes
         # -----------------------------------------------
@@ -74,6 +79,8 @@ class ZygoLabApp(QWidget):
         self.list_masks = []
         self.list_original_masks = []
         self.mask_unactived = None
+
+        self.phase = None
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -111,6 +118,13 @@ class ZygoLabApp(QWidget):
         self.acquisition_menu_widget = AcquisitionMenuWidget(parent=self)
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
+
+        self.graphic_widget = Surface3DWidget()
+        self.graphic_widget.set_title('')
+        self.graphic_widget.set_information('')
+        self.graphic_widget.set_background('white')
+
+        self.layout.addWidget(self.graphic_widget, 1, 2)
 
         # Other initializations
         # ---------------------
@@ -193,11 +207,17 @@ class ZygoLabApp(QWidget):
         # Save information wedge factor
         self.wedge_factor = self.acquisition_menu_widget.wedge_factor
 
+        try:
+            self.image = self.masks_menu_widget.image
+        except:
+            None
+
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget(self)
         self.acquisition_menu_widget = AcquisitionMenuWidget(self)
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
+        
 
         self.options_menu_widget.signal_language_updated.connect(self.signal_language_changed_isReceived)
 
@@ -208,11 +228,30 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.camera_settings_widget, 2, 1)
 
         elif event == 'masks_main_menu':
+            self.display_mask_widget = ImageWidget()
+            self.display_mask_widget.set_title('Visualisation de la zone sélectionnée')
+            self.display_mask_widget.set_information('La zone sélectionnée est en vert.')
+            self.display_mask_widget.set_background('white')
+            try:
+                self.display_mask_widget.set_image_data(np.squeeze(self.display_mask_widget.image), np.squeeze(self.mask)*255, colormap_name1='gray', colormap_name2='RdYlGn', alpha=0.2)
+            except:
+                None
+            
+            self.layout.addWidget(self.display_mask_widget, 1, 2)
+
             self.layout.addWidget(self.masks_menu_widget, 2, 1)
 
         elif event == 'acquisition_main_menu':
+            self.clear_layout(1, 2)
             self.layout.addWidget(self.acquisition_menu_widget, 2, 1)
             self.layout.addWidget(self.results_menu_widget, 2, 2)
+
+            self.graphic_widget = Surface3DWidget()
+            self.graphic_widget.set_title('')
+            self.graphic_widget.set_information('')
+            self.graphic_widget.set_background('white')
+
+            self.layout.addWidget(self.graphic_widget, 1, 2)
 
         elif event == 'analyzes_main_menu':
             pass
@@ -254,9 +293,6 @@ class ZygoLabApp(QWidget):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout, QGridLayout)):
                 for subwidget in widget.findChildren(QWidget):
                     self.update_labels(subwidget)
-
-
-
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

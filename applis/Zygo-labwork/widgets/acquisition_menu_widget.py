@@ -28,11 +28,16 @@ from lensepy.css import *
 from process.unwrap import unwrap2D, suppression_bord
 from process.acquisition_images import get_phase, check_alpha
 from process.surface_statistics import statistique_surface
+from process.display_images import display_images
 
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
 else:
     from widgets.lineedit_bloc import LineEditBloc
+
+from timeit import default_timer as timer
+from scipy.interpolate import NearestNDInterpolator, LinearNDInterpolator
+import matplotlib.pyplot as plt
 
 PI = np.pi
 
@@ -125,7 +130,7 @@ class AcquisitionMenuWidget(QWidget):
         if self.parent is None or not hasattr(self.parent, 'wedge_factor'):
             self.wedge_factor = 1
         else:
-                self.wedge_factor = self.parent.wedge_factor
+            self.wedge_factor = self.parent.wedge_factor
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -208,6 +213,17 @@ class AcquisitionMenuWidget(QWidget):
                 msg_box = QMessageBox()
                 msg_box.setStyleSheet(styleH3)
                 msg_box.information(self, "Information", "Le wedge factor a bien été modifié.")
+
+                if self.parent is not None and hasattr(self.parent, 'results_menu_widget'):
+                    # Assurez-vous que results_menu_widget possède l'attribut table_results et array
+                    if hasattr(self.parent.results_menu_widget, 'table_results') and hasattr(self.parent.results_menu_widget, 'array'):
+                        self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
+                    else:
+                        print("L'attribut 'table_results' ou 'array' est manquant dans 'results_menu_widget'")
+                else:
+                    print("Le parent n'existe pas ou n'a pas l'attribut 'results_menu_widget'")
+
+
             except ValueError:
                 msg_box = QMessageBox()
                 msg_box.setStyleSheet(styleH3)
@@ -222,6 +238,7 @@ class AcquisitionMenuWidget(QWidget):
     def button_simple_acquisition_isClicked(self):
         self.button_simple_acquisition.setStyleSheet(actived_button)
         print('button_simple_acquisition_isClicked')
+
         if self.parent is not None:
             try:
                 mask = self.parent.mask
@@ -232,24 +249,49 @@ class AcquisitionMenuWidget(QWidget):
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
 
-                wrapped_phase, images = get_phase(self.parent, sigma_gaussian_filter=3)
-                average_alpha, std_alpha = check_alpha(images)
+                # Start measuring the time
+                timer_start = timer()
+
+                # Get wrapped phase
+                wrapped_phase, self.images = get_phase(self.parent, sigma_gaussian_filter=3)
+                time_getting_wrapped_phase = timer() - timer_start
+
+                # Check alpha
+                average_alpha, std_alpha = check_alpha(self.images)
                 
-                if average_alpha<86 or average_alpha>94 or std_alpha>8:
+                if average_alpha < 86 or average_alpha > 94 or std_alpha > 8:
                     msg_box = QMessageBox()
                     msg_box.setStyleSheet(styleH3)
-                    msg_box.warning(self, "Erreur", f"α={average_alpha} °: il vaut mieux reprendre la mesure ou attendre que le laser se stabilise.")
+                    msg_box.warning(self, "Erreur", f"α={average_alpha:.2f} °: il vaut mieux reprendre la mesure ou attendre que le laser se stabilise.")
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
                 else:
+                    # Unwrap phase
+                    unwrapped_phase_start = timer()
                     unwrapped_phase = unwrap2D(wrapped_phase)[0]
+                    time_getting_unwrapped_phase = timer() - unwrapped_phase_start
+
+                    # Suppress borders and mean adjustment
+                    final_phase_start = timer()
                     unwrapped_phase = suppression_bord(unwrapped_phase, 3)
                     unwrapped_phase = unwrapped_phase - np.nanmean(unwrapped_phase)
+                    self.phase = unwrapped_phase / (2 * PI)
+                    time_getting_final_phase = timer() - final_phase_start
 
-                self.phase = unwrapped_phase/(2*PI)
+                    # Total time
+                    total_time = timer() - timer_start
 
+                # Display times
+                print(
+                    f"Time to get the wrapped phase: {time_getting_wrapped_phase:.4f} s",
+                    f"Time to get the unwrapped phase: {time_getting_unwrapped_phase:.4f} s",
+                    f"Time to get the final phase: {time_getting_final_phase:.4f} s",
+                    f"Total time: {total_time:.4f} s",
+                    sep='\n', end='\n\n'
+                )
+
+                # Calculate statistics
                 PV, RMS = statistique_surface(self.phase)
-                
                 array = np.array([
                     ['', 1, 2, 3, 4, 5, 'Moyenne'],
                     ['PV (λ)', round(PV, 4), np.nan, np.nan, np.nan, np.nan, round(PV, 4)],
@@ -257,15 +299,14 @@ class AcquisitionMenuWidget(QWidget):
                 ])
 
                 self.parent.results_menu_widget.array = array
-                self.parent.results_menu_widget.table_results.update_table(array)
+                self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
 
+                # Display phase in 3D
                 self.display_phase_3d(self.phase)
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
-
-    
 
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
@@ -285,8 +326,8 @@ class AcquisitionMenuWidget(QWidget):
                 all_RMS = []
 
                 for i in range(5):
-                    wrapped_phase, images = get_phase(self.parent, sigma_gaussian_filter=3)
-                    average_alpha, std_alpha = check_alpha(images)
+                    wrapped_phase, self.images = get_phase(self.parent, sigma_gaussian_filter=3)
+                    average_alpha, std_alpha = check_alpha(self.images)
                     
                     if average_alpha<86 or average_alpha>94 or std_alpha>8:
                         msg_box = QMessageBox()
@@ -315,7 +356,7 @@ class AcquisitionMenuWidget(QWidget):
                 ])
 
                 self.parent.results_menu_widget.array = array
-                self.parent.results_menu_widget.table_results.update_table(array)
+                self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
 
                 self.display_phase_3d(self.phase)
 
@@ -327,6 +368,16 @@ class AcquisitionMenuWidget(QWidget):
     def button_see_and_save_images_isClicked(self):
         self.button_see_and_save_images.setStyleSheet(actived_button)
         print('button_see_and_save_images_isClicked')
+
+        try:
+            display_images(self.images)
+        except:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", "Vous devez faire un acquisition.")
+            self.button_repeated_acquisition.setStyleSheet(unactived_button)  
+            return None
+
         self.button_see_and_save_images.setStyleSheet(unactived_button)
 
     def button_save_phase_isClicked(self):
@@ -335,27 +386,57 @@ class AcquisitionMenuWidget(QWidget):
         self.button_save_phase.setStyleSheet(unactived_button)
 
     def display_phase_3d(self, phase):
-        import matplotlib.pyplot as plt
-        not_nan_indices = np.where(~np.isnan(phase))
+        """ Only for testing """
 
+        time_start = timer()
+
+        not_nan_indices = np.where(~np.isnan(phase))
         values = phase[not_nan_indices]
         x = not_nan_indices[0]
         y = not_nan_indices[1]
 
+
+        # Create the grid for interpolation
         x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
 
         interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic')
+        time_getting_interpolation = timer() - time_start
 
-        fig = plt.figure()
+        """fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        x = np.arange(interpolated_values.shape[0])
-        y = np.arange(interpolated_values.shape[1])
-        x, y = np.meshgrid(x, y)
+        x_plot = np.arange(interpolated_values.shape[0])
+        y_plot = np.arange(interpolated_values.shape[1])
+        x_plot, y_plot = np.meshgrid(x_plot, y_plot)
 
-        ax.plot_surface(x, y, interpolated_values, cmap='magma')
-        plt.show()
+        ax.plot_surface(x_plot, y_plot, interpolated_values, cmap='magma')
 
+        plt.show()"""
+
+        try:
+            z = interpolated_values
+
+            z *= (np.nanmax(x) -np.nanmin(x)) * .75 / (np.nanmax(z)-np.nanmin(z))
+            z -= np.nanmax(z)/4
+
+            self.parent.graphic_widget.set_data(x_grid, y_grid, z)
+            self.parent.graphic_widget.refresh_chart()
+        except Exception as e:
+            print(f"Affichage 3D - {e}")
+
+        time_plot = timer() - time_start - time_getting_interpolation
+
+        print(
+            f"Time to get the interpolation: {time_getting_interpolation:.4f} s",
+            f"Time to get the plot: {time_plot:.4f} s",
+            f"Total: {time_getting_interpolation + time_plot:.4f} s",
+            sep='\n', end='\n\n'
+        )
+
+    def multiply_results_array_by_wedge_factor(self):
+        arr = self.parent.results_menu_widget.array.copy()
+        arr[1:, 1:] = np.round(((arr[1:, 1:].astype(float))*self.wedge_factor), 4)
+        return arr
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

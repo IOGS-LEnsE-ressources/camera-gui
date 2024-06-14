@@ -63,7 +63,7 @@ def daq_ramp(val_min, val_max, duration=1, step_nb=100):
         # Arrêter la tâche
         task.stop()
 
-daq_ramp(0, 5, 1)
+daq_ramp(0, 5, 3)
 
 '''
 # Test 2

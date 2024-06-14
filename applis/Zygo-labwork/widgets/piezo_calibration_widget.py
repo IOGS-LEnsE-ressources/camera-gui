@@ -98,11 +98,12 @@ class PiezoCalibrationWidget(QWidget):
     def button_start_calibration_isClicked(self):
         self.button_start_calibration.setStyleSheet(actived_button)
         image_for_all_voltages = []
-        number_measures = 5
+        number_measures = 2
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
-        num_steps = 100  # Nombre de pas dans la rampe
+        num_steps = 50  # Nombre de pas dans la rampe
+        step_val = (end_voltage-start_voltage) / num_steps
 
         # Stop thread
 
@@ -145,9 +146,18 @@ class PiezoCalibrationWidget(QWidget):
             plt.imshow(raw_array, 'gray')
             plt.show()
 
+
             average_for_all_voltages = np.squeeze(np.array(average_for_all_voltages))
             phi = np.array(list(map(lambda img:1-img/average_for_all_voltages[0], average_for_all_voltages)))
-            phase = np.rad2deg(np.arcsin(np.mean(np.mean(phi/np.max(phi, axis=0), axis=2), axis=1))-PI/2)
+            print(f' IsNan ? {np.isnan(phi).any()}')
+            print(f' Max = {(np.nanmax(phi[1:20], axis=0) == 0).any()}')
+
+            plt.figure()
+            plt.imshow(phi[10])
+            plt.colorbar()
+            plt.show()
+
+            phase = np.rad2deg(np.arcsin(np.nanmean(np.nanmean(phi/np.nanmax(phi, axis=0), axis=2), axis=1))-PI/2)
             #phase = np.mean(np.mean(phi, axis=2), axis=1)
             print(phase.shape)
 
@@ -157,7 +167,7 @@ class PiezoCalibrationWidget(QWidget):
             
             #phase[0] = 0
             for i in range(1, len(phase)):
-                phase[i] = phase[i-1] + diff_phase[i]
+                phase[i] = phase[i-1] + diff_phase[i]/step_val
 
             phase = 2*phase
             task.write(0)
@@ -176,13 +186,13 @@ class PiezoCalibrationWidget(QWidget):
         self.button_start_calibration.setStyleSheet(unactived_button)
 
         eps = 1 # °
-        V_1 = np.mean(ramp[np.where(np.abs(phase-0) < eps)])
-        V_2 = np.mean(ramp[np.where(np.abs(phase-90) < eps)])
-        V_3 = np.mean(ramp[np.where(np.abs(phase-180) < eps)])
-        V_4 = np.mean(ramp[np.where(np.abs(phase-270) < eps)])
-        V_5 = np.mean(ramp[np.where(np.abs(phase-360) < eps)])
+        V_1 = np.nanmean(ramp[np.where(np.abs(phase-0) < eps)])
+        V_2 = np.nanmean(ramp[np.where(np.abs(phase-90) < eps)])
+        V_3 = np.nanmean(ramp[np.where(np.abs(phase-180) < eps)])
+        V_4 = np.nanmean(ramp[np.where(np.abs(phase-270) < eps)])
+        V_5 = np.nanmean(ramp[np.where(np.abs(phase-360) < eps)])
 
-        print(f"V(phi=0)={V_1}")
+        print(f"V(phi=0°)={V_1}")
         print(f"V(phi=90°)={V_2}")
         print(f"V(phi=180°)={V_3}")
         print(f"V(phi=270°)={V_4}")

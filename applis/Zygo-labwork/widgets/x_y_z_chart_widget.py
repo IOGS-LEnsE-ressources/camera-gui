@@ -17,9 +17,11 @@ Authors
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QVector3D
 import numpy as np
 import sys
 from matplotlib import cm
+import matplotlib.pyplot as plt
 
 import pyqtgraph.opengl as gl  # Import pyqtgraph for 3D OpenGL integration
 
@@ -96,8 +98,8 @@ class Surface3DWidget(QWidget):
 
         # pyqtgraph OpenGL GLViewWidget setup
         self.plot_chart_widget: gl.GLViewWidget = gl.GLViewWidget()
-        self.plot_chart_widget.setMinimumWidth(400)
-        self.plot_chart_widget.setMinimumHeight(400)
+        self.plot_chart_widget.setMinimumWidth(300)
+        self.plot_chart_widget.setMinimumHeight(300)
 
         # Initialize Numpy arrays for X, Y, and Z data
         self.plot_x_data: np.ndarray = np.array([])
@@ -177,8 +179,8 @@ class Surface3DWidget(QWidget):
         colors : np.ndarray
             Colors corresponding to the Z values.
         """
-        norm = (z_values - z_values.min()) / (z_values.max() - z_values.min())
-        colormap = cm.get_cmap('magma')
+        norm = (z_values - np.nanmin(z_values)) / (np.nanmax(z_values) - np.nanmin(z_values))
+        colormap = plt.get_cmap('magma')
         colors = colormap(norm)
         return colors
 
@@ -186,20 +188,21 @@ class Surface3DWidget(QWidget):
         """
         Adjust camera position to fit the data nicely.
         """
-        x_min, x_max = self.plot_x_data.min(), self.plot_x_data.max()
-        y_min, y_max = self.plot_y_data.min(), self.plot_y_data.max()
-        z_min, z_max = self.plot_z_data.min(), self.plot_z_data.max()
+        x_min, x_max = np.nanmin(self.plot_x_data), np.nanmax(self.plot_x_data)
+        y_min, y_max = np.nanmin(self.plot_y_data), np.nanmax(self.plot_y_data)
+        z_min, z_max = np.nanmin(self.plot_z_data), np.nanmax(self.plot_z_data)
 
         # Calculate center of the plot
         center_x = (x_min + x_max) / 2
         center_y = (y_min + y_max) / 2
-        center_z = (z_min + z_max) / 2
+        center_z = (z_min + z_max) / 4 *3
 
         # Calculate distance for camera position
-        distance = max(x_max - x_min, y_max - y_min, z_max - z_min) * 2
+        distance = 1.5*max(x_max - x_min, y_max - y_min, z_max - z_min) * 2
 
         # Set camera position
         self.plot_chart_widget.setCameraPosition(
+            pos=QVector3D(center_x, center_y, center_z),
             distance=distance,
             azimuth=0,  # Adjust azimuth as needed
             elevation=15  # Adjust elevation as needed
