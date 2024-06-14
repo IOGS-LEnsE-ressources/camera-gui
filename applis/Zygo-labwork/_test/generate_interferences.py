@@ -51,19 +51,14 @@ def calibration(patterns, display=False):
         print(patterns[i].shape)
         for j, voltage in enumerate(ramp):
             print(f"{i + 1}e mesure | V={voltage:.2f}/{end_voltage:.2f}")
-            '''
-            task.write(voltage)
-            time.sleep(0.1)
-            '''
-            raw_array = patterns[j][x_min:x_max, y_min:y_max] / number_measures
+
+            raw_array = patterns[j][y_min:y_max, x_min:x_max] / number_measures
             image_for_all_voltages.append(raw_array)
         average_for_all_voltages.append(image_for_all_voltages)
 
     average_for_all_voltages = np.mean(np.array(average_for_all_voltages), axis=0)
-    print(average_for_all_voltages.shape)
+    print(f'Shape Average for all = {average_for_all_voltages.shape}')
     average_for_all_voltages = np.squeeze(np.array(average_for_all_voltages))
-    print(average_for_all_voltages.shape)
-    print(average_for_all_voltages[0].dtype)
 
     if display:
         plt.figure()
@@ -80,9 +75,9 @@ def calibration(patterns, display=False):
     '''
 
     phi = np.array(list(map(lambda img: 1 - img / average_for_all_voltages[0], average_for_all_voltages)))
-    print(f'Phi Shape = {phi.shape}')
-    print(f' IsNan ? {np.isnan(phi).any()}')
-    print(f' Max IsZero ? {(np.max(phi[1:10, :, :], axis=0) == 0).any()}')
+
+    animated_interference(phi, -1, 1)
+
     if display:
         for i in range(0,len(ramp)):
             print(phi[i].dtype)
@@ -92,10 +87,41 @@ def calibration(patterns, display=False):
                 plt.imshow(phi[i])
                 plt.show()
 
+    phi_norm = []
+
+    for i in range(1, len(ramp)):
+        print(f'{i} ==> {phi[i].shape}')
+        phi_norm.append(phi[i] / np.max(phi[i]))
+    phi_norm = np.array(phi_norm)
+
+    print(f'Max Phi Norm = {np.max(phi_norm)}')
+
+    avg_phi = []
+    for i in range(len(phi_norm)):
+        avg_phi.append(np.mean(phi_norm[i]))
+    # avg_phi = np.mean(np.mean(phi, axis=1), axis=1) - np.pi / 2
+    print(f'Max Avg Phi = {np.max(avg_phi)}')
+    print(f'Min Avg Phi = {np.min(avg_phi)}')
+
+
+
+    plt.figure()
+    plt.plot(ramp[:-1], avg_phi)
+
+    try:
+        phase = np.arcsin(avg_phi)
+    except Exception as e:
+        print(f'Exception : {e}')
+
+    plt.plot(ramp[:-1], phase)
+    plt.show()
+
+
+    '''
     phase = np.rad2deg(np.arcsin(np.nanmean(np.nanmean(phi[1:10] / np.nanmax(phi[1:10], axis=0), axis=2), axis=1)) - np.pi / 2)
     # phase = np.mean(np.mean(phi, axis=2), axis=1)
     print(phase.shape)
-    '''
+    
     phase -= phase[0]
 
     diff_phase = np.abs(np.diff(phase, prepend=0))
@@ -124,18 +150,18 @@ def calibration(patterns, display=False):
     print(f"V(phi=180°)={V_5}")
     '''
 
-def animated_interference(patterns):
+def animated_interference(patterns, min_val, max_val):
     nb = len(patterns)
     # Créer la figure et les axes
     fig, ax = plt.subplots()
-    img = ax.imshow(patterns[0], cmap='gray', vmin=0, vmax=255)
+    img = ax.imshow(patterns[0], cmap='gray', vmin=min_val, vmax=max_val)
 
     def update(frame):
         img.set_data(patterns[frame])
         return img,
 
     # Créer l'animation
-    ani = FuncAnimation(fig, update, frames=nb, blit=True, interval=50)
+    ani = FuncAnimation(fig, update, frames=nb, blit=True, interval=100)
 
     # Afficher l'animation
     plt.show()
@@ -148,14 +174,14 @@ if __name__ == '__main__':
 
     ## Generate a list of array with
     k = 2.1 #
-    x_value = np.linspace(0, k*step, 10)
+    x_value = np.linspace(0, k*step, 101)
     patterns = []
     for x in x_value:
         pattern = generate_interference_pattern(size, step, angle, shift_x=x)
         patterns.append(pattern)
 
-    animated_interference(patterns)
-    calibration(patterns, display=True)
+    # animated_interference(patterns)
+    calibration(patterns, display=False)
 
 
 

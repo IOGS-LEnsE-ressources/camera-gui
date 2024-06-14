@@ -88,9 +88,9 @@ function Bouton_Initialisation_Callback(hObject, eventdata, handles)
 global o;
 switch (o)
     case (0)
-handles.h=actxcontrol('UEYECAM.uEyeCamCtrl.1','position',[30 30 300 300]); % on crée l'objet pour la caméra
+handles.h=actxcontrol('UEYECAM.uEyeCamCtrl.1','position',[30 30 300 300]); % on crï¿½e l'objet pour la camï¿½ra
 handles.h.InitCamera(0);
-set(handles.Bouton_Initialisation,'String','Paramètres Caméra');
+set(handles.Bouton_Initialisation,'String','Paramï¿½tres Camï¿½ra');
 
 o=1;
 guidata(hObject, handles);
@@ -107,8 +107,8 @@ function Image_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.h.SaveImage('Caméra.png'); % on enregistre l'image sur le disque dur
-a=double(imread('Caméra.png'));
+handles.h.SaveImage('Camï¿½ra.png'); % on enregistre l'image sur le disque dur
+a=double(imread('Camï¿½ra.png'));
 axes(handles.axes1);
 imagesc(a),colorbar;
 
@@ -255,7 +255,7 @@ waitbar(1,wbar) ;
 set(wbar,'CloseRequestFcn','delete(gcf)')
 close(wbar) ;
 
-disp('Méthode 1')
+disp('Mï¿½thode 1')
 tensions = [Vx0,Vx1,Vx2,Vx3,Vx4]/10
 
 hold off
@@ -264,25 +264,23 @@ hold off
 
 
 
-% % Méthode n°2 
+% % Mï¿½thode nï¿½2 
 % 
 tensions_appliquees = 1:pas:Vmax ;
 valeurs_moy=valeurs_moy(11:end) ;
 Nb_pts=length(tensions_appliquees)-1;
 
 
-
-
 Am=max(max(valeurs_moy)); %amplitude sinusoide
 
 tensions_appliquees2=tensions_appliquees(1:Nb_pts); %il faut enlever le dernier point!
 
-dephasages=180*asin(valeurs_moy/Am)/pi ; %en degré phi/2
+dephasages=180*asin(valeurs_moy/Am)/pi ; %en degrï¿½ phi/2
  
 %figure,  plot(dephasages);
 
 der_deph=diff(dephasages) ; % on calcul la derivee
-i=find(0>der_deph) ; % points à derivee negative 
+i=find(0>der_deph) ; % points ï¿½ derivee negative 
 dephasages(i)=90+(90-dephasages(i)) ; % attention deroulement avec une seulement deux arches ???
 
 %il faut enlever le dernier point!
@@ -298,7 +296,7 @@ figure ; plot(tensions_appliquees2,dephasages) ;
 
 dephasages_commande = [0 90 180 270 360] ;
 
-disp('Méthode 2')
+disp('Mï¿½thode 2')
 tensions_commande=interp1(dephasages,tensions_appliquees2,dephasages_commande,'spline')
 
 save_config('calibpiezo_tensions',tensions_appliquees)
