@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-def generate_interference_pattern(size, step, angle, shift_x=0):
+def generate_interference_pattern(size, step, angle, shift_x=0, amp=75, amp_noise=0):
     """
     Génère une matrice représentant des franges d'interférences avec décalage.
 
@@ -18,23 +18,25 @@ def generate_interference_pattern(size, step, angle, shift_x=0):
     height, width = size
     angle_rad = np.radians(angle)
 
-    # Créer une grille de coordonnées
+    # Grid for coordinates
     y, x = np.meshgrid(np.arange(height), np.arange(width), indexing='ij')
-
-    # Ajouter le décalage
+    # Shift
     x_shifted = x + shift_x
+    noise = np.random.normal(0, amp_noise, x.shape)
+    x_shifted += noise
+    # Add noise
 
-    # Calculer les coordonnées modifiées en fonction de l'angle
+    # Process coordinates
     x_rot = x_shifted * np.cos(angle_rad) + y * np.sin(angle_rad)
 
-    # Calculer le motif des franges d'interférences
-    pattern = 75 * (np.sin(2 * np.pi * x_rot / step)+1) + 20
+    # interfering drawing
+    pattern = amp * (np.sin(2 * np.pi * x_rot / step)+1) + 30
     pattern = pattern.astype(np.uint8)
 
     return pattern
 
 
-def calibration(patterns, display=False):
+def calibration(patterns, number_measures, display=False):
     x_min = 50
     x_max = 450
     y_min = 50
@@ -43,16 +45,17 @@ def calibration(patterns, display=False):
     # Générer la rampe de tension en écrivant chaque valeur successivement
     start_voltage = 0
     end_voltage = 5
-    ramp = np.linspace(start_voltage, end_voltage, len(patterns))
-    number_measures = 1
+    ramp = np.linspace(start_voltage, end_voltage, len(patterns[0]))
+
     print(f'Nb Mesures = {number_measures}')
     for i in range(number_measures):
         image_for_all_voltages = []
-        print(patterns[i].shape)
+        patternss = patterns[i]
+        print(f'Shape of pattern {i} = {patternss[0].shape}')
+
         for j, voltage in enumerate(ramp):
             print(f"{i + 1}e mesure | V={voltage:.2f}/{end_voltage:.2f}")
-
-            raw_array = patterns[j][y_min:y_max, x_min:x_max] / number_measures
+            raw_array = patternss[j][y_min:y_max, x_min:x_max] / number_measures
             image_for_all_voltages.append(raw_array)
         average_for_all_voltages.append(image_for_all_voltages)
 
@@ -87,6 +90,7 @@ def calibration(patterns, display=False):
                 plt.imshow(phi[i])
                 plt.show()
 
+    '''
     phi_norm = []
 
     for i in range(1, len(ramp)):
@@ -95,24 +99,22 @@ def calibration(patterns, display=False):
     phi_norm = np.array(phi_norm)
 
     print(f'Max Phi Norm = {np.max(phi_norm)}')
+    '''
 
     avg_phi = []
-    for i in range(len(phi_norm)):
-        avg_phi.append(np.mean(phi_norm[i]))
+    for i in range(1, len(phi)):
+        avg_phi.append(np.mean(phi[i]))
     # avg_phi = np.mean(np.mean(phi, axis=1), axis=1) - np.pi / 2
     print(f'Max Avg Phi = {np.max(avg_phi)}')
     print(f'Min Avg Phi = {np.min(avg_phi)}')
 
+    amp_phi = np.max(avg_phi)-np.min(avg_phi)
+    avg_phi_norm = (avg_phi-np.mean(avg_phi))/amp_phi
 
+    phase = np.arcsin(avg_phi_norm)
 
     plt.figure()
-    plt.plot(ramp[:-1], avg_phi)
-
-    try:
-        phase = np.arcsin(avg_phi)
-    except Exception as e:
-        print(f'Exception : {e}')
-
+    plt.plot(ramp[:-1], avg_phi_norm)
     plt.plot(ramp[:-1], phase)
     plt.show()
 
@@ -150,7 +152,7 @@ def calibration(patterns, display=False):
     print(f"V(phi=180°)={V_5}")
     '''
 
-def animated_interference(patterns, min_val, max_val):
+def animated_interference(patterns, min_val=-1, max_val=1):
     nb = len(patterns)
     # Créer la figure et les axes
     fig, ax = plt.subplots()
@@ -171,17 +173,22 @@ if __name__ == '__main__':
     size = (300, 500)  # taille de la matrice
     step = 50  # pas (espacement entre les franges)
     angle = 30  # angle en degrés
+    number_measures = 1
 
     ## Generate a list of array with
     k = 2.1 #
     x_value = np.linspace(0, k*step, 101)
-    patterns = []
-    for x in x_value:
-        pattern = generate_interference_pattern(size, step, angle, shift_x=x)
-        patterns.append(pattern)
 
-    # animated_interference(patterns)
-    calibration(patterns, display=False)
+    patterns2 = []
+    for k in range(number_measures):
+        patterns = []
+        for x in x_value:
+            pattern = generate_interference_pattern(size, step, angle, shift_x=x, amp_noise=10)
+            patterns.append(pattern)
+        patterns2.append(patterns)
+
+    animated_interference(patterns2[0], min_val=0, max_val=255)
+    calibration(patterns2, number_measures, display=False)
 
 
 
