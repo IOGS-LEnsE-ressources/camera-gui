@@ -41,5 +41,9 @@ Piezo
 GUI
 ---
 - in TitleWidget (widgets/title_widget.py), find a way to add transparency on the logo.
-  -> Remove the background of the logo (with remove.bg for example, or modify the source file)
 - Find a way to display the action of the mask on the image.
+
+Phase-Shift
+-----------
+- The interpolation is too slow.
+  -> Try a 'linear' interpolation with a gaussian filter instead of a simple 'cubic' interpolation.
