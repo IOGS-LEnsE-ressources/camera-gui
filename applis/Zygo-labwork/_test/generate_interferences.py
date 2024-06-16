@@ -108,8 +108,10 @@ def calibration(patterns, number_measures, display=False):
     print(f'Max Avg Phi = {np.max(avg_phi)}')
     print(f'Min Avg Phi = {np.min(avg_phi)}')
 
-    amp_phi = np.max(avg_phi)-np.min(avg_phi)
-    avg_phi_norm = (avg_phi-np.mean(avg_phi))/amp_phi
+    amp_phi = (np.max(avg_phi)-np.min(avg_phi))/2
+    avg_phi_norm = (avg_phi/amp_phi) - np.mean(avg_phi/amp_phi)
+
+    print(f'Max Avg_phi = {np.max(avg_phi_norm)} / {np.min(avg_phi_norm)}')
 
     phase = np.arcsin(avg_phi_norm)
 
@@ -169,14 +171,30 @@ def animated_interference(patterns, min_val=-1, max_val=1):
     plt.show()
 
 if __name__ == '__main__':
+    import sys
+    x = np.linspace(0,3*np.pi, 100)
+    y = np.sin(x + 1)
+
+    plt.figure()
+    plt.plot(x, y)
+
+    yy = np.arcsin(y)
+
+    plt.figure()
+    plt.plot(x, yy)
+    plt.show()
+
+    #sys.exit(0)
+
+
     # Parameters
     size = (300, 500)  # taille de la matrice
     step = 50  # pas (espacement entre les franges)
     angle = 30  # angle en degrés
-    number_measures = 1
+    number_measures = 5
 
     ## Generate a list of array with
-    k = 2.1 #
+    k = 1.7 #
     x_value = np.linspace(0, k*step, 101)
 
     patterns2 = []
@@ -189,6 +207,8 @@ if __name__ == '__main__':
 
     animated_interference(patterns2[0], min_val=0, max_val=255)
     calibration(patterns2, number_measures, display=False)
+
+
 
 
 
