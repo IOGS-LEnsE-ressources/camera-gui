@@ -33,7 +33,15 @@ def display_images(images):
     plt.imshow(images[0]+images[1]+images[2]+images[3]+images[4], cmap='gray')
     plt.axis('off')
 
+    plt.tight_layout()
     plt.show()
+
+def save_images(images, path):
+    for i in range(5):
+        plt.figure()
+        plt.imshow(images[i], 'gray')
+        plt.savefig(f'{path}/zygo_interf_{i+1}.png')
+    return 0
 
 if __name__ == '__main__':
     import numpy as np

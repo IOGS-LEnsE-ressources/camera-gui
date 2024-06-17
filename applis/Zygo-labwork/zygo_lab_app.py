@@ -70,7 +70,7 @@ class ZygoLabApp(QWidget):
         default_settings_dict = read_default_parameters('config.txt')
         default_exposure = float(default_settings_dict['Exposure time']) # ms
         default_exposure *= 1000 # µs
-        self.camera.set_exposure(default_exposure)
+        self.camera.set_exposure(default_exposure) # µs
         self.camera.set_black_level(63)
 
         # Initialisation of the mask selection attributes

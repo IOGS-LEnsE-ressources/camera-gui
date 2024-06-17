@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QCheckBox,
-    QMessageBox
+    QMessageBox, QFileDialog
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
@@ -28,7 +28,7 @@ from lensepy.css import *
 from process.unwrap import unwrap2D, suppression_bord
 from process.acquisition_images import get_phase, check_alpha
 from process.surface_statistics import statistique_surface
-from process.display_images import display_images
+from process.export_images import *
 
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
@@ -37,6 +37,7 @@ else:
 
 from timeit import default_timer as timer
 from scipy.interpolate import NearestNDInterpolator, LinearNDInterpolator
+from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
 PI = np.pi
@@ -371,6 +372,8 @@ class AcquisitionMenuWidget(QWidget):
 
         try:
             display_images(self.images)
+            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", "")
+            save_images(self.images, path)
         except:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
@@ -383,6 +386,19 @@ class AcquisitionMenuWidget(QWidget):
     def button_save_phase_isClicked(self):
         self.button_save_phase.setStyleSheet(actived_button)
         print('button_save_phase_isClicked')
+
+        try:
+            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", "")
+            plt.figure()
+            plt.imshow(self.interpolated_values)
+            plt.savefig(f"{path}/phase.png")
+        except:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", "Vous devez faire un acquisition.")
+            self.button_save_phase.setStyleSheet(unactived_button)  
+            return None
+
         self.button_save_phase.setStyleSheet(unactived_button)
 
     def display_phase_3d(self, phase):
@@ -399,8 +415,12 @@ class AcquisitionMenuWidget(QWidget):
         # Create the grid for interpolation
         x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
 
-        interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic')
+        self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
         time_getting_interpolation = timer() - time_start
+
+        self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
+        time_filterred = timer() - time_getting_interpolation
+
 
         """fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -414,7 +434,7 @@ class AcquisitionMenuWidget(QWidget):
         plt.show()"""
 
         try:
-            z = interpolated_values
+            z = self.interpolated_values
 
             z *= (np.nanmax(x) -np.nanmin(x)) * .75 / (np.nanmax(z)-np.nanmin(z))
             z -= np.nanmax(z)/4
@@ -424,10 +444,11 @@ class AcquisitionMenuWidget(QWidget):
         except Exception as e:
             print(f"Affichage 3D - {e}")
 
-        time_plot = timer() - time_start - time_getting_interpolation
+        time_plot = timer() - time_start - time_filterred
 
         print(
             f"Time to get the interpolation: {time_getting_interpolation:.4f} s",
+            f"Time to apply the gaussian filter: {time_filterred:.4f} s",
             f"Time to get the plot: {time_plot:.4f} s",
             f"Total: {time_getting_interpolation + time_plot:.4f} s",
             sep='\n', end='\n\n'
