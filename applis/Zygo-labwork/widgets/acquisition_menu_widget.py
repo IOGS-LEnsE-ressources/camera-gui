@@ -55,8 +55,10 @@ BUTTON_HEIGHT = 30  # px
 
 # %% Auxiliary widget
 class RemoveFaultsWidget(QWidget):
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__(parent=None)
+
+        self.aberrations_considered = parent.aberrations_considered
 
         self.setStyleSheet(f"background-color: {ORANGE_IOGS};")
         self.layout = QVBoxLayout()
@@ -77,12 +79,15 @@ class RemoveFaultsWidget(QWidget):
 
         self.checkbox_remove_tilt = QCheckBox("Retirer le tilt")
         self.checkbox_remove_tilt.setStyleSheet(styleCheckbox)
+        self.checkbox_remove_tilt.stateChanged.connect(self.checkbox_remove_tilt_changed)
 
-        self.checkbox_remove_defocus = QCheckBox("Retirer l'autofocus")
+        self.checkbox_remove_defocus = QCheckBox("Retirer le defocus")
         self.checkbox_remove_defocus.setStyleSheet(styleCheckbox)
+        self.checkbox_remove_defocus.stateChanged.connect(self.checkbox_remove_defocus_changed)
 
         self.checkbox_remove_spherical_aberration = QCheckBox("Retirer l'abération sphérique")
         self.checkbox_remove_spherical_aberration.setStyleSheet(styleCheckbox)
+        self.checkbox_remove_spherical_aberration.stateChanged.connect(self.checkbox_remove_spherical_aberration_changed)
         
         self.sublayout_left.addWidget(self.checkbox_remove_tilt)
         self.sublayout_left.addWidget(self.checkbox_remove_defocus)
@@ -97,9 +102,11 @@ class RemoveFaultsWidget(QWidget):
         
         self.checkbox_remove_astigmatism = QCheckBox("Retirer l'astigmatisme")
         self.checkbox_remove_astigmatism.setStyleSheet(styleCheckbox)
+        self.checkbox_remove_astigmatism.stateChanged.connect(self.checkbox_remove_astigmatism_changed)
 
         self.checkbox_remove_coma = QCheckBox("Retirer la coma")
         self.checkbox_remove_coma.setStyleSheet(styleCheckbox)
+        self.checkbox_remove_coma.stateChanged.connect(self.checkbox_remove_coma_changed)
 
 
         self.sublayout_right.addWidget(self.checkbox_remove_astigmatism)
@@ -121,6 +128,34 @@ class RemoveFaultsWidget(QWidget):
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
+    def checkbox_remove_tilt_changed(self, state):
+        print(f"Remove tilt [{bool(state//2)}]")
+
+        self.aberrations_considered[1] = state//2
+        self.aberrations_considered[2] = state//2
+
+    def checkbox_remove_defocus_changed(self, state):
+        print(f"Remove defocus [{bool(state//2)}]")
+
+        self.aberrations_considered[3] = state//2
+
+    def checkbox_remove_spherical_aberration_changed(self, state):
+        print(f"Remove spherical aberation [{bool(state//2)}]")
+
+        self.aberrations_considered[8] = state//2
+
+    def checkbox_remove_astigmatism_changed(self, state):
+        print(f"Remove astigmatism [{bool(state//2)}]")
+
+        self.aberrations_considered[4] = state//2
+        self.aberrations_considered[5] = state//2
+
+    def checkbox_remove_coma_changed(self, state):
+        print(f"Remove coma [{bool(state//2)}]")
+
+        self.aberrations_considered[6] = state//2
+        self.aberrations_considered[7] = state//2
+
 # %% Widget
 class AcquisitionMenuWidget(QWidget):
     def __init__(self, parent=None):
@@ -132,6 +167,13 @@ class AcquisitionMenuWidget(QWidget):
             self.wedge_factor = 1
         else:
             self.wedge_factor = self.parent.wedge_factor
+
+        if self.parent is not None and hasattr(self.parent, 'aberrations_considered'):
+            self.aberrations_considered = self.parent.aberrations_considered
+        else:
+            self.aberrations_considered = np.zeros(37, dtype=int)
+            self.aberrations_considered[0] = 1
+
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -172,7 +214,7 @@ class AcquisitionMenuWidget(QWidget):
 
         # Remove faults menu
         # ------------------
-        self.submenu_remove_faults = RemoveFaultsWidget()
+        self.submenu_remove_faults = RemoveFaultsWidget(self)
 
         # Subwidget to save acquisition
         # ------------------------------
@@ -210,6 +252,7 @@ class AcquisitionMenuWidget(QWidget):
     def wedge_factor_is_modified(self, event):
         if (event.key() == Qt.Key.Key_Return) or (event.key() == Qt.Key.Key_Enter):
             try:
+                old_wedge_factor = self.wedge_factor
                 self.wedge_factor = float(self.lineedit_wedge_factor.text())
                 msg_box = QMessageBox()
                 msg_box.setStyleSheet(styleH3)
@@ -221,6 +264,9 @@ class AcquisitionMenuWidget(QWidget):
                         self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
                     else:
                         print("L'attribut 'table_results' ou 'array' est manquant dans 'results_menu_widget'")
+
+                    if hasattr(self, 'interpolated_values'):
+                        self.display_phase_3d(self.interpolated_values*self.wedge_factor/old_wedge_factor)
                 else:
                     print("Le parent n'existe pas ou n'a pas l'attribut 'results_menu_widget'")
 
@@ -235,6 +281,7 @@ class AcquisitionMenuWidget(QWidget):
         else:
             # Laissez le QLineEdit gérer les autres touches
             super().keyPressEvent(event)
+        print(self.wedge_factor)
 
     def button_simple_acquisition_isClicked(self):
         self.button_simple_acquisition.setStyleSheet(actived_button)
@@ -303,7 +350,7 @@ class AcquisitionMenuWidget(QWidget):
                 self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
 
                 # Display phase in 3D
-                self.display_phase_3d(self.phase)
+                self.display_phase_3d(self.phase*self.wedge_factor)
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
@@ -359,7 +406,7 @@ class AcquisitionMenuWidget(QWidget):
                 self.parent.results_menu_widget.array = array
                 self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
 
-                self.display_phase_3d(self.phase)
+                self.display_phase_3d(self.phase*self.wedge_factor)
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
@@ -401,26 +448,30 @@ class AcquisitionMenuWidget(QWidget):
 
         self.button_save_phase.setStyleSheet(unactived_button)
 
-    def display_phase_3d(self, phase):
+    def display_phase_3d(self, phase, interpolation=True):
         """ Only for testing """
 
-        time_start = timer()
+        if interpolation:
+            time_start = timer()
 
-        not_nan_indices = np.where(~np.isnan(phase))
-        values = phase[not_nan_indices]
-        x = not_nan_indices[0]
-        y = not_nan_indices[1]
+            not_nan_indices = np.where(~np.isnan(phase))
+            values = phase[not_nan_indices]
+            x = not_nan_indices[0]
+            y = not_nan_indices[1]
 
 
-        # Create the grid for interpolation
-        x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
+            # Create the grid for interpolation
+            x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
 
-        self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
-        time_getting_interpolation = timer() - time_start
+            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
+            time_getting_interpolation = timer() - time_start
 
-        self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
-        time_filterred = timer() - time_getting_interpolation
+            self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
+            time_filterred = timer() - time_getting_interpolation
 
+            z = self.interpolated_values
+        else:
+            z = phase
 
         """fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -434,8 +485,6 @@ class AcquisitionMenuWidget(QWidget):
         plt.show()"""
 
         try:
-            z = self.interpolated_values
-
             z *= (np.nanmax(x) -np.nanmin(x)) * .75 / (np.nanmax(z)-np.nanmin(z))
             z -= np.nanmax(z)/4
 
@@ -456,8 +505,10 @@ class AcquisitionMenuWidget(QWidget):
 
     def multiply_results_array_by_wedge_factor(self):
         arr = self.parent.results_menu_widget.array.copy()
-        arr[1:, 1:] = np.round(((arr[1:, 1:].astype(float))*self.wedge_factor), 4)
+        arr[1:, 1:] = np.round(((arr[1:, 1:].astype(float))*np.abs(self.wedge_factor)), 4)
         return arr
+
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

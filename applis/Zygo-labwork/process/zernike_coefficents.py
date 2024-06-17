@@ -15,7 +15,7 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/applis/appli_Zygo_la
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
 
-from numpy import sqrt, sin, cos, ndarray
+from numpy import sqrt, sin, cos
 import numpy as np
 
 if __name__ == '__main__':
@@ -56,7 +56,7 @@ def polar_zernike_coefficients(u: np.ndarray, phi: np.ndarray, osa_index: int) -
     
     if osa_index == 0:
         # Piston
-        return 1
+        return np.ones_like(u)
     
     elif osa_index == 1:
         # Tilt Y
@@ -235,7 +235,7 @@ def cartesian_zernike_coefficients(x: np.ndarray, y: np.ndarray, osa_index: int)
     u, phi = cartesian_to_polar(x, y)  # Convert Cartesian to polar coordinates
     return polar_zernike_coefficients(u, phi, osa_index)  # Calculate Zernike coefficients
 
-def get_surface_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
+def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     # Parameters
     N = 37 # Degree of the polynomial
     limit = 1e-3 # Below, the coefficients are considered insignificant.
@@ -277,13 +277,43 @@ def get_surface_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
 
     return coeff_zernike
 
-# Exemple d'utilisation
-if __name__ == "__main__":
-    u = np.array([0.5])
-    phi = np.array([0.25])
-    for i in range(37):
-        # print(f"Zernike coefficient for OSA index {i}: {polar_zernike_coefficients(u, phi, i)}")
-        pass
+def get_polynomials_basis(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    polynomials = np.ones((len(x), number_zernike_polynomials))
+    for i in range(number_zernike_polynomials):
+        polynomials[:, i] = cartesian_zernike_coefficients(x, y, i)
+    return polynomials
 
-    surf = np.random.randint(0, 255, (10,10))
-    print(get_surface_zernike_coefficient(surf))
+def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> np.ndarray:
+    a, b = phase.shape
+    normalized_phase = phase/(2*PI)
+
+    x = np.linspace(-1, 1, b)
+    y = np.linspace(-1, 1, a)
+    X, Y = np.meshgrid(x, y)
+
+    coeffs = get_zernike_coefficient(normalized_phase)
+    polynomials = get_polynomials_basis(x, y).flatten()
+    surface = aberrations_considered*coeffs*polynomials
+    surface = surface.reshape((a, b))
+
+    normalized_phase -= surface
+    return normalized_phase*2*PI
+
+if __name__ == '__main__':
+    x = y = np.linspace(0,5,100)
+    X, Y = np.meshgrid(x, y)
+    phi = X+Y
+    aberrations_considered = np.zeros(37, dtype=int)
+
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.imshow(phi)
+    plt.colorbar()
+    plt.show()
+
+    print(phi.shape)
+
+    plt.figure()
+    plt.imshow(remove_aberration(phi, aberrations_considered))
+    plt.colorbar()
+    plt.show()

@@ -85,10 +85,16 @@ class PiezoCalibrationWidget(QWidget):
         self.button_start_calibration.setStyleSheet(unactived_button)
         self.button_start_calibration.clicked.connect(self.button_start_calibration_isClicked)
 
+        # Label progression
+        # -----------------
+        self.label_progression = QLabel('')
+        self.label_progression.setStyleSheet(styleH3)
+
         # Add widgets to the main layout
         self.layout.addWidget(self.label_title_calibration_menu)
         self.layout.addWidget(self.graph_calibration)
         self.layout.addWidget(self.button_start_calibration)
+        self.layout.addWidget(self.label_progression)
 
         self.master_widget.setLayout(self.layout)
 
@@ -98,12 +104,13 @@ class PiezoCalibrationWidget(QWidget):
     def button_start_calibration_isClicked(self):
         self.button_start_calibration.setStyleSheet(actived_button)
         image_for_all_voltages = []
-        number_measures = 2
+        number_measures = 3
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
         num_steps = 50  # Nombre de pas dans la rampe
-        step_val = (end_voltage-start_voltage) / num_steps
+
+        print("============================= START CALIBRATION ===================================")
 
         # Stop thread
 
@@ -114,6 +121,8 @@ class PiezoCalibrationWidget(QWidget):
 
         # Calcul des paramètres de la rampe
         ramp = np.linspace(start_voltage, end_voltage, num_steps)
+        step_val = ramp[1] - ramp[0]
+
         # Créer une tâche pour générer la rampe de tension
         with nidaqmx.Task() as task:
             # Ajouter un canal de sortie analogique
@@ -133,43 +142,48 @@ class PiezoCalibrationWidget(QWidget):
             for i in range(number_measures):
                 image_for_all_voltages = []
                 for j,voltage in enumerate(ramp):
-                    print(f"{i + 1}e mesure | V={voltage:.2f}/{end_voltage:.2f}")
+                    # Affichage debug
+                    print(f"{i + 1}e mesure / {number_measures} mesures | Voltage = {voltage:.2f} V /{end_voltage:.2f} V")
+                    self.label_progression.setText(f"{i + 1}e mesure / {number_measures} mesures | Voltage = {voltage:.2f} V /{end_voltage:.2f} V")
+                    self.label_progression.repaint()
+
                     task.write(voltage)
                     time.sleep(0.1)
+
                     raw_array = self.parent.camera_widget.camera.get_image().copy()[x_min:x_max, y_min:y_max]/number_measures
                     image_for_all_voltages.append(raw_array)
                 average_for_all_voltages.append(image_for_all_voltages)
             average_for_all_voltages = np.mean(np.array(average_for_all_voltages), axis=0)
 
-            print(average_for_all_voltages, f"average_for_all_voltages.shape {average_for_all_voltages.shape}")
-            plt.figure()
-            plt.imshow(raw_array, 'gray')
-            plt.show()
-
+            # print(average_for_all_voltages, f"average_for_all_voltages.shape {average_for_all_voltages.shape}")
 
             average_for_all_voltages = np.squeeze(np.array(average_for_all_voltages))
-            phi = np.array(list(map(lambda img:1-img/average_for_all_voltages[0], average_for_all_voltages)))
-            print(f' IsNan ? {np.isnan(phi).any()}')
-            print(f' Max = {(np.nanmax(phi[1:20], axis=0) == 0).any()}')
+            phi = np.array(list(map(lambda img:img-average_for_all_voltages[0], average_for_all_voltages)))
+
+            print(f"Il y a au moins un NaN dans 'phi' ? {np.isnan(phi).any()}")
+            print(f"Le maxilum est nul ? {(np.nanmax(phi[1:20], axis=0) == 0).any()}")
 
             plt.figure()
+            plt.title('phi[10]')
             plt.imshow(phi[10])
             plt.colorbar()
             plt.show()
 
-            phase = np.rad2deg(np.arcsin(np.nanmean(np.nanmean(phi/np.nanmax(phi, axis=0), axis=2), axis=1))-PI/2)
+            phase = np.nanmean(np.nanmean(phi, axis=2), axis=1)
+
+            #phase = np.rad2deg(np.arcsin(np.nanmean(np.nanmean(phi/np.nanmax(phi, axis=0), axis=2), axis=1))-PI/2)
             #phase = np.mean(np.mean(phi, axis=2), axis=1)
             print(phase.shape)
 
-            phase -= phase[0]
+            # bphase -= phase[0]
 
-            diff_phase = np.abs(np.diff(phase, prepend=0))
+            """diff_phase = np.abs(np.diff(phase, prepend=0))
             
             #phase[0] = 0
             for i in range(1, len(phase)):
-                phase[i] = phase[i-1] + diff_phase[i]/step_val
+                phase[i] = phase[i-1] + diff_phase[i]/step_val"""
 
-            phase = 2*phase
+            # phase = 2*phase
             task.write(0)
 
             ## Arrêter la tâche
@@ -198,7 +212,7 @@ class PiezoCalibrationWidget(QWidget):
         print(f"V(phi=270°)={V_4}")
         print(f"V(phi=180°)={V_5}")
 
-        self.parent.camera_thread.stop()
+        """self.parent.camera_thread.stop()
         self.parent.camera.init_camera()
         self.parent.camera.alloc_memory()
         self.parent.camera.start_acquisition()
@@ -224,8 +238,10 @@ class PiezoCalibrationWidget(QWidget):
 
         self.parent.camera.stop_acquisition()
         self.parent.camera.free_memory()
-        self.parent.camera_thread.start()
+        self.parent.camera_thread.start()"""
         plt.show()
+
+        print("============================= END CALIBRATION ===================================")
 
 # %% Example
 if __name__ == '__main__':
