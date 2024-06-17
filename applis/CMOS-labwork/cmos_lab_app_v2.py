@@ -66,7 +66,7 @@ cam_from_brands = {
 class Modes(Enum):
     NOMODE = 0
     SETTINGS = 1
-    LIVE = 2
+    AOI = 2
     SPACE = 3
     TIME = 4
 
@@ -88,7 +88,6 @@ class MainWindow(QMainWindow):
         self.camera_list = None
         self.camera_device = None
         self.camera_thread = CameraThread()
-        self.camera_thread.set_pause(0.05)
         self.camera_thread.image_acquired.connect(self.thread_update_image)
         self.brand = None
         # Parameters
@@ -146,12 +145,14 @@ class MainWindow(QMainWindow):
                 file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
                 load_dictionary(file_name_dict)
             if 'brandname' in self.default_parameters:
-                print(f'Brand = {self.default_parameters["brandname"]}')
                 self.brand = self.default_parameters["brandname"]
                 self.camera = cam_from_brands[self.brand]()
-                print(f'Is Camera OK ? {self.camera.find_first_camera()}')
+                if self.camera.find_first_camera() is False:
+                    print(f'No {self.brand} Camera Connected')
+                    sys.exit(-1)
 
                 self.camera.init_camera(self.camera.camera_device)
+                self.camera.init_camera()
                 self.camera_widget = cam_widget_brands[self.brand](self.camera)
                 self.camera.set_frame_rate(1)
                 self.camera_thread.set_camera(self.camera)
@@ -159,6 +160,8 @@ class MainWindow(QMainWindow):
                 # Init default param
                 if 'exposure' in self.default_parameters:
                     self.camera.set_exposure(int(self.default_parameters['exposure']))
+                if 'blacklevel' in self.default_parameters:
+                    self.camera.set_black_level(int(self.default_parameters['blacklevel']))
                 self.params_widget = CameraSettingsWidget(self.camera)
                 self.clear_layout(2, 1)
                 self.main_layout.addWidget(self.params_widget, 2, 1)
@@ -228,31 +231,44 @@ class MainWindow(QMainWindow):
             return False
 
     def menu_action(self, event) -> None:
-        if self.camera is not None:
-            self.camera_thread.stop()
+        try:
             self.timer.stop()
-        if event == 'camera_settings':
-            self.clear_layout(2, 1)
-            if self.camera is None:
-                self.params_widget = CameraChoice()
-                self.params_widget.selected.connect(self.action_brand_selected)
-                self.main_layout.addWidget(self.params_widget, 2, 1)
-            else:
-                # display camera settings and sliders
-                self.mode = Modes.SETTINGS
-                self.params_widget = CameraSettingsWidget(self.camera)
-                self.camera_thread.start()
-                self.main_layout.addWidget(self.params_widget, 2, 1)
-        elif event == 'aoi':
-            self.timer.setInterval(300)
-            self.timer.start()
-            print('AOI')
-        elif event == 'space':
-            print('Spatial')
-        elif event == 'time':
-            print('Timing')
-        elif event == 'options':
-            print('Options')
+            if self.mode == Modes.SETTINGS:
+                self.camera_thread.stop()
+            self.camera.stop_acquisition()
+            self.camera.free_memory()
+            if event == 'camera_settings':
+                self.clear_layout(2, 1)
+                if self.camera is None:
+                    self.params_widget = CameraChoice()
+                    self.params_widget.selected.connect(self.action_brand_selected)
+                    self.main_layout.addWidget(self.params_widget, 2, 1)
+                else:
+                    # display camera settings and sliders
+                    self.mode = Modes.SETTINGS
+                    self.params_widget = CameraSettingsWidget(self.camera)
+                    self.camera_thread.start()
+                    self.main_layout.addWidget(self.params_widget, 2, 1)
+            elif event == 'aoi':
+                self.mode = Modes.AOI
+                self.camera.alloc_memory()
+                self.camera.start_acquisition()
+                self.start_time_graphe()
+                self.timer.setInterval(300)
+                self.timer.start()
+                print('AOI')
+            elif event == 'space':
+                self.mode = Modes.SPACE
+
+                print('Spatial')
+            elif event == 'time':
+                self.mode = Modes.TIME
+                print('Timing')
+            elif event == 'options':
+                self.mode = Modes.NOMODE
+                print('Options')
+        except Exception as e:
+            print(f'Exception - menu_action {e}')
 
 
     def action_brand_selected(self, event):
@@ -275,6 +291,7 @@ class MainWindow(QMainWindow):
             self.camera.set_frame_rate(1)
             self.camera_thread.set_camera(self.camera)
             self.camera_widget.camera_display_params.update_params()
+            self.camera.init_camera()
             # Init default param
             if 'exposure' in self.default_parameters:
                 self.camera.set_exposure(int(self.default_parameters['exposure']))
@@ -291,10 +308,10 @@ class MainWindow(QMainWindow):
         try:
             frame_width = self.camera_widget.width()
             frame_height = self.camera_widget.height()
-            '''
-            if self.camera_thread.running is False:
+
+            if self.mode != Modes.SETTINGS:
                 self.process_data(image_array)
-            '''
+
             # Resize to the display size
             image_array_disp2 = resize_image_ratio(
                 image_array,
@@ -310,23 +327,41 @@ class MainWindow(QMainWindow):
 
     def update_timer(self):
         image_array = self.camera.get_image()
+
         self.thread_update_image(image_array)
 
     def process_data(self, image_array):
-        if self.mode == Modes.SETTINGS:
+        if self.mode == Modes.AOI:
             if self.x_time is None:
                 self.x_time = np.array([0])
                 self.y_time = [np.zeros(0) for _ in range(4)]
+            if self.x_time_cpt == 0:
+                self.y_time[0] = image_array[self.image_x[0], self.image_y[0]]
+                self.y_time[1] = image_array[self.image_x[1], self.image_y[1]]
+                self.y_time[2] = image_array[self.image_x[2], self.image_y[2]]
+                self.y_time[3] = image_array[self.image_x[3], self.image_y[3]]
             else:
                 self.x_time = np.append(self.x_time, self.x_time_cpt)
+                self.y_time[0] = np.append(self.y_time[0], image_array[self.image_x[0], self.image_y[0]])
+                self.y_time[1] = np.append(self.y_time[1], image_array[self.image_x[1], self.image_y[1]])
+                self.y_time[2] = np.append(self.y_time[2], image_array[self.image_x[2], self.image_y[2]])
+                self.y_time[3] = np.append(self.y_time[3], image_array[self.image_x[3], self.image_y[3]])
             self.x_time_cpt += 1
-            self.y_time[0] = np.append(self.y_time[0], image_array[self.image_x[0], self.image_y[0]])
-            self.y_time[1] = np.append(self.y_time[1], image_array[self.image_x[1], self.image_y[1]])
-            self.y_time[2] = np.append(self.y_time[2], image_array[self.image_x[2], self.image_y[2]])
-            self.y_time[3] = np.append(self.y_time[3], image_array[self.image_x[3], self.image_y[3]])
 
-            self.histo_graph.set_data(self.x_time, self.y_time)
-            self.histo_graph.refresh_chart()
+            self.time_graph.set_data(self.x_time, self.y_time[1:])
+            self.time_graph.refresh_chart()
+
+    def start_time_graphe(self):
+        self.rand_pixels()
+        self.x_time = np.array([0])
+        self.y_time = [np.zeros(0) for _ in range(4)]
+        self.x_time_cpt = 0
+        self.time_graph = XYChartWidget()
+        self.time_graph.set_background('white')
+        self.time_graph.set_x_label('Image Number')
+        self.time_graph.set_y_label('RAW Value')
+        self.clear_layout(2, 2)
+        self.main_layout.addWidget(self.time_graph, 2, 2)
 
     def rand_pixels(self):
         # TO DO : in the AOI !

@@ -201,6 +201,7 @@ class XYChartWidget(QWidget):
 
         """
         self.plot_chart_widget.removeItem(self.plot_chart)
+        self.adjustSize()
         if isinstance(self.plot_y_data, list):
             for i, y_data in enumerate(self.plot_y_data):
                 self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
@@ -210,7 +211,7 @@ class XYChartWidget(QWidget):
             self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
                                                       self.plot_y_data,
                                                       pen=mkPen(self.line_color, width=self.line_width))
-        self.adjustSize()
+
 
     def update_infos(self, val=True):
         """

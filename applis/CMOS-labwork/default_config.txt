@@ -3,5 +3,6 @@
 
 language; FR
 languages; FR,EN
-exposure; 6000
 brandname; IDS
+exposure; 6000
+blacklevel; 200
