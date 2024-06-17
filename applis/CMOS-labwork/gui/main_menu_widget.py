@@ -31,7 +31,7 @@ OPTIONS_BUTTON_HEIGHT = 20 #px
 # %% Widget
 class MainMenuWidget(QWidget):
 
-    camera_settings_clicked = pyqtSignal(str)
+    menu_clicked = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -52,15 +52,15 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_aoi_main_menu.clicked.connect(self.button_aoi_main_menu_isClicked)
         
-        self.button_live_main_menu = QPushButton(translate("button_live_main_menu"))
-        self.button_live_main_menu.setStyleSheet(unactived_button)
-        self.button_live_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_live_main_menu.clicked.connect(self.button_live_main_menu_isClicked)
+        self.button_space_analysis_main_menu = QPushButton(translate("button_space_analysis_main_menu"))
+        self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_space_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_space_analysis_main_menu.clicked.connect(self.button_space_analysis_main_menu_isClicked)
         
-        self.button_acquisition_main_menu = QPushButton(translate("button_acquisition_main_menu"))
-        self.button_acquisition_main_menu.setStyleSheet(unactived_button)
-        self.button_acquisition_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_acquisition_main_menu.clicked.connect(self.button_acquisition_main_menu_isClicked)
+        self.button_time_analysis_main_menu = QPushButton(translate("button_time_analysis_main_menu"))
+        self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_time_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_time_analysis_main_menu.clicked.connect(self.button_time_analysis_main_menu_isClicked)
         
         self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
         self.button_options_main_menu.setStyleSheet(unactived_button)
@@ -70,8 +70,8 @@ class MainMenuWidget(QWidget):
         self.layout.addWidget(self.label_title_main_menu)
         self.layout.addWidget(self.button_camera_settings_main_menu)
         self.layout.addWidget(self.button_aoi_main_menu)
-        self.layout.addWidget(self.button_live_main_menu)
-        self.layout.addWidget(self.button_acquisition_main_menu)
+        self.layout.addWidget(self.button_space_analysis_main_menu)
+        self.layout.addWidget(self.button_time_analysis_main_menu)
         self.layout.addStretch()
         self.layout.addWidget(self.button_options_main_menu)
         self.setLayout(self.layout)
@@ -80,8 +80,8 @@ class MainMenuWidget(QWidget):
         """ Switches all buttons to inactive style """
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
-        self.button_live_main_menu.setStyleSheet(unactived_button)
-        self.button_acquisition_main_menu.setStyleSheet(unactived_button)
+        self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setStyleSheet(unactived_button)        
         
     def button_camera_settings_main_menu_isClicked(self):
@@ -90,7 +90,7 @@ class MainMenuWidget(QWidget):
         self.button_camera_settings_main_menu.setStyleSheet(actived_button)
         
         # Action
-        self.camera_settings_clicked.emit('camera_settings')
+        self.menu_clicked.emit('camera_settings')
         
     def button_aoi_main_menu_isClicked(self):
         # Change style
@@ -98,23 +98,23 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.setStyleSheet(actived_button)
         
         # Action
-        print("AOI")
+        self.menu_clicked.emit('aoi')
         
-    def button_live_main_menu_isClicked(self):
+    def button_space_analysis_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
-        self.button_live_main_menu.setStyleSheet(actived_button)
+        self.button_space_analysis_main_menu.setStyleSheet(actived_button)
         
         # Action
-        print("Live")
+        self.menu_clicked.emit('space')
         
-    def button_acquisition_main_menu_isClicked(self):
+    def button_time_analysis_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
-        self.button_acquisition_main_menu.setStyleSheet(actived_button)
+        self.button_time_analysis_main_menu.setStyleSheet(actived_button)
         
         # Action
-        print("Acquisition")
+        self.menu_clicked.emit('time')
         
     def button_options_main_menu_isClicked(self):
         # Change style
@@ -122,7 +122,7 @@ class MainMenuWidget(QWidget):
         self.button_options_main_menu.setStyleSheet(actived_button)
         
         # Action
-        print("Options")
+        self.menu_clicked.emit('options')
         
 # %% Example
 if __name__ == '__main__':

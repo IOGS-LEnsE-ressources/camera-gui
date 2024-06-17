@@ -36,6 +36,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow,
                              QGridLayout, QWidget,
                              QMessageBox)
 from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtCore import QTimer
 
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
@@ -87,6 +88,7 @@ class MainWindow(QMainWindow):
         self.camera_list = None
         self.camera_device = None
         self.camera_thread = CameraThread()
+        self.camera_thread.set_pause(0.05)
         self.camera_thread.image_acquired.connect(self.thread_update_image)
         self.brand = None
         # Parameters
@@ -101,13 +103,6 @@ class MainWindow(QMainWindow):
         self.x_histo = None
         self.y_histo = None
 
-        # Init default parameters
-        print(f"CMOS App {dictionary['version']}")
-        self.default = self.init_default_parameters()
-        if self.default:
-            if 'language' in self.default_parameters:
-                file_name_dict = './lang/dict_'+str(self.default_parameters['language'])+'.txt'
-                load_dictionary(file_name_dict)
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -142,8 +137,43 @@ class MainWindow(QMainWindow):
         self.main_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.main_widget)
 
+
+        # Init default parameters
+        print(f"CMOS App {dictionary['version']}")
+        self.default = self.init_default_parameters()
+        if self.default:
+            if 'language' in self.default_parameters:
+                file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
+                load_dictionary(file_name_dict)
+            if 'brandname' in self.default_parameters:
+                print(f'Brand = {self.default_parameters["brandname"]}')
+                self.brand = self.default_parameters["brandname"]
+                self.camera = cam_from_brands[self.brand]()
+                print(f'Is Camera OK ? {self.camera.find_first_camera()}')
+
+                self.camera.init_camera(self.camera.camera_device)
+                self.camera_widget = cam_widget_brands[self.brand](self.camera)
+                self.camera.set_frame_rate(1)
+                self.camera_thread.set_camera(self.camera)
+                self.camera_widget.camera_display_params.update_params()
+                # Init default param
+                if 'exposure' in self.default_parameters:
+                    self.camera.set_exposure(int(self.default_parameters['exposure']))
+                self.params_widget = CameraSettingsWidget(self.camera)
+                self.clear_layout(2, 1)
+                self.main_layout.addWidget(self.params_widget, 2, 1)
+                self.clear_layout(1, 1)
+                self.main_layout.addWidget(self.camera_widget, 1, 1)
+                self.mode = Modes.SETTINGS
+                self.camera_thread.start()
+                self.main_menu_widget.button_camera_settings_main_menu_isClicked()
+                self.camera_widget.camera_display_params.update_params()
+
         # Events
-        self.main_menu_widget.camera_settings_clicked.connect(self.camera_settings_action)
+        self.main_menu_widget.menu_clicked.connect(self.menu_action)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_timer)
+        self.timer.stop()
 
     def load_file(self, file_path: str) -> dict:
         """
@@ -197,18 +227,32 @@ class MainWindow(QMainWindow):
         else:
             return False
 
-    def camera_settings_action(self, event) -> None:
-        self.clear_layout(2, 1)
-        if self.camera is None:
-            self.params_widget = CameraChoice()
-            self.params_widget.selected.connect(self.action_brand_selected)
-            self.main_layout.addWidget(self.params_widget, 2, 1)
-        else:
-            # display camera settings and sliders
-            self.mode = Modes.SETTINGS
-            self.rand_pixels()
-            self.params_widget = CameraSettingsWidget(self.camera)
-            self.main_layout.addWidget(self.params_widget, 2, 1)
+    def menu_action(self, event) -> None:
+        if self.camera is not None:
+            self.camera_thread.stop()
+            self.timer.stop()
+        if event == 'camera_settings':
+            self.clear_layout(2, 1)
+            if self.camera is None:
+                self.params_widget = CameraChoice()
+                self.params_widget.selected.connect(self.action_brand_selected)
+                self.main_layout.addWidget(self.params_widget, 2, 1)
+            else:
+                # display camera settings and sliders
+                self.mode = Modes.SETTINGS
+                self.params_widget = CameraSettingsWidget(self.camera)
+                self.camera_thread.start()
+                self.main_layout.addWidget(self.params_widget, 2, 1)
+        elif event == 'aoi':
+            self.timer.setInterval(300)
+            self.timer.start()
+            print('AOI')
+        elif event == 'space':
+            print('Spatial')
+        elif event == 'time':
+            print('Timing')
+        elif event == 'options':
+            print('Options')
 
 
     def action_brand_selected(self, event):
@@ -218,7 +262,7 @@ class MainWindow(QMainWindow):
         elif type_event == 'brand':
             self.brand = event.split(':')[1]
             self.clear_layout(1,1)   # camera_widget
-            self.camera_widget = cam_widget_brands[self.brand](params_disp=False)
+            self.camera_widget = cam_widget_brands[self.brand]()
             self.camera_widget.connected.connect(self.action_camera_connected)
             self.main_layout.addWidget(self.camera_widget, 1, 1)
 
@@ -237,11 +281,6 @@ class MainWindow(QMainWindow):
 
             self.params_widget = CameraSettingsWidget(self.camera)
             self.main_layout.addWidget(self.params_widget, 2, 1)
-            self.histo_graph = XYChartWidget()
-            self.histo_graph.set_background('white')
-            self.main_layout.addWidget(self.histo_graph, 1, 2)
-            self.rand_pixels()
-            print(f'Random Pixels : {self.image_x} / {self.image_y}')
             self.mode = Modes.SETTINGS
             self.camera_thread.start()
         except Exception as e:
@@ -252,7 +291,10 @@ class MainWindow(QMainWindow):
         try:
             frame_width = self.camera_widget.width()
             frame_height = self.camera_widget.height()
-            # self.process_data(image_array)
+            '''
+            if self.camera_thread.running is False:
+                self.process_data(image_array)
+            '''
             # Resize to the display size
             image_array_disp2 = resize_image_ratio(
                 image_array,
@@ -265,6 +307,10 @@ class MainWindow(QMainWindow):
             self.camera_widget.camera_display.setPixmap(pmap)
         except Exception as e:
             print(f'Exception - update_image {e}')
+
+    def update_timer(self):
+        image_array = self.camera.get_image()
+        self.thread_update_image(image_array)
 
     def process_data(self, image_array):
         if self.mode == Modes.SETTINGS:

@@ -4,3 +4,4 @@
 language; FR
 languages; FR,EN
 exposure; 6000
+brandname; IDS
