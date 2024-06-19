@@ -83,9 +83,14 @@ class CameraSettingsWidget(QWidget):
         self.slider_exposure_time = SliderBloc(name="Temps d'exposition", unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
         
+        # ...
+        self.button_big_cam = QPushButton('Caméra en plein écran')
+        self.button_big_cam.clicked.connect(self.button_big_cam_isClicked)
+
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)
         self.layout.addWidget(self.slider_exposure_time)
+        self.layout.addWidget(self.button_big_cam)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
@@ -107,11 +112,7 @@ class CameraSettingsWidget(QWidget):
         exposure_time = self.camera.get_exposure()
         self.slider_exposure_time.set_value(exposure_time/1000)
 
-    def set_parameters(self, color_mode:str='Mono8', frame_rate: float=3,
-                       exposure: float=2, black_level:int=10 ):
-        """Useful ?
-
-        """
+    def button_big_cam_isClicked(self):
         pass
 
 # %% Example

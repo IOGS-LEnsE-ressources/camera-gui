@@ -68,7 +68,7 @@ class PiezoCalibrationWidget(QWidget):
         
         # Title
         # -----
-        self.label_title_calibration_menu = QLabel(translate('label_title_calibration_menu'))
+        self.label_title_calibration_menu = QLabel(translate('Calibration'))
         self.setStyleSheet(styleH1)
 
         # Graph
@@ -81,7 +81,7 @@ class PiezoCalibrationWidget(QWidget):
 
         # Button
         # ------
-        self.button_start_calibration = QPushButton(translate('button_start_calibration'))
+        self.button_start_calibration = QPushButton(translate('Start calibration'))
         self.button_start_calibration.setStyleSheet(unactived_button)
         self.button_start_calibration.clicked.connect(self.button_start_calibration_isClicked)
 
@@ -104,7 +104,7 @@ class PiezoCalibrationWidget(QWidget):
     def button_start_calibration_isClicked(self):
         self.button_start_calibration.setStyleSheet(actived_button)
         image_for_all_voltages = []
-        number_measures = 3
+        number_measures = 1
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
@@ -134,8 +134,12 @@ class PiezoCalibrationWidget(QWidget):
             import matplotlib.pyplot as plt
 
             n, m, p = (self.parent.camera_widget.camera.get_image().copy()).shape
-            x_min, x_max = n // 4, 3 * n // 4
-            y_min, y_max = m // 4, 3 * m // 4
+
+            x_moy, y_moy = n // 2, m//2
+            delta_x, delta_y = n // 16 , m // 16
+
+            x_min, x_max = x_moy-delta_x, x_moy+delta_x
+            y_min, y_max = y_moy-delta_y, y_moy+delta_y
             average_for_all_voltages = []
 
             # Générer la rampe de tension en écrivant chaque valeur successivement
@@ -170,18 +174,29 @@ class PiezoCalibrationWidget(QWidget):
             plt.show()
 
             phase = np.nanmean(np.nanmean(phi, axis=2), axis=1)
+            phase -= (np.nanmax(phase) + np.nanmin(phase))/2
+            phase /= (np.nanmax(phase) - np.nanmin(phase))/2
 
-            #phase = np.rad2deg(np.arcsin(np.nanmean(np.nanmean(phi/np.nanmax(phi, axis=0), axis=2), axis=1))-PI/2)
+            fig, ax1 = plt.subplots()
+            ax1.plot(phase)
+
+            phase = np.rad2deg(np.arcsin(phase))
+
+            ax2 = ax1.twinx()
+            ax2.plot(phase, c='r')
             #phase = np.mean(np.mean(phi, axis=2), axis=1)
             print(phase.shape)
+            plt.show()
 
-            # bphase -= phase[0]
+            phase -= phase[0]
 
-            """diff_phase = np.abs(np.diff(phase, prepend=0))
+            diff_phase = np.abs(np.diff(phase, prepend=0))
             
             #phase[0] = 0
             for i in range(1, len(phase)):
-                phase[i] = phase[i-1] + diff_phase[i]/step_val"""
+                phase[i] = phase[i-1] + diff_phase[i]#/step_val
+
+            # phase *= 2
 
             # phase = 2*phase
             task.write(0)
