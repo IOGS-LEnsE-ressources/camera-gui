@@ -17,6 +17,7 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/applis/appli_Zygo_la
 
 from numpy import sqrt, sin, cos
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 if __name__ == '__main__':
@@ -50,160 +51,122 @@ def polar_zernike_coefficients(u: np.ndarray, phi: np.ndarray, osa_index: int) -
     Notes
     -----
     For more information on Zernike polynomials and their coefficients, refer to:
-    https://wp.optics.arizona.edu/jcwyant/wp-content/uploads/sites/13/2016/08/ZernikePolynomialsForTheWeb.pdf
     """
     # Handle points outside the pupil (where u > 1)
     u[u > 1] = 0
     
-    if osa_index == 0:
-        # Piston
-        return 1
-    
-    elif osa_index == 1:
-        # Tilt Y
-        return 2 * u * sin(phi)
-    
+    if osa_index == 1:
+        return np.ones_like(u)
+
     elif osa_index == 2:
-        # Tilt X
-        return 2 * u * cos(phi)
-    
+        return u * cos(phi)
+
     elif osa_index == 3:
-        # Defocus
-        return sqrt(3) * (2 * u**2 - 1)
-    
+        return u * sin(phi)
+
     elif osa_index == 4:
-        # Astigmatism 45°
-        return sqrt(6) * u**2 * sin(2 * phi)
-    
+        return 2 * (u ** 2) - 1
+
     elif osa_index == 5:
-        # Astigmatism 0°
-        return sqrt(6) * u**2 * cos(2 * phi)
-    
+        return u ** 2 * cos(2 * phi)
+
     elif osa_index == 6:
-        # Trefoil Y
-        return sqrt(8) * u**3 * sin(3 * phi)
-    
+        return u ** 2 * sin(2 * phi)
+
     elif osa_index == 7:
-        # Coma Y
-        return sqrt(8) * (3 * u**3 - 2 * u) * sin(phi)
-    
+        return (3 * u ** 3 - 2 * u) * cos(phi)
+
     elif osa_index == 8:
-        # Coma X
-        return sqrt(8) * (3 * u**3 - 2 * u) * cos(phi)
-    
+        return (3 * u ** 3 - 2 * u) * sin(phi)
+
     elif osa_index == 9:
-        # Trefoil X
-        return sqrt(8) * u**3 * cos(3 * phi)
-    
+        return 6 * u ** 4 - 6 * u ** 2 + 1
+
     elif osa_index == 10:
-        # Spherical aberration
-        return sqrt(5) * (6 * u**4 - 6 * u**2 + 1)
-    
+        return u ** 3 * cos(3 * phi)
+
     elif osa_index == 11:
-        # Secondary Astigmatism 45°
-        return sqrt(10) * (4 * u**4 - 3 * u**2) * sin(2 * phi)
-    
+        return u ** 3 * sin(3 * phi)
+
     elif osa_index == 12:
-        # Secondary Astigmatism 0°
-        return sqrt(10) * (4 * u**4 - 3 * u**2) * cos(2 * phi)
-    
+        return (4 * u ** 4 - 3 * u ** 2) * cos(2 * phi)
+
     elif osa_index == 13:
-        # Tetrafoil Y
-        return sqrt(12) * u**4 * sin(4 * phi)
-    
+        return (4 * u ** 4 - 3 * u ** 2) * sin(2 * phi)
+
     elif osa_index == 14:
-        # Secondary Trefoil Y
-        return sqrt(12) * (10 * u**5 - 12 * u**3 + 3 * u) * sin(3 * phi)
-    
+        return (10 * u ** 5 - 12 * u ** 3 + 3 * u) * cos(phi)
+
     elif osa_index == 15:
-        # Secondary Coma Y
-        return sqrt(12) * (10 * u**5 - 12 * u**3 + 3 * u) * sin(phi)
-    
+        return (10 * u ** 5 - 12 * u ** 3 + 3 * u) * sin(phi)
+
     elif osa_index == 16:
-        # Secondary Coma X
-        return sqrt(12) * (10 * u**5 - 12 * u**3 + 3 * u) * cos(phi)
-    
+        return 20 * u ** 6 - 30 * u ** 4 + 12 * u ** 2 - 1
+
     elif osa_index == 17:
-        # Secondary Trefoil X
-        return sqrt(12) * u**4 * cos(4 * phi)
-    
+        return u ** 4 * cos(4 * phi)
+
     elif osa_index == 18:
-        # Tetrafoil X
-        return sqrt(12) * u**4 * cos(4 * phi)
-    
+        return u ** 4 * sin(4 * phi)
+
     elif osa_index == 19:
-        # Pentafoil Y
-        return sqrt(14) * u**5 * sin(5 * phi)
-    
+        return (5 * u ** 5 - 4 * u ** 3) * cos(3 * phi)
+
     elif osa_index == 20:
-        # Tetra-Astigmatism 45°
-        return sqrt(14) * (15 * u**6 - 20 * u**4 + 6 * u**2) * sin(2 * phi)
-    
+        return (5 * u ** 5 - 4 * u ** 3) * sin(3 * phi)
+
     elif osa_index == 21:
-        # Tetra-Astigmatism 0°
-        return sqrt(14) * (15 * u**6 - 20 * u**4 + 6 * u**2) * cos(2 * phi)
-    
+        return (15 * u ** 6 - 20 * u ** 4 + 6 * u ** 2) * cos(2 * phi)
+
     elif osa_index == 22:
-        # Pentafoil X
-        return sqrt(14) * u**5 * cos(5 * phi)
-    
+        return (15 * u ** 6 - 20 * u ** 4 + 6 * u ** 2) * sin(2 * phi)
+
     elif osa_index == 23:
-        # Secondary Spherical Aberration
-        return sqrt(7) * (20 * u**6 - 30 * u**4 + 12 * u**2 - 1)
-    
+        return (35 * u ** 7 - 60 * u ** 5 + 30 * u ** 3 - 4 * u) * cos(phi)
+
     elif osa_index == 24:
-        # Secondary Astigmatism 0°
-        return sqrt(7) * (15 * u**6 - 20 * u**4 + 6 * u**2) * cos(6 * phi)
-    
+        return (35 * u ** 7 - 60 * u ** 5 + 30 * u ** 3 - 4 * u) * sin(phi)
+
     elif osa_index == 25:
-        # Secondary Astigmatism 45°
-        return sqrt(7) * (15 * u**6 - 20 * u**4 + 6 * u**2) * sin(6 * phi)
-    
+        return 70 * u ** 8 - 140 * u ** 6 + 90 * u ** 4 - 20 * u ** 2 + 1
+
     elif osa_index == 26:
-        # Hexafoil Y
-        return sqrt(16) * u**6 * sin(6 * phi)
-    
+        return u ** 5 * cos(5 * phi)
+
     elif osa_index == 27:
-        # Secondary Pentafoil Y
-        return sqrt(16) * (21 * u**7 - 30 * u**5 + 12 * u**3 - u) * sin(5 * phi)
-    
+        return u ** 5 * sin(5 * phi)
+
     elif osa_index == 28:
-        # Secondary Pentafoil X
-        return sqrt(16) * (21 * u**7 - 30 * u**5 + 12 * u**3 - u) * cos(5 * phi)
-    
+        return (6 * u ** 2 - 5) * u ** 4 * cos(4 * phi)
+
     elif osa_index == 29:
-        # Secondary Hexafoil Y
-        return sqrt(16) * (28 * u**8 - 42 * u**6 + 20 * u**4 - 3 * u**2) * sin(6 * phi)
-    
+        return (6 * u ** 2 - 5) * u ** 4 * sin(4 * phi)
+
     elif osa_index == 30:
-        # Tetra-Pentafoil Y
-        return sqrt(18) * u**7 * sin(7 * phi)
-    
+        return (21 * u ** 4 - 30 * u ** 2 + 10) * u ** 3 * cos(3 * phi)
+
     elif osa_index == 31:
-        # Hexafoil X
-        return sqrt(18) * u**6 * cos(6 * phi)
-    
+        return (21 * u ** 4 - 30 * u ** 2 + 10) * u ** 3 * sin(3 * phi)
+
     elif osa_index == 32:
-        # Tetrafoil X
-        return sqrt(18) * (36 * u**8 - 56 * u**6 + 28 * u**4 - 8 * u**2) * cos(4 * phi)
-    
+        return (56 * u ** 6 - 105 * u ** 4 + 60 * u ** 2 - 10) * u ** 2 * cos(2 * phi)
+
     elif osa_index == 33:
-        # Tetrafoil Y
-        return sqrt(18) * (36 * u**8 - 56 * u**6 + 28 * u**4 - 8 * u**2) * sin(4 * phi)
-    
+        return (56 * u ** 6 - 105 * u ** 4 + 60 * u ** 2 - 10) * u ** 2 * sin(2 * phi)
+
     elif osa_index == 34:
-        # Secondary Pentafoil X
-        return sqrt(18) * u**7 * cos(7 * phi)
-    
+        return (126 * u ** 8 - 280 * u ** 6 + 210 * u ** 4 - 60 * u ** 2 + 5) * u * cos(phi)
+
     elif osa_index == 35:
-        # Secondary Pentafoil Y
-        return sqrt(18) * (45 * u**9 - 72 * u**7 + 45 * u**5 - 10 * u**3 + u) * sin(5 * phi)
-    
+        return (126 * u ** 8 - 280 * u ** 6 + 210 * u ** 4 - 60 * u ** 2 + 5) * u * sin(phi)
+
     elif osa_index == 36:
-        # Secondary Pentafoil X
-        return sqrt(18) * (45 * u**9 - 72 * u**7 + 45 * u**5 - 10 * u**3 + u) * cos(5 * phi)
+        return 252 * u ** 10 - 630 * u ** 8 + 560 * u ** 6 - 210 * u ** 4 + 30 * u ** 2 - 1
+
+    elif osa_index == 37:
+        return 924 * u ** 12 - 2772 * u ** 10 + 3150 * u ** 8 - 1680 * u ** 6 + 420 * u ** 4 - 42 * u ** 2 + 1
     
-    return 0  # Si l'indice n'est pas dans les 37 premiers, retournez 0
+    return 0
 
 def cartesian_zernike_coefficients(x: np.ndarray, y: np.ndarray, osa_index: int) -> np.ndarray:
     """
@@ -249,9 +212,7 @@ def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     y = np.linspace(-1, 1, a)
     X, Y = np.meshgrid(x, y)
     
-    # Reorganizing the surface
-    surface = np.fliplr(surface)
-    surface = np.flipud(surface)
+    surface = np.transpose(surface)
     
     # Converting to column vectors
     X = X.flatten()
@@ -267,6 +228,7 @@ def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     phi = surface / (2 * PI)
 
     # Calculating the matrix M using polar_zernike_coefficients
+    # m_(i,k) = Z_k(u_i, phi_i)
     M = np.zeros((len(phi), N-1))
     for i in range(2, N+1):
         M[:, i-2] = cartesian_zernike_coefficients(X, Y, i)
@@ -298,11 +260,13 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     X, Y = np.meshgrid(x, y)
     
     coeffs = get_zernike_coefficient(normalized_phase)
+    
     print("Zernike coefficients:")
     print(coeffs)
 
     plt.figure(figsize=(10, 6))
     plt.bar(list(range(len(coeffs))), coeffs**2)
+    plt.bar(list(range(len(coeffs))), (coeffs*aberrations_considered)**2, color='red')
     plt.xticks(list(range(len(coeffs))))
     plt.axhline(0, color='black')
     plt.ylabel(r'$C_i^2$')
@@ -310,20 +274,18 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     plt.show()
     
     polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
-    coeffs[0] *= -1
     surface = polynomials.dot((aberrations_considered * coeffs))
     
-    normalized_phase -= surface.reshape((b, a))
+    normalized_phase -= surface.reshape((a, b))
     print("Normalized phase after correction:")
     print(normalized_phase)
     print(normalized_phase.min(), normalized_phase.max())
     
     return normalized_phase * 2 * PI
 
-
 if __name__ == '__main__':
     # Dimensions de l'image
-    a, b = 100, 100
+    a, b = 100, 300
 
     # Définir une phase combinée avec piston, tilt et astigmatisme
     X, Y = np.meshgrid(np.linspace(-1, 1, b), np.linspace(-1, 1, a))
@@ -335,28 +297,34 @@ if __name__ == '__main__':
     phi_tilt = 3 * Y
 
     # Astigmatisme à 45°
-    phi_astigmatism_45 = 2 * np.sqrt(6) * (X**2 - Y**2) * np.sin(2 * np.arctan2(Y, X))
+    # phi_astigmatism_45 = 2 * np.sqrt(6) * (X**2 - Y**2) * np.sin(2 * np.arctan2(X, Y))
 
     # Phase totale avec aberrations
-    phi = phi_piston + phi_tilt #+ phi_astigmatism_45
+    phi = phi_piston + phi_tilt # + phi_astigmatism_45
 
     # Appliquer la fonction pour retirer les aberrations
     aberrations_considered = np.zeros(37, dtype=int)
-    aberrations_considered[:3] = 1
+    aberrations_considered[1:2] = 1
+    print(aberrations_considered)
     corrected_phase = remove_aberration(phi, aberrations_considered)
 
     # Affichage de la phase initiale
-    plt.figure(figsize=(10, 4))
-    plt.subplot(1, 2, 1)
-    plt.imshow(phi, cmap='viridis')
-    plt.colorbar()
-    plt.title('Phase initiale avec aberrations')    
+    # Création de la figure et des sous-graphiques en 3D
+    fig = plt.figure(figsize=(14, 6))
 
-    # Affichage de la phase corrigée
-    plt.subplot(1, 2, 2)
-    plt.imshow(corrected_phase, cmap='viridis')
-    plt.colorbar()
-    plt.title('Phase corrigée sans aberrations')
+    # Graphique 1 : Phase initiale avec aberrations
+    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+    surf1 = ax1.plot_surface(X, Y, phi, cmap='viridis')
+    ax1.set_title('Phase initiale avec aberrations')
+    fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)
 
-    plt.tight_layout()
+    # Graphique 2 : Phase corrigée sans aberrations
+    ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+    surf2 = ax2.plot_surface(X, Y, corrected_phase, cmap='viridis')
+    ax2.set_title('Phase corrigée sans aberrations')
+    fig.colorbar(surf2, ax=ax2, shrink=0.5, aspect=10)
+
+    # Ajustement des paramètres de la figure
+    fig.tight_layout()
+
     plt.show()
