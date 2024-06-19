@@ -16,6 +16,7 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/applis/appli_Zygo_la
 """
 
 from numpy import sqrt, sin, cos
+import matplotlib.pyplot as plt
 import numpy as np
 
 if __name__ == '__main__':
@@ -56,7 +57,7 @@ def polar_zernike_coefficients(u: np.ndarray, phi: np.ndarray, osa_index: int) -
     
     if osa_index == 0:
         # Piston
-        return np.ones_like(u)
+        return 1
     
     elif osa_index == 1:
         # Tilt Y
@@ -273,11 +274,12 @@ def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     # Calculating Zernike coefficients
     coeff_zernike = np.linalg.lstsq(M, phi, rcond=None)[0]
     coeff_zernike = np.concatenate(([0], coeff_zernike))
-    coeff_zernike[coeff_zernike < limit] = 0  # removing insignificant coefficients
+    coeff_zernike[np.abs(coeff_zernike) < limit] = 0  # removing insignificant coefficients
 
-    return coeff_zernike
+    return coeff_zernike.squeeze()
 
 def get_polynomials_basis(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """ Return Z_i(x, y) """
     polynomials = np.ones((len(x), number_zernike_polynomials))
     for i in range(number_zernike_polynomials):
         polynomials[:, i] = cartesian_zernike_coefficients(x, y, i)
@@ -285,35 +287,76 @@ def get_polynomials_basis(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> np.ndarray:
     a, b = phase.shape
-    normalized_phase = phase/(2*PI)
-
+    normalized_phase = phase / (2 * PI)
+    
+    print("Normalized phase before correction:")
+    print(normalized_phase)
+    print(normalized_phase.min(), normalized_phase.max())
+    
     x = np.linspace(-1, 1, b)
     y = np.linspace(-1, 1, a)
     X, Y = np.meshgrid(x, y)
-
+    
     coeffs = get_zernike_coefficient(normalized_phase)
-    polynomials = get_polynomials_basis(x, y).flatten()
-    surface = aberrations_considered*coeffs*polynomials
-    surface = surface.reshape((a, b))
+    print("Zernike coefficients:")
+    print(coeffs)
 
-    normalized_phase -= surface
-    return normalized_phase*2*PI
+    plt.figure(figsize=(10, 6))
+    plt.bar(list(range(len(coeffs))), coeffs**2)
+    plt.xticks(list(range(len(coeffs))))
+    plt.axhline(0, color='black')
+    plt.ylabel(r'$C_i^2$')
+    plt.title('Zernike coefficients')
+    plt.show()
+    
+    polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
+    coeffs[0] *= -1
+    surface = polynomials.dot((aberrations_considered * coeffs))
+    
+    normalized_phase -= surface.reshape((b, a))
+    print("Normalized phase after correction:")
+    print(normalized_phase)
+    print(normalized_phase.min(), normalized_phase.max())
+    
+    return normalized_phase * 2 * PI
+
 
 if __name__ == '__main__':
-    x = y = np.linspace(0,5,100)
-    X, Y = np.meshgrid(x, y)
-    phi = X+Y
+    # Dimensions de l'image
+    a, b = 100, 100
+
+    # Définir une phase combinée avec piston, tilt et astigmatisme
+    X, Y = np.meshgrid(np.linspace(-1, 1, b), np.linspace(-1, 1, a))
+
+    # Piston
+    phi_piston = np.ones((a, b)) * 5
+
+    # Tilt
+    phi_tilt = 3 * Y
+
+    # Astigmatisme à 45°
+    phi_astigmatism_45 = 2 * np.sqrt(6) * (X**2 - Y**2) * np.sin(2 * np.arctan2(Y, X))
+
+    # Phase totale avec aberrations
+    phi = phi_piston + phi_tilt #+ phi_astigmatism_45
+
+    # Appliquer la fonction pour retirer les aberrations
     aberrations_considered = np.zeros(37, dtype=int)
+    aberrations_considered[:3] = 1
+    corrected_phase = remove_aberration(phi, aberrations_considered)
 
-    import matplotlib.pyplot as plt
-    plt.figure()
-    plt.imshow(phi)
+    # Affichage de la phase initiale
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.imshow(phi, cmap='viridis')
     plt.colorbar()
-    plt.show()
+    plt.title('Phase initiale avec aberrations')    
 
-    print(phi.shape)
-
-    plt.figure()
-    plt.imshow(remove_aberration(phi, aberrations_considered))
+    # Affichage de la phase corrigée
+    plt.subplot(1, 2, 2)
+    plt.imshow(corrected_phase, cmap='viridis')
     plt.colorbar()
+    plt.title('Phase corrigée sans aberrations')
+
+    plt.tight_layout()
     plt.show()
