@@ -416,6 +416,8 @@ class AcquisitionMenuWidget(QWidget):
                     sep='\n', end='\n\n'
                 )
 
+                self.zernike_coefficients = get_zernike_coefficient(self.phase)
+
                 # Calculate statistics
                 PV, RMS = statistique_surface(self.phase)
                 array = np.array([
@@ -531,13 +533,13 @@ class AcquisitionMenuWidget(QWidget):
         values = phase[not_nan_indices]
         x = not_nan_indices[0]
         y = not_nan_indices[1]
+
+        # Create the grid for interpolation
+        x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
         
         if interpolation:
-            # Create the grid for interpolation
-            x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
-
             # self.interpolated_values = LinearNDInterpolator(list(zip(x, y)), values)(x_grid, y_grid)
-            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
+            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear') # or 'cubic'
 
             self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
 
