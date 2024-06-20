@@ -268,9 +268,9 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     a, b = phase.shape
     normalized_phase = phase / (2 * PI)
     
-    print("Normalized phase before correction:")
+    """print("Normalized phase before correction:")
     print(normalized_phase)
-    print(normalized_phase.min(), normalized_phase.max())
+    print(normalized_phase.min(), normalized_phase.max())"""
     
     x = np.linspace(-1, 1, b)
     y = np.linspace(-1, 1, a)
@@ -278,7 +278,7 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     
     coeffs = get_zernike_coefficient(normalized_phase)
     
-    print("Zernike coefficients:")
+    """print("Zernike coefficients:")
     print(coeffs)
 
     plt.figure(figsize=(10, 6))
@@ -290,24 +290,24 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     plt.axhline(0, color='black')
     plt.ylabel(r'$C_i^2$')
     plt.title('Zernike coefficients')
-    plt.show()
+    plt.show()"""
     
     polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
     surface = polynomials.dot((aberrations_considered * coeffs))
 
-    fig = plt.figure(figsize=(14, 6))
+    """fig = plt.figure(figsize=(14, 6))
 
     ax1 = fig.add_subplot(1, 2, 1, projection='3d')
     surf1 = ax1.plot_surface(X, Y, surface.reshape((a, b)), cmap='viridis')
     ax1.set_xlabel('X')
     ax1.set_ylabel('Y')
-    fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)
+    fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)"""
     
     
     normalized_phase = normalized_phase - surface.reshape((a, b))
-    print("Normalized phase after correction:")
+    """print("Normalized phase after correction:")
     print(normalized_phase)
-    print(normalized_phase.min(), normalized_phase.max())
+    print(normalized_phase.min(), normalized_phase.max())"""
     
     return normalized_phase * 2 * PI
 
