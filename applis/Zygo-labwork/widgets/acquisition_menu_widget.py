@@ -449,8 +449,6 @@ class AcquisitionMenuWidget(QWidget):
         self.button_save_phase.setStyleSheet(unactived_button)
 
     def display_phase_3d(self, phase, interpolation=True):
-        """ Only for testing """
-
         if interpolation:
             time_start = timer()
 
@@ -463,7 +461,8 @@ class AcquisitionMenuWidget(QWidget):
             # Create the grid for interpolation
             x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
 
-            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
+            self.interpolated_values = LinearNDInterpolator((x, y), values)
+            #self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
             time_getting_interpolation = timer() - time_start
 
             self.interpolated_values = gaussian_filter(self.interpolated_values, 3)

@@ -65,3 +65,31 @@ def cartesian_to_polar(x:np.ndarray, y:np.ndarray) -> Tuple[np.ndarray, np.ndarr
     u = u / np.max(u)
     
     return u, phi
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    x = y = np.linspace(-1,1,100)
+    X, Y = np.meshgrid(x, y)
+    r, theta = cartesian_to_polar(X, Y)
+
+    plt.figure()
+    plt.subplot(2, 2, 1)
+    plt.title(r'$x$')
+    plt.imshow(X)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 2)
+    plt.title(r'$y$')
+    plt.imshow(Y)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.title(r'$r$')
+    plt.imshow(r)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.title(r'$\theta$')
+    plt.imshow(theta)
+    plt.colorbar()
+    plt.show()

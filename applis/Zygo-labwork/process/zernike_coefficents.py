@@ -29,7 +29,7 @@ PI = np.pi
 
 number_zernike_polynomials = 37
 
-def polar_zernike_coefficients(u: np.ndarray, phi: np.ndarray, osa_index: int) -> np.ndarray:
+def polar_zernike_polynomials(u: np.ndarray, phi: np.ndarray, osa_index: int) -> np.ndarray:
     """
     Calculate the Zernike polynomial coefficient for given polar coordinates and OSA index.
 
@@ -51,124 +51,141 @@ def polar_zernike_coefficients(u: np.ndarray, phi: np.ndarray, osa_index: int) -
     Notes
     -----
     For more information on Zernike polynomials and their coefficients, refer to:
+    https://iopscience.iop.org/article/10.1088/2040-8986/ac9e08/pdf
     """
     # Handle points outside the pupil (where u > 1)
     u[u > 1] = 0
     
-    if osa_index == 1:
+    if osa_index == 0:
         return np.ones_like(u)
+    
+    # ---------------------------------------------------------------
+    
+    elif osa_index == 1:
+        return 2 * u * sin(phi)
 
     elif osa_index == 2:
-        return u * cos(phi)
+        return 2 * u * cos(phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 3:
-        return u * sin(phi)
-
+        return sqrt(6) * u**2 * sin(2 * phi)
+    
     elif osa_index == 4:
-        return 2 * (u ** 2) - 1
+        return sqrt(3) * (2* u**2 - 1)
 
     elif osa_index == 5:
-        return u ** 2 * cos(2 * phi)
+        return sqrt(6) * u**2 * cos(2 * phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 6:
-        return u ** 2 * sin(2 * phi)
+        return sqrt(8) * u**3 * sin(3 * phi)
 
     elif osa_index == 7:
-        return (3 * u ** 3 - 2 * u) * cos(phi)
+        return sqrt(8) * (3 * u**3 - 2 * u) * sin(phi)
 
     elif osa_index == 8:
-        return (3 * u ** 3 - 2 * u) * sin(phi)
+        return sqrt(8) * (3 * u**3 - 2 * u) * cos(phi)
 
     elif osa_index == 9:
-        return 6 * u ** 4 - 6 * u ** 2 + 1
+        return sqrt(8) * u**3 * cos(3 * phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 10:
-        return u ** 3 * cos(3 * phi)
+        return sqrt(10) * u**4 * sin(4 * phi)
 
     elif osa_index == 11:
-        return u ** 3 * sin(3 * phi)
+        return sqrt(10) * (4 * u**4 - 3 * u**2) * sin(2 * phi)
 
     elif osa_index == 12:
-        return (4 * u ** 4 - 3 * u ** 2) * cos(2 * phi)
+        return sqrt(5) * (6 * u**4 - 6 * u**2 + 1)
 
     elif osa_index == 13:
-        return (4 * u ** 4 - 3 * u ** 2) * sin(2 * phi)
+        return sqrt(10) * (4 * u**4 - 3 * u**2) * cos(2 * phi)
 
     elif osa_index == 14:
-        return (10 * u ** 5 - 12 * u ** 3 + 3 * u) * cos(phi)
+        return sqrt(10) * u**4 * cos(4 * phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 15:
-        return (10 * u ** 5 - 12 * u ** 3 + 3 * u) * sin(phi)
+        return sqrt(12) * u**5 * sin(5 * phi)
 
     elif osa_index == 16:
-        return 20 * u ** 6 - 30 * u ** 4 + 12 * u ** 2 - 1
+        return sqrt(12) * (5 * u**5 - 4 * u**3) * sin(3 * phi)
 
     elif osa_index == 17:
-        return u ** 4 * cos(4 * phi)
+        return sqrt(12) * (10 * u**5 - 12 * u**3 + 3 * u) * sin(phi)
 
     elif osa_index == 18:
-        return u ** 4 * sin(4 * phi)
+        return sqrt(12) * (10 * u**5 - 12 * u**3 + 3 * u) * cos(phi)
 
     elif osa_index == 19:
-        return (5 * u ** 5 - 4 * u ** 3) * cos(3 * phi)
+        return sqrt(12) * (5 * u**5 - 4 * u**3) * cos(3 * phi)
 
     elif osa_index == 20:
-        return (5 * u ** 5 - 4 * u ** 3) * sin(3 * phi)
+        return sqrt(12) * u**5 * cos(5 * phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 21:
-        return (15 * u ** 6 - 20 * u ** 4 + 6 * u ** 2) * cos(2 * phi)
+        return sqrt(14) * u**6 * sin(6 * phi)
 
     elif osa_index == 22:
-        return (15 * u ** 6 - 20 * u ** 4 + 6 * u ** 2) * sin(2 * phi)
+        return sqrt(14) * (6 * u**6 - 5 * u**4) * sin(4 * phi)
 
     elif osa_index == 23:
-        return (35 * u ** 7 - 60 * u ** 5 + 30 * u ** 3 - 4 * u) * cos(phi)
+        return sqrt(14) * (15 * u**6 - 20 * u**4 + 6 * u**2) * sin(2 * phi)
 
     elif osa_index == 24:
-        return (35 * u ** 7 - 60 * u ** 5 + 30 * u ** 3 - 4 * u) * sin(phi)
+        return sqrt(7) * (20 * u**6 - 30 * u**4 + 12 * u**2 - 1)
 
     elif osa_index == 25:
-        return 70 * u ** 8 - 140 * u ** 6 + 90 * u ** 4 - 20 * u ** 2 + 1
+        return sqrt(14) * (15 * u**6 - 20 * u**4 + 6 * u**2) * cos(2 * phi)
 
     elif osa_index == 26:
-        return u ** 5 * cos(5 * phi)
+        return sqrt(14) * (6 * u**6 - 5 * u**4) * cos(4 * phi)
 
     elif osa_index == 27:
-        return u ** 5 * sin(5 * phi)
+        return sqrt(14) * u**6 * cos(6 * phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 28:
-        return (6 * u ** 2 - 5) * u ** 4 * cos(4 * phi)
+        return 4 * u**7 * sin(7 * phi)
 
     elif osa_index == 29:
-        return (6 * u ** 2 - 5) * u ** 4 * sin(4 * phi)
+        return 4 * (7 * u**7 - 6 * u**5) * sin(5 * phi)
 
     elif osa_index == 30:
-        return (21 * u ** 4 - 30 * u ** 2 + 10) * u ** 3 * cos(3 * phi)
+        return 4 * (21 * u**7 - 30 * u**5 + 10 * u**3) * sin(3 * phi)
 
     elif osa_index == 31:
-        return (21 * u ** 4 - 30 * u ** 2 + 10) * u ** 3 * sin(3 * phi)
+        return 4 * (35 * u**7 - 60 * u**5 + 30 * u**3 - 4 * u) * sin(phi)
 
     elif osa_index == 32:
-        return (56 * u ** 6 - 105 * u ** 4 + 60 * u ** 2 - 10) * u ** 2 * cos(2 * phi)
+        return 4 * (35 * u**7 - 60 * u**5 + 30 * u**3 - 4 * u) * sin(phi)
 
     elif osa_index == 33:
-        return (56 * u ** 6 - 105 * u ** 4 + 60 * u ** 2 - 10) * u ** 2 * sin(2 * phi)
+        return 4 * (21 * u**7 - 30 * u**5 + 10 * u**3) * sin(3 * phi)
 
     elif osa_index == 34:
-        return (126 * u ** 8 - 280 * u ** 6 + 210 * u ** 4 - 60 * u ** 2 + 5) * u * cos(phi)
+        return 4 * (7 * u**7 - 6 * u**5) * cos(5 * phi)
 
     elif osa_index == 35:
-        return (126 * u ** 8 - 280 * u ** 6 + 210 * u ** 4 - 60 * u ** 2 + 5) * u * sin(phi)
+        return 4 * u**7 * sin(7 * phi)
+    
+    # ---------------------------------------------------------------
 
     elif osa_index == 36:
-        return 252 * u ** 10 - 630 * u ** 8 + 560 * u ** 6 - 210 * u ** 4 + 30 * u ** 2 - 1
+        return sqrt(18) * u**8 * sin(8 * phi)
 
-    elif osa_index == 37:
-        return 924 * u ** 12 - 2772 * u ** 10 + 3150 * u ** 8 - 1680 * u ** 6 + 420 * u ** 4 - 42 * u ** 2 + 1
-    
     return 0
 
-def cartesian_zernike_coefficients(x: np.ndarray, y: np.ndarray, osa_index: int) -> np.ndarray:
+def cartesian_zernike_polynomials(x: np.ndarray, y: np.ndarray, osa_index: int) -> np.ndarray:
     """
     Calculate the Zernike polynomial coefficient for given Cartesian coordinates and OSA index.
 
@@ -194,10 +211,10 @@ def cartesian_zernike_coefficients(x: np.ndarray, y: np.ndarray, osa_index: int)
     It then calculates the Zernike polynomial coefficient using the polar coordinates.
 
     For more information on Zernike polynomials and their coefficients, refer to:
-    https://wp.optics.arizona.edu/jcwyant/wp-content/uploads/sites/13/2016/08/ZernikePolynomialsForTheWeb.pdf
+    https://iopscience.iop.org/article/10.1088/2040-8986/ac9e08/pdf
     """
     u, phi = cartesian_to_polar(x, y)  # Convert Cartesian to polar coordinates
-    return polar_zernike_coefficients(u, phi, osa_index)  # Calculate Zernike coefficients
+    return polar_zernike_polynomials(u, phi, osa_index)
 
 def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     # Parameters
@@ -212,7 +229,7 @@ def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     y = np.linspace(-1, 1, a)
     X, Y = np.meshgrid(x, y)
     
-    surface = np.transpose(surface)
+    #surface = np.transpose(surface)
     
     # Converting to column vectors
     X = X.flatten()
@@ -225,18 +242,18 @@ def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     surface = surface[~np.isnan(surface)]
 
     # Normalizing the surface
-    phi = surface / (2 * PI)
+    phi = surface # / (2 * PI)
 
     # Calculating the matrix M using polar_zernike_coefficients
     # m_(i,k) = Z_k(u_i, phi_i)
-    M = np.zeros((len(phi), N-1))
-    for i in range(2, N+1):
-        M[:, i-2] = cartesian_zernike_coefficients(X, Y, i)
+    M = np.zeros((len(phi), N))
+    for i in range(0, N):
+        M[:, i] = cartesian_zernike_polynomials(X, Y, i)
 
     # Calculating Zernike coefficients
     coeff_zernike = np.linalg.lstsq(M, phi, rcond=None)[0]
-    coeff_zernike = np.concatenate(([0], coeff_zernike))
-    coeff_zernike[np.abs(coeff_zernike) < limit] = 0  # removing insignificant coefficients
+    #coeff_zernike = np.concatenate(([0], coeff_zernike))
+    #coeff_zernike[np.abs(coeff_zernike) < limit] = 0  # removing insignificant coefficients
 
     return coeff_zernike.squeeze()
 
@@ -244,7 +261,7 @@ def get_polynomials_basis(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """ Return Z_i(x, y) """
     polynomials = np.ones((len(x), number_zernike_polynomials))
     for i in range(number_zernike_polynomials):
-        polynomials[:, i] = cartesian_zernike_coefficients(x, y, i)
+        polynomials[:, i] = cartesian_zernike_polynomials(x, y, i)
     return polynomials
 
 def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> np.ndarray:
@@ -268,6 +285,8 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     plt.bar(list(range(len(coeffs))), coeffs**2)
     plt.bar(list(range(len(coeffs))), (coeffs*aberrations_considered)**2, color='red')
     plt.xticks(list(range(len(coeffs))))
+    #plt.axhline(1e-3)
+    #plt.semilogy()
     plt.axhline(0, color='black')
     plt.ylabel(r'$C_i^2$')
     plt.title('Zernike coefficients')
@@ -275,8 +294,17 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     
     polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
     surface = polynomials.dot((aberrations_considered * coeffs))
+
+    fig = plt.figure(figsize=(14, 6))
+
+    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+    surf1 = ax1.plot_surface(X, Y, surface.reshape((a, b)), cmap='viridis')
+    ax1.set_xlabel('X')
+    ax1.set_ylabel('Y')
+    fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)
     
-    normalized_phase -= surface.reshape((a, b))
+    
+    normalized_phase = normalized_phase - surface.reshape((a, b))
     print("Normalized phase after correction:")
     print(normalized_phase)
     print(normalized_phase.min(), normalized_phase.max())
@@ -294,17 +322,14 @@ if __name__ == '__main__':
     phi_piston = np.ones((a, b)) * 5
 
     # Tilt
-    phi_tilt = 3 * Y
-
-    # Astigmatisme à 45°
-    # phi_astigmatism_45 = 2 * np.sqrt(6) * (X**2 - Y**2) * np.sin(2 * np.arctan2(X, Y))
+    phi_tilt = 3 * X
 
     # Phase totale avec aberrations
-    phi = phi_piston + phi_tilt # + phi_astigmatism_45
+    phi = phi_piston + phi_tilt
 
     # Appliquer la fonction pour retirer les aberrations
     aberrations_considered = np.zeros(37, dtype=int)
-    aberrations_considered[1:2] = 1
+    aberrations_considered[:3] = 1
     print(aberrations_considered)
     corrected_phase = remove_aberration(phi, aberrations_considered)
 
@@ -314,12 +339,16 @@ if __name__ == '__main__':
 
     # Graphique 1 : Phase initiale avec aberrations
     ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+    ax1.set_xlabel('X')
+    ax1.set_ylabel('Y')
     surf1 = ax1.plot_surface(X, Y, phi, cmap='viridis')
     ax1.set_title('Phase initiale avec aberrations')
     fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)
 
     # Graphique 2 : Phase corrigée sans aberrations
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+    ax2.set_xlabel('X')
+    ax2.set_ylabel('Y')
     surf2 = ax2.plot_surface(X, Y, corrected_phase, cmap='viridis')
     ax2.set_title('Phase corrigée sans aberrations')
     fig.colorbar(surf2, ax=ax2, shrink=0.5, aspect=10)
