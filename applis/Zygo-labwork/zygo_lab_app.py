@@ -64,6 +64,7 @@ class ZygoLabApp(QWidget):
         self.camera_device = self.init_camera()
         self.camera = CameraIds()
         self.camera.init_camera(self.camera_device)
+        self.zoom_activated = False    # Camera is started in a large window (imshow_pyqtgraph)
         
         # Default settings
         # ----------------
@@ -110,6 +111,9 @@ class ZygoLabApp(QWidget):
         self.camera_widget.camera_display_params.update_params()
         self.camera_widget.camera_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.camera_widget, 1, 1)
+        self.zoom_window = ImageWidget()
+        self.zoom_window.window_closed.connect(self.zoom_closed_action)
+        # self.zoom_window = WidgetImageDisplay()
 
         # Other Widgets
         # -------------
@@ -128,6 +132,17 @@ class ZygoLabApp(QWidget):
 
         # Other initializations
         # ---------------------
+        clock = self.camera.camera_remote.FindNode("DeviceClockFrequency").Value()
+        print(f'Clock1 = {clock}')
+        self.camera.camera_remote.FindNode("DeviceClockFrequency").SetValue(5000000)
+        clock = self.camera.camera_remote.FindNode("DeviceClockFrequency").Value()
+        print(f'Clock2 = {clock}')
+
+        fps_min, fps_max = self.camera.get_frame_rate_range()
+
+        print(f'FPS = {fps_min}, {fps_max}')
+        self.camera.set_frame_rate(1.6)
+
         self.camera_thread = CameraThread()
         self.camera_thread.set_camera(self.camera)
         self.camera_thread.image_acquired.connect(self.thread_update_image)
@@ -178,22 +193,37 @@ class ZygoLabApp(QWidget):
             if widget:
                 widget.deleteLater()
 
+    def zoom_action(self, event):
+        self.zoom_activated = True
+        if event is True:
+            self.camera_thread.stop()
+            self.zoom_window.showMaximized()
+            self.camera_thread.start()
+
+    def zoom_closed_action(self, event):
+        self.zoom_activated = False
+
     def thread_update_image(self, image_array):
         """Action performed when the live acquisition (via CameraThread) is running."""
         try:
-            frame_width = self.camera_widget.width()
-            frame_height = self.camera_widget.height()
             if self.camera_thread.running:
-                # Resize to the display size
-                image_array_disp2 = resize_image_ratio(
-                    image_array,
-                    frame_width,
-                    frame_height)
-                # Convert the frame into an image
-                image = array_to_qimage(image_array_disp2)
-                pmap = QPixmap(image)
-                # display it in the cameraDisplay
-                self.camera_widget.camera_display.setPixmap(pmap)
+                if self.zoom_activated is False:
+                    frame_width = self.camera_widget.width()
+                    frame_height = self.camera_widget.height()
+                    # Resize to the display size
+                    image_array_disp2 = resize_image_ratio(
+                        image_array,
+                        frame_width,
+                        frame_height)
+                    # Convert the frame into an image
+                    image = array_to_qimage(image_array_disp2)
+                    pmap = QPixmap(image)
+                    # display it in the cameraDisplay
+                    self.camera_widget.camera_display.setPixmap(pmap)
+                else:
+                    print(image_array.dtype)
+                    self.zoom_window.set_image_data(image_array)
+                    # self.zoom_window.set_image_from_array(image_array)
         except Exception as e:
             print(f'Exception - update_image {e}')
 
@@ -226,6 +256,7 @@ class ZygoLabApp(QWidget):
         if event == 'camera_settings_main_menu':
             self.camera_settings_widget.update_parameters()
             self.layout.addWidget(self.camera_settings_widget, 2, 1)
+            self.camera_settings_widget.zoom_activated.connect(self.zoom_action)
 
         elif event == 'masks_main_menu':
             self.display_mask_widget = ImageWidget()
