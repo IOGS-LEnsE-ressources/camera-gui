@@ -29,6 +29,7 @@ from process.unwrap import unwrap2D, suppression_bord
 from process.acquisition_images import get_phase, check_alpha
 from process.surface_statistics import statistique_surface
 from process.export_images import *
+from process.zernike_coefficents import *
 
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
@@ -58,7 +59,8 @@ class RemoveFaultsWidget(QWidget):
     def __init__(self, parent):
         super().__init__(parent=None)
 
-        self.aberrations_considered = parent.aberrations_considered
+        self.parent = parent
+        self.aberrations_considered = self.parent.aberrations_considered
 
         self.setStyleSheet(f"background-color: {ORANGE_IOGS};")
         self.layout = QVBoxLayout()
@@ -134,27 +136,104 @@ class RemoveFaultsWidget(QWidget):
         self.aberrations_considered[1] = state//2
         self.aberrations_considered[2] = state//2
 
+        try:
+            self.phase = self.parent.phase
+            self.interpolated_values = self.parent.interpolated_values
+            self.aberrations_considered = self.parent.aberrations_considered
+
+            self.apply_modifications()
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            self.checkbox_remove_tilt.setChecked(False)
+
     def checkbox_remove_defocus_changed(self, state):
         print(f"Remove defocus [{bool(state//2)}]")
 
-        self.aberrations_considered[3] = state//2
+        self.aberrations_considered[4] = state//2
+
+        try:
+            self.phase = self.parent.phase
+            self.interpolated_values = self.parent.interpolated_values
+            self.aberrations_considered = self.parent.aberrations_considered
+
+            self.apply_modifications()
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            self.checkbox_remove_defocus.setChecked(False)
 
     def checkbox_remove_spherical_aberration_changed(self, state):
         print(f"Remove spherical aberation [{bool(state//2)}]")
 
-        self.aberrations_considered[8] = state//2
+        self.aberrations_considered[12] = state//2
+
+        try:
+            self.phase = self.parent.phase
+            self.interpolated_values = self.parent.interpolated_values
+            self.aberrations_considered = self.parent.aberrations_considered
+
+            self.apply_modifications()
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            self.checkbox_remove_spherical_aberration.setChecked(False)
 
     def checkbox_remove_astigmatism_changed(self, state):
         print(f"Remove astigmatism [{bool(state//2)}]")
 
-        self.aberrations_considered[4] = state//2
+        self.aberrations_considered[3] = state//2
         self.aberrations_considered[5] = state//2
+
+        try:
+            self.phase = self.parent.phase
+            self.interpolated_values = self.parent.interpolated_values
+            self.aberrations_considered = self.parent.aberrations_considered
+
+            self.apply_modifications()
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            self.checkbox_remove_astigmatism.setChecked(False)
 
     def checkbox_remove_coma_changed(self, state):
         print(f"Remove coma [{bool(state//2)}]")
 
-        self.aberrations_considered[6] = state//2
+        self.aberrations_considered[8] = state//2
         self.aberrations_considered[7] = state//2
+
+        try:
+            self.phase = self.parent.phase
+            self.interpolated_values = self.parent.interpolated_values
+            self.aberrations_considered = self.parent.aberrations_considered
+
+            self.apply_modifications()
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            self.checkbox_remove_coma.setChecked(False)
+
+    def apply_modifications(self):
+        corrected_wavefront = remove_aberration(self.phase, self.aberrations_considered)
+        corrected_interpolated_wavefront = remove_aberration(self.interpolated_values, self.aberrations_considered)
+
+        PV, RMS = statistique_surface(corrected_wavefront)
+        array = np.array([
+            ['', 1, 2, 3, 4, 5, 'Moyenne'],
+            ['PV (λ)', round(PV, 4), np.nan, np.nan, np.nan, np.nan, round(PV, 4)],
+            ['RMS (λ)', round(RMS, 4), np.nan, np.nan, np.nan, np.nan, round(RMS, 4)]
+        ])
+
+        self.parent.parent.results_menu_widget.array = array
+        self.parent.parent.results_menu_widget.table_results.update_table(self.parent.multiply_results_array_by_wedge_factor())
+
+        self.parent.display_phase_3d(corrected_interpolated_wavefront, interpolation=False)
+
 
 # %% Widget
 class AcquisitionMenuWidget(QWidget):
@@ -173,7 +252,6 @@ class AcquisitionMenuWidget(QWidget):
         else:
             self.aberrations_considered = np.zeros(37, dtype=int)
             self.aberrations_considered[0] = 1
-
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -449,24 +527,19 @@ class AcquisitionMenuWidget(QWidget):
         self.button_save_phase.setStyleSheet(unactived_button)
 
     def display_phase_3d(self, phase, interpolation=True):
+        not_nan_indices = np.where(~np.isnan(phase))
+        values = phase[not_nan_indices]
+        x = not_nan_indices[0]
+        y = not_nan_indices[1]
+        
         if interpolation:
-            time_start = timer()
-
-            not_nan_indices = np.where(~np.isnan(phase))
-            values = phase[not_nan_indices]
-            x = not_nan_indices[0]
-            y = not_nan_indices[1]
-
-
             # Create the grid for interpolation
             x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
 
-            self.interpolated_values = LinearNDInterpolator((x, y), values)
-            #self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
-            time_getting_interpolation = timer() - time_start
+            # self.interpolated_values = LinearNDInterpolator(list(zip(x, y)), values)(x_grid, y_grid)
+            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear')
 
             self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
-            time_filterred = timer() - time_getting_interpolation
 
             z = self.interpolated_values
         else:
@@ -491,16 +564,6 @@ class AcquisitionMenuWidget(QWidget):
             self.parent.graphic_widget.refresh_chart()
         except Exception as e:
             print(f"Affichage 3D - {e}")
-
-        time_plot = timer() - time_start - time_filterred
-
-        print(
-            f"Time to get the interpolation: {time_getting_interpolation:.4f} s",
-            f"Time to apply the gaussian filter: {time_filterred:.4f} s",
-            f"Time to get the plot: {time_plot:.4f} s",
-            f"Total: {time_getting_interpolation + time_plot:.4f} s",
-            sep='\n', end='\n\n'
-        )
 
     def multiply_results_array_by_wedge_factor(self):
         arr = self.parent.results_menu_widget.array.copy()
