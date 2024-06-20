@@ -45,6 +45,7 @@ from widgets.options_menu_widget import OptionsMenuWidget
 from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import ImageWidget
+from widgets.display_zernike_widget import ZernikeDisplayWidget
 
 from process.initialization_parameters import *
 
@@ -239,6 +240,7 @@ class ZygoLabApp(QWidget):
 
         try:
             self.image = self.masks_menu_widget.image
+            self.zernike_coefficients = self.acquisition_menu_widget.zernike_coefficients
         except:
             None
 
@@ -285,7 +287,15 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.graphic_widget, 1, 2)
 
         elif event == 'analyzes_main_menu':
-            pass
+            self.clear_layout(1, 1)
+            self.clear_layout(1, 2)
+
+            try:
+                self.zernike_coefficients = 2 * np.random.rand(37) - 1
+                self.zernike_display = ZernikeDisplayWidget(self.zernike_coefficients)
+                self.layout.addWidget(self.zernike_display, 1, 1)
+            except Exception as e:
+                print(e)
 
         elif event == 'options_main_menu':
             self.clear_layout(1, 2)

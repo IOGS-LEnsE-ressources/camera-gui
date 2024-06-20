@@ -35,7 +35,7 @@ styleH1 = f"font-size:20px; padding:7px; color:{BLUE_IOGS}; font-weight: bold;"
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 BUTTON_HEIGHT = 30 # px
-COEFFICIENTS_ROUND_RANGE = 3 # decimals
+COEFFICIENTS_ROUND_RANGE = 4 # decimals
 
 class ZernikeDisplayWidget(QWidget):
     def __init__(self, coeffs):
