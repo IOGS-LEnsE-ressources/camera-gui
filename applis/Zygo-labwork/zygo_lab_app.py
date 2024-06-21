@@ -45,7 +45,7 @@ from widgets.options_menu_widget import OptionsMenuWidget
 from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import ImageWidget
-from widgets.display_zernike_widget import ZernikeDisplayWidget
+from widgets.display_zernike_widget import *
 
 from process.initialization_parameters import *
 
@@ -293,7 +293,9 @@ class ZygoLabApp(QWidget):
             try:
                 self.zernike_coefficients = 2 * np.random.rand(37) - 1
                 self.zernike_display = ZernikeDisplayWidget(self.zernike_coefficients)
+                self.seidel_display = SeidelDisplayWidget(self.zernike_coefficients)
                 self.layout.addWidget(self.zernike_display, 1, 1)
+                self.layout.addWidget(self.seidel_display, 1, 2)
             except Exception as e:
                 print(e)
 
@@ -355,7 +357,7 @@ if __name__ == '__main__':
             closeEvent redefinition. Use when the user clicks
             on the red cross to close the window
             """
-            reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
+            """reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                          QMessageBox.StandardButton.No)
 
@@ -364,7 +366,7 @@ if __name__ == '__main__':
                     self.central_widget.camera_widget.disconnect()
                 event.accept()
             else:
-                event.ignore()
+                event.ignore()"""
 
 
     app = QApplication(sys.argv)

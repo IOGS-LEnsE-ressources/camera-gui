@@ -55,14 +55,6 @@ def get_phase(parent, sigma_gaussian_filter=3):
     except Exception as e:
         print(f'Exception Phase - {e}')
 
-    """
-    import matplotlib.pyplot as plt
-    plt.figure()
-    plt.title('Filtered image')
-    plt.imshow(images_filtrees[0], 'gray')
-    plt.show()
-    """
-
     parent.camera_thread.start()
     return hariharan_algorithm(*images_filtrees), images_filtrees
 

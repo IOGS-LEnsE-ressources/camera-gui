@@ -392,14 +392,24 @@ class AcquisitionMenuWidget(QWidget):
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
                 else:
+                    plt.figure()
+                    plt.imshow(wrapped_phase, cmap='gray')
+                    plt.title(f"wrapped | {np.sum(np.isnan(wrapped_phase))} ({np.sum(np.isnan(wrapped_phase))/(wrapped_phase.shape[0]*wrapped_phase.shape[1])*100} %)")
+                    plt.show()
+
                     # Unwrap phase
                     unwrapped_phase_start = timer()
                     unwrapped_phase = unwrap2D(wrapped_phase)[0]
                     time_getting_unwrapped_phase = timer() - unwrapped_phase_start
+                    plt.figure()
+                    plt.imshow(unwrapped_phase, cmap='gray')
+                    plt.title(f"unwrapped | {np.sum(np.isnan(unwrapped_phase))} ({np.sum(np.isnan(unwrapped_phase))/(wrapped_phase.shape[0]*wrapped_phase.shape[1])*100} %)")
+                    plt.show()
 
                     # Suppress borders and mean adjustment
                     final_phase_start = timer()
                     unwrapped_phase = suppression_bord(unwrapped_phase, 3)
+
                     unwrapped_phase = unwrapped_phase - np.nanmean(unwrapped_phase)
                     self.phase = unwrapped_phase / (2 * PI)
                     time_getting_final_phase = timer() - final_phase_start
@@ -415,8 +425,8 @@ class AcquisitionMenuWidget(QWidget):
                     f"Total time: {total_time:.4f} s",
                     sep='\n', end='\n\n'
                 )
-
-                self.zernike_coefficients = get_zernike_coefficient(self.phase)
+                
+                # self.zernike_coefficients = get_zernike_coefficient(self.phase)
 
                 # Calculate statistics
                 PV, RMS = statistique_surface(self.phase)
@@ -428,7 +438,7 @@ class AcquisitionMenuWidget(QWidget):
 
                 self.parent.results_menu_widget.array = array
                 self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
-
+                
                 # Display phase in 3D
                 self.display_phase_3d(self.phase*self.wedge_factor)
 
@@ -529,21 +539,30 @@ class AcquisitionMenuWidget(QWidget):
         self.button_save_phase.setStyleSheet(unactived_button)
 
     def display_phase_3d(self, phase, interpolation=True):
+        import cv2
+        scale_factor = 0.4
+        scaled_image = cv2.resize(phase, (0, 0), fx = scale_factor, fy = scale_factor, interpolation=cv2.INTER_CUBIC)
+        phase = scaled_image
+
         not_nan_indices = np.where(~np.isnan(phase))
         values = phase[not_nan_indices]
         x = not_nan_indices[0]
         y = not_nan_indices[1]
 
         # Create the grid for interpolation
-        x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], 300), np.linspace(0, phase.shape[0], 300))
-        
+        x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], phase.shape[1]), np.linspace(0, phase.shape[0], phase.shape[0]))
+
+
         if interpolation:
-            # self.interpolated_values = LinearNDInterpolator(list(zip(x, y)), values)(x_grid, y_grid)
-            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='linear') # or 'cubic'
+            
+            timer_start = timer()
+            #self.interpolated_values = LinearNDInterpolator(list(zip(x, y)), values)(x_grid, y_grid)
+            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic') # or 'cubic'
 
             self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
 
             z = self.interpolated_values
+            print(timer()-timer_start)
         else:
             z = phase
 
@@ -564,6 +583,7 @@ class AcquisitionMenuWidget(QWidget):
 
             self.parent.graphic_widget.set_data(x_grid, y_grid, z)
             self.parent.graphic_widget.refresh_chart()
+            print("======================= c'est rapide !!! ================================")
         except Exception as e:
             print(f"Affichage 3D - {e}")
 

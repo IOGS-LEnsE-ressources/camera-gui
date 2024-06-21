@@ -167,13 +167,21 @@ def unwrap2D(Ph: np.ndarray):
     both = (~isnPh) & (~isnPl)
 
     Voffset = PhDc[both] - PhDl[both]
+    print(f'Shape Voff1: {Voffset.shape}')
     offsetBrut = np.mean(Voffset)
     offset = 2 * PI * round(offsetBrut / (2 * PI))
     ecarto = abs(offset - offsetBrut)
 
     pb = np.abs(PhDc - PhDl - offset) > PI / 10000
 
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.imshow(np.log10(np.abs(PhDc - PhDl - offset)))
+    plt.colorbar()
+    plt.show()
+
     Voffset = PhDc[both[:]&~pb[:]] - PhDl[both[:]&~pb[:]]
+    print(f'Shape Voff2: {Voffset.shape}')
     if len(Voffset) >=2:
         offsetBrut = np.mean(Voffset)
         offset = 2*PI*np.round(offsetBrut/(2*PI))
@@ -191,7 +199,9 @@ def unwrap2D(Ph: np.ndarray):
 
     tauxMaxPtsDiff = 0.05
 
-    if rapp > tauxMaxPtsDiff or ecarttype > PI / 10000:
+    print(f"rapp: {rapp} , tauxMaxPtsDiff:{tauxMaxPtsDiff}, ecarttype:{ecarttype}")
+    
+    if rapp > tauxMaxPtsDiff or ecarttype > PI/ 10000 :
         Pb = True
         PhD = PhDc.copy()
         PhD[~both] = np.nan
@@ -222,7 +232,7 @@ def unwrap2D(Ph: np.ndarray):
                     pass
                 else:
                     PhD[k[idx], m[idx]] = np.nan
-                    
+        
     return PhD, Pb, info, both, pb
 
 def selection_surface_utile(mask):
