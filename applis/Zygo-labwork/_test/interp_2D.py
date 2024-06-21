@@ -30,7 +30,7 @@ np.random.seed(42)  # Pour reproductibilité
 for _ in range(200):
     x_k = np.random.randint(0, x_samples)
     y_k = np.random.randint(0, y_samples)
-    data[x_k, y_k] = np.nan
+    # data[x_k, y_k] = np.nan
 
 # Créer un masque pour les valeurs non-NaN
 mask = ~np.isnan(data)
