@@ -105,6 +105,99 @@ class ZernikeDisplayWidget(QWidget):
     def open_pdf_file(self):
         QDesktopServices.openUrl(QUrl.fromLocalFile(PDF_PATH))
 
+class SeidelDisplayWidget(QWidget):
+    def __init__(self, coeffs):
+        super().__init__(parent=None)
+
+        self.coeffs = coeffs
+
+        self.setStyleSheet("background-color: white;")
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.master_widget = QWidget()
+        self.master_layout = QVBoxLayout()
+        self.master_widget.setStyleSheet("background-color: white;")
+        
+        # Title
+        self.label_title_results = QLabel("Coefficients de Seidel")
+        self.label_title_results.setStyleSheet(styleH1)
+
+        # Label
+        self.label = QLabel('Les coefficients sont donnés en λ.')
+        self.label.setStyleSheet(styleH3)
+
+        # Table
+        array = self.convert_zernike_seidel()
+        self.table_results = TableFromNumpy(array)
+
+        # Add widgets to the layout
+        self.layout.addWidget(self.label_title_results)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.table_results)
+        self.layout.addStretch()
+
+        self.master_widget.setLayout(self.layout)
+        self.master_layout.addWidget(self.master_widget)
+        self.setLayout(self.master_layout)
+
+    def convert_zernike_seidel(self):
+        """
+        Dans les conventions actuelles, on a:
+
+        Aberration  | Amplitude     | Angle
+        ---------------------------------------------------
+        Tilt        | √(C1²+C2²)    | arctan(C2/C1)
+        Defocus     | 2*C4          |    no
+        Astigmatism | √(C3²+C5²)    | 1/2 * arctan(C5/C3)
+        Coma        | 3*√(C7²+C8²)  | arctan(C8/C7)
+        Sph. Ab.    | 6*C12         |    no
+        """
+        c = self.coeffs
+
+        # Tilt
+        # ----
+        tilt_magnitude = np.sqrt(c[1]**2 + c[2]**2)
+        tilt_angle = np.rad2deg(np.arctan2(c[2], c[1]))
+
+        # Defocus
+        # -------
+        defocus_amplitude = 2*c[4]
+
+        # Astigmatism
+        # -----------
+        astigmatism_magnitude = 2 * np.sqrt(c[3]**2+c[5]**2)
+        astigmatism_angle = np.rad2deg(1/2* np.arctan2(c[3], c[5]))
+
+        # Coma
+        # ----
+        coma_amplitude = 3 * np.sqrt(c[7]**2+c[8]**2)
+        coma_angle = np.rad2deg(np.arctan2(c[8], c[7]))
+
+        # Spherical aberration
+        # --------------------
+        sp_ab_magnitude = 6*c[12]
+
+        # Round
+        # -----
+        tilt_magnitude = np.round(tilt_magnitude, COEFFICIENTS_ROUND_RANGE)
+        tilt_angle = np.round(tilt_angle, COEFFICIENTS_ROUND_RANGE)
+        defocus_amplitude = np.round(defocus_amplitude, COEFFICIENTS_ROUND_RANGE)
+        astigmatism_magnitude = np.round(astigmatism_magnitude, COEFFICIENTS_ROUND_RANGE)
+        astigmatism_angle = np.round(astigmatism_angle, COEFFICIENTS_ROUND_RANGE)
+        coma_amplitude = np.round(coma_amplitude, COEFFICIENTS_ROUND_RANGE)
+        coma_angle = np.round(coma_angle, COEFFICIENTS_ROUND_RANGE)
+        sp_ab_magnitude = np.round(sp_ab_magnitude, COEFFICIENTS_ROUND_RANGE)
+
+        # Array
+        # -----
+        arr = np.array([
+            ['',            'Tilt',         'Defocus',          'Astigmatism',          'Coma',         'Sph. Ab'       ],
+            ['Amplitude',   tilt_magnitude, defocus_amplitude,  astigmatism_magnitude,  coma_amplitude, sp_ab_magnitude ],
+            ['Angle',       tilt_angle, '∅',  astigmatism_angle,  coma_angle, '∅' ]
+        ])
+        return arr
+
 class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -115,7 +208,7 @@ class MyWindow(QMainWindow):
         # Exemple de coefficients aléatoires pour les tests
         random_coeffs = 2 * np.random.rand(37) - 1
 
-        self.central_widget = ZernikeDisplayWidget(random_coeffs)
+        self.central_widget = SeidelDisplayWidget(random_coeffs)
         self.setCentralWidget(self.central_widget)
 
     def closeEvent(self, event):
