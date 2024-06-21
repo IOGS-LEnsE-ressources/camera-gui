@@ -18,7 +18,7 @@ def f(x, y):
 
 T = f(X, Y)
 # Choose npts random point from the discrete domain of our model function
-npts = int(0.5*x_nb*y_nb)
+npts = int(0.05*x_nb*y_nb)
 print(f'N = {npts}')
 x_nan, y_nan = np.random.randint(0, x_nb, size=npts), np.random.randint(0, y_nb, size=npts)
 

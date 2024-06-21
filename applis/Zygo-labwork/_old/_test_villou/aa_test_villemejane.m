@@ -12,9 +12,6 @@ Img5=uint8(Imgs(:,:,5));
 
 [img,mask] = mask_auto(Img1,Img2,Img3,Img4,Img5) ;
 
-%figure();
-%imshow(mask);
-mask = ones((size(Img1)));
 
 [img_interf,phi]=phase_shift(Img1,Img2,Img3,Img4,Img5, mask);
 
