@@ -3,40 +3,34 @@ Zygo Lab GUI / IDS Camera
 
 Structure of the GUI
 ====================
-/!\ Only one camera to manage ! But where ? And signal to the main app ?
+
 
 Documentation
 =============
 - Write doc for CameraIds class
-- Test CameraIds class
 - Write doc for lensecam (installation and use of the package) and lensepy/css (use of the different elements)
 - Change doc of camera_gui (delete IDS/Basler + add link to lensecam)
 
 - Prepare an Installation Procedure (and store all the drivers and apps on an USB key - then in a LEnsE cloud directory or S: ) - from Python to application
 	/!\ IDS-peak must be installed in Custom Mode with the uEye Transport Layer option /!\
-- Doc langDict
 
 GUI Dev
 =======
 
 Global
 ------
-- If no camera is connected, disable main_menu possibilities (camera_settings...) ?
 - Create a global_default_parameters file ?
 
 Camera
 ------
 - Create/Modify CameraParameters
-- Test ParamsWidget outside CamWidget and test update params
 - Load default parameters (stored in a file ?)
   -> See 'process' folder
 - Add default parameters (in the same file) for min and max exposure time and black level ??
 
 Piezo
 -----
-- Find Texas Instrument USB-6001 module API. See https://nidaqmx-python.readthedocs.io/en/latest/
-- Find a way to detect if DAQ is connected...
-- Create a widget (or driver) class to control it.
+See https://nidaqmx-python.readthedocs.io/en/latest/
 
 GUI
 ---

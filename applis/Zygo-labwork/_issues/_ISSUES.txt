@@ -1,6 +1,3 @@
-- Issues with the use of PyQt signals.
-- [Acquisition Menu Widget] DialBox Style
-- [Options Menu Widget] ComboBox Style
 - [Acquisition Simple] Exception - update_image Unknown C++ exception from OpenCV code
 
 STYLES
