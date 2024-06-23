@@ -20,6 +20,9 @@ GUI Dev
 Global
 ------
 - Create a global_default_parameters file ?
+- Maybe : separate zernike coeff calculations for only 1A labwork
+(maybe the 36 coeffs are not necessary ?)
+and keep the calculations of others for the analysis window ?
 
 Camera
 ------
