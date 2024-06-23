@@ -102,7 +102,6 @@ class MainWindow(QMainWindow):
         self.x_histo = None
         self.y_histo = None
 
-
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
         # Main Widget
@@ -139,38 +138,7 @@ class MainWindow(QMainWindow):
 
         # Init default parameters
         print(f"CMOS App {dictionary['version']}")
-        self.default = self.init_default_parameters()
-        if self.default:
-            if 'language' in self.default_parameters:
-                file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
-                load_dictionary(file_name_dict)
-            if 'brandname' in self.default_parameters:
-                self.brand = self.default_parameters["brandname"]
-                self.camera = cam_from_brands[self.brand]()
-                if self.camera.find_first_camera() is False:
-                    print(f'No {self.brand} Camera Connected')
-                    sys.exit(-1)
-
-                self.camera.init_camera(self.camera.camera_device)
-                self.camera.init_camera()
-                self.camera_widget = cam_widget_brands[self.brand](self.camera)
-                self.camera.set_frame_rate(1)
-                self.camera_thread.set_camera(self.camera)
-                self.camera_widget.camera_display_params.update_params()
-                # Init default param
-                if 'exposure' in self.default_parameters:
-                    self.camera.set_exposure(int(self.default_parameters['exposure']))
-                if 'blacklevel' in self.default_parameters:
-                    self.camera.set_black_level(int(self.default_parameters['blacklevel']))
-                self.params_widget = CameraSettingsWidget(self.camera)
-                self.clear_layout(2, 1)
-                self.main_layout.addWidget(self.params_widget, 2, 1)
-                self.clear_layout(1, 1)
-                self.main_layout.addWidget(self.camera_widget, 1, 1)
-                self.mode = Modes.SETTINGS
-                self.camera_thread.start()
-                self.main_menu_widget.button_camera_settings_main_menu_isClicked()
-                self.camera_widget.camera_display_params.update_params()
+        self.init_default_parameters()
 
         # Events
         self.main_menu_widget.menu_clicked.connect(self.menu_action)
@@ -226,9 +194,37 @@ class MainWindow(QMainWindow):
         file_path = './default_config.txt'
         if os.path.exists(file_path):
             self.default_parameters = self.load_file(file_path)
-            return True
-        else:
-            return False
+            if 'language' in self.default_parameters:
+                file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
+                load_dictionary(file_name_dict)
+            if 'brandname' in self.default_parameters:
+                self.brand = self.default_parameters["brandname"]
+                self.camera = cam_from_brands[self.brand]()
+                if self.camera.find_first_camera() is False:
+                    print(f'No {self.brand} Camera Connected')
+                    sys.exit(-1)
+
+                self.camera.init_camera(self.camera.camera_device)
+                self.camera.init_camera()
+                self.camera_widget = cam_widget_brands[self.brand](self.camera)
+                self.camera.set_frame_rate(1)
+                self.camera_thread.set_camera(self.camera)
+                self.camera_widget.camera_display_params.update_params()
+                # Init default param
+                if 'exposure' in self.default_parameters:
+                    self.camera.set_exposure(int(self.default_parameters['exposure']))
+                if 'blacklevel' in self.default_parameters:
+                    self.camera.set_black_level(int(self.default_parameters['blacklevel']))
+                self.params_widget = CameraSettingsWidget(self.camera)
+                self.clear_layout(2, 1)
+                self.main_layout.addWidget(self.params_widget, 2, 1)
+                self.clear_layout(1, 1)
+                self.main_layout.addWidget(self.camera_widget, 1, 1)
+                self.mode = Modes.SETTINGS
+                self.camera_thread.start()
+                self.main_menu_widget.button_camera_settings_main_menu_isClicked()
+                self.camera_widget.camera_display_params.update_params()
+
 
     def menu_action(self, event) -> None:
         try:
@@ -254,7 +250,7 @@ class MainWindow(QMainWindow):
                 self.camera.alloc_memory()
                 self.camera.start_acquisition()
                 self.start_time_graphe()
-                self.timer.setInterval(300)
+                self.timer.setInterval(200)
                 self.timer.start()
                 print('AOI')
             elif event == 'space':

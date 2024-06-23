@@ -123,6 +123,7 @@ class MainMenuWidget(QWidget):
         
         # Action
         self.menu_clicked.emit('options')
+
         
 # %% Example
 if __name__ == '__main__':
