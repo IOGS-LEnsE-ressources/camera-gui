@@ -24,8 +24,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QSignalMapper
 from PyQt6.QtGui import QPixmap, QIcon
+import cv2
 
-from lensepy.pyqt6.widget_image_display import WidgetImageDisplay
+from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from lensecam.ids.camera_ids import CameraIds
 from lensecam.camera_thread import CameraThread
@@ -42,7 +43,7 @@ from widgets.masks_menu_widget import MasksMenuWidget
 from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
-from widgets.piezo_calibration_widget import PiezoCalibrationWidget
+#from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import ImageWidget
 from widgets.display_zernike_widget import *
@@ -112,7 +113,7 @@ class ZygoLabApp(QWidget):
         self.camera_widget.camera_display_params.update_params()
         self.camera_widget.camera_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.camera_widget, 1, 1)
-        self.zoom_window = ImageWidget()
+        self.zoom_window = ImageDisplayWidget()
         self.zoom_window.window_closed.connect(self.zoom_closed_action)
         # self.zoom_window = WidgetImageDisplay()
 
@@ -197,9 +198,7 @@ class ZygoLabApp(QWidget):
     def zoom_action(self, event):
         self.zoom_activated = True
         if event is True:
-            self.camera_thread.stop()
             self.zoom_window.showMaximized()
-            self.camera_thread.start()
 
     def zoom_closed_action(self, event):
         self.zoom_activated = False
@@ -222,9 +221,8 @@ class ZygoLabApp(QWidget):
                     # display it in the cameraDisplay
                     self.camera_widget.camera_display.setPixmap(pmap)
                 else:
-                    print(image_array.dtype)
-                    self.zoom_window.set_image_data(image_array)
-                    # self.zoom_window.set_image_from_array(image_array)
+                    image = image_array.copy().squeeze()
+                    self.zoom_window.set_image_from_array(image)
         except Exception as e:
             print(f'Exception - update_image {e}')
 
@@ -249,8 +247,6 @@ class ZygoLabApp(QWidget):
         self.acquisition_menu_widget = AcquisitionMenuWidget(self)
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
-        
-
         self.options_menu_widget.signal_language_updated.connect(self.signal_language_changed_isReceived)
 
         self.clear_layout(2, 1)
