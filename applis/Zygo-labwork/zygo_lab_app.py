@@ -11,8 +11,8 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
-.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 """
 
 import sys
@@ -22,9 +22,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox, QDialog,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QSignalMapper
 from PyQt6.QtGui import QPixmap, QIcon
-import cv2
 
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
