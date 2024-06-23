@@ -92,7 +92,6 @@ class ResultsMenuWidget(QWidget):
 
     def button_print_all_results_isClicked(self):
         self.button_print_all_results.setStyleSheet(actived_button)
-        print('button_print_all_results_isClicked')
         self.button_print_all_results.setStyleSheet(unactived_button)
 
 

@@ -34,17 +34,19 @@ class TitleWidget(QWidget):
     def __init__(self):
         super().__init__(parent=None)
         self.setStyleSheet("background-color: white;")  # Set background color for the entire widget
+        self.title = "Contrôle interférométrique & Analyseur de front d'onde ZYGO"
+        self.subtitle = "Travaux pratiques de 1A et 2AP"
 
         self.layout = QVBoxLayout()
 
         self.subwidget = QWidget()
         self.sublayout = QGridLayout()
 
-        self.label_title = QLabel("Contrôle interférométrique & Analyseur de front d'onde ZYGO")
+        self.label_title = QLabel(self.title)
         self.label_title.setStyleSheet(styleH1)
         self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.label_subtitle = QLabel("Travaux pratiques de 1A et 2AP")
+        self.label_subtitle = QLabel(self.subtitle)
         self.label_subtitle.setStyleSheet(styleH2)
         self.label_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -62,6 +64,14 @@ class TitleWidget(QWidget):
         self.subwidget.setLayout(self.sublayout)
         self.layout.addWidget(self.subwidget)
         self.setLayout(self.layout)
+
+    def set_title(self, value):
+        self.title = value
+        self.label_title.setText(self.title)
+
+    def set_subtitle(self, value):
+        self.subtitle = value
+        self.label_subtitle.setText(self.subtitle)
 
 # %% Example
 if __name__ == '__main__':

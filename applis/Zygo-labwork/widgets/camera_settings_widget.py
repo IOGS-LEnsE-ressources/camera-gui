@@ -104,8 +104,6 @@ class CameraSettingsWidget(QWidget):
         if self.camera is not None:
             exposure_time_value = self.slider_exposure_time.get_value() * 1000
             self.camera.set_exposure(exposure_time_value)
-        else:
-            print('No Camera Connected')
 
     def update_parameters(self, auto_min_max: bool = False) -> None:
         """Update displayed parameters values, from the camera.

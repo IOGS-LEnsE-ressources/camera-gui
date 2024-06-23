@@ -147,7 +147,6 @@ class PiezoCalibrationWidget(QWidget):
                 image_for_all_voltages = []
                 for j,voltage in enumerate(ramp):
                     # Affichage debug
-                    print(f"{i + 1}e mesure / {number_measures} mesures | Voltage = {voltage:.2f} V /{end_voltage:.2f} V")
                     self.label_progression.setText(f"{i + 1}e mesure / {number_measures} mesures | Voltage = {voltage:.2f} V /{end_voltage:.2f} V")
                     self.label_progression.repaint()
 
@@ -158,8 +157,6 @@ class PiezoCalibrationWidget(QWidget):
                     image_for_all_voltages.append(raw_array)
                 average_for_all_voltages.append(image_for_all_voltages)
             average_for_all_voltages = np.mean(np.array(average_for_all_voltages), axis=0)
-
-            # print(average_for_all_voltages, f"average_for_all_voltages.shape {average_for_all_voltages.shape}")
 
             average_for_all_voltages = np.squeeze(np.array(average_for_all_voltages))
             phi = np.array(list(map(lambda img:img-average_for_all_voltages[0], average_for_all_voltages)))

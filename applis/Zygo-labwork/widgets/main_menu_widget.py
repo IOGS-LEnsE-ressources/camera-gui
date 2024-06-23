@@ -112,7 +112,6 @@ class MainMenuWidget(QWidget):
         
         # Action
         self.signal_menu_selected.emit('camera_settings_main_menu')
-        print("Camera Settings")
         
     def button_masks_main_menu_isClicked(self):
         # Change style
@@ -121,7 +120,6 @@ class MainMenuWidget(QWidget):
         
         # Action
         self.signal_menu_selected.emit('masks_main_menu')
-        print("Masks")
         
     def button_acquisition_main_menu_isClicked(self):
         # Change style
@@ -130,7 +128,6 @@ class MainMenuWidget(QWidget):
         
         # Action
         self.signal_menu_selected.emit('acquisition_main_menu')
-        print("Acquisition")
         
     def button_analyzes_main_menu_isClicked(self):
         # Change style
@@ -139,7 +136,6 @@ class MainMenuWidget(QWidget):
         
         # Action
         self.signal_menu_selected.emit('analyzes_main_menu')
-        print("Analyzes")
         
     def button_options_main_menu_isClicked(self):
         # Change style
@@ -148,7 +144,11 @@ class MainMenuWidget(QWidget):
         
         # Action
         self.signal_menu_selected.emit('options_main_menu')
-        print("Options")
+
+    def reset_menu(self):
+        # Change style
+        self.unactive_buttons()
+
         
 # %% Example
 if __name__ == '__main__':

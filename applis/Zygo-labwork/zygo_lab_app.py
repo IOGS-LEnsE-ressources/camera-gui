@@ -7,7 +7,7 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 Subject : http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
 
 More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
+https://iogs-lense-ressources.github.io/camera-gui/
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QMessageBox
 )
 from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtCore import Qt
 
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
@@ -44,7 +45,8 @@ from widgets.options_menu_widget import OptionsMenuWidget
 #from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import ImageWidget
-from widgets.display_zernike_widget import *
+#from widgets.display_zernike_widget import *
+from analyses_app import AnalysisApp
 
 from process.initialization_parameters import *
 
@@ -113,7 +115,6 @@ class ZygoLabApp(QWidget):
         self.layout.addWidget(self.camera_widget, 1, 1)
         self.zoom_window = ImageDisplayWidget()
         self.zoom_window.window_closed.connect(self.zoom_closed_action)
-        # self.zoom_window = WidgetImageDisplay()
 
         # Other Widgets
         # -------------
@@ -129,6 +130,9 @@ class ZygoLabApp(QWidget):
         self.graphic_widget.set_background('white')
 
         self.layout.addWidget(self.graphic_widget, 1, 2)
+
+        self.analysis_window = AnalysisApp()
+        self.analysis_window.window_closed.connect(self.signal_menu_selected_isReceived)
 
         # Other initializations
         # ---------------------
@@ -162,16 +166,13 @@ class ZygoLabApp(QWidget):
         manager.Update()
 
         if manager.Devices().empty():
-            print("No Camera")
             device = None
-
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
             msg_box.warning(self, 'Erreur', 'Aucune caméra connectée')
             print('No cam => Quit')
             sys.exit(QApplication.instance())
         else:
-            print("Camera")
             device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
         return device
 
@@ -194,8 +195,8 @@ class ZygoLabApp(QWidget):
                 widget.deleteLater()
 
     def zoom_action(self, event):
-        self.zoom_activated = True
         if event is True:
+            self.zoom_activated = True
             self.zoom_window.showMaximized()
 
     def zoom_closed_action(self, event):
@@ -281,10 +282,17 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.graphic_widget, 1, 2)
 
         elif event == 'analyzes_main_menu':
-            self.clear_layout(1, 1)
             self.clear_layout(1, 2)
-
             try:
+                self.analysis_window.showMaximized()
+            except Exception as e:
+                print(f'Exception - analysis_app_open {e}')
+            # self.clear_layout(1, 1)
+
+
+            '''
+            try:
+
                 self.zernike_coefficients = 2 * np.random.rand(37) - 1
                 self.zernike_display = ZernikeDisplayWidget(self.zernike_coefficients)
                 self.seidel_display = SeidelDisplayWidget(self.zernike_coefficients)
@@ -292,6 +300,7 @@ class ZygoLabApp(QWidget):
                 self.layout.addWidget(self.seidel_display, 1, 2)
             except Exception as e:
                 print(e)
+            '''
 
         elif event == 'options_main_menu':
             self.clear_layout(1, 2)
@@ -300,6 +309,10 @@ class ZygoLabApp(QWidget):
 
             self.piezo_calibration_widget = PiezoCalibrationWidget(self)
             self.layout.addWidget(self.piezo_calibration_widget, 1, 2, 2, 1)
+        elif event == 'analysis_window_closed':
+            self.main_menu_widget.reset_menu()
+            self.clear_layout(1, 2)
+            self.clear_layout(2, 1)
 
     def signal_language_changed_isReceived(self, language_selected):
         """Handler for the language updated signal."""
