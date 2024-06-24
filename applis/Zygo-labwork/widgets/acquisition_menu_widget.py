@@ -224,6 +224,7 @@ class RemoveFaultsWidget(QWidget):
         corrected_interpolated_wavefront = remove_aberration(self.interpolated_values, self.aberrations_considered)
 
         PV, RMS = statistique_surface(corrected_interpolated_wavefront)
+        print(f"corrected_interpolated_wavefront min/max: {np.nanmin(corrected_interpolated_wavefront)}/{np.nanmax(corrected_interpolated_wavefront)}")
         array = np.array([
             ['', 1, 2, 3, 4, 5, 'Moyenne'],
             ['PV (λ)', round(PV, 4), np.nan, np.nan, np.nan, np.nan, round(PV, 4)],
@@ -393,10 +394,10 @@ class AcquisitionMenuWidget(QWidget):
                     self.button_simple_acquisition.setStyleSheet(unactived_button)  
                     return None
                 else:
-                    plt.figure()
+                    """plt.figure()
                     plt.imshow(wrapped_phase, cmap='gray')
                     plt.title(f"wrapped | {np.sum(np.isnan(wrapped_phase))} ({np.sum(np.isnan(wrapped_phase))/(wrapped_phase.shape[0]*wrapped_phase.shape[1])*100} %)")
-                    plt.show()
+                    plt.show()"""
 
                     # Unwrap phase
                     unwrapped_phase_start = timer()
@@ -407,10 +408,10 @@ class AcquisitionMenuWidget(QWidget):
                     unwrapped_phase = gaussian_filter(unwrapped_phase, 10)
 
                     time_getting_unwrapped_phase = timer() - unwrapped_phase_start
-                    plt.figure()
+                    """plt.figure()
                     plt.imshow(unwrapped_phase, cmap='gray')
                     plt.title(f"unwrapped | {np.sum(np.isnan(unwrapped_phase))} ({np.sum(np.isnan(unwrapped_phase))/(wrapped_phase.shape[0]*wrapped_phase.shape[1])*100} %)")
-                    plt.show()
+                    plt.show()"""
 
                     # Suppress borders and mean adjustment
                     final_phase_start = timer()
@@ -424,13 +425,13 @@ class AcquisitionMenuWidget(QWidget):
                     total_time = timer() - timer_start
 
                 # Display times
-                print(
+                """print(
                     f"Time to get the wrapped phase: {time_getting_wrapped_phase:.4f} s",
                     f"Time to get the unwrapped phase: {time_getting_unwrapped_phase:.4f} s",
                     f"Time to get the final phase: {time_getting_final_phase:.4f} s",
                     f"Total time: {total_time:.4f} s",
                     sep='\n', end='\n\n'
-                )
+                )"""
                 
                 # self.zernike_coefficients = get_zernike_coefficient(self.phase)
 
