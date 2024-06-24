@@ -63,7 +63,7 @@ class AnalysisApp(QWidget):
         # -----------------
         # Title Widget: first row of the grid layout
         self.title_widget = TitleWidget()
-        self.title_widget.set_title("Contrôles interférométriques / Analyses poussées")
+        self.title_widget.set_title("Contrôles interférométriques | Analyses poussées")
         self.layout.addWidget(self.title_widget, 0, 0, 1, 3)
 
         # Analysis Menu Widget: fist column of the grid layout

@@ -25,6 +25,8 @@ if __name__ == '__main__':
 else:
     from widgets.x_y_chart_widget import XYChartWidget
 
+from process.initialization_parameters import *
+
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
@@ -214,11 +216,11 @@ class PiezoCalibrationWidget(QWidget):
         print(ramp.shape)
 
         eps = 5 # °
-        V_1 = np.nanmean(ramp[(phase >= 0 - eps) & (phase <= 0 + eps)])
-        V_2 = np.nanmean(ramp[(phase >= 90 - eps) & (phase <= 90 + eps)])
-        V_3 = np.nanmean(ramp[(phase >= 180 - eps) & (phase <= 180 + eps)])
-        V_4 = np.nanmean(ramp[(phase >= 270 - eps) & (phase <= 270 + eps)])
-        V_5 = np.nanmean(ramp[(phase >= 360 - eps) & (phase <= 360 + eps)])
+        V_1 = np.round(np.nanmean(ramp[(phase >= 0 - eps) & (phase <= 0 + eps)]), 3)
+        V_2 = np.round(np.nanmean(ramp[(phase >= 90 - eps) & (phase <= 90 + eps)]), 3)
+        V_3 = np.round(np.nanmean(ramp[(phase >= 180 - eps) & (phase <= 180 + eps)]), 3)
+        V_4 = np.round(np.nanmean(ramp[(phase >= 270 - eps) & (phase <= 270 + eps)]), 3)
+        V_5 = np.round(np.nanmean(ramp[(phase >= 360 - eps) & (phase <= 360 + eps)]), 3)
 
         print(f"V(phi=0°)={V_1:.3f} V")
         print(f"V(phi=90°)={V_2:.3f} V")
@@ -227,34 +229,10 @@ class PiezoCalibrationWidget(QWidget):
         print(f"V(phi=180°)={V_5:.3f} V")
         print(f"V(phi=180°)-V(phi=0°)={V_5-V_1:.3f} V")
 
-        """self.parent.camera_thread.stop()
-        self.parent.camera.init_camera()
-        self.parent.camera.alloc_memory()
-        self.parent.camera.start_acquisition()
-
-        with nidaqmx.Task() as task:
-                # Ajouter un canal de sortie analogique
-                task.ao_channels.add_ao_voltage_chan("Dev1/ao1", min_val=start_voltage, max_val=end_voltage)
-
-                # Démarrer la tâche
-                task.start()
-
-                import matplotlib.pyplot as plt
-                plt.figure()
-                for i in range(6):
-                    plt.subplot(1,6,i+1)
-                    plt.title(f"Voltage={i} V")
-                    task.write(i)
-                    plt.imshow(self.parent.camera_widget.camera.get_image().copy()[x_min:x_max, y_min:y_max], 'gray')
-                    time.sleep(0.1)
-
-                task.write(0)
-                task.stop()
-
-        self.parent.camera.stop_acquisition()
-        self.parent.camera.free_memory()
-        self.parent.camera_thread.start()"""
-        plt.show()
+        if any([V_1, V_2, V_3, V_4, V_5]) == None:
+            print('aie')
+        else:
+            modify_parameter_value('config.txt', 'Piezo voltage', f"{V_1},{V_2},{V_3},{V_4},{V_5}")
 
         print("============================= END CALIBRATION ===================================")
 

@@ -85,13 +85,6 @@ if __name__ == '__main__':
         def __init__(self):
             super().__init__()
 
-            # Translation
-            dictionary = {}
-            # Load French dictionary
-            #dictionary = load_dictionary('../lang/dict_FR.txt')
-            # Load English dictionary
-            dictionary = load_dictionary('../lang/dict_EN.txt')
-
             self.setWindowTitle(translate("window_title_line_edit_block"))
             self.setGeometry(300, 300, 600, 600)
 

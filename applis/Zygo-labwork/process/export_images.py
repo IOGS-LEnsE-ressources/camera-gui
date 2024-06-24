@@ -29,8 +29,8 @@ def display_images(images):
     plt.axis('off')
 
     plt.subplot(2, 3, 6)
-    plt.title(r"Somme")
-    plt.imshow(images[0]+images[1]+images[2]+images[3]+images[4], cmap='gray')
+    plt.title(r"Somme des 4 premières")
+    plt.imshow(images[0]+images[1]+images[2]+images[3], cmap='gray')
     plt.axis('off')
 
     plt.tight_layout()

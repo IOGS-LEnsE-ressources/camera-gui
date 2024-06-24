@@ -1,5 +1,8 @@
 - [Acquisition Simple] Exception - update_image Unknown C++ exception from OpenCV code
 
+CALIBRATION
+- alpha is not correct (near 80° according to the acquisition error)
+
 STYLES
 - [Acquisition Menu Widget] DialBox Style
 - [Options Menu Widget] ComboBox Style

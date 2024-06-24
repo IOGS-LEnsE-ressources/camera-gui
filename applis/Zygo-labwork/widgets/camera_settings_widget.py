@@ -44,8 +44,7 @@ styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 # %% Params
-BUTTON_HEIGHT = 60  # px
-OPTIONS_BUTTON_HEIGHT = 20  # px
+BUTTON_HEIGHT = 30  # px
 
 
 # %% Widget
@@ -90,6 +89,8 @@ class CameraSettingsWidget(QWidget):
 
         # ...
         self.button_big_cam = QPushButton('Caméra en plein écran')
+        self.button_big_cam.setFixedHeight(BUTTON_HEIGHT)
+        self.button_big_cam.setStyleSheet(unactived_button)
         self.button_big_cam.clicked.connect(self.button_big_cam_isClicked)
 
         self.layout.addWidget(self.label_title_camera_settings)
@@ -116,8 +117,9 @@ class CameraSettingsWidget(QWidget):
         self.slider_exposure_time.set_value(exposure_time / 1000)
 
     def button_big_cam_isClicked(self):
+        self.button_big_cam.setStyleSheet(actived_button)
         self.zoom_activated.emit(True)
-
+        self.button_big_cam.setStyleSheet(unactived_button)
 
 # %% Example
 if __name__ == '__main__':

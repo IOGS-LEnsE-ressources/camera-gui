@@ -220,7 +220,6 @@ def cartesian_zernike_polynomials(x: np.ndarray, y: np.ndarray, osa_index: int) 
 def get_zernike_coefficient(surface: np.ndarray) -> np.ndarray:
     # Parameters
     N = 37 # Degree of the polynomial
-    limit = 1e-3 # Below, the coefficients are considered insignificant.
     
     # Dimensions of the surface
     a, b = surface.shape

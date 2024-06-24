@@ -13,10 +13,10 @@ Ne = 512;
 %4 : Ne = 512 N_Phi 32
 %5 : Ne = 512 N_Phi 16
 
-%valeur par défaut 2
+%valeur par dï¿½faut 2
 zoom_psf = 4;
 
-val_def_echant    = {'512','4'}; %pour la boite de dialogue
+val_def_echant = {'512','4'}; %pour la boite de dialogue
 
 %pour l'affichage x,y
 Lambda = 632.8*1E-6 %en mm
@@ -60,19 +60,19 @@ while  re_calcul_tout==0;
     PSF_parfaite = Ampl_image_parfaite.*conj(Ampl_image_parfaite) ;
     PSF_norm = Ampl_image.*conj(Ampl_image) ;
 
-    PSF_norm = PSF_norm/(max(max(PSF_parfaite))) ; %Normalisation à la tache d'airy
+    PSF_norm = PSF_norm/(max(max(PSF_parfaite))) ; %Normalisation ï¿½ la tache d'airy
     PSF_parfaite = PSF_parfaite/(max(max(PSF_parfaite))) ;
 
     Rapport_de_Strelh=max(max(PSF_norm));
     %titre des PSF
     str_Strehl=['PSF :        Strehl ratio =' num2str(Rapport_de_Strelh,3)];
-    PSF_OK=1;%psf calculé
+    PSF_OK=1;%psf calculï¿½
 
 
     while  retourne_menuP==0;
 
         menu_PSF=menu('Menu PSF','Niveau de gris','Coupe X',...
-            'Coupe Y','Defoc. (ecart_normal)','Defoc. (delta Z)','Energie encerclée','Choix échantillonage','Fermer Menu PSF');
+            'Coupe Y','Defoc. (ecart_normal)','Defoc. (delta Z)','Energie encerclï¿½e','Choix ï¿½chantillonage','Fermer Menu PSF');
         x_image=1e3*(Rayon_image/Rapport_pupille_plan )*(-Ne/2:+Ne/2-1); %axe de l'image echelle en microns
         %fig_psf= figure;
         if menu_PSF==1
@@ -113,7 +113,7 @@ while  re_calcul_tout==0;
 
         %%%%%%%%%%%%%%%%%%%PSF avec defoc entre lambda/2 et - lambda/2
         if menu_PSF==4
-            fig_psf5= figure('name','PSF avec défocalistion','position',[100 200 1000 400]);
+            fig_psf5= figure('name','PSF avec dï¿½focalistion','position',[100 200 1000 400]);
             for Num_defoc=1:5
                 Defoc_en_lambda = (Num_defoc - 3)/4;%pas de lambda/4
                 [Z_phase_defoc]=defoc_phase_map(mask,Defoc_en_lambda);
@@ -126,7 +126,7 @@ while  re_calcul_tout==0;
                 PSF_parfaite = Ampl_image_parfaite.*conj(Ampl_image_parfaite) ;
                 PSF_norm_defocalise = Ampl_image_defocalise.*conj(Ampl_image_defocalise) ;
 
-                PSF_norm_defocalise = PSF_norm_defocalise/(max(max(PSF_parfaite))) ; %Normalisation à la tache d'airy
+                PSF_norm_defocalise = PSF_norm_defocalise/(max(max(PSF_parfaite))) ; %Normalisation ï¿½ la tache d'airy
                 PSF_parfaite = PSF_parfaite/(max(max(PSF_parfaite))) ;
 
                 Rapport_de_Strelh=max(max(PSF_norm_defocalise));
@@ -149,7 +149,7 @@ while  re_calcul_tout==0;
             subplot(1,5,3)
             delta_Z=(Lambda/4)/(1-cos(1/(2*N_ouverture))); %Calcul la defoc en Delta Z
 
-            title(['1/4 Lambda, soit :' num2str(delta_Z,2) 'mm de défoc. entre plans images'])
+            title(['1/4 Lambda, soit :' num2str(delta_Z,2) 'mm de dï¿½foc. entre plans images'])
 
 
         end
@@ -168,7 +168,7 @@ while  re_calcul_tout==0;
                 delta_Z=str2num(reponse{1});
                 ecart_normal=delta_Z*(1-cos(1/(2*N_ouverture)))/Lambda;%en lambda
             end
-            fig_psf6= figure('name','PSF avec défocalistion','position',[100 200 1000 400]);
+            fig_psf6= figure('name','PSF avec dï¿½focalistion','position',[100 200 1000 400]);
 
             for Num_defoc=1:5
 
@@ -184,7 +184,7 @@ while  re_calcul_tout==0;
                 PSF_parfaite = Ampl_image_parfaite.*conj(Ampl_image_parfaite) ;
                 PSF_norm_defocalise = Ampl_image_defocalise.*conj(Ampl_image_defocalise) ;
 
-                PSF_norm_defocalise = PSF_norm_defocalise/(max(max(PSF_parfaite))) ; %Normalisation à la tache d'airy
+                PSF_norm_defocalise = PSF_norm_defocalise/(max(max(PSF_parfaite))) ; %Normalisation ï¿½ la tache d'airy
                 PSF_parfaite = PSF_parfaite/(max(max(PSF_parfaite))) ;
 
                 Rapport_de_Strelh=max(max(PSF_norm_defocalise));
@@ -203,12 +203,12 @@ while  re_calcul_tout==0;
             end
             subplot(1,5,3)
             %delta_Z=(Lambda/4)/(1-cos(Rayon_pupille/foc));
-            title([num2str(delta_Z/2,2) 'mm de défoc. entre plans images, soit un ecart normal :' num2str(ecart_normal/2,2) 'lambda'])
+            title([num2str(delta_Z/2,2) 'mm de dï¿½foc. entre plans images, soit un ecart normal :' num2str(ecart_normal/2,2) 'lambda'])
 
         end
 
         if menu_PSF==6
-            % Energie encerclée
+            % Energie encerclï¿½e
             energie_encerclee(PSF_norm,PSF_parfaite,N_ouverture,zoom_psf);
         end
 
@@ -216,10 +216,10 @@ while  re_calcul_tout==0;
 
         if menu_PSF==7
             % configuration echantillonnage Ne et zoom_PSF
-            prompt  = {'Nombre d''échantillons, Ne :128, 256, 512 ou 1024','Zoom de la PSF : 1, 2 , 3 , 4 ou 5 '};%
+            prompt  = {'Nombre d''ï¿½chantillons, Ne :128, 256, 512 ou 1024','Zoom de la PSF : 1, 2 , 3 , 4 ou 5 '};%
             %Rapport plan pupille = 2^zoom
             val_echant    =    val_def_echant;
-            titre_dialogue   = 'Configuration de l''échantillonnage';
+            titre_dialogue   = 'Configuration de l''ï¿½chantillonnage';
             lineNo  = 1;
             reponse  = inputdlg(prompt,titre_dialogue,lineNo,val_echant);
             val_def_echant =reponse;

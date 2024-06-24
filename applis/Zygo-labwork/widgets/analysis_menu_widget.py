@@ -60,13 +60,31 @@ class AnalysisMenuWidget(QWidget):
         self.label_title_main_menu.setStyleSheet(styleH1)
         self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.button_zernike_menu = QPushButton("Zernike / Sodiel")
+        self.button_zernike_menu = QPushButton("Zernike / Seidel")
         self.button_zernike_menu.setStyleSheet(unactived_button)
         self.button_zernike_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_zernike_menu.clicked.connect(self.button_analysis_menu_isClicked)
 
+        self.button_psf_menu = QPushButton("PSF")
+        self.button_psf_menu.setStyleSheet(unactived_button)
+        self.button_psf_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_psf_menu.clicked.connect(self.button_analysis_menu_isClicked)
+
+        self.button_mtf_menu = QPushButton("MTF")
+        self.button_mtf_menu.setStyleSheet(unactived_button)
+        self.button_mtf_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_mtf_menu.clicked.connect(self.button_analysis_menu_isClicked)
+
+        self.button_spot_diagram_menu = QPushButton("Spot diagram")
+        self.button_spot_diagram_menu.setStyleSheet(unactived_button)
+        self.button_spot_diagram_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_spot_diagram_menu.clicked.connect(self.button_analysis_menu_isClicked)
+
         self.sublayout.addWidget(self.label_title_main_menu)
         self.sublayout.addWidget(self.button_zernike_menu)
+        self.sublayout.addWidget(self.button_psf_menu)
+        self.sublayout.addWidget(self.button_mtf_menu)
+        self.sublayout.addWidget(self.button_spot_diagram_menu)
         self.sublayout.addStretch()
         self.subwidget.setLayout(self.sublayout)
 
@@ -76,6 +94,9 @@ class AnalysisMenuWidget(QWidget):
     def unactive_buttons(self):
         """ Switches all buttons to inactive style """
         self.button_zernike_menu.setStyleSheet(unactived_button)
+        self.button_psf_menu.setStyleSheet(unactived_button)
+        self.button_mtf_menu.setStyleSheet(unactived_button)
+        self.button_spot_diagram_menu.setStyleSheet(unactived_button)
         
     def button_analysis_menu_isClicked(self):
         sender = self.sender()
@@ -86,6 +107,18 @@ class AnalysisMenuWidget(QWidget):
         if sender == self.button_zernike_menu:
             # Action
             self.analysis_selected.emit('zernike')
+
+        elif sender == self.button_psf_menu:
+            # Action
+            self.analysis_selected.emit('psf')
+
+        elif sender == self.button_mtf_menu:
+            # Action
+            self.analysis_selected.emit('mtf')
+
+        elif sender == self.button_spot_diagram_menu:
+            # Action
+            self.analysis_selected.emit('spot_diagram')
 
     def reset_menu(self):
         # Change style
