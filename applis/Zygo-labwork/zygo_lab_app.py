@@ -15,7 +15,10 @@ https://iogs-lense-ressources.github.io/camera-gui/
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 """
 
+# Standard library imports
 import sys
+
+# PyQt6 imports
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
@@ -25,6 +28,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtCore import Qt
 
+# Third-party library imports
+import numpy as np
+
+# Project-specific module imports
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from lensecam.ids.camera_ids import CameraIds
@@ -34,6 +41,8 @@ from ids_peak import ids_peak
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
+
+from analyses_app import AnalysisApp
 
 from widgets.title_widget import TitleWidget
 from widgets.main_menu_widget import MainMenuWidget
@@ -46,16 +55,12 @@ from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import ImageWidget
 #from widgets.display_zernike_widget import *
-from analyses_app import AnalysisApp
 
 from process.initialization_parameters import *
-
-import numpy as np
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 class ZygoLabApp(QWidget):
-
     def __init__(self) -> None:
         """Default constructor of the class.
         """
@@ -71,10 +76,13 @@ class ZygoLabApp(QWidget):
         # Default settings
         # ----------------
         default_settings_dict = read_default_parameters('config.txt')
+
         default_exposure = float(default_settings_dict['Exposure time']) # ms
         default_exposure *= 1000 # µs
         self.camera.set_exposure(default_exposure) # µs
-        self.camera.set_black_level(63)
+
+        default_black_level = int(default_settings_dict['Black level'])
+        self.camera.set_black_level(default_black_level)
 
         # Initialisation of the mask selection attributes
         # -----------------------------------------------
@@ -197,10 +205,12 @@ class ZygoLabApp(QWidget):
     def zoom_action(self, event):
         if event is True:
             self.zoom_activated = True
+            self.camera_settings_widget.button_big_cam.setStyleSheet(actived_button)
             self.zoom_window.showMaximized()
 
     def zoom_closed_action(self, event):
         self.zoom_activated = False
+        self.camera_settings_widget.button_big_cam.setStyleSheet(unactived_button)
 
     def thread_update_image(self, image_array):
         """Action performed when the live acquisition (via CameraThread) is running."""
@@ -251,6 +261,7 @@ class ZygoLabApp(QWidget):
         self.clear_layout(2, 1)
         self.clear_layout(2, 2)
         if event == 'camera_settings_main_menu':
+            self.clear_layout(1, 2)
             self.camera_settings_widget.update_parameters()
             self.layout.addWidget(self.camera_settings_widget, 2, 1)
             self.camera_settings_widget.zoom_activated.connect(self.zoom_action)
@@ -316,7 +327,7 @@ class ZygoLabApp(QWidget):
 
     def signal_language_changed_isReceived(self, language_selected):
         """Handler for the language updated signal."""
-        print(f"Signal received with language selected: {language_selected}")
+        #print(f"Signal received with language selected: {language_selected}")
         #dictionary.clear()
         if language_selected == 'English':
             dictionaray = load_dictionary('lang\dict_EN.txt')

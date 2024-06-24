@@ -37,6 +37,8 @@ from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
 
+from process.initialization_parameters import *
+
 # %% To add in lensepy librairy
 # Styles
 # ------
@@ -64,7 +66,7 @@ class CameraSettingsWidget(QWidget):
         self.label_title_camera_settings = QLabel("Paramètres de la caméra")
         self.label_title_camera_settings.setStyleSheet(styleH1)
 
-        # Camera ID
+        """# Camera ID
         # ---------
         self.subwidget_camera_id = QWidget()
         self.sublayout_camera_id = QHBoxLayout()
@@ -80,24 +82,37 @@ class CameraSettingsWidget(QWidget):
         self.sublayout_camera_id.addWidget(self.label_value_camera_id)
         self.sublayout_camera_id.setContentsMargins(0, 0, 0, 0)
 
-        self.subwidget_camera_id.setLayout(self.sublayout_camera_id)
+        self.subwidget_camera_id.setLayout(self.sublayout_camera_id)"""
 
         # Settings
         # --------
         self.slider_exposure_time = SliderBloc(name="Temps d'exposition", unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
 
-        # ...
+        self.slider_black_level = SliderBloc(name="Black level", unit='', min_value=1, max_value=100)
+        self.slider_black_level.slider_changed.connect(self.slider_black_level_changing)
+
+        # Big cam
+        # -------
         self.button_big_cam = QPushButton('Caméra en plein écran')
         self.button_big_cam.setFixedHeight(BUTTON_HEIGHT)
         self.button_big_cam.setStyleSheet(unactived_button)
         self.button_big_cam.clicked.connect(self.button_big_cam_isClicked)
 
+        # Default settings
+        # ----------------
+        self.button_default_settings = QPushButton('Rétablir les valeurs par défaut')
+        self.button_default_settings.setFixedHeight(BUTTON_HEIGHT)
+        self.button_default_settings.setStyleSheet(unactived_button)
+        self.button_default_settings.clicked.connect(self.button_default_settings_isClicked)
+
         self.layout.addWidget(self.label_title_camera_settings)
-        self.layout.addWidget(self.subwidget_camera_id)
+        """self.layout.addWidget(self.subwidget_camera_id)"""
         self.layout.addWidget(self.slider_exposure_time)
+        self.layout.addWidget(self.slider_black_level)
         self.layout.addWidget(self.button_big_cam)
         self.layout.addStretch()
+        self.layout.addWidget(self.button_default_settings)
         self.setLayout(self.layout)
 
     def slider_exposure_time_changing(self, event):
@@ -106,20 +121,44 @@ class CameraSettingsWidget(QWidget):
             exposure_time_value = self.slider_exposure_time.get_value() * 1000
             self.camera.set_exposure(exposure_time_value)
 
+    def slider_black_level_changing(self, event):
+        """Action performed when the exposure time slider changed."""
+        if self.camera is not None:
+            self.camera.set_black_level(int(self.slider_black_level.get_value()))
+
+
     def update_parameters(self, auto_min_max: bool = False) -> None:
         """Update displayed parameters values, from the camera.
-
         """
         if auto_min_max:
             exposure_min, exposure_max = self.camera.get_exposure_range()
             self.slider_exposure_time.set_min_max_slider_values(exposure_min // 1000, exposure_max // 1000)
+
+            black_min, black_max = self.camera.get_black_level_range()
+            self.slider_black_level.set_min_max_slider_values(black_min, black_max)
+        
         exposure_time = self.camera.get_exposure()
         self.slider_exposure_time.set_value(exposure_time / 1000)
+
+        black_level = self.camera.get_black_level()
+        self.slider_black_level.set_value(int(black_level))
 
     def button_big_cam_isClicked(self):
         self.button_big_cam.setStyleSheet(actived_button)
         self.zoom_activated.emit(True)
         self.button_big_cam.setStyleSheet(unactived_button)
+
+    def button_default_settings_isClicked(self):
+        default_settings_dict = read_default_parameters('config.txt')
+
+        default_exposure = float(default_settings_dict['Exposure time']) # ms
+        default_exposure *= 1000 # µs
+        self.camera.set_exposure(default_exposure) # µs
+
+        default_black_level = int(default_settings_dict['Black level'])
+        self.camera.set_black_level(default_black_level)
+
+        self.update_parameters()
 
 # %% Example
 if __name__ == '__main__':

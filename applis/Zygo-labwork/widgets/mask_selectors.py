@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-File: masks_menu_widget.py
+File: zygo_lab_app.py
 
-This file is associated with a first-year and second year engineering lab in photonics.
+This file contains the definition of the ZygoLabApp class, which serves as the main interface 
+for a photonics laboratory in both first-year and second-year engineering courses.
+
 First-year subject: http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
 Second-year subject: https://lense.institutoptique.fr/s8-aberrations/
 
 Development details for this interface:
-https://iogs-lense-ressources.github.io/camera-gui/contents/applis/appli_Zygo_labwork.html
+https://iogs-lense-ressources.github.io/camera-gui/
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
-.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 """
 
 import sys
