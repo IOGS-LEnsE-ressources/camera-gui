@@ -29,9 +29,11 @@ print(f'F(Hz) = {self.camera_remote.FindNode("DeviceClockFrequency").Value()}')
 
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
+from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 import sys
 import os
 import numpy as np
+
 from PyQt6.QtWidgets import (QApplication, QMainWindow,
                              QGridLayout, QWidget,
                              QMessageBox)
@@ -116,12 +118,9 @@ class MainWindow(QMainWindow):
         self.params_widget = QWidget()
         self.time_graph = QWidget()
         self.time_graph.setStyleSheet("background-color: lightblue;")
-        self.histo_graph = QWidget()
-
         self.main_layout.addWidget(self.title_widget, 0, 0, 1, 3)
         self.main_layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
         self.main_layout.addWidget(self.camera_widget, 1, 1)
-        self.main_layout.addWidget(self.histo_graph, 1, 2)
         self.main_layout.addWidget(self.params_widget, 2, 1)  # params_widget
         self.main_layout.addWidget(self.time_graph, 2, 2)
 
@@ -222,17 +221,17 @@ class MainWindow(QMainWindow):
                 self.main_layout.addWidget(self.camera_widget, 1, 1)
                 self.mode = Modes.SETTINGS
                 self.camera_thread.start()
-                self.main_menu_widget.button_camera_settings_main_menu_isClicked()
+                # self.main_menu_widget.button_camera_settings_main_menu_isClicked()
                 self.camera_widget.camera_display_params.update_params()
-
 
     def menu_action(self, event) -> None:
         try:
-            self.timer.stop()
-            if self.mode == Modes.SETTINGS:
+            #self.timer.stop()
+            if self.camera_thread.running:
                 self.camera_thread.stop()
-            self.camera.stop_acquisition()
-            self.camera.free_memory()
+            else:
+                self.camera.stop_acquisition()
+                self.camera.free_memory()
             if event == 'camera_settings':
                 self.clear_layout(2, 1)
                 if self.camera is None:
@@ -247,12 +246,14 @@ class MainWindow(QMainWindow):
                     self.main_layout.addWidget(self.params_widget, 2, 1)
             elif event == 'aoi':
                 self.mode = Modes.AOI
+                self.camera_thread.start()
+                '''
                 self.camera.alloc_memory()
                 self.camera.start_acquisition()
-                self.start_time_graphe()
                 self.timer.setInterval(200)
                 self.timer.start()
-                print('AOI')
+                '''
+
             elif event == 'space':
                 self.mode = Modes.SPACE
 
@@ -302,32 +303,33 @@ class MainWindow(QMainWindow):
     def thread_update_image(self, image_array):
         """Action performed when the live acquisition (via CameraThread) is running."""
         try:
-            frame_width = self.camera_widget.width()
-            frame_height = self.camera_widget.height()
+            if image_array is not None:
+                image = image_array.squeeze()
+                frame_width = self.camera_widget.width()
+                frame_height = self.camera_widget.height()
 
-            if self.mode != Modes.SETTINGS:
-                self.process_data(image_array)
+                self.process_data(image)
 
-            # Resize to the display size
-            image_array_disp2 = resize_image_ratio(
-                image_array,
-                frame_width,
-                frame_height)
-            # Convert the frame into an image
-            image = array_to_qimage(image_array_disp2)
-            pmap = QPixmap(image)
-            # display it in the cameraDisplay
-            self.camera_widget.camera_display.setPixmap(pmap)
+                # Resize to the display size
+                image_resized = resize_image_ratio(
+                    image,
+                    frame_width,
+                    frame_height)
+                # Convert the frame into an image
+                qimage = array_to_qimage(image_resized) #image_array_disp2)
+                pmap = QPixmap(qimage)
+                # display it in the cameraDisplay
+                self.camera_widget.camera_display.setPixmap(pmap)
         except Exception as e:
             print(f'Exception - update_image {e}')
 
     def update_timer(self):
         image_array = self.camera.get_image()
-
         self.thread_update_image(image_array)
 
     def process_data(self, image_array):
         if self.mode == Modes.AOI:
+            '''
             if self.x_time is None:
                 self.x_time = np.array([0])
                 self.y_time = [np.zeros(0) for _ in range(4)]
@@ -346,9 +348,24 @@ class MainWindow(QMainWindow):
 
             self.time_graph.set_data(self.x_time, self.y_time[1:])
             self.time_graph.refresh_chart()
+            '''
+            self.clear_layout(1, 2)
+            image_histo = ImageHistogramWidget()
+            image_histo.set_background('white')
+            image_histo.set_image(image_array)
+            image_histo.refresh_chart()
+            image_histo.update_info()
+            self.main_layout.addWidget(image_histo, 1, 2)
+            '''
+            # self.histo_graph.refresh_chart()
+            # self.histo_graph.update_info()
+            # self.histo_graph.set_image(image_array)
+            '''
 
     def start_time_graphe(self):
         self.rand_pixels()
+        self.clear_layout(2, 2)
+        '''
         self.x_time = np.array([0])
         self.y_time = [np.zeros(0) for _ in range(4)]
         self.x_time_cpt = 0
@@ -356,8 +373,8 @@ class MainWindow(QMainWindow):
         self.time_graph.set_background('white')
         self.time_graph.set_x_label('Image Number')
         self.time_graph.set_y_label('RAW Value')
-        self.clear_layout(2, 2)
         self.main_layout.addWidget(self.time_graph, 2, 2)
+        '''
 
     def rand_pixels(self):
         # TO DO : in the AOI !

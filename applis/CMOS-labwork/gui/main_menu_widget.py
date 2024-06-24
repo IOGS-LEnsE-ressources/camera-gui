@@ -45,7 +45,7 @@ class MainMenuWidget(QWidget):
         self.button_camera_settings_main_menu = QPushButton(translate("button_camera_settings_main_menu"))
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
         self.button_camera_settings_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_camera_settings_main_menu.clicked.connect(self.button_camera_settings_main_menu_isClicked)
+        self.button_camera_settings_main_menu.clicked.connect(self.main_menu_is_clicked)
         
         self.button_aoi_main_menu = QPushButton(translate("button_aoi_main_menu"))
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
@@ -82,16 +82,19 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
         self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
-        self.button_options_main_menu.setStyleSheet(unactived_button)        
-        
-    def button_camera_settings_main_menu_isClicked(self):
-        # Change style
+        self.button_options_main_menu.setStyleSheet(unactived_button)
+
+    def main_menu_is_clicked(self):
         self.unactive_buttons()
-        self.button_camera_settings_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        self.menu_clicked.emit('camera_settings')
-        
+        sender = self.sender()
+        if sender == self.button_camera_settings_main_menu:
+            # Change style
+            sender.setStyleSheet(actived_button)
+
+            # Action
+            self.menu_clicked.emit('camera_settings')
+
+
     def button_aoi_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
