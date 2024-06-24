@@ -107,7 +107,7 @@ class Surface3DWidget(QWidget):
 
     def apply_colormap(self, z_values: np.ndarray) -> np.ndarray:
         norm = (z_values - np.nanmin(z_values)) / (np.nanmax(z_values) - np.nanmin(z_values))
-        colormap = plt.get_cmap('magma')
+        colormap = plt.get_cmap('coolwarm')
         colors = colormap(norm)
         return colors
 
@@ -207,10 +207,10 @@ class MyWindow(QMainWindow):
         self.layout.addWidget(self.chart_widget)
 
         x: np.ndarray = np.linspace(-10, 10, 100)
-        y: np.ndarray = np.linspace(-1, 1, 100)
+        y: np.ndarray = np.linspace(-10, 10, 100)
         x, y = np.meshgrid(x, y)
-        # z: np.ndarray = np.sin(np.sqrt(x**2 + y**2))
-        z = x + y
+        z: np.ndarray = np.sin(np.sqrt(x**2 + y**2))
+        # z = x + y
 
         z *= (x.max() - x.min()) * .75 / (z.max() - z.min())
 

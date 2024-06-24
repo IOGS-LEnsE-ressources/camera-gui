@@ -19,6 +19,7 @@ from numpy import sqrt, sin, cos
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from timeit import default_timer as timer
 
 if __name__ == '__main__':
     from polar_cartesian_transformations import *
@@ -276,7 +277,10 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     y = np.linspace(-1, 1, a)
     X, Y = np.meshgrid(x, y)
     
+    start = timer()
     coeffs = get_zernike_coefficient(normalized_phase)
+    end = timer()
+    print(f"Zernike coeffs: {end-start :.2f} s")
     
     """print("Zernike coefficients:")
     print(coeffs)
@@ -292,7 +296,11 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     plt.title('Zernike coefficients')
     plt.show()"""
     
+    start = timer()
     polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
+    end = timer()
+    print(f"Zernike polynomials: {end-start :.2f} s")
+
     surface = polynomials.dot((aberrations_considered * coeffs))
 
     """fig = plt.figure(figsize=(14, 6))

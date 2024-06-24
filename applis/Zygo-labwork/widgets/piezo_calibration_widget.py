@@ -108,7 +108,7 @@ class PiezoCalibrationWidget(QWidget):
 
         start_voltage = 0  # Tension de départ en volts
         end_voltage = 5 # Tension finale en volts
-        num_steps = 50  # Nombre de pas dans la rampe
+        num_steps = 100  # Nombre de pas dans la rampe
 
         print("============================= START CALIBRATION ===================================")
 
@@ -211,18 +211,21 @@ class PiezoCalibrationWidget(QWidget):
 
         self.button_start_calibration.setStyleSheet(unactived_button)
 
-        eps = 1 # °
-        V_1 = np.nanmean(ramp[np.where(np.abs(phase-0) < eps)])
-        V_2 = np.nanmean(ramp[np.where(np.abs(phase-90) < eps)])
-        V_3 = np.nanmean(ramp[np.where(np.abs(phase-180) < eps)])
-        V_4 = np.nanmean(ramp[np.where(np.abs(phase-270) < eps)])
-        V_5 = np.nanmean(ramp[np.where(np.abs(phase-360) < eps)])
+        print(ramp.shape)
 
-        print(f"V(phi=0°)={V_1}")
-        print(f"V(phi=90°)={V_2}")
-        print(f"V(phi=180°)={V_3}")
-        print(f"V(phi=270°)={V_4}")
-        print(f"V(phi=180°)={V_5}")
+        eps = 5 # °
+        V_1 = np.nanmean(ramp[(phase >= 0 - eps) & (phase <= 0 + eps)])
+        V_2 = np.nanmean(ramp[(phase >= 90 - eps) & (phase <= 90 + eps)])
+        V_3 = np.nanmean(ramp[(phase >= 180 - eps) & (phase <= 180 + eps)])
+        V_4 = np.nanmean(ramp[(phase >= 270 - eps) & (phase <= 270 + eps)])
+        V_5 = np.nanmean(ramp[(phase >= 360 - eps) & (phase <= 360 + eps)])
+
+        print(f"V(phi=0°)={V_1:.3f} V")
+        print(f"V(phi=90°)={V_2:.3f} V")
+        print(f"V(phi=180°)={V_3:.3f} V")
+        print(f"V(phi=270°)={V_4:.3f} V")
+        print(f"V(phi=180°)={V_5:.3f} V")
+        print(f"V(phi=180°)-V(phi=0°)={V_5-V_1:.3f} V")
 
         """self.parent.camera_thread.stop()
         self.parent.camera.init_camera()

@@ -220,10 +220,10 @@ class RemoveFaultsWidget(QWidget):
             self.checkbox_remove_coma.setChecked(False)
 
     def apply_modifications(self):
-        corrected_wavefront = remove_aberration(self.phase, self.aberrations_considered)
+        # corrected_wavefront = remove_aberration(self.phase, self.aberrations_considered)
         corrected_interpolated_wavefront = remove_aberration(self.interpolated_values, self.aberrations_considered)
 
-        PV, RMS = statistique_surface(corrected_wavefront)
+        PV, RMS = statistique_surface(corrected_interpolated_wavefront)
         array = np.array([
             ['', 1, 2, 3, 4, 5, 'Moyenne'],
             ['PV (λ)', round(PV, 4), np.nan, np.nan, np.nan, np.nan, round(PV, 4)],
