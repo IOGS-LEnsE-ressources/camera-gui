@@ -21,6 +21,7 @@ from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
 import numpy as np
 from scipy.interpolate import griddata
+from skimage.restoration import unwrap_phase
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
@@ -399,7 +400,12 @@ class AcquisitionMenuWidget(QWidget):
 
                     # Unwrap phase
                     unwrapped_phase_start = timer()
-                    unwrapped_phase = unwrap2D(wrapped_phase)[0]
+
+                    # unwrapped_phase = unwrap2D(wrapped_phase)[0]
+                    unwrapped_phase = unwrap_phase(wrapped_phase)
+                    unwrapped_phase[mask == 0] = np.NaN
+                    unwrapped_phase = gaussian_filter(unwrapped_phase, 10)
+
                     time_getting_unwrapped_phase = timer() - unwrapped_phase_start
                     plt.figure()
                     plt.imshow(unwrapped_phase, cmap='gray')
@@ -474,9 +480,10 @@ class AcquisitionMenuWidget(QWidget):
                         self.button_repeated_acquisition.setStyleSheet(unactived_button)  
                         return None
                     else:
-                        unwrapped_phase = unwrap2D(wrapped_phase)[0]
-                        unwrapped_phase = suppression_bord(unwrapped_phase, 3)
-                        unwrapped_phase = unwrapped_phase - np.nanmean(unwrapped_phase)
+                        # unwrapped_phase = unwrap2D(wrapped_phase)[0]
+                        unwrapped_phase = unwrap_phase(wrapped_phase)
+                        unwrapped_phase[mask == 0] = np.NaN
+                        unwrapped_phase = gaussian_filter(unwrapped_phase, 10)
 
                     self.phase = unwrapped_phase/(2*PI)
 
@@ -557,7 +564,8 @@ class AcquisitionMenuWidget(QWidget):
             
             timer_start = timer()
             #self.interpolated_values = LinearNDInterpolator(list(zip(x, y)), values)(x_grid, y_grid)
-            self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic') # or 'cubic'
+            #self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic') # or 'cubic'
+            self.interpolated_values = phase
 
             self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
 

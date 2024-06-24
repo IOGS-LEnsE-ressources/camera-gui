@@ -1,85 +1,23 @@
-# -*- coding: utf-8 -*-
-"""
-Surface3DWidget for displaying data on a 3D surface.
-
----------------------------------------
-(c) 2024 - LEnsE - Institut d'Optique
----------------------------------------
-
-Modifications
--------------
-    Creation on 2024/06/13
-
-Authors
--------
-    Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
-"""
-
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QVector3D
 import numpy as np
 import sys
-from matplotlib import cm
 import matplotlib.pyplot as plt
 
 import pyqtgraph.opengl as gl  # Import pyqtgraph for 3D OpenGL integration
+import pyqtgraph as pg
 
 from lensepy.css import *  # Import CSS styles if needed
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
-
 class Surface3DWidget(QWidget):
-    """
-    Widget used to display data in a 3D surface chart.
-
-    Attributes
-    ----------
-    title : str
-        Title of the surface plot widget.
-    plot_chart_widget : gl.GLViewWidget
-        pyqtgraph OpenGL widget to display the surface plot.
-    plot_x_data : np.ndarray
-        X-axis values to display.
-    plot_y_data : np.ndarray
-        Y-axis values to display.
-    plot_z_data : np.ndarray
-        Z-axis values to display.
-    surface_plot : gl.GLMeshItem or None
-        Surface plot object.
-
-    Methods
-    -------
-    set_data(x_axis: np.ndarray, y_axis: np.ndarray, z_axis: np.ndarray) -> None
-        Set the X, Y, and Z axis data to display on the surface plot.
-    set_axis_and_ticks_color(axis_color: str = BLUE_IOGS, ticks_color: str = BLUE_IOGS) -> None
-        Set the color of the axes and their ticks.
-    apply_colormap(z_values: np.ndarray) -> np.ndarray
-        Apply a colormap to the Z values.
-    adjust_camera_position() -> None
-        Adjust camera position to fit the data nicely.
-    refresh_chart() -> None
-        Refresh the data and display the surface plot.
-    set_title(title: str) -> None
-        Set the title of the surface plot.
-    set_information(infos: str) -> None
-        Set information text displayed below the surface plot.
-    set_background(css_color: str) -> None
-        Set the background color of the widget.
-    clear_graph() -> None
-        Clear the surface plot.
-    disable_chart() -> None
-        Remove all widgets from the layout.
-    enable_chart() -> None
-        Add and display all widgets in the layout.
-    """
-
-    def __init__(self) -> None:
-        """
-        Initialization of the 3D surface chart widget.
-        """
+    def __init__(self, grid_color='black', subdivisions=10) -> None:
         super().__init__()
+        self.grid_color = grid_color
+        self.subdivisions = subdivisions
+
         self.title: str = ''  # Initialize title as an empty string
         self.layout: QVBoxLayout = QVBoxLayout()  # Create a vertical layout for the widget
 
@@ -117,77 +55,63 @@ class Surface3DWidget(QWidget):
         # Enable chart to add widgets to the layout
         self.enable_chart()
 
+    def add_grids(self, grid_color='black', subdivisions=10):
+        # Create the background grids
+        x_min, x_max = np.nanmin(self.plot_x_data), np.nanmax(self.plot_x_data)
+        y_min, y_max = np.nanmin(self.plot_y_data), np.nanmax(self.plot_y_data)
+        z_min, z_max = np.nanmin(self.plot_z_data), np.nanmax(self.plot_z_data)
+
+        grid_x_size = x_max - x_min
+        grid_y_size = y_max - y_min
+        grid_z_size = z_max - z_min
+
+        # Calculate the spacing for the subdivisions
+        x_spacing = grid_x_size / subdivisions
+        y_spacing = grid_y_size / subdivisions
+        z_spacing = grid_z_size / subdivisions
+
+        # Create and position the XZ grid at y_min
+        gx = gl.GLGridItem(size=QVector3D(grid_z_size, grid_y_size, 0))
+        gx.rotate(90, 0, 1, 0)
+        gx.translate(x_min, (y_min + y_max) / 2, (z_min + z_max) / 2)
+        gx.setColor(pg.mkColor(grid_color))
+        gx.setSpacing(z_spacing, x_spacing)
+        self.plot_chart_widget.addItem(gx)
+
+        # Create and position the YZ grid at x_min
+        gy = gl.GLGridItem(size=QVector3D(grid_x_size, grid_z_size, 0))
+        gy.rotate(90, 1, 0, 0)
+        gy.translate((x_min + x_max) / 2, y_min, (z_min + z_max) / 2)
+        gy.setColor(pg.mkColor(grid_color))
+        gy.setSpacing(y_spacing, z_spacing)
+        self.plot_chart_widget.addItem(gy)
+
+        # Create and position the XY grid at z_min
+        gz = gl.GLGridItem(size=QVector3D(grid_x_size, grid_y_size, 0))
+        gz.translate((x_min + x_max) / 2, (y_min + y_max) / 2, z_min)
+        gz.setColor(pg.mkColor(grid_color))
+        gz.setSpacing(x_spacing, y_spacing)
+        self.plot_chart_widget.addItem(gz)
+
+
     def set_data(self, x_axis: np.ndarray, y_axis: np.ndarray, z_axis: np.ndarray) -> None:
-        """
-        Set the X, Y, and Z axis data to display on the surface plot.
-
-        Parameters
-        ----------
-        x_axis : np.ndarray
-            X-axis values to display.
-        y_axis : np.ndarray
-            Y-axis values to display.
-        z_axis : np.ndarray
-            Z-axis values to display.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method sets the data for the X, Y, and Z axes that will be used to generate the surface plot.
-        """
         self.plot_x_data = x_axis
         self.plot_y_data = y_axis
         self.plot_z_data = z_axis
 
+        # Add grids after setting data to ensure they match the data range
+        self.add_grids(self.grid_color, self.subdivisions)
+
     def set_axis_and_ticks_color(self, axis_color: str = BLUE_IOGS, ticks_color: str = BLUE_IOGS) -> None:
-        """
-        Set the color of the axes and their ticks.
-
-        Parameters
-        ----------
-        axis_color : str, optional
-            Color for the axes in CSS color format (default is BLUE_IOGS).
-        ticks_color : str, optional
-            Color for the ticks in CSS color format (default is BLUE_IOGS).
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        GLViewWidget doesn't have a straightforward way to set axis and tick colors.
-        """
         pass
 
     def apply_colormap(self, z_values: np.ndarray) -> np.ndarray:
-        """
-        Apply a colormap to the Z values.
-
-        Parameters
-        ----------
-        z_values : np.ndarray
-            Z values of the surface.
-
-        Returns
-        -------
-        colors : np.ndarray
-            Colors corresponding to the Z values.
-        """
         norm = (z_values - np.nanmin(z_values)) / (np.nanmax(z_values) - np.nanmin(z_values))
         colormap = plt.get_cmap('magma')
         colors = colormap(norm)
         return colors
 
     def adjust_camera_position(self) -> None:
-        """
-        Adjust camera position to fit the data nicely.
-        """
         x_min, x_max = np.nanmin(self.plot_x_data), np.nanmax(self.plot_x_data)
         y_min, y_max = np.nanmin(self.plot_y_data), np.nanmax(self.plot_y_data)
         z_min, z_max = np.nanmin(self.plot_z_data), np.nanmax(self.plot_z_data)
@@ -195,10 +119,10 @@ class Surface3DWidget(QWidget):
         # Calculate center of the plot
         center_x = (x_min + x_max) / 2
         center_y = (y_min + y_max) / 2
-        center_z = (z_min + z_max) / 4 *3
+        center_z = (z_min + z_max) / 4 * 3
 
         # Calculate distance for camera position
-        distance = 1.5*max(x_max - x_min, y_max - y_min, z_max - z_min) * 2
+        distance = 1.5 * max(x_max - x_min, y_max - y_min, z_max - z_min) * 2
 
         # Set camera position
         self.plot_chart_widget.setCameraPosition(
@@ -209,18 +133,6 @@ class Surface3DWidget(QWidget):
         )
 
     def refresh_chart(self) -> None:
-        """
-        Refresh the data and display the surface plot.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method refreshes the surface plot using the current X, Y, and Z data.
-        """
         if self.surface_plot:
             self.plot_chart_widget.removeItem(self.surface_plot)
 
@@ -237,10 +149,8 @@ class Surface3DWidget(QWidget):
 
         for i in range(rows - 1):
             for j in range(cols - 1):
-                faces.append([i * cols + j, i * cols +
-                             j + 1, (i + 1) * cols + j])
-                faces.append([(i + 1) * cols + j, i * cols +
-                             j + 1, (i + 1) * cols + j + 1])
+                faces.append([i * cols + j, i * cols + j + 1, (i + 1) * cols + j])
+                faces.append([(i + 1) * cols + j, i * cols + j + 1, (i + 1) * cols + j + 1])
 
                 face_colors.append(z_colors[i, j, :])
                 face_colors.append(z_colors[i, j, :])
@@ -255,96 +165,20 @@ class Surface3DWidget(QWidget):
         self.adjustSize()
 
     def set_title(self, title: str) -> None:
-        """
-        Set the title of the surface plot.
-
-        Parameters
-        ----------
-        title : str
-            Title of the surface plot.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method updates the title displayed at the top of the surface plot widget.
-        """
         self.title = title
         self.title_label.setText(self.title)
 
     def set_information(self, infos: str) -> None:
-        """
-        Set information text displayed below the surface plot.
-
-        Parameters
-        ----------
-        infos : str
-            Information to display below the surface plot.
-
-        Returns
-        -------
-            -------
-    None
-        No return value.
-
-    Notes
-    -----
-    This method updates the information text displayed below the surface plot widget.
-    """
         self.info_label.setText(infos)
 
     def set_background(self, css_color: str) -> None:
-        """
-        Set the background color of the widget.
-
-        Parameters
-        ----------
-        css_color : str
-            Color in CSS style.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method sets the background color of the entire widget.
-        """
         self.plot_chart_widget.setBackgroundColor(css_color)
         self.setStyleSheet("background:" + css_color + ";")
 
     def clear_graph(self) -> None:
-        """
-        Clear the surface plot from the widget.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method clears the main surface plot from the widget.
-        """
         self.plot_chart_widget.clear()
 
     def disable_chart(self) -> None:
-        """
-        Remove all widgets from the layout.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method removes all child widgets from the layout.
-        """
         count = self.layout.count()
         for i in reversed(range(count)):
             item = self.layout.itemAt(i)
@@ -352,34 +186,13 @@ class Surface3DWidget(QWidget):
             widget.deleteLater()
 
     def enable_chart(self) -> None:
-        """
-        Add and display all widgets in the layout.
-
-        Returns
-        -------
-        None
-            No return value.
-
-        Notes
-        -----
-        This method adds all child widgets to the layout for display.
-        """
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
         self.layout.addWidget(self.info_label)
 
 
-# -----------------------------------------------------------------------------------------------
-# Only for testing
 class MyWindow(QMainWindow):
-    """
-    Main application window for testing the Surface3DWidget.
-    """
-
     def __init__(self) -> None:
-        """
-        Initialization of the main application window.
-        """
         super().__init__()
 
         self.setWindowTitle("3D Surface Chart")
@@ -394,9 +207,10 @@ class MyWindow(QMainWindow):
         self.layout.addWidget(self.chart_widget)
 
         x: np.ndarray = np.linspace(-10, 10, 100)
-        y: np.ndarray = np.linspace(-10, 10, 100)
+        y: np.ndarray = np.linspace(-1, 1, 100)
         x, y = np.meshgrid(x, y)
-        z: np.ndarray = np.sin(np.sqrt(x**2 + y**2))
+        # z: np.ndarray = np.sin(np.sqrt(x**2 + y**2))
+        z = x + y
 
         z *= (x.max() - x.min()) * .75 / (z.max() - z.min())
 
@@ -409,10 +223,8 @@ class MyWindow(QMainWindow):
         self.setCentralWidget(self.centralWid)
 
 
-# Launching as main for tests
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyWindow()
     main.show()
     sys.exit(app.exec())
-

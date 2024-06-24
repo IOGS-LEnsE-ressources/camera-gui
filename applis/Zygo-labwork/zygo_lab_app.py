@@ -124,7 +124,7 @@ class ZygoLabApp(QWidget):
         self.results_menu_widget = ResultsMenuWidget()
         self.options_menu_widget = OptionsMenuWidget()
 
-        self.graphic_widget = Surface3DWidget()
+        self.graphic_widget = Surface3DWidget('lightgray', 1)
         self.graphic_widget.set_title('')
         self.graphic_widget.set_information('')
         self.graphic_widget.set_background('white')
@@ -274,7 +274,7 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.acquisition_menu_widget, 2, 1)
             self.layout.addWidget(self.results_menu_widget, 2, 2)
 
-            self.graphic_widget = Surface3DWidget()
+            self.graphic_widget = Surface3DWidget('lightgray', 1)
             self.graphic_widget.set_title('')
             self.graphic_widget.set_information('')
             self.graphic_widget.set_background('white')
