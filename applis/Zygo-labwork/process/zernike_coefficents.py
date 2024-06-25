@@ -264,7 +264,7 @@ def get_polynomials_basis(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         polynomials[:, i] = cartesian_zernike_polynomials(x, y, i)
     return polynomials
 
-def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> np.ndarray:
+def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray, coeffs=None, polynomials=None) -> np.ndarray:
     a, b = phase.shape
     normalized_phase = phase / (2 * PI)
     
@@ -275,48 +275,20 @@ def remove_aberration(phase: np.ndarray, aberrations_considered: np.ndarray) -> 
     x = np.linspace(-1, 1, b)
     y = np.linspace(-1, 1, a)
     X, Y = np.meshgrid(x, y)
-    
-    start = timer()
-    coeffs = get_zernike_coefficient(normalized_phase)
-    end = timer()
-    print(f"Zernike coeffs: {end-start :.2f} s")
-    
-    """print("Zernike coefficients:")
-    print(coeffs)
 
-    plt.figure(figsize=(10, 6))
-    plt.bar(list(range(len(coeffs))), coeffs**2)
-    plt.bar(list(range(len(coeffs))), (coeffs*aberrations_considered)**2, color='red')
-    plt.xticks(list(range(len(coeffs))))
-    #plt.axhline(1e-3)
-    #plt.semilogy()
-    plt.axhline(0, color='black')
-    plt.ylabel(r'$C_i^2$')
-    plt.title('Zernike coefficients')
-    plt.show()"""
-    
-    start = timer()
-    polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
-    end = timer()
-    print(f"Zernike polynomials: {end-start :.2f} s")
+    if coeffs is None:
+        coeffs = get_zernike_coefficient(normalized_phase)
+    if polynomials is None:
+        polynomials = get_polynomials_basis(X.flatten(), Y.flatten())
 
-    surface = polynomials.dot((aberrations_considered * coeffs))
-
-    """fig = plt.figure(figsize=(14, 6))
-
-    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-    surf1 = ax1.plot_surface(X, Y, surface.reshape((a, b)), cmap='viridis')
-    ax1.set_xlabel('X')
-    ax1.set_ylabel('Y')
-    fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)"""
-    
+    surface = polynomials.dot((aberrations_considered * coeffs))  
     
     normalized_phase = normalized_phase - surface.reshape((a, b))
     """print("Normalized phase after correction:")
     print(normalized_phase)
     print(normalized_phase.min(), normalized_phase.max())"""
     
-    return normalized_phase * 2 * PI
+    return normalized_phase * 2 * PI, coeffs, polynomials
 
 if __name__ == '__main__':
     # Dimensions de l'image

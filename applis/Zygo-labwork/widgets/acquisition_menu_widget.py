@@ -20,13 +20,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
 import numpy as np
-from scipy.interpolate import griddata
 from skimage.restoration import unwrap_phase
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-from process.unwrap import unwrap2D, suppression_bord
+from process.unwrap import suppression_bord
 from process.acquisition_images import get_phase, check_alpha
 from process.surface_statistics import statistique_surface
 from process.export_images import *
@@ -38,7 +37,6 @@ else:
     from widgets.lineedit_bloc import LineEditBloc
 
 from timeit import default_timer as timer
-from scipy.interpolate import NearestNDInterpolator, LinearNDInterpolator
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
@@ -139,7 +137,6 @@ class RemoveFaultsWidget(QWidget):
 
         try:
             self.phase = self.parent.phase
-            self.interpolated_values = self.parent.interpolated_values
             self.aberrations_considered = self.parent.aberrations_considered
 
             self.apply_modifications()
@@ -156,7 +153,6 @@ class RemoveFaultsWidget(QWidget):
 
         try:
             self.phase = self.parent.phase
-            self.interpolated_values = self.parent.interpolated_values
             self.aberrations_considered = self.parent.aberrations_considered
 
             self.apply_modifications()
@@ -173,7 +169,6 @@ class RemoveFaultsWidget(QWidget):
 
         try:
             self.phase = self.parent.phase
-            self.interpolated_values = self.parent.interpolated_values
             self.aberrations_considered = self.parent.aberrations_considered
 
             self.apply_modifications()
@@ -191,7 +186,6 @@ class RemoveFaultsWidget(QWidget):
 
         try:
             self.phase = self.parent.phase
-            self.interpolated_values = self.parent.interpolated_values
             self.aberrations_considered = self.parent.aberrations_considered
 
             self.apply_modifications()
@@ -209,7 +203,6 @@ class RemoveFaultsWidget(QWidget):
 
         try:
             self.phase = self.parent.phase
-            self.interpolated_values = self.parent.interpolated_values
             self.aberrations_considered = self.parent.aberrations_considered
 
             self.apply_modifications()
@@ -221,10 +214,19 @@ class RemoveFaultsWidget(QWidget):
 
     def apply_modifications(self):
         # corrected_wavefront = remove_aberration(self.phase, self.aberrations_considered)
-        corrected_interpolated_wavefront = remove_aberration(self.interpolated_values, self.aberrations_considered)
+        print('apply_modifications')
+        if not(hasattr(self, 'coeffs')):
+            corrected_wavefront, self.coeffs, self.polynomials = remove_aberration(self.phase, self.aberrations_considered)
+        elif hasattr(self, 'polynomials'):
+            corrected_wavefront, self.coeffs, self.polynomials = remove_aberration(self.phase, self.aberrations_considered, self.coeffs, self.polynomials)
+        else:
+            corrected_wavefront, self.coeffs, self.polynomials = remove_aberration(self.phase, self.aberrations_considered, self.coeffs)
+        
+        # corrected_wavefront *= self.parent.wedge_factor
+        corrected_wavefront *= np.sign(self.parent.wedge_factor)
 
-        PV, RMS = statistique_surface(corrected_interpolated_wavefront)
-        print(f"corrected_interpolated_wavefront min/max: {np.nanmin(corrected_interpolated_wavefront)}/{np.nanmax(corrected_interpolated_wavefront)}")
+        PV, RMS = statistique_surface(corrected_wavefront)
+        print(f"corrected_interpolated_wavefront min/max: {np.nanmin(corrected_wavefront)}/{np.nanmax(corrected_wavefront)}")
         array = np.array([
             ['', 1, 2, 3, 4, 5, 'Moyenne'],
             ['PV (λ)', round(PV, 4), np.nan, np.nan, np.nan, np.nan, round(PV, 4)],
@@ -234,7 +236,13 @@ class RemoveFaultsWidget(QWidget):
         self.parent.parent.results_menu_widget.array = array
         self.parent.parent.results_menu_widget.table_results.update_table(self.parent.multiply_results_array_by_wedge_factor())
 
-        self.parent.display_phase_3d(corrected_interpolated_wavefront, interpolation=False)
+        self.parent.display_phase_3d(corrected_wavefront)
+
+    def new_sample(self):
+        if hasattr(self, 'coeffs'):
+            del self.coeffs
+        if hasattr(self, 'polynomials'):
+            del self.polynomials
 
 
 # %% Widget
@@ -339,17 +347,15 @@ class AcquisitionMenuWidget(QWidget):
                 msg_box.information(self, "Information", "Le wedge factor a bien été modifié.")
 
                 if self.parent is not None and hasattr(self.parent, 'results_menu_widget'):
-                    # Assurez-vous que results_menu_widget possède l'attribut table_results et array
                     if hasattr(self.parent.results_menu_widget, 'table_results') and hasattr(self.parent.results_menu_widget, 'array'):
                         self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
                     else:
                         print("L'attribut 'table_results' ou 'array' est manquant dans 'results_menu_widget'")
 
-                    if hasattr(self, 'interpolated_values'):
-                        self.display_phase_3d(self.interpolated_values*self.wedge_factor/old_wedge_factor)
+                    if hasattr(self, 'phase'):
+                        self.display_phase_3d(self.phase*self.wedge_factor/old_wedge_factor)
                 else:
                     print("Le parent n'existe pas ou n'a pas l'attribut 'results_menu_widget'")
-
 
             except ValueError:
                 msg_box = QMessageBox()
@@ -366,6 +372,8 @@ class AcquisitionMenuWidget(QWidget):
     def button_simple_acquisition_isClicked(self):
         self.button_simple_acquisition.setStyleSheet(actived_button)
         print('button_simple_acquisition_isClicked')
+
+        self.submenu_remove_faults.new_sample()
 
         if self.parent is not None:
             try:
@@ -433,7 +441,7 @@ class AcquisitionMenuWidget(QWidget):
                     sep='\n', end='\n\n'
                 )"""
                 
-                # self.zernike_coefficients = get_zernike_coefficient(self.phase)
+                #self.zernike_coefficients = get_zernike_coefficient(self.phase)
 
                 # Calculate statistics
                 PV, RMS = statistique_surface(self.phase)
@@ -456,6 +464,8 @@ class AcquisitionMenuWidget(QWidget):
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
         print('button_repeated_acquisition_isClicked')
+
+        self.submenu_remove_faults.new_sample()
 
         if self.parent is not None:
             try:
@@ -546,7 +556,7 @@ class AcquisitionMenuWidget(QWidget):
 
         self.button_save_phase.setStyleSheet(unactived_button)
 
-    def display_phase_3d(self, phase, interpolation=True):
+    def display_phase_3d(self, phase):
         import cv2
         scale_factor = 0.4
         scaled_image = cv2.resize(phase, (0, 0), fx = scale_factor, fy = scale_factor, interpolation=cv2.INTER_CUBIC)
@@ -560,20 +570,7 @@ class AcquisitionMenuWidget(QWidget):
         # Create the grid for interpolation
         x_grid, y_grid = np.meshgrid(np.linspace(0, phase.shape[1], phase.shape[1]), np.linspace(0, phase.shape[0], phase.shape[0]))
 
-
-        if interpolation:
-            
-            timer_start = timer()
-            #self.interpolated_values = LinearNDInterpolator(list(zip(x, y)), values)(x_grid, y_grid)
-            #self.interpolated_values = griddata((x, y), values, (x_grid, y_grid), method='cubic') # or 'cubic'
-            self.interpolated_values = phase
-
-            self.interpolated_values = gaussian_filter(self.interpolated_values, 3)
-
-            z = self.interpolated_values
-            print(timer()-timer_start)
-        else:
-            z = phase
+        z = phase
 
         """fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')

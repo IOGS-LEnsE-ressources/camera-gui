@@ -47,6 +47,9 @@ class Surface3DWidget(QWidget):
         # Initialize surface plot object to None
         self.surface_plot: gl.GLMeshItem or None = None
 
+        # List to store grid items
+        self.grid_items = []
+
         # Set up the layout hierarchy
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
@@ -56,6 +59,8 @@ class Surface3DWidget(QWidget):
         self.enable_chart()
 
     def add_grids(self, grid_color='black', subdivisions=10):
+        self.remove_grids()  # Remove existing grids before adding new ones
+
         # Create the background grids
         x_min, x_max = np.nanmin(self.plot_x_data), np.nanmax(self.plot_x_data)
         y_min, y_max = np.nanmin(self.plot_y_data), np.nanmax(self.plot_y_data)
@@ -77,6 +82,7 @@ class Surface3DWidget(QWidget):
         gx.setColor(pg.mkColor(grid_color))
         gx.setSpacing(z_spacing, x_spacing)
         self.plot_chart_widget.addItem(gx)
+        self.grid_items.append(gx)
 
         # Create and position the YZ grid at x_min
         gy = gl.GLGridItem(size=QVector3D(grid_x_size, grid_z_size, 0))
@@ -85,6 +91,7 @@ class Surface3DWidget(QWidget):
         gy.setColor(pg.mkColor(grid_color))
         gy.setSpacing(y_spacing, z_spacing)
         self.plot_chart_widget.addItem(gy)
+        self.grid_items.append(gy)
 
         # Create and position the XY grid at z_min
         gz = gl.GLGridItem(size=QVector3D(grid_x_size, grid_y_size, 0))
@@ -92,7 +99,12 @@ class Surface3DWidget(QWidget):
         gz.setColor(pg.mkColor(grid_color))
         gz.setSpacing(x_spacing, y_spacing)
         self.plot_chart_widget.addItem(gz)
+        self.grid_items.append(gz)
 
+    def remove_grids(self):
+        for grid_item in self.grid_items:
+            self.plot_chart_widget.removeItem(grid_item)
+        self.grid_items = []
 
     def set_data(self, x_axis: np.ndarray, y_axis: np.ndarray, z_axis: np.ndarray) -> None:
         self.plot_x_data = x_axis
@@ -189,6 +201,7 @@ class Surface3DWidget(QWidget):
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
         self.layout.addWidget(self.info_label)
+
 
 
 class MyWindow(QMainWindow):
