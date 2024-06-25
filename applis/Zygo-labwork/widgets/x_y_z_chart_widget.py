@@ -119,7 +119,7 @@ class Surface3DWidget(QWidget):
 
     def apply_colormap(self, z_values: np.ndarray) -> np.ndarray:
         norm = (z_values - np.nanmin(z_values)) / (np.nanmax(z_values) - np.nanmin(z_values))
-        colormap = plt.get_cmap('coolwarm')
+        colormap = plt.get_cmap('rainbow')
         colors = colormap(norm)
         return colors
 

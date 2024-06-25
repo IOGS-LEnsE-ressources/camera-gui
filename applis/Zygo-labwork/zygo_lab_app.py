@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
     QMessageBox
 )
 from PyQt6.QtGui import QPixmap, QIcon
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 # Third-party library imports
 import numpy as np
@@ -61,6 +61,8 @@ from process.initialization_parameters import *
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 class ZygoLabApp(QWidget):
+    analysis_requested = pyqtSignal()
+
     def __init__(self) -> None:
         """Default constructor of the class.
         """
@@ -139,7 +141,7 @@ class ZygoLabApp(QWidget):
 
         self.layout.addWidget(self.graphic_widget, 1, 2)
 
-        self.analysis_window = AnalysisApp()
+        self.analysis_window = AnalysisApp(self)
         self.analysis_window.window_closed.connect(self.signal_menu_selected_isReceived)
 
         # Other initializations
@@ -162,6 +164,7 @@ class ZygoLabApp(QWidget):
 
         # Signals
         # -------
+        self.analysis_requested.connect(self.show_analysis_window_maximized)
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
 
     def init_camera(self) -> ids_peak.Device:
@@ -251,6 +254,11 @@ class ZygoLabApp(QWidget):
         except:
             None
 
+        try:
+            self.phase = self.acquisition_menu_widget.phase
+        except:
+            pass
+
         self.camera_settings_widget = CameraSettingsWidget(self.camera)
         self.masks_menu_widget = MasksMenuWidget(self)
         self.acquisition_menu_widget = AcquisitionMenuWidget(self)
@@ -285,21 +293,16 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.acquisition_menu_widget, 2, 1)
             self.layout.addWidget(self.results_menu_widget, 2, 2)
 
-            self.graphic_widget = Surface3DWidget('lightgray', 1)
+            self.graphic_widget = Surface3DWidget('white', 1)
             self.graphic_widget.set_title('')
             self.graphic_widget.set_information('')
-            self.graphic_widget.set_background('white')
+            self.graphic_widget.set_background('lightgray')
 
             self.layout.addWidget(self.graphic_widget, 1, 2)
 
         elif event == 'analyzes_main_menu':
             self.clear_layout(1, 2)
-            try:
-                self.analysis_window.showMaximized()
-            except Exception as e:
-                print(f'Exception - analysis_app_open {e}')
-            # self.clear_layout(1, 1)
-
+            self.analysis_requested.emit()
 
             '''
             try:
@@ -354,6 +357,12 @@ class ZygoLabApp(QWidget):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout, QGridLayout)):
                 for subwidget in widget.findChildren(QWidget):
                     self.update_labels(subwidget)
+
+    def show_analysis_window_maximized(self):
+        try:
+            self.analysis_window.showMaximized()
+        except Exception as e:
+            print(f'Exception - analysis_app_open {e}')
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

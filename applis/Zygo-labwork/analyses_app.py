@@ -31,6 +31,9 @@ from lensepy import load_dictionary, translate, dictionary
 from widgets.title_widget import TitleWidget
 from widgets.analysis_menu_widget import AnalysisMenuWidget
 from widgets.display_zernike_widget import *
+from widgets.bar_chart_widget import BarChartWidget
+
+from process.zernike_coefficents import get_zernike_coefficient
 
 
 
@@ -41,10 +44,12 @@ class AnalysisApp(QWidget):
 
     window_closed = pyqtSignal(str)
 
-    def __init__(self) -> None:
+    def __init__(self, parent=None) -> None:
         """Default constructor of the class.
         """
         super().__init__(parent=None)
+
+        self.parent = parent
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -69,19 +74,46 @@ class AnalysisApp(QWidget):
         # Analysis Menu Widget: fist column of the grid layout
         self.main_menu_widget = AnalysisMenuWidget()
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
+
+        if parent is not None:
+            self.parent.analysis_requested.connect(self.check_data)
         self.main_menu_widget.analysis_selected.connect(self.analysis_is_selected)
+
+        if parent is None:
+            self.zernike_coefficients = 2 * np.random.rand(37) - 1
+
+            x = y = np.arange(1024)
+            X, Y = np.meshgrid(x, y)
+            self.wavefront = X+Y
+
+    def check_data(self):
+        try:
+            self.wavefront = self.parent.phase
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Il n'y a pas de donner à analyser. \n {e}")
+            self.close()  # Close the window to trigger closeEvent
+            return
+        
+        try:
+            self.zernike_coefficients = self.parent.acquisition_menu_widget.submenu_remove_faults.coeffs
+        except:
+            self.zernike_coefficients = get_zernike_coefficient(self.wavefront)
 
     def analysis_is_selected(self, event):
         """
         Manage menu selection.
         Depending on the analysis required, layout is changing.
         """
+        self.reset_layout()
         if event == 'zernike':
-            zernike_coefficients = 2 * np.random.rand(37) - 1
-            zernike_display = ZernikeDisplayWidget(zernike_coefficients)
-            seidel_display = SeidelDisplayWidget(zernike_coefficients)
+            zernike_display = ZernikeDisplayWidget(self.zernike_coefficients)
+            seidel_display = SeidelDisplayWidget(self.zernike_coefficients)
+            zernike_graph = BarChartWidget()
             self.layout.addWidget(zernike_display, 1, 1)
             self.layout.addWidget(seidel_display, 1, 2)
+            self.layout.addWidget(zernike_graph, 2, 1, 1, 2)
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout without deleting them.
@@ -116,7 +148,6 @@ class AnalysisApp(QWidget):
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
-
 
     class MyWindow(QMainWindow):
         def __init__(self):
