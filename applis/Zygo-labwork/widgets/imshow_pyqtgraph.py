@@ -10,8 +10,107 @@ from lensepy.css import *
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
-
 class ImageWidget(QWidget):
+    """
+    Widget used to display a 2D image with a specified colormap.
+    """
+    window_closed = pyqtSignal(bool)
+
+    def __init__(self):
+        super().__init__()
+
+        self.title = ''
+        self.layout = QVBoxLayout()
+        self.master_widget = QWidget()
+
+        # Title label setup
+        self.title_label = QLabel(self.title)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # pyQtGraph GraphicsLayoutWidget setup
+        self.plot_widget = pg.GraphicsLayoutWidget()
+
+        # ImageItem setup
+        self.image_item = pg.ImageItem()
+        self.view_box = self.plot_widget.addViewBox()
+        self.view_box.addItem(self.image_item)
+        self.view_box.setAspectLocked(True)
+
+        # Set up the layout hierarchy
+        self.master_widget.setLayout(self.layout)
+        self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.plot_widget)
+        self.setLayout(self.layout)
+
+        # Enable chart to add widgets to the layout
+        self.enable_chart()
+
+    def set_image_data(self, image_data: np.ndarray, colormap_name: str = 'viridis'):
+        """
+        Set the image data to display with a specified colormap.
+
+        Parameters
+        ----------
+        image_data : np.ndarray
+            2D array of image data.
+        colormap_name : str, optional
+            Name of the colormap to use (default is 'viridis').
+
+        Notes
+        -----
+        This method applies the specified colormap to the image data.
+        """
+        # Rotate the image data 90 degrees clockwise
+        image_data_rotated = np.rot90(image_data, k=-1)
+
+        # Apply colormap to the rotated image data
+        colormap = plt.get_cmap(colormap_name)
+        colored_image = colormap(image_data_rotated)
+
+        # Ensure the image has RGBA channels for transparency
+        if colored_image.shape[2] == 3:
+            colored_image = np.concatenate([colored_image, np.ones((colored_image.shape[0], colored_image.shape[1], 1))], axis=2)
+
+        # Set the image data to the ImageItem
+        self.image_item.setImage(colored_image)
+
+        # Adjust the view range to fit the image
+        self.view_box.autoRange()
+
+    def set_title(self, title: str):
+        """
+        Set the title of the image display widget.
+        """
+        self.title = title
+        self.title_label.setText(self.title)
+
+    def clear_graph(self):
+        """
+        Clear the image display widget.
+        """
+        self.image_item.clear()
+
+    def disable_chart(self):
+        """
+        Erase all widgets from the layout.
+        """
+        count = self.layout.count()
+        for i in reversed(range(count)):
+            item = self.layout.itemAt(i)
+            widget = item.widget()
+            widget.deleteLater()
+
+    def enable_chart(self):
+        """
+        Enable and display all widgets in the layout.
+        """
+        self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.plot_widget)
+
+    def closeEvent(self, event):
+        self.window_closed.emit(True)
+
+class TwoImageWidget(QWidget):
     """
     Widget used to display 2D images with a specified colormap.
     """
@@ -167,7 +266,7 @@ class MyWindow(QMainWindow):
         self.centralWid = QWidget()
         self.layout = QVBoxLayout()
 
-        self.image_widget = ImageWidget()
+        self.image_widget = TwoImageWidget()
         self.image_widget.set_title('Image Display with Colormap')
         self.image_widget.set_information('Displaying a 2D image with colormap "Magma" and "Viridis"')
         self.layout.addWidget(self.image_widget)
@@ -193,8 +292,34 @@ class MyWindow(QMainWindow):
 
 
 # Launching as main for tests
-if __name__ == '__main__':
+"""if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyWindow()
     main.show()
+    sys.exit(app.exec())"""
+
+def main():
+    app = QApplication(sys.argv)
+
+    # Create an instance of ImageWidget
+    widget = ImageWidget()
+
+    # Generate some sample data (2D array)
+    x = np.linspace(-10, 10, 1024)
+    y = np.linspace(-10, 10, 1024)
+    X, Y = np.meshgrid(x, y)
+    Z = np.sin(X) * np.cos(Y)
+
+    # Set image data and colormap
+    widget.set_image_data(Z, colormap_name='magma')
+
+    # Set title
+    widget.set_title('Pseudocolor Plot')
+
+    # Show the widget
+    widget.show()
+
     sys.exit(app.exec())
+
+if __name__ == '__main__':
+    main()

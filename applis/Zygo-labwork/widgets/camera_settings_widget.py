@@ -28,10 +28,10 @@ from PyQt6.QtGui import QPixmap
 
 if __name__ == '__main__':
     from slider_bloc import SliderBloc
-    from imshow_pyqtgraph import ImageWidget
+    from imshow_pyqtgraph import TwoImageWidget
 else:
     from widgets.slider_bloc import SliderBloc
-    from widgets.imshow_pyqtgraph import ImageWidget
+    from widgets.imshow_pyqtgraph import TwoImageWidget
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *

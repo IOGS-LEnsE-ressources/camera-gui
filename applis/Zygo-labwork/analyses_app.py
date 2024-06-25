@@ -32,6 +32,7 @@ from widgets.title_widget import TitleWidget
 from widgets.analysis_menu_widget import AnalysisMenuWidget
 from widgets.display_zernike_widget import *
 from widgets.bar_chart_widget import BarChartWidget
+from widgets.psf_view import *
 
 from process.zernike_coefficents import get_zernike_coefficient
 
@@ -84,7 +85,15 @@ class AnalysisApp(QWidget):
 
             x = y = np.arange(1024)
             X, Y = np.meshgrid(x, y)
-            self.wavefront = X+Y
+            self.wavefront = np.ones_like(X)
+
+        self.focal = None
+        self.f_number = None
+
+        # Signals
+        # -------
+        self.main_menu_widget.focal_changed.connect(self.on_focal_changed)
+        self.main_menu_widget.f_number_changed.connect(self.on_f_number_changed)
 
     def check_data(self):
         try:
@@ -111,9 +120,17 @@ class AnalysisApp(QWidget):
             zernike_display = ZernikeDisplayWidget(self.zernike_coefficients)
             seidel_display = SeidelDisplayWidget(self.zernike_coefficients)
             zernike_graph = BarChartWidget()
+            zernike_graph.set_data(list(range(len(self.zernike_coefficients))), self.zernike_coefficients)
+
             self.layout.addWidget(zernike_display, 1, 1)
             self.layout.addWidget(seidel_display, 1, 2)
             self.layout.addWidget(zernike_graph, 2, 1, 1, 2)
+
+        elif event == 'psf':
+            psf_display = PointspreadFunctionDisplay()
+            psf_display.update_psf()
+            self.layout.addWidget(psf_display, 1, 1)
+
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout without deleting them.
@@ -145,6 +162,16 @@ class AnalysisApp(QWidget):
         """Action performed when the window is resized.
         """
         super().resizeEvent(event)
+
+    # Signals binding
+    # ---------------
+    def on_focal_changed(self, text):
+        self.focal = float(text)
+        print(f"Focale changed: {self.focal}")
+
+    def on_f_number_changed(self, text):
+        self.f_number = float(text)
+        print(f"f-number changed: {self.f_number}")
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

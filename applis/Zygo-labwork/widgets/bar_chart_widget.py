@@ -39,6 +39,7 @@ Example:
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 import sys
 import numpy as np
+import pyqtgraph as pg
 from bar_chart_widget import BarChartWidget
 
 if __name__ == '__main__':
@@ -76,9 +77,10 @@ import pyqtgraph as pg
 from lensepy.css import *  # Import CSS styles if needed
 
 class BarChartWidget(QWidget):
-    def __init__(self, axis_color='black', bar_color=ORANGE_IOGS, background_color='white',
+    def __init__(self, axis_color='black', bar_color='orange', background_color='white',
                  axis_ticks_color='black', axis_labels_color='black'):
         super().__init__()
+        self.axis_color = axis_color
 
         # Main layout of the widget
         self.layout = QVBoxLayout()
@@ -108,6 +110,10 @@ class BarChartWidget(QWidget):
         # Default data (example)
         self.x_data = np.array([1, 2, 3, 4, 5])
         self.y_data = np.array([10, 30, 20, 15, 35])
+
+        # Horizontal line at y=0
+        self.zero_line = pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen(axis_color, width=1))
+        self.plot_widget.addItem(self.zero_line)
 
         # Update the plot at initialization
         self.update_plot()
@@ -148,6 +154,10 @@ class BarChartWidget(QWidget):
 
         # Create a BarGraphItem object with current data and specified color
         bar_chart = pg.BarGraphItem(x=self.x_data, height=self.y_data, width=0.6, brush=self.bar_color)
+
+        # Horizontal line at y=0
+        self.zero_line = pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen(self.axis_color, width=1))
+        self.plot_widget.addItem(self.zero_line)
 
         # Add BarGraphItem object to the plot widget
         self.plot_widget.addItem(bar_chart)

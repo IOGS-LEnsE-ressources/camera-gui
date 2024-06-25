@@ -76,6 +76,10 @@ class LineEditBloc(QWidget):
     def setReadOnly(self, readonly: bool):
         self.lineedit(readonly)
 
+    def editing_finished_signal(self):
+        return self.lineedit.editingFinished
+
+
         
 # %% Example
 if __name__ == '__main__':

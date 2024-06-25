@@ -29,6 +29,11 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
+if __name__ == '__main__':
+    from lineedit_bloc import LineEditBloc
+else:
+    from widgets.lineedit_bloc import LineEditBloc
+
 # %% To add in lensepy librairy
 # Styles
 # ------
@@ -44,6 +49,8 @@ class AnalysisMenuWidget(QWidget):
     # Signals definition
     # ------------------
     analysis_selected = pyqtSignal(str)
+    focal_changed = pyqtSignal(str)
+    f_number_changed = pyqtSignal(str)
 
     def __init__(self):
         super().__init__(parent=None)
@@ -59,6 +66,12 @@ class AnalysisMenuWidget(QWidget):
         self.label_title_main_menu = QLabel('Menu')
         self.label_title_main_menu.setStyleSheet(styleH1)
         self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.lineedit_focal = LineEditBloc(title='Focale (mm)')
+        self.lineedit_focal.editing_finished_signal().connect(self.emit_focal_changed)
+
+        self.lineedit_f_number = LineEditBloc(title="f-number")
+        self.lineedit_f_number.editing_finished_signal().connect(self.emit_f_number_changed)
         
         self.button_zernike_menu = QPushButton("Zernike / Seidel")
         self.button_zernike_menu.setStyleSheet(unactived_button)
@@ -81,6 +94,8 @@ class AnalysisMenuWidget(QWidget):
         self.button_spot_diagram_menu.clicked.connect(self.button_analysis_menu_isClicked)
 
         self.sublayout.addWidget(self.label_title_main_menu)
+        self.sublayout.addWidget(self.lineedit_focal)
+        self.sublayout.addWidget(self.lineedit_f_number)
         self.sublayout.addWidget(self.button_zernike_menu)
         self.sublayout.addWidget(self.button_psf_menu)
         self.sublayout.addWidget(self.button_mtf_menu)
@@ -90,6 +105,12 @@ class AnalysisMenuWidget(QWidget):
 
         self.layout.addWidget(self.subwidget)
         self.setLayout(self.layout)
+        
+    def emit_focal_changed(self):
+        self.focal_changed.emit(self.lineedit_focal.text())
+        
+    def emit_f_number_changed(self):
+        self.f_number_changed.emit(self.lineedit_f_number.text())
         
     def unactive_buttons(self):
         """ Switches all buttons to inactive style """
@@ -142,20 +163,29 @@ if __name__ == '__main__':
             self.central_widget = AnalysisMenuWidget()
             self.setCentralWidget(self.central_widget)
 
+            # Connect signals
+            self.central_widget.focal_changed.connect(self.on_focal_changed)
+            self.central_widget.f_number_changed.connect(self.on_f_number_changed)
+
         def closeEvent(self, event):
             """
             closeEvent redefinition. Use when the user clicks
             on the red cross to close the window
             """
             reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                         QMessageBox.StandardButton.No)
+                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                        QMessageBox.StandardButton.No)
 
             if reply == QMessageBox.StandardButton.Yes:
                 event.accept()
             else:
                 event.ignore()
 
+        def on_focal_changed(self, text):
+            print(f"Focale changed: {text}")
+
+        def on_f_number_changed(self, text):
+            print(f"f-number changed: {text}")
 
     app = QApplication(sys.argv)
     main = MyWindow()

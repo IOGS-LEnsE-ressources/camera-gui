@@ -82,7 +82,7 @@ class ZernikeDisplayWidget(QWidget):
         self.layout.addWidget(self.label_title_results)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.table_results)
-        self.layout.addWidget(self.button_show_graph)
+        # self.layout.addWidget(self.button_show_graph)
         self.layout.addWidget(self.button_pdf)
         self.layout.addStretch()
 

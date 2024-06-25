@@ -53,7 +53,7 @@ from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
 from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
-from widgets.imshow_pyqtgraph import ImageWidget
+from widgets.imshow_pyqtgraph import TwoImageWidget
 #from widgets.display_zernike_widget import *
 
 from process.initialization_parameters import *
@@ -275,7 +275,7 @@ class ZygoLabApp(QWidget):
             self.camera_settings_widget.zoom_activated.connect(self.zoom_action)
 
         elif event == 'masks_main_menu':
-            self.display_mask_widget = ImageWidget()
+            self.display_mask_widget = TwoImageWidget()
             self.display_mask_widget.set_title('Visualisation de la zone sélectionnée')
             self.display_mask_widget.set_information('La zone sélectionnée est en vert.')
             self.display_mask_widget.set_background('white')
