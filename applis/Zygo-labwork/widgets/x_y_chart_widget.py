@@ -141,7 +141,7 @@ class XYChartWidget(QWidget):
         self.plot_x_data = x_axis
         self.plot_y_data = y_axis
 
-    def set_x_label(self, label, color=BLUE_IOGS):
+    def set_x_label(self, label, unit='', color=BLUE_IOGS):
         """
         Set the label and color of the X axis.
 
@@ -157,9 +157,9 @@ class XYChartWidget(QWidget):
         None
             No return value.
         """
-        self.plot_chart_widget.setLabel('bottom', label, color=color)
+        self.plot_chart_widget.setLabel('bottom', label, units=unit, color=color)
 
-    def set_y_label(self, label, color=BLUE_IOGS):
+    def set_y_label(self, label, unit='', color=BLUE_IOGS):
         """
         Set the label and color of the Y axis.
 
@@ -175,7 +175,7 @@ class XYChartWidget(QWidget):
         None
             No return value.
         """
-        self.plot_chart_widget.setLabel('left', label, color=color)
+        self.plot_chart_widget.setLabel('left', label, units=unit, color=color)
 
     def set_axis_and_ticks_color(self, axis_color=BLUE_IOGS, ticks_color=BLUE_IOGS):
         """
@@ -351,6 +351,47 @@ class XYChartWidget(QWidget):
         """
         self.line_color = color
         self.line_width = width
+
+class MultiCurveChartWidget(XYChartWidget):
+    def __init__(self):
+        super().__init__()
+        self.curves = []  # List to store the curves
+
+    def add_curve(self, x_axis, y_axis, color, width, name):
+        """
+        Add a new curve to the graph.
+
+        Parameters
+        ----------
+        x_axis : np.ndarray
+            Data for the X axis.
+        y_axis : np.ndarray
+            Data for the Y axis.
+        color : str
+            Color of the curve in CSS format (e.g., '#FF0000').
+        width : float
+            Width of the curve.
+        name : str
+            Name of the curve for the legend.
+        """
+        curve = self.plot_chart_widget.plot(x_axis, y_axis, pen=mkPen(color, width=width), name=name)
+        self.curves.append(curve)
+
+    def refresh_chart(self):
+        """
+        Update the graph display with all the curves.
+        """
+        self.plot_chart_widget.clear()  # Clear existing graph
+        for curve in self.curves:
+            self.plot_chart_widget.addItem(curve)
+        # self.plot_chart_widget.addLegend()  # Uncomment to add a legend
+
+    def clear_graph(self):
+        """
+        Clear the main chart of the widget and reset the curves.
+        """
+        super().clear_graph()
+        self.curves = []  # Reset the list of curves
 
 # -----------------------------------------------------------------------------------------------
 # Only for testing

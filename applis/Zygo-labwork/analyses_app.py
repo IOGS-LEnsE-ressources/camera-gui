@@ -36,14 +36,13 @@ from widgets.psf_view import *
 
 from process.zernike_coefficents import get_zernike_coefficient
 
-
-
 class AnalysisApp(QWidget):
     """
     /!\ NEED TO RECEIVE DATA TO PROCESS ANALYSIS / phase ? coeff ?
     """
 
     window_closed = pyqtSignal(str)
+    WAVELENGTH = 632.8e-9 # m
 
     def __init__(self, parent=None) -> None:
         """Default constructor of the class.
@@ -51,6 +50,9 @@ class AnalysisApp(QWidget):
         super().__init__(parent=None)
 
         self.parent = parent
+
+        self.focal = 150 # mm
+        self.f_number = 0.08
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -73,7 +75,7 @@ class AnalysisApp(QWidget):
         self.layout.addWidget(self.title_widget, 0, 0, 1, 3)
 
         # Analysis Menu Widget: fist column of the grid layout
-        self.main_menu_widget = AnalysisMenuWidget()
+        self.main_menu_widget = AnalysisMenuWidget(self)
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
 
         if parent is not None:
@@ -81,14 +83,15 @@ class AnalysisApp(QWidget):
         self.main_menu_widget.analysis_selected.connect(self.analysis_is_selected)
 
         if parent is None:
+            #Only for testing
             self.zernike_coefficients = 2 * np.random.rand(37) - 1
 
-            x = y = np.arange(1024)
+            x = y = np.linspace(-5, 5, 1024)
             X, Y = np.meshgrid(x, y)
-            self.wavefront = np.ones_like(X)
-
-        self.focal = None
-        self.f_number = None
+            phase_test = np.ones_like(X)
+            phase_test[X**2 + Y**2 > 4**2] = 0
+            aberration_term = (np.sqrt(8)*X*(X**2+Y**2)-2)*0.003 # Coma
+            self.wavefront = phase_test*np.exp(2*I*PI*aberration_term)
 
         # Signals
         # -------
@@ -127,9 +130,16 @@ class AnalysisApp(QWidget):
             self.layout.addWidget(zernike_graph, 2, 1, 1, 2)
 
         elif event == 'psf':
-            psf_display = PointspreadFunctionDisplay()
-            psf_display.update_psf()
+            psf_display = PointSpreadFunctionDisplay(self)
+            psf = psf_display.update_psf()
+            self.zoom = psf_display.zoom
+            self.grid_size = psf_display.grid_size
+            psf_slice = PointSpreadFunctionSlice(psf, self)
+            psf_circled_energy = PointSpreadFunctionCircledEnergy(psf, self)
+
             self.layout.addWidget(psf_display, 1, 1)
+            self.layout.addWidget(psf_slice, 1, 2)
+            self.layout.addWidget(psf_circled_energy, 2, 1)
 
 
     def clear_layout(self, row: int, column: int) -> None:

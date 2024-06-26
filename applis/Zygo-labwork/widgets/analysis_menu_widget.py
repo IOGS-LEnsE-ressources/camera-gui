@@ -52,9 +52,11 @@ class AnalysisMenuWidget(QWidget):
     focal_changed = pyqtSignal(str)
     f_number_changed = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__(parent=None)
         self.setStyleSheet("background-color: white;")
+
+        self.parent = parent
 
         # Widgets
         # -------
@@ -105,6 +107,10 @@ class AnalysisMenuWidget(QWidget):
 
         self.layout.addWidget(self.subwidget)
         self.setLayout(self.layout)
+
+        if parent is not None:
+            self.lineedit_focal.setText(str(self.parent.focal))
+            self.lineedit_f_number.setText(str(self.parent.f_number))
         
     def emit_focal_changed(self):
         self.focal_changed.emit(self.lineedit_focal.text())

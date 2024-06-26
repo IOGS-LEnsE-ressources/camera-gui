@@ -727,6 +727,6 @@ class PolygonalMaskSelection(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     image = np.random.randint(0, 255, (700, 700))
-    main = PolygonalMaskSelection(image)
+    main = CircularMaskSelection(image)
     main.show()
     sys.exit(app.exec())

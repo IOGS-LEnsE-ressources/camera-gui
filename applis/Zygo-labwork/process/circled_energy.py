@@ -63,8 +63,7 @@ def circled_energy(psf, theorical_psf, f_number, psf_zoom):
     image_radius = LAMBDA*f_number
     pupil_ratio = 2**psf_zoom
 
-    r = (1e3) * (image_radius/pupil_ratio) * np.array(list(range(x_dim//2))
-)
+    r = (1e3) * (image_radius/pupil_ratio) * np.array(list(range(x_dim//2)))
     plt.figure()
     plt.plot(r, circled_energy, label='Réponse percussionnelle')
     plt.plot(r, theorical_circled_energy, label='Limite de diffraction')
@@ -72,13 +71,14 @@ def circled_energy(psf, theorical_psf, f_number, psf_zoom):
     plt.legend()
     plt.show()
 
-x = y = np.linspace(-1, 1, 100)
-X, Y = np.meshgrid(x, y)
-c = np.ones_like(X)
-c[X**2+Y**2>1/7] = 0
+if __name__ == '__main__':
+    x = y = np.linspace(-1, 1, 100)
+    X, Y = np.meshgrid(x, y)
+    c = np.ones_like(X)
+    c[X**2+Y**2>1/7] = 0
 
-psf = np.fft.fftshift(np.fft.fft2(c))
-plt.imshow(np.abs(psf))
-plt.show()
+    psf = np.fft.fftshift(np.fft.fft2(c))
+    plt.imshow(np.abs(psf))
+    plt.show()
 
-circled_energy(np.abs(psf), np.abs(psf)+2*np.random.rand(), 10, 2)
+    circled_energy(np.abs(psf), np.abs(psf)+2*np.random.rand(), 10, 2)
