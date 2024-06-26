@@ -116,12 +116,15 @@ class MainWindow(QMainWindow):
         self.camera_widget = QWidget()
         self.camera_widget.setStyleSheet("background-color: lightblue;")
         self.params_widget = QWidget()
-        self.time_graph = QWidget()
-        self.time_graph.setStyleSheet("background-color: lightblue;")
         self.main_layout.addWidget(self.title_widget, 0, 0, 1, 3)
         self.main_layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
         self.main_layout.addWidget(self.camera_widget, 1, 1)
         self.main_layout.addWidget(self.params_widget, 2, 1)  # params_widget
+        self.histo_graph = QWidget()
+        self.histo_graph_started = False
+        self.main_layout.addWidget(self.histo_graph, 1, 2)
+        self.time_graph = QWidget()
+        self.time_graph_started = False
         self.main_layout.addWidget(self.time_graph, 2, 2)
 
         self.main_layout.setColumnStretch(0,1)
@@ -205,7 +208,7 @@ class MainWindow(QMainWindow):
 
                 self.camera.init_camera(self.camera.camera_device)
                 self.camera.init_camera()
-                self.camera_widget = cam_widget_brands[self.brand](self.camera)
+                self.camera_widget = cam_widget_brands[self.brand](self.camera, params_disp=True)
                 self.camera.set_frame_rate(1)
                 self.camera_thread.set_camera(self.camera)
                 self.camera_widget.camera_display_params.update_params()
@@ -226,15 +229,18 @@ class MainWindow(QMainWindow):
 
     def menu_action(self, event) -> None:
         try:
-            #self.timer.stop()
-            if self.camera_thread.running:
-                self.camera_thread.stop()
-            else:
+            '''
+            if self.camera_thread.running is False:
+                print('>Menu / Stop (no thread)')
                 self.camera.stop_acquisition()
                 self.camera.free_memory()
+            '''
+            self.histo_graph_started = False
+            self.time_graph_started = False
             if event == 'camera_settings':
                 self.clear_layout(2, 1)
                 if self.camera is None:
+                    self.mode = Modes.NOMODE
                     self.params_widget = CameraChoice()
                     self.params_widget.selected.connect(self.action_brand_selected)
                     self.main_layout.addWidget(self.params_widget, 2, 1)
@@ -243,30 +249,27 @@ class MainWindow(QMainWindow):
                     self.mode = Modes.SETTINGS
                     self.params_widget = CameraSettingsWidget(self.camera)
                     self.camera_thread.start()
-                    self.main_layout.addWidget(self.params_widget, 2, 1)
+                    self.main_layout.addWidget(self.params_widget, 2, 1) # display camera images
+                    self.start_histo_graph()
+                    self.start_time_graph()
+
             elif event == 'aoi':
                 self.mode = Modes.AOI
                 self.camera_thread.start()
-                '''
-                self.camera.alloc_memory()
-                self.camera.start_acquisition()
-                self.timer.setInterval(200)
-                self.timer.start()
-                '''
+                self.start_histo_graph()
+                self.start_time_graph()
 
             elif event == 'space':
                 self.mode = Modes.SPACE
-
-                print('Spatial')
+                print('>Menu / Spatial')
             elif event == 'time':
                 self.mode = Modes.TIME
-                print('Timing')
+                print('>Menu / Timing')
             elif event == 'options':
                 self.mode = Modes.NOMODE
-                print('Options')
+                print('>Menu / Options')
         except Exception as e:
             print(f'Exception - menu_action {e}')
-
 
     def action_brand_selected(self, event):
         type_event = event.split(':')[0]
@@ -307,9 +310,7 @@ class MainWindow(QMainWindow):
                 image = image_array.squeeze()
                 frame_width = self.camera_widget.width()
                 frame_height = self.camera_widget.height()
-
                 self.process_data(image)
-
                 # Resize to the display size
                 image_resized = resize_image_ratio(
                     image,
@@ -328,8 +329,8 @@ class MainWindow(QMainWindow):
         self.thread_update_image(image_array)
 
     def process_data(self, image_array):
-        if self.mode == Modes.AOI:
-            '''
+
+        if self.time_graph_started:
             if self.x_time is None:
                 self.x_time = np.array([0])
                 self.y_time = [np.zeros(0) for _ in range(4)]
@@ -348,24 +349,14 @@ class MainWindow(QMainWindow):
 
             self.time_graph.set_data(self.x_time, self.y_time[1:])
             self.time_graph.refresh_chart()
-            '''
-            self.clear_layout(1, 2)
-            image_histo = ImageHistogramWidget()
-            image_histo.set_background('white')
-            image_histo.set_image(image_array)
-            image_histo.refresh_chart()
-            image_histo.update_info()
-            self.main_layout.addWidget(image_histo, 1, 2)
-            '''
-            # self.histo_graph.refresh_chart()
-            # self.histo_graph.update_info()
-            # self.histo_graph.set_image(image_array)
-            '''
 
-    def start_time_graphe(self):
+        if self.histo_graph_started:
+            self.histo_graph.set_image(image_array)
+            self.histo_graph.update_info()
+
+    def start_time_graph(self):
         self.rand_pixels()
         self.clear_layout(2, 2)
-        '''
         self.x_time = np.array([0])
         self.y_time = [np.zeros(0) for _ in range(4)]
         self.x_time_cpt = 0
@@ -374,7 +365,13 @@ class MainWindow(QMainWindow):
         self.time_graph.set_x_label('Image Number')
         self.time_graph.set_y_label('RAW Value')
         self.main_layout.addWidget(self.time_graph, 2, 2)
-        '''
+        #self.time_graph_started = True
+
+    def start_histo_graph(self):
+        self.histo_graph = ImageHistogramWidget()
+        self.histo_graph.set_background('white')
+        self.main_layout.addWidget(self.histo_graph, 1, 2)
+        self.histo_graph_started = True
 
     def rand_pixels(self):
         # TO DO : in the AOI !
