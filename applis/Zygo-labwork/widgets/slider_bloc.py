@@ -110,7 +110,7 @@ class SliderBloc(QWidget):
         
         self.lineedit_value = QLineEdit()
         self.lineedit_value.setText(str(self.value))
-        self.lineedit_value.textChanged.connect(self.input_changed)
+        self.lineedit_value.editingFinished.connect(self.input_changed)
         
         self.label_unit = QLabel(unit)
         self.label_unit.setStyleSheet(styleH3)
@@ -184,7 +184,11 @@ class SliderBloc(QWidget):
         self.slider.setMaximum(int(self.max_value * self.ratio))
         self.label_min_value.setText(str(self.min_value)+' '+self.unit)
         self.label_max_value.setText(str(self.max_value)+' '+self.unit)
-        
+
+    def set_enabled(self, value):
+        """Set the widget enabled if value is True."""
+        self.slider.setEnabled(value)
+        self.lineedit_value.setEnabled(value)
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

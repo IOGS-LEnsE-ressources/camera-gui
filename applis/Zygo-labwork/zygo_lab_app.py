@@ -146,16 +146,6 @@ class ZygoLabApp(QWidget):
 
         # Other initializations
         # ---------------------
-        """clock = self.camera.camera_remote.FindNode("DeviceClockFrequency").Value()
-        print(f'Clock1 = {clock}')
-        self.camera.camera_remote.FindNode("DeviceClockFrequency").SetValue(5000000)
-        clock = self.camera.camera_remote.FindNode("DeviceClockFrequency").Value()
-        print(f'Clock2 = {clock}')
-
-        fps_min, fps_max = self.camera.get_frame_rate_range()
-
-        print(f'FPS = {fps_min}, {fps_max}')
-        self.camera.set_frame_rate(1.6)"""
 
         self.camera_thread = CameraThread()
         self.camera_thread.set_camera(self.camera)

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """*camera_settings_widget.py* file.
 
-This file is attached to a 1st year of engineer training labwork in photonics.
-Subject : http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
+This file is attached to a 2nd year of engineer training labwork in photonics.
+Subject : http://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-Detection.EN.pdf
 
 More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
+https://iogs-lense-ressources.github.io/camera-gui/
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
@@ -80,13 +80,13 @@ class CameraSettingsWidget(QWidget):
         self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
 
-        self.slider_frame_rate = SliderBloc(name='name_slider_frame_rate', unit='fps', min_value=1, max_value=10)
-        self.slider_frame_rate.slider_changed.connect(self.slider_frame_rate_changing)
+        self.slider_black_level = SliderBloc(name='name_slider_black_level', unit='gray', min_value=0, max_value=255)
+        self.slider_black_level.slider_changed.connect(self.slider_black_level_changing)
 
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)
         self.layout.addWidget(self.slider_exposure_time)
-        self.layout.addWidget(self.slider_frame_rate)
+        self.layout.addWidget(self.slider_black_level)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
@@ -98,12 +98,11 @@ class CameraSettingsWidget(QWidget):
         else:
             print('No Camera Connected')
 
-    def slider_frame_rate_changing(self, event):
+    def slider_black_level_changing(self, event):
         """Action performed when the exposure time slider changed."""
         if self.camera is not None:
-            frame_rate_value = self.slider_frame_rate.get_value()
-            print(self.camera.set_frame_rate(frame_rate_value))
-
+            black_level_value = self.slider_black_level.get_value()
+            self.camera.set_black_level(black_level_value)
         else:
             print('No Camera Connected')
 
@@ -114,8 +113,13 @@ class CameraSettingsWidget(QWidget):
         if auto_min_max:
             exposure_min, exposure_max = self.camera.get_exposure_range()
             self.slider_exposure_time.set_min_max_slider_values(exposure_min // 1000, exposure_max // 1000)
+            bl_min, bl_max = self.camera.get_black_level_range()
+            self.slider_black_level.set_min_max_slider_values(bl_min, bl_max)
         exposure_time = self.camera.get_exposure()
         self.slider_exposure_time.set_value(exposure_time / 1000)
+        bl = self.camera.get_black_level()
+        self.slider_black_level.set_value(bl)
+        print('Updated')
 
     def set_parameters(self, color_mode: str = 'Mono8', frame_rate: float = 3,
                        exposure: float = 2, black_level: int = 10):

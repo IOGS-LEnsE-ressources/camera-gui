@@ -4,5 +4,7 @@
 language; FR
 languages; FR,EN
 brandname; IDS
-exposure; 6000
-blacklevel; 200
+clock_freq; 15
+exposure; 4000
+blacklevel; 100
+framerate; 5
