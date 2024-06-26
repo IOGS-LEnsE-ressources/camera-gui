@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
     QLabel, QComboBox, QPushButton, QCheckBox, QDialog,
-    QMessageBox
+    QMessageBox, QSizePolicy
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QSignalMapper
 from PyQt6.QtGui import QPixmap, QIcon, QCloseEvent
@@ -257,10 +257,11 @@ class PointSpreadFunctionCircledEnergy(QWidget):
         # --------------
         self.psf_display = MultiCurveChartWidget()
         self.psf_display.set_background('white')
+        self.psf_display.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.layout.addWidget(self.label_title)
         self.layout.addWidget(self.label_legend)
-        self.layout.addWidget(self.psf_display)
+        self.layout.addWidget(self.psf_display, stretch=1)
 
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
@@ -295,11 +296,11 @@ class PointSpreadFunctionCircledEnergy(QWidget):
         psf /= psf.max()
         theorical_psf /= theorical_psf.max()
 
-        circled_energy = np.array([np.sum(psf[R<ray]) for ray in range(x_dim//4)])/np.sum(psf)
-        theorical_circled_energy = np.array([np.sum(theorical_psf[R<ray]) for ray in range(x_dim//4)])/np.sum(theorical_psf)
+        circled_energy = np.array([np.sum(psf[R<ray]) for ray in range(x_dim//8)])/np.sum(psf)
+        theorical_circled_energy = np.array([np.sum(theorical_psf[R<ray]) for ray in range(x_dim//8)])/np.sum(theorical_psf)
 
         px_psf = (self.parent.WAVELENGTH*self.parent.f_number)*2**(-self.parent.zoom)
-        r = np.linspace(0, x_dim/4*px_psf, x_dim//4)
+        r = np.linspace(0, x_dim/8*px_psf, x_dim//8)
 
         self.psf_display.add_curve(r, circled_energy, ORANGE_IOGS, 2, 'Circled Energy')
         self.psf_display.add_curve(r, theorical_circled_energy, BLUE_IOGS, 1, 'Theoretical Circled Energy')

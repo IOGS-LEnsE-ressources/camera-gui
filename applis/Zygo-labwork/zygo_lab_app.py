@@ -250,6 +250,9 @@ class ZygoLabApp(QWidget):
 
         try:
             self.image = self.masks_menu_widget.image
+        except:
+            None
+        try:
             self.zernike_coefficients = self.acquisition_menu_widget.zernike_coefficients
         except:
             None
@@ -280,9 +283,9 @@ class ZygoLabApp(QWidget):
             self.display_mask_widget.set_information('La zone sélectionnée est en vert.')
             self.display_mask_widget.set_background('white')
             try:
-                self.display_mask_widget.set_image_data(np.squeeze(self.display_mask_widget.image), np.squeeze(self.mask)*255, colormap_name1='gray', colormap_name2='RdYlGn', alpha=0.2)
-            except:
-                None
+                self.display_mask_widget.set_image_data(np.squeeze(self.image), np.squeeze(self.mask)*255, colormap_name1='gray', colormap_name2='RdYlGn', alpha=0.2)
+            except Exception as e:
+                print(f"MASKS selected - {e}")
             
             self.layout.addWidget(self.display_mask_widget, 1, 2)
 
@@ -301,20 +304,10 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.graphic_widget, 1, 2)
 
         elif event == 'analyzes_main_menu':
+            self.aberrations_considered = self.acquisition_menu_widget.aberrations_considered
+
             self.clear_layout(1, 2)
             self.analysis_requested.emit()
-
-            '''
-            try:
-
-                self.zernike_coefficients = 2 * np.random.rand(37) - 1
-                self.zernike_display = ZernikeDisplayWidget(self.zernike_coefficients)
-                self.seidel_display = SeidelDisplayWidget(self.zernike_coefficients)
-                self.layout.addWidget(self.zernike_display, 1, 1)
-                self.layout.addWidget(self.seidel_display, 1, 2)
-            except Exception as e:
-                print(e)
-            '''
 
         elif event == 'options_main_menu':
             self.clear_layout(1, 2)

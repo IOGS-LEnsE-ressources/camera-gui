@@ -34,7 +34,7 @@ from widgets.display_zernike_widget import *
 from widgets.bar_chart_widget import BarChartWidget
 from widgets.psf_view import *
 
-from process.zernike_coefficents import get_zernike_coefficient
+from process.zernike_coefficents import *
 
 class AnalysisApp(QWidget):
     """
@@ -101,6 +101,8 @@ class AnalysisApp(QWidget):
     def check_data(self):
         try:
             self.wavefront = self.parent.phase
+            self.aberrations_considered = self.parent.aberrations_considered
+            
         except Exception as e:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
@@ -112,6 +114,11 @@ class AnalysisApp(QWidget):
             self.zernike_coefficients = self.parent.acquisition_menu_widget.submenu_remove_faults.coeffs
         except:
             self.zernike_coefficients = get_zernike_coefficient(self.wavefront)
+        self.wavefront, self.zernike_coefficients, _ = remove_aberration(self.wavefront, self.aberrations_considered, self.zernike_coefficients)
+        
+        print(self.zernike_coefficients)
+        self.zernike_coefficients *= 1-self.aberrations_considered
+        print(self.zernike_coefficients)
 
     def analysis_is_selected(self, event):
         """
