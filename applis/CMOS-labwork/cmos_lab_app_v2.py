@@ -15,18 +15,6 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 """
 
-
-"""
-Try modify Clock Freq (and framerate ??)
-Probable Issue with set_frame_rate ??
-
-
-print(f'F(Hz) = {self.camera_remote.FindNode("DeviceClockFrequency").Value()}')
-self.camera_remote.FindNode("DeviceClockFrequency").SetValue(5000000)
-print(f'F(Hz) = {self.camera_remote.FindNode("DeviceClockFrequency").Value()}')
-
-"""
-
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
@@ -45,7 +33,7 @@ from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
 from gui.x_y_chart_widget import XYChartWidget
 from gui.camera_params_view_widget import CameraParamsViewWidget
-from lensecam.ids.camera_ids import CameraIds
+from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.camera_thread import CameraThread
 from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
@@ -92,6 +80,7 @@ class MainWindow(QMainWindow):
         self.camera_device = None
         self.camera_thread = CameraThread()
         self.camera_thread.image_acquired.connect(self.thread_update_image)
+        self.bits_depth = 0
         self.brand = None
         # Parameters
         self.default_parameters = {}
@@ -199,7 +188,6 @@ class MainWindow(QMainWindow):
             if 'language' in self.default_parameters:
                 file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
                 dict = load_dictionary(file_name_dict)
-                print(dictionary)
             if 'brandname' in self.default_parameters:
                 self.brand = self.default_parameters["brandname"]
                 self.camera = cam_from_brands[self.brand]()
@@ -210,28 +198,26 @@ class MainWindow(QMainWindow):
                 self.camera.init_camera(self.camera.camera_device)
                 self.camera.init_camera()
                 self.camera_widget = cam_widget_brands[self.brand](self.camera)
-                self.camera.set_frame_rate(1)
                 self.camera_thread.set_camera(self.camera)
-                self.camera_widget.camera_display_params.update_params()
                 # Init default param
+                if 'clock_freq' in self.default_parameters:
+                    c_f = float(self.default_parameters['clock_freq']) * 1e6
+                    self.camera.set_clock_frequency(c_f)
+                    print(c_f)
                 if 'exposure' in self.default_parameters:
                     self.camera.set_exposure(int(self.default_parameters['exposure']))
                 if 'blacklevel' in self.default_parameters:
                     self.camera.set_black_level(int(self.default_parameters['blacklevel']))
                 if 'framerate' in self.default_parameters:
                     self.camera.set_frame_rate(int(self.default_parameters['framerate']))
-                self.params_widget = CameraSettingsWidget(self.camera)
-                self.clear_layout(2, 1)
-                self.main_layout.addWidget(self.params_widget, 2, 1)
+                if 'colormode' in self.default_parameters:
+                    self.camera.set_color_mode(self.default_parameters['colormode'])
+                self.bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
                 self.clear_layout(1, 1)
                 self.main_layout.addWidget(self.camera_widget, 1, 1)
                 self.mode = Modes.SETTINGS
                 self.camera_thread.start()
-                # self.main_menu_widget.button_camera_settings_main_menu_isClicked()
                 self.camera_widget.camera_display_params.update_params()
-                if 'clock_freq' in self.default_parameters:
-                    c_f = float(self.default_parameters['clock_freq']) * 1e6
-                    self.camera.set_clock_frequency(c_f)
 
     def menu_action(self, event) -> None:
         try:
@@ -251,10 +237,8 @@ class MainWindow(QMainWindow):
                     self.start_cam_settings()
                     self.start_histo_graph()
                     self.start_time_graph()
-                    #self.camera_thread.start()
             elif event == 'aoi':
                 self.mode = Modes.AOI
-                #self.camera_thread.start()
                 self.start_histo_graph()
                 self.start_time_graph()
             elif event == 'space':
@@ -292,15 +276,19 @@ class MainWindow(QMainWindow):
             self.camera.init_camera(self.camera.camera_device)
             self.camera.set_frame_rate(1)
             self.camera_thread.set_camera(self.camera)
-            self.camera_widget.camera_display_params.update_params()
             self.camera.init_camera()
             # Init default param
             if 'exposure' in self.default_parameters:
                 self.camera.set_exposure(int(self.default_parameters['exposure']))
-
-            self.params_widget = CameraSettingsWidget(self.camera)
-            self.main_layout.addWidget(self.params_widget, 2, 1)
-            self.mode = Modes.SETTINGS
+            if 'blacklevel' in self.default_parameters:
+                self.camera.set_black_level(int(self.default_parameters['blacklevel']))
+            if 'framerate' in self.default_parameters:
+                self.camera.set_frame_rate(int(self.default_parameters['framerate']))
+            if 'colormode' in self.default_parameters:
+                self.camera.set_color_mode(self.default_parameters['colormode'])
+            self.bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
+            self.camera_widget.camera_display_params.update_params()
+            self.start_cam_settings()
             self.camera_thread.start()
         except Exception as e:
             print(f'Exception - action_camera_connected {e}')
@@ -309,11 +297,19 @@ class MainWindow(QMainWindow):
         """Action performed when the live acquisition (via CameraThread) is running."""
         try:
             if image_array is not None:
-                image = image_array.squeeze()
+                if self.bits_depth > 8:
+                    image = image_array.view(np.uint16)
+                else:
+                    image = image_array.view(np.uint8)
+                image = image.squeeze()
+                self.process_data(image)
+                if self.bits_depth > 8:
+                    coeff = int(self.bits_depth-8)
+                    image = image >> coeff
+                    image = image.astype(np.uint8)
+                # Resize to the display size
                 frame_width = self.camera_widget.width()
                 frame_height = self.camera_widget.height()
-                self.process_data(image)
-                # Resize to the display size
                 image_resized = resize_image_ratio(
                     image,
                     frame_width,
@@ -326,11 +322,8 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f'Exception - update_image {e}')
 
-    def update_timer(self):
-        image_array = self.camera.get_image()
-        self.thread_update_image(image_array)
-
     def process_data(self, image_array):
+        """Process data to display in histogram or/and time graph."""
 
         if self.time_graph_started:
             if self.x_time is None:
@@ -381,6 +374,8 @@ class MainWindow(QMainWindow):
         self.clear_layout(1, 2)
         self.histo_graph = ImageHistogramWidget()
         self.histo_graph.set_background('white')
+        self.histo_graph.set_name('Image histogram')
+        self.histo_graph.set_bit_depth(self.bits_depth)
         self.main_layout.addWidget(self.histo_graph, 1, 2)
         self.histo_graph_started = True
 

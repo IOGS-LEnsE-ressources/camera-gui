@@ -105,7 +105,6 @@ class CameraChoice(QWidget):
     def init_brand_choice_list(self):
         """Action ..."""
         # create list from dict cam_list_widget_brands
-        print('Init')
         self.brand_choice_list.clear()
         for item, (brand, camera_widget) in enumerate(cam_list_widget_brands.items()):
             if brand != 'Select...':
@@ -121,7 +120,6 @@ class CameraChoice(QWidget):
 
     def action_brand_select_button(self, event) -> None:
         """Action performed when the brand_select button is clicked."""
-        print('action_brand_select')
         self.clear_layout(5, 0)
         self.clear_layout(4, 0)
         self.clear_layout(3, 0)
@@ -145,7 +143,6 @@ class CameraChoice(QWidget):
         '''
 
     def action_camera_selected(self, event):
-        print('action_camera')
         selected_camera = self.cam_choice_widget.get_selected_camera_dev()
         self.brand_return_button.setEnabled(False)
         dict_brand = {'brand': self.brand_choice, 'cam_dev': selected_camera}
@@ -153,7 +150,6 @@ class CameraChoice(QWidget):
 
     def action_brand_return_button(self, event) -> None:
         """Action performed when the brand_return button is clicked."""
-        print('action_brand_return')
         try:
             self.clear_layout(6, 0)
             self.clear_layout(5, 0)
