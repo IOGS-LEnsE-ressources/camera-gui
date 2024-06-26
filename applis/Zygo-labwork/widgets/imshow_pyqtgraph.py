@@ -100,6 +100,8 @@ class ImageWidget(QWidget):
             widget = item.widget()
             widget.deleteLater()
 
+    
+
     def enable_chart(self):
         """
         Enable and display all widgets in the layout.

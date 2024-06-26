@@ -118,7 +118,6 @@ class AnalysisApp(QWidget):
         
         print(self.zernike_coefficients)
         self.zernike_coefficients *= 1-self.aberrations_considered
-        print(self.zernike_coefficients)
 
     def analysis_is_selected(self, event):
         """
@@ -143,10 +142,12 @@ class AnalysisApp(QWidget):
             self.grid_size = psf_display.grid_size
             psf_slice = PointSpreadFunctionSlice(psf, self)
             psf_circled_energy = PointSpreadFunctionCircledEnergy(psf, self)
+            psf_defoc = PointSpreadFunctionDefoc(self)
 
             self.layout.addWidget(psf_display, 1, 1)
             self.layout.addWidget(psf_slice, 1, 2)
             self.layout.addWidget(psf_circled_energy, 2, 1)
+            self.layout.addWidget(psf_defoc, 2, 2)
 
 
     def clear_layout(self, row: int, column: int) -> None:

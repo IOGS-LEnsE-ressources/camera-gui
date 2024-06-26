@@ -33,6 +33,8 @@ from lensepy.css import *
 
 from process.compute_psf_ftm import *
 
+import pyqtgraph as pg
+
 if __name__ == '__main__':
     from lineedit_bloc import LineEditBloc
     from imshow_pyqtgraph import ImageWidget
@@ -308,7 +310,117 @@ class PointSpreadFunctionCircledEnergy(QWidget):
         self.psf_display.set_y_label('Énergie encerclée normalisée')
         self.psf_display.refresh_chart()
 
+class PointSpreadFunctionDefoc(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=None)
 
+        self.parent = parent
+
+        if parent is None:
+            self.phase = phase_test
+        else:
+            self.phase = self.parent.wavefront
+
+        self.setStyleSheet("background-color: white;")
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.master_widget = QWidget()
+        self.master_layout = QVBoxLayout()
+        self.master_widget.setStyleSheet("background-color: white;")
+
+        # Title
+        # -----
+        self.label_title = QLabel('PSF - Défocalisation')
+        self.label_title.setStyleSheet(styleH1)
+
+        # Legend 1
+        # --------
+        self.label_legend1 = QLabel('Défocalisation de -λ/2 à λ/2.')
+        self.label_legend1.setStyleSheet(styleH3)
+        self.button_big_defoc_lambda = QPushButton(' Agrandir ')
+        self.button_big_defoc_lambda.setStyleSheet(unactived_button)
+        self.button_big_defoc_lambda.clicked.connect(self.button_big_defoc_lambda_isClicked)
+        self.sublayout_legend_defoc_lambda = QHBoxLayout()
+        self.sublayout_legend_defoc_lambda.addWidget(self.label_legend1)
+        self.sublayout_legend_defoc_lambda.addStretch()
+        self.sublayout_legend_defoc_lambda.addWidget(self.button_big_defoc_lambda)
+
+        # Defoc. PSF | lambda
+        # -------------------
+        self.sublayout_defoc_lambda = QHBoxLayout()
+
+        # Legend 2
+        # --------
+        self.label_legend2 = QLabel('Défocalisation de *** à ***.')
+        self.label_legend2.setStyleSheet(styleH3)
+        self.button_big_defoc_delta_z = QPushButton(' Agrandir ')
+        self.button_big_defoc_delta_z.setStyleSheet(unactived_button)
+        self.sublayout_legend_defoc_delta_z = QHBoxLayout()
+        self.sublayout_legend_defoc_delta_z.addWidget(self.label_legend2)
+        self.sublayout_legend_defoc_delta_z.addStretch()
+        self.sublayout_legend_defoc_delta_z.addWidget(self.button_big_defoc_delta_z)
+
+        # Defoc. PSF | delta Z
+        # --------------------
+        self.sublayout_defoc_delta_z = QHBoxLayout()
+
+        self.layout.addWidget(self.label_title)
+        self.layout.addLayout(self.sublayout_legend_defoc_lambda)
+        self.layout.addLayout(self.sublayout_defoc_lambda)
+        self.layout.addLayout(self.sublayout_legend_defoc_delta_z)
+        self.layout.addLayout(self.sublayout_defoc_delta_z)
+
+        self.master_widget.setLayout(self.layout)
+        self.master_layout.addWidget(self.master_widget)
+        self.setLayout(self.master_layout)
+
+        self.action()
+
+    def action(self):
+        if self.parent is None:
+            self.phase = phase_test
+        else:
+            self.phase = self.parent.wavefront
+
+        dim_y, dim_x = self.phase.shape
+        x = np.linspace(-1, 1, dim_x)
+        y = np.linspace(-1, 1, dim_y)
+        x, y = np.meshgrid(x, y)
+        r = np.sqrt(x**2+y**2)
+        r[r>1] = 0
+
+        self.psf_defoc_lambda = []
+
+        for delta_lambda in [-1/2, -1/4, 0, 1/4, 1/2]:
+            defoc = delta_lambda * np.sqrt(3)*(2*r**2-1)
+
+            psf = get_psf(self.phase * np.exp(np.exp(2*I*PI*defoc)), self.parent.zoom, self.parent.grid_size)
+            psf_for_display = thresholed_log(psf)
+            psf_for_display = psf_for_display[psf.shape[0]//4:3*psf.shape[0]//4, psf.shape[0]//4:3*psf.shape[0]//4]
+            psf_for_display -= psf_for_display.min()
+            psf_for_display /= psf_for_display.max()
+
+            self.psf_defoc_lambda.append(psf_for_display)
+            
+            widget = ImageWidget()
+            widget.set_image_data(psf_for_display, 'gray')
+            self.sublayout_defoc_lambda.addWidget(widget)
+
+    def button_big_defoc_lambda_isClicked(self):
+        self.button_big_defoc_lambda.setStyleSheet(actived_button)
+
+        list_defoc = [-1/2, -1/4, 0, 1/4, 1/2]
+
+        plt.figure(figsize=(15, 10))
+        for i in range(5):
+            plt.subplot(2, 3, i+1)
+            plt.imshow(self.psf_defoc_lambda[i], 'gray')
+            plt.title(f"Défoc. de {list_defoc[i]}"+r"$\lambda$")
+            plt.axis('off')
+        plt.show()
+
+        self.button_big_defoc_lambda.setStyleSheet(unactived_button)
 
 
 
