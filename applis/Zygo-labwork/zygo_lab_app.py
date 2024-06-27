@@ -58,6 +58,14 @@ from widgets.imshow_pyqtgraph import TwoImageWidget
 
 from process.initialization_parameters import *
 
+"""import PyInstaller.__main__
+
+PyInstaller.__main__.run([
+    'zygo_lab_app.py',
+    '--onefile',
+    '--windowed'
+])"""
+
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 class ZygoLabApp(QWidget):
