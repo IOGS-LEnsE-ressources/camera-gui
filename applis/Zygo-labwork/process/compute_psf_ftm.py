@@ -76,3 +76,10 @@ def get_psf(wavefront, zoom, Ne):
     perfect_psf = np.abs(fftshift(fft2(np.abs(phi_reshaped), (Ne, Ne))))**2
 
     return psf/perfect_psf.max()
+
+def get_mtf(wavefront, zoom, Ne):
+    psf = get_psf(wavefront, zoom, Ne)
+    mtf = np.abs(fftshift(fft2(psf)))
+    mtf /= mtf.max()
+
+    return mtf

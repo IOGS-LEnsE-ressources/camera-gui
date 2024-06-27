@@ -33,6 +33,7 @@ from widgets.analysis_menu_widget import AnalysisMenuWidget
 from widgets.display_zernike_widget import *
 from widgets.bar_chart_widget import BarChartWidget
 from widgets.psf_view import *
+from widgets.mtf_view import *
 
 from process.zernike_coefficents import *
 
@@ -148,6 +149,18 @@ class AnalysisApp(QWidget):
             self.layout.addWidget(psf_slice, 1, 2)
             self.layout.addWidget(psf_circled_energy, 2, 1)
             self.layout.addWidget(psf_defoc, 2, 2)
+
+        elif event == 'mtf':
+            mtf_display = ModulationTransfertFunctionDisplay(self)
+            mtf = mtf_display.update_mtf()
+            self.zoom = mtf_display.zoom
+            self.grid_size = mtf_display.grid_size
+            mtf_slice = ModulationTransfertFunctionSlice(mtf, self)
+            mtf_defoc = ModulationTransfertFunctionDefoc(self)
+
+            self.layout.addWidget(mtf_display, 1, 1)
+            self.layout.addWidget(mtf_slice, 1, 2)
+            self.layout.addWidget(mtf_defoc, 2, 1, 1, 2)
 
 
     def clear_layout(self, row: int, column: int) -> None:

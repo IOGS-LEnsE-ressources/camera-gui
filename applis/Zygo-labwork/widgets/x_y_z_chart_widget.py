@@ -29,11 +29,6 @@ class Surface3DWidget(QWidget):
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_label.setStyleSheet(styleH1)
 
-        # Information label setup
-        self.info_label: QLabel = QLabel('')
-        self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.info_label.setStyleSheet(styleH3)
-
         # pyqtgraph OpenGL GLViewWidget setup
         self.plot_chart_widget: gl.GLViewWidget = gl.GLViewWidget()
         self.plot_chart_widget.setMinimumWidth(300)
@@ -198,9 +193,8 @@ class Surface3DWidget(QWidget):
             widget.deleteLater()
 
     def enable_chart(self) -> None:
-        self.layout.addWidget(self.title_label)
+        #self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
-        self.layout.addWidget(self.info_label)
 
 
 

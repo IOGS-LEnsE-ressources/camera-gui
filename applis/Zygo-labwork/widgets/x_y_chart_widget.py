@@ -329,9 +329,9 @@ class XYChartWidget(QWidget):
         None
             No return value.
         """
-        self.layout.addWidget(self.title_label)
+        # self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
-        self.layout.addWidget(self.info_label)
+        # self.layout.addWidget(self.info_label)
 
     def set_line_color_width(self, color, width):
         """
