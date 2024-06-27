@@ -1,10 +1,6 @@
 Zygo Lab GUI / IDS Camera
 #########################
 
-Structure of the GUI
-====================
-
-
 Documentation
 =============
 - Write doc for CameraIds class
@@ -16,13 +12,6 @@ Documentation
 
 GUI Dev
 =======
-
-Global
-------
-- Create a global_default_parameters file ?
-- Maybe : separate zernike coeff calculations for only 1A labwork
-(maybe the 36 coeffs are not necessary ?)
-and keep the calculations of others for the analysis window ?
 
 Camera
 ------
@@ -38,4 +27,3 @@ See https://nidaqmx-python.readthedocs.io/en/latest/
 GUI
 ---
 - in TitleWidget (widgets/title_widget.py), find a way to add transparency on the logo.
-- Find a way to display the action of the mask on the image.

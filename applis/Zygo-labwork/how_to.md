@@ -24,11 +24,11 @@ Les sujets des TPs en question sont disponibles sur le site du LEnsE :
 
 ![Logo LEnsE!](assets/IOGS-LEnsE-logo_small.jpg)
 
-|              | Date      | Contributeurs                                                      |
-| ------------ | --------- | ------------------------------------------------------------------ |
-| Création     | Juin 2024 | Julien VILLEMEJANE (PRAG) (<julien.villemjane@institutoptique.fr>) |
-| Création     | Juin 2024 | Dorian MENDES (Promo 2026) (<dorian.mendes@institutoptique.fr>)    |
-| Modification | à venir.. | à venir ..                                                         |
+|              | Date      | Contributeurs                                                       |
+| ------------ | --------- | ------------------------------------------------------------------- |
+| Création     | Juin 2024 | Julien VILLEMEJANE (PRAG) (<julien.villemejane@institutoptique.fr>) |
+| Création     | Juin 2024 | Dorian MENDES (Promo 2026) (<dorian.mendes@institutoptique.fr>)     |
+| Modification | à venir.. | à venir ..                                                          |
 
 ## Pré-requis
 Pour son bon fonctionnement, veillez à ce que la caméra IDS et la cale piézoélectrique soient branchées à l'ordinateur, et que les librairies présentes dans le document [requirements.txt](requirements.txt) soient bien installées.
