@@ -320,6 +320,7 @@ class PointSpreadFunctionDefoc(QWidget):
             self.phase = phase_test
         else:
             self.phase = self.parent.wavefront
+        self.defoc_max_delta_z = 1 # mm
 
         self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout()
@@ -337,7 +338,7 @@ class PointSpreadFunctionDefoc(QWidget):
         # Legend 1
         # --------
         self.label_legend1 = QLabel('Défocalisation de -λ/2 à λ/2.')
-        self.label_legend1.setStyleSheet(styleH3)
+        self.label_legend1.setStyleSheet(styleH2)
         self.button_big_defoc_lambda = QPushButton(' Agrandir ')
         self.button_big_defoc_lambda.setStyleSheet(unactived_button)
         self.button_big_defoc_lambda.clicked.connect(self.button_big_defoc_lambda_isClicked)
@@ -352,12 +353,16 @@ class PointSpreadFunctionDefoc(QWidget):
 
         # Legend 2
         # --------
-        self.label_legend2 = QLabel('Défocalisation de *** à ***.')
-        self.label_legend2.setStyleSheet(styleH3)
+        self.label_legend2 = QLabel('Défocalisation de -1 mm à +1 mm.')
+        self.label_legend2.setStyleSheet(styleH2)
+        self.lineedit_defoc = LineEditBloc('Maximum defoc (mm):', txt='1')
+        self.lineedit_defoc.editing_finished_signal().connect(self.on_lineedit_defoc_change)
         self.button_big_defoc_delta_z = QPushButton(' Agrandir ')
+        self.button_big_defoc_delta_z.clicked.connect(self.button_big_defoc_delta_z_isClicked)
         self.button_big_defoc_delta_z.setStyleSheet(unactived_button)
         self.sublayout_legend_defoc_delta_z = QHBoxLayout()
         self.sublayout_legend_defoc_delta_z.addWidget(self.label_legend2)
+        self.sublayout_legend_defoc_delta_z.addWidget(self.lineedit_defoc)
         self.sublayout_legend_defoc_delta_z.addStretch()
         self.sublayout_legend_defoc_delta_z.addWidget(self.button_big_defoc_delta_z)
 
@@ -367,15 +372,16 @@ class PointSpreadFunctionDefoc(QWidget):
 
         self.layout.addWidget(self.label_title)
         self.layout.addLayout(self.sublayout_legend_defoc_lambda)
-        self.layout.addLayout(self.sublayout_defoc_lambda)
+        self.layout.addLayout(self.sublayout_defoc_lambda, stretch=1)
         self.layout.addLayout(self.sublayout_legend_defoc_delta_z)
-        self.layout.addLayout(self.sublayout_defoc_delta_z)
+        self.layout.addLayout(self.sublayout_defoc_delta_z, stretch=1)
 
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
         self.action()
+        self.parent.main_menu_widget.f_number_changed.connect(self.action)
 
     def action(self):
         if self.parent is None:
@@ -391,7 +397,6 @@ class PointSpreadFunctionDefoc(QWidget):
         r[r>1] = 0
 
         self.psf_defoc_lambda = []
-
         for delta_lambda in [-1/2, -1/4, 0, 1/4, 1/2]:
             defoc = delta_lambda * np.sqrt(3)*(2*r**2-1)
 
@@ -400,12 +405,28 @@ class PointSpreadFunctionDefoc(QWidget):
             psf_for_display = psf_for_display[psf.shape[0]//4:3*psf.shape[0]//4, psf.shape[0]//4:3*psf.shape[0]//4]
             psf_for_display -= psf_for_display.min()
             psf_for_display /= psf_for_display.max()
-
             self.psf_defoc_lambda.append(psf_for_display)
-            
+
             widget = ImageWidget()
             widget.set_image_data(psf_for_display, 'gray')
             self.sublayout_defoc_lambda.addWidget(widget)
+
+        conversion = self.defoc_max_delta_z * (1-np.cos(1/(2*self.parent.f_number))) / self.parent.WAVELENGTH
+        self.psf_defoc_delta_z = []
+        for delta_lambda in [-1/2, -1/4, 0, 1/4, 1/2]:
+            print('ok')
+            defoc = delta_lambda * np.sqrt(3)*(2*r**2-1) * conversion
+
+            psf = get_psf(self.phase * np.exp(np.exp(2*I*PI*defoc)), self.parent.zoom, self.parent.grid_size)
+            psf_for_display = thresholed_log(psf)
+            psf_for_display = psf_for_display[psf.shape[0]//4:3*psf.shape[0]//4, psf.shape[0]//4:3*psf.shape[0]//4]
+            psf_for_display -= psf_for_display.min()
+            psf_for_display /= psf_for_display.max()
+            self.psf_defoc_delta_z.append(psf_for_display)
+
+            widget = ImageWidget()
+            widget.set_image_data(psf_for_display, 'gray')
+            self.sublayout_defoc_delta_z.addWidget(widget)
 
     def button_big_defoc_lambda_isClicked(self):
         self.button_big_defoc_lambda.setStyleSheet(actived_button)
@@ -422,9 +443,34 @@ class PointSpreadFunctionDefoc(QWidget):
 
         self.button_big_defoc_lambda.setStyleSheet(unactived_button)
 
+    def button_big_defoc_delta_z_isClicked(self):
+        self.button_big_defoc_delta_z.setStyleSheet(actived_button)
 
+        list_defoc = [-1/2, -1/4, 0, 1/4, 1/2]
+        conversion = self.defoc_max_delta_z * (1-np.cos(1/(2*self.parent.f_number))) / self.parent.WAVELENGTH
 
+        plt.figure(figsize=(15, 10))
+        for i in range(5):
+            plt.subplot(2, 3, i+1)
+            plt.imshow(self.psf_defoc_delta_z[i], 'gray')
+            plt.title(f"Écart normal de {list_defoc[i]*conversion:.1f} mm")
+            plt.axis('off')
+        plt.show()
 
+        self.button_big_defoc_delta_z.setStyleSheet(unactived_button)
+
+    def on_lineedit_defoc_change(self):
+        self.defoc_max_delta_z = float(self.lineedit_defoc.text())
+        self.label_legend2.setText(f"Défocalisation de -{self.defoc_max_delta_z} mm à +{self.defoc_max_delta_z} mm.")
+        
+        self.clean_layout(self.sublayout_defoc_lambda)
+        self.clean_layout(self.sublayout_defoc_delta_z)
+
+        self.action()
+
+    def clean_layout(self, layout):
+        for i in reversed(range(layout.count())): 
+            layout.itemAt(i).widget().setParent(None)
 
 
 
