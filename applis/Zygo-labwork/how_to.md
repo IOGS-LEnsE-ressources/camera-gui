@@ -6,7 +6,7 @@ Les sujets des TPs en question sont disponibles sur le site du LEnsE :
 * En première année : [Contrôles interférométriques](https://lense.institutoptique.fr/tp-controles-interferometriques/)
 * En deuxième année : [Aberrations](https://lense.institutoptique.fr/s8-aberrations/)
 
-![a!](/assets/IOGS-LEnsE-logo_small.jpg)
+![Logo LEnsE!](assets/IOGS-LEnsE-logo_small.jpg)
 
 |              | Date      | Contributeurs                                                      |
 | ------------ | --------- | ------------------------------------------------------------------ |
