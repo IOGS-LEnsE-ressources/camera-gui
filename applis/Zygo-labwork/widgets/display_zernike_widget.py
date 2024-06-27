@@ -147,18 +147,18 @@ class SeidelDisplayWidget(QWidget):
 
         Aberration  | Amplitude     | Angle
         ---------------------------------------------------
-        Tilt        | √(C1²+C2²)    | arctan(C2/C1)
+        Tilt        | √(C3²+C2²)    | arctan(C3/C2)
         Defocus     | 2*C4          |    no
-        Astigmatism | √(C3²+C5²)    | 1/2 * arctan(C5/C3)
-        Coma        | 3*√(C7²+C8²)  | arctan(C8/C7)
-        Sph. Ab.    | 6*C12         |    no
+        Astigmatism | √(C5²+C6²)    | 1/2 * arctan(C6/C5)
+        Coma        | 3*√(C8²+C7²)  | arctan(C8/C7)
+        Sph. Ab.    | 6*C11         |    no
         """
         c = self.coeffs
 
         # Tilt
         # ----
-        tilt_magnitude = np.sqrt(c[1]**2 + c[2]**2)
-        tilt_angle = np.rad2deg(np.arctan2(c[2], c[1]))
+        tilt_magnitude = np.sqrt(c[3]**2 + c[2]**2)
+        tilt_angle = np.rad2deg(np.arctan2(c[3], c[2]))
 
         # Defocus
         # -------
@@ -166,8 +166,8 @@ class SeidelDisplayWidget(QWidget):
 
         # Astigmatism
         # -----------
-        astigmatism_magnitude = 2 * np.sqrt(c[3]**2+c[5]**2)
-        astigmatism_angle = np.rad2deg(1/2* np.arctan2(c[3], c[5]))
+        astigmatism_magnitude = 2 * np.sqrt(c[6]**2+c[5]**2)
+        astigmatism_angle = np.rad2deg(1/2* np.arctan2(c[6], c[5]))
 
         # Coma
         # ----
@@ -176,7 +176,7 @@ class SeidelDisplayWidget(QWidget):
 
         # Spherical aberration
         # --------------------
-        sp_ab_magnitude = 6*c[12]
+        sp_ab_magnitude = 6*c[11]
 
         # Round
         # -----

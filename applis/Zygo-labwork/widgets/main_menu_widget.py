@@ -80,6 +80,11 @@ class MainMenuWidget(QWidget):
         self.button_analyzes_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_analyzes_main_menu.clicked.connect(self.button_analyzes_main_menu_isClicked)
         
+        self.button_help_main_menu = QPushButton("Aide")
+        self.button_help_main_menu.setStyleSheet(unactived_button)
+        self.button_help_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.button_help_main_menu.clicked.connect(self.button_help_main_menu_isClicked)
+        
         self.button_options_main_menu = QPushButton("Options")
         self.button_options_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
@@ -91,6 +96,7 @@ class MainMenuWidget(QWidget):
         self.sublayout.addWidget(self.button_acquisition_main_menu)
         self.sublayout.addWidget(self.button_analyzes_main_menu)
         self.sublayout.addStretch()
+        self.sublayout.addWidget(self.button_help_main_menu)
         self.sublayout.addWidget(self.button_options_main_menu)
         self.subwidget.setLayout(self.sublayout)
 
@@ -137,6 +143,14 @@ class MainMenuWidget(QWidget):
         # Action
         self.signal_menu_selected.emit('analyzes_main_menu')
         
+    def button_help_main_menu_isClicked(self):
+        # Change style
+        self.unactive_buttons()
+        self.button_help_main_menu.setStyleSheet(actived_button)
+        
+        # Action
+        self.signal_menu_selected.emit('help')
+    
     def button_options_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()

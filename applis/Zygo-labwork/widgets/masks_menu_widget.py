@@ -442,6 +442,7 @@ class SelectionMaskWindow(QDialog):
 
         # print(self.width(), self.height()) # Window size
 
+        self.setWindowTitle('Enfoncez ENTRÉE pour valider le masque.')
         self.layout = QVBoxLayout()
 
         self.image = image

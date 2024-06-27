@@ -287,8 +287,9 @@ class ZygoLabApp(QWidget):
             self.layout.addWidget(self.results_menu_widget, 2, 2)
 
             self.graphic_widget = Surface3DWidget('white', 1)
-            self.graphic_widget.set_title('')
-            #self.graphic_widget.set_information('')
+            # self.graphic_widget.set_title('')
+            
+            # self.graphic_widget.set_information('')
             self.graphic_widget.set_background('lightgray')
 
             self.layout.addWidget(self.graphic_widget, 1, 2)
@@ -298,6 +299,10 @@ class ZygoLabApp(QWidget):
 
             self.clear_layout(1, 2)
             self.analysis_requested.emit()
+
+        elif event == 'help':
+            # Call help page
+            pass
 
         elif event == 'options_main_menu':
             self.clear_layout(1, 2)
@@ -355,7 +360,7 @@ if __name__ == '__main__':
             super().__init__()
             
             # Define Window title
-            self.setWindowTitle(translate("Zygo-IDS Labwork APP"))
+            self.setWindowTitle(translate("ZygoLab"))
             self.setWindowIcon(QIcon('assets\IOGS-LEnsE-icon.jpg'))
             self.setGeometry(50, 50, 700, 700)
 
