@@ -71,7 +71,12 @@ class PiezoCalibrationWidget(QWidget):
         # Title
         # -----
         self.label_title_calibration_menu = QLabel(translate('Calibration'))
-        self.setStyleSheet(styleH1)
+        self.label_title_calibration_menu.setStyleSheet(styleH1)
+
+        # Explanation
+        # -----------
+        self.label_explanation = QLabel("Montez le miroir plan et formez une teinte plate.\nVeillez à ce que rien ne perturbe le système de franges.")
+        self.label_explanation.setStyleSheet(styleH3)
 
         # Graph
         # -----
@@ -94,6 +99,7 @@ class PiezoCalibrationWidget(QWidget):
 
         # Add widgets to the main layout
         self.layout.addWidget(self.label_title_calibration_menu)
+        self.layout.addWidget(self.label_explanation)
         self.layout.addWidget(self.graph_calibration)
         self.layout.addWidget(self.button_start_calibration)
         self.layout.addWidget(self.label_progression)
@@ -153,7 +159,7 @@ class PiezoCalibrationWidget(QWidget):
                     self.label_progression.repaint()
 
                     task.write(voltage)
-                    time.sleep(0.1)
+                    time.sleep(0.2)
 
                     raw_array = self.parent.camera_widget.camera.get_image().copy()[x_min:x_max, y_min:y_max]/number_measures
                     image_for_all_voltages.append(raw_array)
@@ -187,8 +193,6 @@ class PiezoCalibrationWidget(QWidget):
             print(phase.shape)
             plt.show()
 
-            phase -= phase[0]
-
             diff_phase = np.abs(np.diff(phase, prepend=0))
             
             #phase[0] = 0
@@ -196,8 +200,8 @@ class PiezoCalibrationWidget(QWidget):
                 phase[i] = phase[i-1] + diff_phase[i]#/step_val
 
             # phase *= 2
+            phase -= phase[num_steps//5]
 
-            # phase = 2*phase
             task.write(0)
 
             ## Arrêter la tâche
@@ -233,6 +237,10 @@ class PiezoCalibrationWidget(QWidget):
             print('aie')
         else:
             modify_parameter_value('config.txt', 'Piezo voltage', f"{V_1},{V_2},{V_3},{V_4},{V_5}")
+        
+        msg_box = QMessageBox()
+        msg_box.setStyleSheet(styleH3)
+        msg_box.information(self, "Information", "Piezo calibrée.\nLes valeurs ont été modifiées dans le fichier de configuration.")
 
         print("============================= END CALIBRATION ===================================")
 

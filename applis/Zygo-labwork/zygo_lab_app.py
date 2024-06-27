@@ -288,7 +288,7 @@ class ZygoLabApp(QWidget):
 
             self.graphic_widget = Surface3DWidget('white', 1)
             self.graphic_widget.set_title('')
-            #♣self.graphic_widget.set_information('')
+            #self.graphic_widget.set_information('')
             self.graphic_widget.set_background('lightgray')
 
             self.layout.addWidget(self.graphic_widget, 1, 2)
