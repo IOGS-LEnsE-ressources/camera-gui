@@ -34,7 +34,9 @@ Les sujets des TPs en question sont disponibles sur le site du LEnsE :
 Pour son bon fonctionnement, veillez à ce que la caméra IDS et la cale piézoélectrique soient branchées à l'ordinateur, et que les librairies présentes dans le document [requirements.txt](requirements.txt) soient bien installées.
 
 ## Accès à l'interface
-...
+> // Provisoire //
+
+Sur le Bureau, cliquez sur ``ZygoLab.bat``.
 
 ## Présentation de l'interface
 L'interface est composée de plusieurs widgets et éléments interactifs organisés de manière intuitive. Voici une description des principales sections de l'interface :
