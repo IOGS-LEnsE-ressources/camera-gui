@@ -1,5 +1,21 @@
 # Notice d'utilisation de l'application ZygoLab
 
+## Table des matières
+
+1. [Présentation de l'interface](#présentation-de-linterface)
+2. [Pré-requis](#pré-requis)
+3. [Accès à l'interface](#accès-à-linterface)
+4. [Présentation de l'interface](#présentation-de-linterface)
+
+    * [Barre de titre](#barre-de-titre)
+    * [Menu principal](#menu-principal)
+    * [Paramètres de la caméra](#paramètres-de-la-caméra)
+    * [Menu des masques](#menu-des-masques)
+    * [Menu d'acquisition](#menu-dacquisition)
+    * [Options et paramètres](#options-et-paramètres)
+    * [Menu d'analyse](#menu-danalyse)
+5. [La marche à suivre en TP](#la-marche-à-suivre-en-tp)
+
 L'interface utilisateur de l'application **ZygoLab** est conçue pour faciliter l'acquisition et l'analyse des interférogrammes obtenus à l'aide d'un interféromètre Zygo dans le cadre des travaux pratiques de photonique du Laboratoire d'Enseignement Expérimental (*LEnsE*) de l'Institut d'Optique Graduate School (*IOGS*).
 
 Les sujets des TPs en question sont disponibles sur le site du LEnsE :
@@ -81,7 +97,7 @@ Dans le cas d'une suppression d'un ou de tous les masques, une fenêtre de dialo
 > **Astuce** : ...
 
 ### Menu d'acquisition
-La vue d'acquisition permet de démarrer et de gérer les sessions d'acquisition des interférogrammes. Elle offre des options pour configurer les paramètres de l'acquisition et pour lancer les processus de capture d'images. C'est dans cette vue que l'on retrouve aussi les principaux résultats une fois l'acquisition faite. L'utilisateur peut aussi choisir de supprimer certaines aberrations avant l'étape d'analyse (voir la section sur le menu Analyse).
+La vue d'acquisition permet de démarrer et de gérer les sessions d'acquisition des interférogrammes. Elle offre des options pour configurer les paramètres de l'acquisition et pour lancer les processus de capture d'images. C'est dans cette vue que l'on retrouve aussi les principaux résultats une fois l'acquisition faite. L'utilisateur peut aussi choisir de supprimer certaines aberrations avant l'étape d'analyse (voir le [menu Analyses](#menu-danalyse)).
 
 > **Note** : Si l'utilisateur souhaite supprimer une ou des aberrations, il doit le faire **après** l'acquisition. Sinon, un message d'erreur apparaît et l'invite à effectuer une acquisition avant.
 
