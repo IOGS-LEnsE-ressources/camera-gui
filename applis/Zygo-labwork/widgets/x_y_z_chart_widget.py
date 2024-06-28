@@ -31,8 +31,8 @@ class Surface3DWidget(QWidget):
 
         # pyqtgraph OpenGL GLViewWidget setup
         self.plot_chart_widget: gl.GLViewWidget = gl.GLViewWidget()
-        self.plot_chart_widget.setMinimumWidth(300)
-        self.plot_chart_widget.setMinimumHeight(300)
+        #self.plot_chart_widget.setMinimumWidth(300)
+        #self.plot_chart_widget.setMinimumHeight(300)
 
         # Initialize Numpy arrays for X, Y, and Z data
         self.plot_x_data: np.ndarray = np.array([])

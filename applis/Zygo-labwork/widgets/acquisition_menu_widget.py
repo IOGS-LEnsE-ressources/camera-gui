@@ -40,6 +40,9 @@ from timeit import default_timer as timer
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
+import cv2
+
+
 PI = np.pi
 
 # %% To add in lensepy library
@@ -353,7 +356,7 @@ class AcquisitionMenuWidget(QWidget):
                         print("L'attribut 'table_results' ou 'array' est manquant dans 'results_menu_widget'")
 
                     if hasattr(self, 'phase'):
-                        self.display_phase_3d(self.phase*self.wedge_factor/old_wedge_factor)
+                        self.display_phase(self.phase*self.wedge_factor/old_wedge_factor)
                 else:
                     print("Le parent n'existe pas ou n'a pas l'attribut 'results_menu_widget'")
 
@@ -455,7 +458,7 @@ class AcquisitionMenuWidget(QWidget):
                 self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
                 
                 # Display phase in 3D
-                self.display_phase_3d(self.phase*self.wedge_factor)
+                self.display_phase(self.phase*self.wedge_factor)
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
@@ -503,7 +506,7 @@ class AcquisitionMenuWidget(QWidget):
                     all_PV.append(PV)
                     all_RMS.append(RMS)
 
-                self.display_phase_3d(self.phase)
+                self.display_phase(self.phase)
                     
                 array = np.array([
                     ['', 1, 2, 3, 4, 5, 'Moyenne'],
@@ -514,7 +517,7 @@ class AcquisitionMenuWidget(QWidget):
                 self.parent.results_menu_widget.array = array
                 self.parent.results_menu_widget.table_results.update_table(self.multiply_results_array_by_wedge_factor())
 
-                self.display_phase_3d(self.phase*self.wedge_factor)
+                self.display_phase(self.phase*self.wedge_factor)
 
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
@@ -555,9 +558,8 @@ class AcquisitionMenuWidget(QWidget):
             return None
 
         self.button_save_phase.setStyleSheet(unactived_button)
-
-    def display_phase_3d(self, phase):
-        import cv2
+    
+    def display_phase(self, phase):
         scale_factor = 0.4
         scaled_image = cv2.resize(phase, (0, 0), fx = scale_factor, fy = scale_factor, interpolation=cv2.INTER_CUBIC)
         phase = scaled_image
@@ -589,7 +591,6 @@ class AcquisitionMenuWidget(QWidget):
 
             self.parent.graphic_widget.set_data(x_grid, y_grid, z)
             self.parent.graphic_widget.refresh_chart()
-            print("======================= c'est rapide !!! ================================")
         except Exception as e:
             print(f"Affichage 3D - {e}")
 

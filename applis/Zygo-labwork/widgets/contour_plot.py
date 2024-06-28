@@ -90,8 +90,8 @@ class ContourWidget(QWidget):
 
         # pyQtGraph PlotWidget setup
         self.plot_chart_widget: pg.PlotWidget = pg.PlotWidget()
-        self.plot_chart_widget.setMinimumWidth(400)
-        self.plot_chart_widget.setMinimumHeight(400)
+        # self.plot_chart_widget.setMinimumWidth(400)
+        # self.plot_chart_widget.setMinimumHeight(400)
 
         # Initialize Numpy arrays for X, Y, and Z data
         self.plot_x_data: np.ndarray = np.array([])
@@ -281,9 +281,9 @@ class ContourWidget(QWidget):
         -----
         This method ensures all necessary widgets are added and displayed in the layout.
         """
-        self.layout.addWidget(self.title_label)
+        # self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
-        self.layout.addWidget(self.info_label)
+        # self.layout.addWidget(self.info_label)
 
 
 # -----------------------------------------------------------------------------------------------

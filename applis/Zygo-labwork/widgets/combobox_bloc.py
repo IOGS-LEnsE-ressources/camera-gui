@@ -39,6 +39,8 @@ dictionary = {}
 
 # %% Widget
 class ComboBoxBloc(QWidget):
+    selection_changed = pyqtSignal(str)
+
     def __init__(self, title: str, list_options: list) -> None: 
         super().__init__(parent=None)
         
@@ -60,6 +62,12 @@ class ComboBoxBloc(QWidget):
 
         self.setLayout(self.layout)
         self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.combobox.currentTextChanged.connect(self.emit_selection_changed)
+
+    def emit_selection_changed(self, text):
+        self.selection_changed.emit(text)  # Émettre le signal avec le texte sélectionné
+        print('Option changée')
 
     def update_options(self, list_options):
         self.combobox.clear()
