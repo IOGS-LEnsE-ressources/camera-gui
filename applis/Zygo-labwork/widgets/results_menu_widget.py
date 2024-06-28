@@ -7,12 +7,12 @@
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
 
-import sys
+import sys, os
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QCheckBox,
-    QMessageBox
+    QMessageBox, QFileDialog
 )
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
@@ -83,7 +83,7 @@ class ResultsMenuWidget(QWidget):
         self.layout.addWidget(self.label_title_results)
         #self.layout.addWidget(self.combobox_type_output_plot)
         self.layout.addWidget(self.table_results)
-        self.layout.addWidget(self.button_print_all_results)
+        #self.layout.addWidget(self.button_print_all_results)
         self.layout.addStretch()
 
         self.master_widget.setLayout(self.layout)
@@ -92,6 +92,19 @@ class ResultsMenuWidget(QWidget):
 
     def button_print_all_results_isClicked(self):
         self.button_print_all_results.setStyleSheet(actived_button)
+
+        try:
+            default_dir = os.path.expanduser("~/Desktop")
+            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", default_dir)
+            if path:
+                np.savetxt(f"{path}/zygo_statistics.txt", self.array, delimiter=',', fmt='%s')
+        except Exception as e:
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet(styleH3)
+            msg_box.warning(self, "Erreur", f"Vous devez faire un acquisition. {e}")
+            self.button_repeated_acquisition.setStyleSheet(unactived_button)  
+            return None
+
         self.button_print_all_results.setStyleSheet(unactived_button)
 
 

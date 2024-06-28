@@ -34,13 +34,16 @@ def display_images(images):
     plt.axis('off')
 
     plt.tight_layout()
+    plt.suptitle('Images enregistrées avec succès.')
     plt.show()
 
 def save_images(images, path):
     for i in range(5):
         plt.figure()
         plt.imshow(images[i], 'gray')
+        plt.axis('off')
         plt.savefig(f'{path}/zygo_interf_{i+1}.png')
+        plt.close()
     return 0
 
 if __name__ == '__main__':

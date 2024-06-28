@@ -529,9 +529,11 @@ class AcquisitionMenuWidget(QWidget):
         print('button_see_and_save_images_isClicked')
 
         try:
-            display_images(self.images)
-            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", "")
-            save_images(self.images, path)
+            default_dir = os.path.expanduser("~/Desktop")
+            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", default_dir)
+            if path:
+                save_images(self.images, path)
+                display_images(self.images)
         except:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
@@ -546,10 +548,17 @@ class AcquisitionMenuWidget(QWidget):
         print('button_save_phase_isClicked')
 
         try:
-            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", "")
-            plt.figure()
-            plt.imshow(self.interpolated_values)
-            plt.savefig(f"{path}/phase.png")
+            default_dir = os.path.expanduser("~/Desktop")
+            path = QFileDialog.getExistingDirectory(self, "Sélectionnez un dossier", default_dir)
+            if path:
+                plt.figure()
+                plt.imshow(self.phase-np.nanmin(self.phase), cmap='rainbow')
+                cbar = plt.colorbar()
+                cbar.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.2f} λ'))
+                plt.axis('off')
+                plt.savefig(f"{path}/phase.png")
+                plt.title('Phase enregitrée avec succès.')
+                plt.show()
         except:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)

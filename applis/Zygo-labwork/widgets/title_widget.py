@@ -35,7 +35,7 @@ class TitleWidget(QWidget):
         super().__init__(parent=None)
         self.setStyleSheet("background-color: white;")  # Set background color for the entire widget
         self.title = "Contrôle interférométrique & Analyseur de front d'onde ZYGO"
-        self.subtitle = "Travaux pratiques de 1A et 2AP"
+        self.subtitle = "Julien Villemejane (PRAG), Dorian Mendes (Promo 2026)"
 
         self.layout = QVBoxLayout()
 
