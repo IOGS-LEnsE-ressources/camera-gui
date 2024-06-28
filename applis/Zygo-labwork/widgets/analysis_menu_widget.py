@@ -90,10 +90,10 @@ class AnalysisMenuWidget(QWidget):
         self.button_mtf_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_mtf_menu.clicked.connect(self.button_analysis_menu_isClicked)
 
-        """self.button_spot_diagram_menu = QPushButton("Spot diagram")
+        self.button_spot_diagram_menu = QPushButton("Spot diagram")
         self.button_spot_diagram_menu.setStyleSheet(unactived_button)
         self.button_spot_diagram_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_spot_diagram_menu.clicked.connect(self.button_analysis_menu_isClicked)"""
+        self.button_spot_diagram_menu.clicked.connect(self.button_analysis_menu_isClicked)
 
         self.sublayout.addWidget(self.label_title_main_menu)
         self.sublayout.addWidget(self.lineedit_focal)
@@ -101,7 +101,7 @@ class AnalysisMenuWidget(QWidget):
         self.sublayout.addWidget(self.button_zernike_menu)
         self.sublayout.addWidget(self.button_psf_menu)
         self.sublayout.addWidget(self.button_mtf_menu)
-        #self.sublayout.addWidget(self.button_spot_diagram_menu)
+        self.sublayout.addWidget(self.button_spot_diagram_menu)
         self.sublayout.addStretch()
         self.subwidget.setLayout(self.sublayout)
 

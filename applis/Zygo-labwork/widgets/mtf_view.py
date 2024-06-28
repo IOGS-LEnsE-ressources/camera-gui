@@ -123,6 +123,7 @@ class ModulationTransfertFunctionDisplay(QWidget):
         self.update_mtf()
 
     def update_mtf(self):
+        print('update MTF')
         mtf = get_mtf(self.phase, self.zoom, self.grid_size)
         #mtf = get_mtf(self.phase, 4, 1024)
 
@@ -377,16 +378,16 @@ class ModulationTransfertFunctionDefoc(QWidget):
         px_mtf = cutoff_frequency * 2**(-self.parent.zoom)
         self.X = np.linspace(-self.Ne//2*px_mtf, self.Ne//2*px_mtf, self.Ne)
 
-        plt.figure(figsize=(20, 10))
+        plt.figure(figsize=(15, 9))
         plt.suptitle('En orange: avec aberrations. En bleu, sans aberrations.')
         for i in range(10):
             plt.subplot(2, 5, i+1)
             plt.plot(self.X[4*self.Ne//8: 5*self.Ne//8], self.mtf_defoc_delta_z_slice[i][4*self.Ne//8: 5*self.Ne//8], color=ORANGE_IOGS, lw=2)
-            plt.plot(self.X[4*self.Ne//8: 5*self.Ne//8], self.theorical_mtf_defoc_delta_z_slice[i][4*self.Ne//8: 5*self.Ne//8], color=BLUE_IOGS, lw=1)
+            plt.plot(self.X[4*self.Ne//8: 5*self.Ne//8], self.theorical_mtf_defoc_delta_z_slice[i][4*self.Ne//8: 5*self.Ne//8], color=BLUE_IOGS, lw=1, alpha=.5)
             plt.xlabel(f"{axis[i]} (m⁻¹)")
             plt.ylabel('MTF normalisée')
             plt.title(f"Écart normal de {list_defoc[i]*conversion:.1f} mm")
-        plt.tight_layout
+        # plt.tight_layout
         plt.show()
 
         self.button_big_defoc_delta_z.setStyleSheet(unactived_button)

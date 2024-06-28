@@ -239,7 +239,7 @@ class RemoveFaultsWidget(QWidget):
         self.parent.parent.results_menu_widget.array = array
         self.parent.parent.results_menu_widget.table_results.update_table(self.parent.multiply_results_array_by_wedge_factor())
 
-        self.parent.display_phase_3d(corrected_wavefront)
+        self.parent.display_phase(corrected_wavefront)
 
     def new_sample(self):
         if hasattr(self, 'coeffs'):
