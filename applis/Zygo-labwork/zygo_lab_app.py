@@ -59,7 +59,6 @@ from widgets.imshow_pyqtgraph import TwoImageWidget
 from process.initialization_parameters import *
 
 import PyInstaller.__main__
-
 """PyInstaller.__main__.run([
     'zygo_lab_app.py',
     '--onefile',

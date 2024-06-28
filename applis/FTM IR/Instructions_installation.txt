@@ -1,0 +1,13 @@
+----------------------------------------------- Mise en place du TP FTM IR --------------------------------------------
+
+Installer Python 3 (>=3.6 et <3.11) en cochant les options "pip" et "Add python to environment variables"/"Add to PATH"
+
+Redémarrer l'ordinateur
+
+Lancer l'éxécutable installation_librairies.bat en tant qu'administrateur
+
+Redémarrer l'ordinateur
+
+Le TP est prêt, vous pouvez accéder à l'interface en ouvrant le fichier InterfaceFTMIR
+
+									- fait par Vincent NOËL et Jesús FERRANDIS

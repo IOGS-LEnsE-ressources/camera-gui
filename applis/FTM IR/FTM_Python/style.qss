@@ -1,0 +1,178 @@
+QWidget {
+	background-color: #FFFFFF;
+}
+
+QLabel {
+	background-color: #FFFFFF;
+	qproperty-alignment: AlignCenter;
+}
+
+QLabel#Titre {
+	font-size: 60px;
+	font-family: Gloucester MT Extra Condensed;
+}
+
+QGroupBox#temps QLabel {
+	font-size: 20px;
+}
+
+QPushButton {
+	border-width: 2px;
+	border-radius: 6px;
+	border-color: white;
+	color: white;
+	font: bold;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+	padding: 6px;
+}
+
+QPushButton:pressed {
+	background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+}
+
+QPushButton:disabled {
+	background-color: #DBDFE0;
+	color: #737576;
+}
+
+QPushButton:checked {
+	border-width: 2px;
+	border-radius: 6px;
+	border-color: white;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #D46D74, stop: 1 #B01E1E);
+	padding: 6px;
+}
+
+QGroupBox {
+	border: 1px solid qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+	border-radius: 6px;
+	margin-top: 11px;
+	padding-top: 10px;
+	color: #1C9BD1;
+	font-size: 14px;
+	font: Bold;
+}
+
+QGroupBox::title {
+	subcontrol-origin: margin;
+	left: 9px;
+	padding: 0 0px;
+}
+
+QProgressBar {
+	border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #DCE3EA, stop: 1 #F6F6F6);
+	padding: 2px;
+}
+
+QProgressBar::chunk {
+	border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+	margin: 1px;
+}
+
+QCheckBox::indicator:unchecked {
+	image: url(./images/uncheckedbox.png);
+}
+
+QCheckBox::indicator:checked {
+	image: url(./images/checkedbox.png);
+}
+
+QDoubleSpinBox {
+	border: 1px solid qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+	color: #1C9BD1;
+	background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #FFFFFF, stop: 1 #EEEEEE);
+	border-radius: 6px;
+	padding-left: 2px;
+}
+
+QDoubleSpinBox::up-button {
+	subcontrol-origin: border;
+    	subcontrol-position: top right; /* position at the top right corner */
+    	border-image: url(./images/Spin-up-arrow.png) 1;
+    	border-width: 1px;
+}
+
+QDoubleSpinBox::up-button:pressed {
+	subcontrol-origin: border;
+    	subcontrol-position: top right; /* position at the top right corner */
+    	border-image: url(./images/Spin-up-arrow-pressed.png) 1;
+    	border-width: 1px;
+}
+
+QDoubleSpinBox::down-button {
+	subcontrol-origin: border;
+	subcontrol-position: bottom right; /* position at the top right corner */
+    	border-image: url(./images/Spin-down-arrow.png) 1;
+    	border-width: 1px;
+}
+
+QDoubleSpinBox::down-button:pressed {
+	subcontrol-origin: border;
+	subcontrol-position: bottom right; /* position at the top right corner */
+    	border-image: url(./images/Spin-down-arrow-pressed.png) 1;
+    	border-width: 1px;
+}
+
+QComboBox {
+	border: 1px solid qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+	color: #1C9BD1;
+	background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #FFFFFF, stop: 1 #EEEEEE);
+	border-radius: 6px;
+	padding-left: 2px;
+}
+
+QComboBox:on {
+}
+
+QComboBox::drop-down {
+	subcontrol-origin: border;
+	subcontrol-position: bottom right; /* position at the top right corner */
+    	border-image: url(./images/drop-button.png) 1;
+    	border-width: 1px;
+	/*border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #27CAF6, stop: 1 #1C9BD1);*/
+}
+
+QComboBox::drop-down:on {
+	subcontrol-origin: border;
+	subcontrol-position: right;
+    	border-image: url(./images/drop-button-pressed.png) 1;
+    	border-width: 1px;
+	/*border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #27CAF6, stop: 1 #1C9BD1);*/
+}
+
+QScrollBar:vertical {
+	border: 1px transparent #FFFFFF;
+	border-radius: 6px;
+	background: #EEEEEE;
+	width: 16px;
+}
+
+QScrollBar::groove {
+	background: none;
+	border-radius: 6px;
+}
+
+QScrollBar::handle {
+	border-radius: 6px;
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+}
+
+QScrollBar::sub-line {
+	height: 0px;
+	background: none;
+}
+
+QScrollBar::add-line {
+	height: 0px;
+	background: none;
+}
+
+QAbstractItemView {
+	border: 1px solid qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #27CAF6, stop: 1 #1C9BD1);
+	border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0,stop: 0 #FFFFFF, stop: 1 #EEEEEE);
+}
