@@ -48,7 +48,7 @@ class ComboBoxBloc(QWidget):
         self.label.setStyleSheet(styleH2)
 
         self.combobox = QComboBox()
-        self.combobox.addItem('===== '+translate('name_output_type_choice')+' =====')
+        self.combobox.addItem('===== Sélectionner une option =====')
         self.combobox.setCurrentIndex(0)
         self.combobox.addItems(list_options)
         self.combobox.setStyleSheet(styleH3)
@@ -63,7 +63,7 @@ class ComboBoxBloc(QWidget):
 
     def update_options(self, list_options):
         self.combobox.clear()
-        self.combobox.addItem('===== '+translate('name_output_type_choice')+' =====')
+        self.combobox.addItem('===== Sélectionner une option =====')
         self.combobox.setCurrentIndex(0)
         self.combobox.addItems(list_options)
 

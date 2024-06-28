@@ -25,8 +25,8 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox, QDialog,
     QMessageBox
 )
-from PyQt6.QtGui import QPixmap, QIcon
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QPixmap, QIcon, QDesktopServices
+from PyQt6.QtCore import Qt, pyqtSignal, QUrl
 
 # Third-party library imports
 import numpy as np
@@ -310,7 +310,8 @@ class ZygoLabApp(QWidget):
 
         elif event == 'help':
             # Call help page
-            pass
+            QDesktopServices.openUrl(QUrl.fromLocalFile('how_to.pdf'))
+            self.main_menu_widget.button_help_main_menu.setStyleSheet(unactived_button)
 
         elif event == 'options_main_menu':
             self.clear_layout(1, 2)

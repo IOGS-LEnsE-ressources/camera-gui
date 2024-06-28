@@ -47,7 +47,7 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 # %% Params
 BUTTON_HEIGHT = 30  # px
-
+OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class CameraSettingsWidget(QWidget):
@@ -99,12 +99,19 @@ class CameraSettingsWidget(QWidget):
         self.button_big_cam.setStyleSheet(unactived_button)
         self.button_big_cam.clicked.connect(self.button_big_cam_isClicked)
 
-        # Default settings
-        # ----------------
-        self.button_default_settings = QPushButton('Rétablir les valeurs par défaut')
-        self.button_default_settings.setFixedHeight(BUTTON_HEIGHT)
-        self.button_default_settings.setStyleSheet(unactived_button)
-        self.button_default_settings.clicked.connect(self.button_default_settings_isClicked)
+        # Set default settings
+        # --------------------
+        self.button_set_default_settings = QPushButton('Sauver en tant que valeurs par défaut')
+        self.button_set_default_settings.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.button_set_default_settings.setStyleSheet(unactived_button)
+        self.button_set_default_settings.clicked.connect(self.button_set_default_settings_isClicked)
+        
+        # Default settings backup
+        # -----------------------
+        self.button_default_settings_backup = QPushButton('Rétablir les valeurs par défaut')
+        self.button_default_settings_backup.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.button_default_settings_backup.setStyleSheet(unactived_button)
+        self.button_default_settings_backup.clicked.connect(self.button_default_settings_backup_isClicked)
 
         self.layout.addWidget(self.label_title_camera_settings)
         """self.layout.addWidget(self.subwidget_camera_id)"""
@@ -112,7 +119,8 @@ class CameraSettingsWidget(QWidget):
         self.layout.addWidget(self.slider_black_level)
         self.layout.addWidget(self.button_big_cam)
         self.layout.addStretch()
-        self.layout.addWidget(self.button_default_settings)
+        self.layout.addWidget(self.button_set_default_settings)
+        self.layout.addWidget(self.button_default_settings_backup)
         self.setLayout(self.layout)
 
     def slider_exposure_time_changing(self, event):
@@ -125,7 +133,6 @@ class CameraSettingsWidget(QWidget):
         """Action performed when the exposure time slider changed."""
         if self.camera is not None:
             self.camera.set_black_level(int(self.slider_black_level.get_value()))
-
 
     def update_parameters(self, auto_min_max: bool = False) -> None:
         """Update displayed parameters values, from the camera.
@@ -148,7 +155,20 @@ class CameraSettingsWidget(QWidget):
         self.zoom_activated.emit(True)
         self.button_big_cam.setStyleSheet(unactived_button)
 
-    def button_default_settings_isClicked(self):
+    def button_set_default_settings_isClicked(self):
+        exposure = 1e-3 * self.camera.get_exposure()
+        black_level = self.camera.get_black_level()
+
+        modify_parameter_value('config.txt', 'Exposure time', str(exposure))
+        modify_parameter_value('config.txt', 'Black level', str(int(black_level)))
+        
+        self.update_parameters()
+
+        msg_box = QMessageBox()
+        msg_box.setStyleSheet(styleH3)
+        msg_box.information(self, "Information", "Ces valeurs sont maintenant les valeurs par défaut.")
+    
+    def button_default_settings_backup_isClicked(self):
         default_settings_dict = read_default_parameters('config.txt')
 
         default_exposure = float(default_settings_dict['Exposure time']) # ms
