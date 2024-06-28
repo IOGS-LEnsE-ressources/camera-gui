@@ -41,10 +41,13 @@ Lors d'un TP, voici les étapes essentielles à suivre (veillez à respecter l'o
 1. Sélectionnez le menu`Paramètres caméra` pour accéder à la vue en plein écran et le réglage du temps d'exposition.
 2. Sélectionnez le menu `Masques` et créez **au moins un masque**.
 3. Sélectionnez le menu `Acquisition`, renseignez le *wedge factor* et effectuez une acquisition (simple ou répétée). Vous pouvez **ensuite** supprimer une ou plusieurs aberrations. Vous pouvez enregistrer vos résultats.
+    > **Attention:** les cases à cocher peuvent mettre du temps à s'activer *(car cela déclenche le calcul des coefficients de Zernike)*: cliquez une seule fois et attendez.
 * *Fin du TP de 1A*
 4. Sélectionnez le menu `Analyses`. Une seconde fenêtre s'ouvre.
+    > **Attention:** cette fenêtre met du temps à s'ouvrir *(car cela déclenche le calcul des coefficients de Zernike)*: cliquez une seule fois et attendez.
 5. Renseignez le nombre d'ouverture de votre système en haut à gauche.
 6. Accédez aux différents résultats via le menu principal à gauche.
+    > **Attention:** l'affichage d'un menu prend du temps *(car cela déclenche le calcul des PSF et MTF dans tous les cas en amont)*: cliquez une seule fois et attendez.
 * *Fin du TP de 2A*
 
 ## Présentation de l'interface
