@@ -33,8 +33,8 @@ def get_phase(parent, sigma_gaussian_filter=3):
             #plt.new_figure_manager
 
             for i in range(5):
-                #plt.subplot(1,5,i+1)
-                print(f'Image {i}')
+                # plt.subplot(1,5,i+1)
+                # print(f'Image {i}')
                 
                 task.write(voltages[i])
                 time.sleep(0.1)

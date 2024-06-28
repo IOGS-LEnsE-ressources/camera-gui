@@ -58,9 +58,9 @@ from widgets.imshow_pyqtgraph import TwoImageWidget
 
 from process.initialization_parameters import *
 
-"""import PyInstaller.__main__
+import PyInstaller.__main__
 
-PyInstaller.__main__.run([
+"""PyInstaller.__main__.run([
     'zygo_lab_app.py',
     '--onefile',
     '--windowed'
@@ -392,7 +392,7 @@ if __name__ == '__main__':
             else:
                 event.ignore()"""
 
-
+    print("Ouverture en cours ...")
     app = QApplication(sys.argv)
     main = MyWindow()
     main.showMaximized()

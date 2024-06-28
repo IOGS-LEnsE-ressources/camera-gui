@@ -2,9 +2,9 @@
 
 ## Table des matières
 
-1. [Présentation de l'interface](#présentation-de-linterface)
-2. [Pré-requis](#pré-requis)
-3. [Accès à l'interface](#accès-à-linterface)
+1. [Pré-requis](#pré-requis)
+2. [Accès à l'interface](#accès-à-linterface)
+3. [La marche à suivre en TP](#la-marche-à-suivre-en-tp)
 4. [Présentation de l'interface](#présentation-de-linterface)
 
     * [Barre de titre](#barre-de-titre)
@@ -14,7 +14,6 @@
     * [Menu d'acquisition](#menu-dacquisition)
     * [Options et paramètres](#options-et-paramètres)
     * [Menu d'analyse](#menu-danalyse)
-5. [La marche à suivre en TP](#la-marche-à-suivre-en-tp)
 
 L'interface utilisateur de l'application **ZygoLab** est conçue pour faciliter l'acquisition et l'analyse des interférogrammes obtenus à l'aide d'un interféromètre Zygo dans le cadre des travaux pratiques de photonique du Laboratoire d'Enseignement Expérimental (*LEnsE*) de l'Institut d'Optique Graduate School (*IOGS*).
 
@@ -34,9 +33,19 @@ Les sujets des TPs en question sont disponibles sur le site du LEnsE :
 Pour son bon fonctionnement, veillez à ce que la caméra IDS et la cale piézoélectrique soient branchées à l'ordinateur, et que les librairies présentes dans le document [requirements.txt](requirements.txt) soient bien installées.
 
 ## Accès à l'interface
-> // Provisoire //
+Sur le Bureau, cliquez sur ``ZygoLab`` (application ayant comme icône le logo du LEnsE).
 
-Sur le Bureau, cliquez sur ``ZygoLab.bat``.
+## La marche à suivre en TP
+Lors d'un TP, voici les étapes essentielles à suivre (veillez à respecter l'ordre de certaines, conformément à ce qui vient d'être dit plus haut):
+
+1. Sélectionnez le menu`Paramètres caméra` pour accéder à la vue en plein écran et le réglage du temps d'exposition.
+2. Sélectionnez le menu `Masques` et créez **au moins un masque**.
+3. Sélectionnez le menu `Acquisition`, renseignez le *wedge factor* et effectuez une acquisition (simple ou répétée). Vous pouvez **ensuite** supprimer une ou plusieurs aberrations. Vous pouvez enregistrer vos résultats.
+* *Fin du TP de 1A*
+4. Sélectionnez le menu `Analyses`. Une seconde fenêtre s'ouvre.
+5. Renseignez le nombre d'ouverture de votre système en haut à gauche.
+6. Accédez aux différents résultats via le menu principal à gauche.
+* *Fin du TP de 2A*
 
 ## Présentation de l'interface
 L'interface est composée de plusieurs widgets et éléments interactifs organisés de manière intuitive. Voici une description des principales sections de l'interface :
@@ -120,7 +129,7 @@ Une fois l'acquisition faite, l'utilisateur a trois choix pour afficher la surfa
 
 Ensuite, l'utilisateur peut enregistrer :
 * les cinq images de l'algorithme de Hariharan,
-* la phase (*i.e.* la surface calculée),
+* la phase (c'est-à-dire la surface calculée),
 * et/ou les différentes valeurs calculées.
 
 Les images sont enregistrées dans un dossier spécifié par l'utilisateur via une boîte de dialogue au format `.png`.
@@ -130,19 +139,13 @@ Les autres résultats sont enregistrés dans un fichier `.txt`.
 ### Options et paramètres
 Le menu des options contient des paramètres généraux pour l'application, comme les préférences linguistiques, les options de calibrage du piézo, et d'autres configurations avancées.
 
-> // En construction //
-
 ### Menu d'analyse
-> // En construction //
+La fenêtre Analyse se compose de trois zones distinctes:
+* une ligne de titre en haut,
+* un menu à gauche,
+* et une zone variable selon les menus sélectionnés.
 
-## La marche à suivre en TP
-Lors d'un TP, voici les étapes essentielles à suivre (veillez à respecter l'ordre de certaines, conformément à ce qui vient d'être dit plus haut):
-
-1. Sélectionnez le menu`Paramètres caméra` pour accéder à la vue en plein écran et le réglage du temps d'exposition.
-2. Sélectionnez le menu `Masques` et créez **au moins un masque**.
-3. Sélectionnez le menu `Acquisition`, renseignez le *wedge factor* et effectuez une acquisiton (simple ou répétée). Vous pouvez **ensuite** supprimer une ou plusieurs aberrations. Vous pouvez enregistrer vos résultats.
-* *Fin du TP de 1A*
-4. Sélectionnez le menu `Analyses`. Une seconde fenêtre s'ouvre.
-5. Renseignez le nombre d'ouverture de votre système en haut à gauche.
-6. Accédez aux différents résultats via le menu principal à gauche.
-* *Fin du TP de 2A*
+L'utilisateur peut sélectionner trois vues:
+* **Zernike/Seidel:** Permet de visualiser les coefficients de Zernike et de Seidel du système étudié.
+* **PSF:** Permet de visualiser la PSF en niveau de gris (affichage logarithmique), des coupes de la PSF et la PSF dans le cas d'une défocalisation.
+* **MTF:** Permet de visualiser la MTF en 3D (affichage logarithmique), des coupes de la MTF et la MTF dans le cas d'une défocalisation.

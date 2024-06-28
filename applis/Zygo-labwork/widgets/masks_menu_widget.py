@@ -160,7 +160,6 @@ class MasksMenuWidget(QWidget):
         self.setLayout(self.master_layout)
 
     def checkbox_apply_mask_changed(self, state):
-        print('checkbox_apply_mask_changed')
         if self.index_mask_selected == -1:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
@@ -174,7 +173,6 @@ class MasksMenuWidget(QWidget):
                 else:
                     self.list_masks[self.index_mask_selected] = self.list_original_masks[self.index_mask_selected]
             
-            print(f'Updated self.list_masks: {self.list_masks}')
         except Exception as e:
             print(f'Exception - checkbox_apply_mask_changed {e}')
 
@@ -248,7 +246,6 @@ class MasksMenuWidget(QWidget):
 
     def selection_mask_circle(self):
         if self.parent is not None:
-            print(self.parent)
             try:
                 image = self.get_image()
                 image_width = image.shape[1]
@@ -275,7 +272,6 @@ class MasksMenuWidget(QWidget):
                 self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
                 if self.mask_unactived is None:
-                    print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
                 self.update_display_mask()
@@ -286,7 +282,6 @@ class MasksMenuWidget(QWidget):
                 plt.axis('equal')
                 plt.show()"""
 
-                print(f"Nb masks: {len(self.list_masks)}")
             except Exception as e:
                 print(f'Exception - selection_mask_circle_isClicked {e}')
 
@@ -317,7 +312,6 @@ class MasksMenuWidget(QWidget):
                 self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
                 if self.mask_unactived is None:
-                    print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
                 self.update_display_mask()
@@ -356,7 +350,6 @@ class MasksMenuWidget(QWidget):
                 self.mask = np.logical_or.reduce(self.list_masks).astype(int)
 
                 if self.mask_unactived is None:
-                    print("Unactived mask SET")
                     self.mask_unactived = np.zeros_like(self.mask)
 
                 """import matplotlib.pyplot as plt
@@ -372,7 +365,6 @@ class MasksMenuWidget(QWidget):
         self.index_mask_selected = index - 1
         if self.index_mask_selected >= 0 and self.index_mask_selected < len(self.list_masks):
             self.mask_selected = self.list_masks[self.index_mask_selected]
-            print(f"self.index_mask_selected: {self.index_mask_selected}")
 
     def button_erase_mask_isClicked(self):
         if self.index_mask_selected == -1:
@@ -569,14 +561,14 @@ class SelectionMaskWindow(QDialog):
             y_center = int(y_center)
             radius = int(np.sqrt((x_center-x0)**2+(y_center-y0)**2))
 
-            print(f"x0={x0}, y0={y0}")
+            """print(f"x0={x0}, y0={y0}")
             print(f"x1={x1}, y1={y1}")
             print(f"x2={x2}, y2={y2}")
             print(f"centre: ({x_center},{y_center})")
             print(f"dist P1-centre: {np.sqrt((x_center-x0)**2+(y_center-y0)**2)}")
             print(f"dist P2-centre: {np.sqrt((x_center-x1)**2+(y_center-y1)**2)}")
             print(f"dist P3-centre: {np.sqrt((x_center-x2)**2+(y_center-y2)**2)}")
-            print(f"rayon: {radius}")
+            print(f"rayon: {radius}")"""
 
             painter = QPainter(self.pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -602,8 +594,8 @@ class SelectionMaskWindow(QDialog):
         x1, y1 = self.points[-2]
         x2, y2 = self.points[-1]
 
-        print(f"x1={x1}, y1={y1}")
-        print(f"x2={x2}, y2={y2}")
+        """print(f"x1={x1}, y1={y1}")
+        print(f"x2={x2}, y2={y2}")"""
 
         painter = QPainter(self.pixmap)
         pen = QPen(QColor(255, 0, 0), 2)

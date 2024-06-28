@@ -51,7 +51,7 @@ class OptionsMenuWidget(QWidget):
         
         # Title
         # -----
-        self.label_title_options_menu = QLabel(translate('label_title_options_menu'))
+        self.label_title_options_menu = QLabel('Options')
         self.setStyleSheet(styleH1)
         
         # Language Selector
@@ -68,8 +68,8 @@ class OptionsMenuWidget(QWidget):
         # Add widgets to the layout
         # -------------------------
         self.layout.addWidget(self.label_title_options_menu)
-        self.layout.addWidget(self.combobox_language_selection)
-        self.layout.addWidget(self.combobox_unit_selection)
+        #self.layout.addWidget(self.combobox_language_selection)
+        #self.layout.addWidget(self.combobox_unit_selection)
 
         self.master_widget.setLayout(self.layout)
 
