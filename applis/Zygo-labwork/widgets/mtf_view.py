@@ -212,9 +212,8 @@ class ModulationTransfertFunctionSlice(QWidget):
         self.parent.main_menu_widget.f_number_changed.connect(self.get_X_axis_array)
 
     def get_X_axis_array(self):
-        print(f"GET X AXIS")
         cutoff_frequency = 1/(self.parent.WAVELENGTH*self.parent.f_number)
-        px_mtf = cutoff_frequency * 2**(-self.parent.zoom)
+        px_mtf = cutoff_frequency * 2**(-self.parent.zoom) * 1e-6
         
         self.X = np.linspace(-self.Ne//2*px_mtf, self.Ne//2*px_mtf, self.Ne)
         self.button_x_axis_isClicked()
@@ -227,7 +226,7 @@ class ModulationTransfertFunctionSlice(QWidget):
 
         self.mtf_display.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], self.x_slice[4*self.Ne//8: 5*self.Ne//8], ORANGE_IOGS, 2, 'MTF')
         self.mtf_display.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], self.theorical_mtf[self.Ne//2, :][4*self.Ne//8: 5*self.Ne//8], BLUE_IOGS, 1, 'Theoretical MTF')
-        self.mtf_display.set_x_label('Y', unit='(m⁻¹)')
+        self.mtf_display.set_x_label('Y', unit='mm⁻¹')
         self.mtf_display.refresh_chart()
 
     def button_y_axis_isClicked(self):
@@ -238,7 +237,7 @@ class ModulationTransfertFunctionSlice(QWidget):
 
         self.mtf_display.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], self.y_slice[4*self.Ne//8: 5*self.Ne//8], ORANGE_IOGS, 2, 'MTF')
         self.mtf_display.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], self.theorical_mtf[:, self.Ne//2][4*self.Ne//8: 5*self.Ne//8], BLUE_IOGS, 1, 'Theoretical MTF')
-        self.mtf_display.set_x_label('X', unit='(m⁻¹)')
+        self.mtf_display.set_x_label('X', unit='mm⁻¹')
         self.mtf_display.refresh_chart()
 
 class ModulationTransfertFunctionDefoc(QWidget):
@@ -326,7 +325,7 @@ class ModulationTransfertFunctionDefoc(QWidget):
         r[r>1] = 0
 
         cutoff_frequency = 1/(self.parent.WAVELENGTH*self.parent.f_number)
-        px_mtf = cutoff_frequency * 2**(-self.parent.zoom)
+        px_mtf = cutoff_frequency * 2**(-self.parent.zoom) * 1e-6
         self.X = np.linspace(-self.Ne//2*px_mtf, self.Ne//2*px_mtf, self.Ne)
 
         conversion = self.defoc_max_delta_z * (1-np.cos(1/(2*self.parent.f_number))) / self.parent.WAVELENGTH
@@ -347,7 +346,7 @@ class ModulationTransfertFunctionDefoc(QWidget):
             widget = MultiCurveChartWidget()
             widget.set_background('white')
             widget.set_y_label('MTF normalisée', unit=None)
-            widget.set_x_label('X', unit='(m⁻¹)')
+            widget.set_x_label('X', unit='mm⁻¹')
 
             widget.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], mtf[:, self.Ne//2][4*self.Ne//8: 5*self.Ne//8], ORANGE_IOGS, 2, 'MTF')
             widget.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], theorical_mtf[:, self.Ne//2][4*self.Ne//8: 5*self.Ne//8], BLUE_IOGS, 1, 'MTF')
@@ -361,7 +360,7 @@ class ModulationTransfertFunctionDefoc(QWidget):
             widget = MultiCurveChartWidget()
             widget.set_background('white')
             widget.set_y_label('MTF normalisée', unit=None)
-            widget.set_x_label('Y', unit='(m⁻¹)')
+            widget.set_x_label('Y', unit='mm⁻¹')
 
             widget.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], mtf[self.Ne//2, :][4*self.Ne//8: 5*self.Ne//8], ORANGE_IOGS, 2, 'MTF')
             widget.add_curve(self.X[4*self.Ne//8: 5*self.Ne//8], theorical_mtf[self.Ne//2, :][4*self.Ne//8: 5*self.Ne//8], BLUE_IOGS, 1, 'MTF')
@@ -375,7 +374,7 @@ class ModulationTransfertFunctionDefoc(QWidget):
         list_defoc = [-1/2, -1/4, 0, 1/4, 1/2, -1/2, -1/4, 0, 1/4, 1/2]
 
         cutoff_frequency = 1/(self.parent.WAVELENGTH*self.parent.f_number)
-        px_mtf = cutoff_frequency * 2**(-self.parent.zoom)
+        px_mtf = cutoff_frequency * 2**(-self.parent.zoom) * 1e-6
         self.X = np.linspace(-self.Ne//2*px_mtf, self.Ne//2*px_mtf, self.Ne)
 
         plt.figure(figsize=(15, 9))
@@ -384,7 +383,7 @@ class ModulationTransfertFunctionDefoc(QWidget):
             plt.subplot(2, 5, i+1)
             plt.plot(self.X[4*self.Ne//8: 5*self.Ne//8], self.mtf_defoc_delta_z_slice[i][4*self.Ne//8: 5*self.Ne//8], color=ORANGE_IOGS, lw=2)
             plt.plot(self.X[4*self.Ne//8: 5*self.Ne//8], self.theorical_mtf_defoc_delta_z_slice[i][4*self.Ne//8: 5*self.Ne//8], color=BLUE_IOGS, lw=1, alpha=.5)
-            plt.xlabel(f"{axis[i]} (m⁻¹)")
+            plt.xlabel(f"{axis[i]} (mm⁻¹)")
             plt.ylabel('MTF normalisée')
             plt.title(f"Écart normal de {list_defoc[i]*conversion:.1f} mm")
         # plt.tight_layout
