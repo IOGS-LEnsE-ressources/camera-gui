@@ -146,7 +146,7 @@ class RemoveFaultsWidget(QWidget):
         except Exception as e:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton.")
             self.checkbox_remove_tilt.setChecked(False)
 
     def checkbox_remove_defocus_changed(self, state):
@@ -162,7 +162,7 @@ class RemoveFaultsWidget(QWidget):
         except Exception as e:
             msg_box = QMessageBox()
             msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton. \n {e}")
+            msg_box.warning(self, "Erreur", f"Veuillez effectuer une acquisiton.")
             self.checkbox_remove_defocus.setChecked(False)
 
     def checkbox_remove_spherical_aberration_changed(self, state):
