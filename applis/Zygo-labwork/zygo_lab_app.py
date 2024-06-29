@@ -40,6 +40,7 @@ from ids_peak import ids_peak
 
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
+from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 
 from analyses_app import AnalysisApp
@@ -51,7 +52,7 @@ from widgets.masks_menu_widget import MasksMenuWidget
 from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
 from widgets.options_menu_widget import OptionsMenuWidget
-from widgets.piezo_calibration_widget import PiezoCalibrationWidget
+#from widgets.piezo_calibration_widget import PiezoCalibrationWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import TwoImageWidget
 #from widgets.display_zernike_widget import *
@@ -151,6 +152,10 @@ class ZygoLabApp(QWidget):
         self.analysis_window = AnalysisApp(self)
         self.analysis_window.window_closed.connect(self.signal_menu_selected_isReceived)
 
+        # histogram of the camera image to optimize parameters.
+        self.histo_widget = ImageHistogramWidget()
+        self.histo_activated = False
+
         # Other initializations
         # ---------------------
 
@@ -219,6 +224,7 @@ class ZygoLabApp(QWidget):
                 if self.zoom_activated is False:
                     frame_width = self.camera_widget.width()
                     frame_height = self.camera_widget.height()
+                    self.process_histo(image_array.squeeze())
                     # Resize to the display size
                     image_array_disp2 = resize_image_ratio(
                         image_array,
@@ -268,11 +274,17 @@ class ZygoLabApp(QWidget):
 
         self.clear_layout(2, 1)
         self.clear_layout(2, 2)
+        self.histo_activated = False
         if event == 'camera_settings_main_menu':
             self.clear_layout(1, 2)
             self.camera_settings_widget.update_parameters()
             self.layout.addWidget(self.camera_settings_widget, 2, 1)
             self.camera_settings_widget.zoom_activated.connect(self.zoom_action)
+            self.clear_layout(1, 2)
+            self.histo_widget = ImageHistogramWidget()
+            self.histo_widget.set_background('white')
+            self.layout.addWidget(self.histo_widget, 2, 2)
+            self.histo_activated = True
 
         elif event == 'masks_main_menu':
             self.display_mask_widget = TwoImageWidget()
@@ -353,6 +365,11 @@ class ZygoLabApp(QWidget):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout, QGridLayout)):
                 for subwidget in widget.findChildren(QWidget):
                     self.update_labels(subwidget)
+
+    def process_histo(self, image):
+        if self.histo_activated:
+            self.histo_widget.set_image(image)
+            self.histo_widget.update_info()
 
     def show_analysis_window_maximized(self):
         try:
