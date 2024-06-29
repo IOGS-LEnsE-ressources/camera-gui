@@ -55,16 +55,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../how_to_use.html">How To use these ressources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pyqt6_integration.html">PyQt6 widget integration</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Camera Sensors</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../cam_basler.html">Basler Camera</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../cam_ids.html">IDS Camera</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Applications</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="appli_CMOS_labwork.html">Study of a CMOS sensor</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Interferometric controls</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#goal-of-the-labwork">Goal of the labwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#goal-of-the-labworks">Goal of the labworks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#first-series-of-labworks-quality-of-standard-optical-components">First series of labworks : quality of standard optical components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#second-series-of-labworks-aberrations">Second series of labworks : aberrations</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#needs-for-the-interface">Needs for the interface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#capture-images-from-a-camera">Capture images from a camera</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#control-a-piezo-actuator">Control a piezo actuator</a></li>
@@ -102,23 +101,34 @@
   <section id="interferometric-controls-labwork">
 <h1>Interferometric controls / Labwork<a class="headerlink" href="#interferometric-controls-labwork" title="Link to this heading"></a></h1>
 <p>The source code of the application is in the <code class="file docutils literal notranslate"><span class="pre">applis/Zygo-labwork</span></code> directory of the GitHub repository of this project : <a class="reference external" href="https://github.com/IOGS-LEnsE-ressources/camera-gui">Camera GUI</a>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <code class="file docutils literal notranslate"><span class="pre">basler/camera_basler_widget.py</span></code> and <code class="file docutils literal notranslate"><span class="pre">ids/camera_ids_widget.py</span></code> files were modified to include the <code class="code docutils literal notranslate"><span class="pre">supoptools</span></code> module.</p>
-<p>The importation of this module is done by:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../supoptools&#39;</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">images.conversion</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pyqt6.widget_slider</span> <span class="kn">import</span> <span class="n">WidgetSlider</span>
-</pre></div>
-</div>
-<p>! To change when SupOpTools will become a package !</p>
-</div>
-<section id="goal-of-the-labwork">
-<h2>Goal of the labwork<a class="headerlink" href="#goal-of-the-labwork" title="Link to this heading"></a></h2>
-<p>The goal of the labwork is to …</p>
+<section id="goal-of-the-labworks">
+<h2>Goal of the labworks<a class="headerlink" href="#goal-of-the-labworks" title="Link to this heading"></a></h2>
+<p>The topics of the lab sessions are available on the LEnsE website:</p>
+<p>First year: <a class="reference external" href="https://lense.institutoptique.fr/tp-controles-interferometriques/">Interferometric Controls</a> (French
+version only)
+Second year: <a class="reference external" href="https://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-PolyAberrations.EN.pdf">Aberrations</a></p>
+<section id="first-series-of-labworks-quality-of-standard-optical-components">
+<h3>First series of labworks : quality of standard optical components<a class="headerlink" href="#first-series-of-labworks-quality-of-standard-optical-components" title="Link to this heading"></a></h3>
+<p>These lab sessions aim to present some commonly used interferometry methods for characterizing the
+quality of standard optical components (parallel-faced plates, flat mirrors, telescope mirrors,
+optical systems, etc.). These techniques allow the quantification of the quality of finished
+optical components or those in the process of manufacturing.</p>
+<p>IMAGE OF “SIMPLE” ACQUISITION PART ?</p>
+</section>
+<section id="second-series-of-labworks-aberrations">
+<h3>Second series of labworks : aberrations<a class="headerlink" href="#second-series-of-labworks-aberrations" title="Link to this heading"></a></h3>
+<p>The goal of the following lab sessions is to study and analyze the defects of an optical system, i.e.
+the geometrical and chromatic aberrations.</p>
+<p>IMAGE OF ANALYSIS PART ?</p>
+</section>
 </section>
 <section id="needs-for-the-interface">
 <h2>Needs for the interface<a class="headerlink" href="#needs-for-the-interface" title="Link to this heading"></a></h2>
+<p>ZYGO is a Fizeau laser interferometer (using an amplitude division) equipped with a phase shift system.
+It allows to measure wavefront errors down to approximately λ/10(PV).</p>
+<p>The user interface of the <strong>ZygoLab</strong> application is designed to facilitate the acquisition and analysis of
+interferograms obtained using a <em>Zygo interferometer</em> as part of the photonics lab work at the
+Experimental Teaching Laboratory (LEnsE) of the Institut d’Optique Graduate School (IOGS).</p>
 <section id="capture-images-from-a-camera">
 <h3>Capture images from a camera<a class="headerlink" href="#capture-images-from-a-camera" title="Link to this heading"></a></h3>
 <ul class="simple">
