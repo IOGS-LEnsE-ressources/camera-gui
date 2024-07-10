@@ -346,7 +346,7 @@ class MainWindow(QMainWindow):
             self.time_graph.refresh_chart()
 
         if self.histo_graph_started:
-            self.histo_graph.set_image(image_array)
+            self.histo_graph.set_image(image_array, fast_mode=True)
             self.histo_graph.update_info()
 
     def start_cam_settings(self):

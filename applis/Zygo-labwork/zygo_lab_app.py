@@ -218,7 +218,7 @@ class ZygoLabApp(QWidget):
                 if self.zoom_activated is False:
                     frame_width = self.camera_widget.width()
                     frame_height = self.camera_widget.height()
-                    # self.process_histo(image_array.squeeze())
+                    self.process_histo(image_array.squeeze())
                     # Resize to the display size
                     image_array_disp2 = resize_image_ratio(
                         image_array,
@@ -362,7 +362,7 @@ class ZygoLabApp(QWidget):
 
     def process_histo(self, image):
         if self.histo_activated:
-            self.histo_widget.set_image(image)
+            self.histo_widget.set_image(image, fast_mode=True, black_mode=True) #, log_mode=True)
             self.histo_widget.update_info()
 
     def show_analysis_window_maximized(self):
