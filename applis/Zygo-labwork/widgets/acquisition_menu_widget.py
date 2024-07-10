@@ -7,7 +7,7 @@
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
 
-import sys, os
+import sys, os, time
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 
@@ -17,8 +17,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox, QFileDialog
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import pyqtSignal, QThread, Qt
 import numpy as np
 from skimage.restoration import unwrap_phase
 
@@ -63,6 +62,7 @@ class RemoveFaultsWidget(QWidget):
 
         self.parent = parent
         self.aberrations_considered = self.parent.aberrations_considered
+        self.coeff_calculated = False
 
         self.setStyleSheet(f"background-color: {ORANGE_IOGS};")
         self.layout = QVBoxLayout()
@@ -131,6 +131,9 @@ class RemoveFaultsWidget(QWidget):
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
+
+        # Calculations
+        # ------------
 
     def checkbox_remove_tilt_changed(self, state):
         print(f"Remove tilt [{bool(state//2)}]")
@@ -224,7 +227,7 @@ class RemoveFaultsWidget(QWidget):
             corrected_wavefront, self.coeffs, self.polynomials = remove_aberration(self.phase, self.aberrations_considered, self.coeffs, self.polynomials)
         else:
             corrected_wavefront, self.coeffs, self.polynomials = remove_aberration(self.phase, self.aberrations_considered, self.coeffs)
-        
+
         # corrected_wavefront *= self.parent.wedge_factor
         corrected_wavefront *= np.sign(self.parent.wedge_factor)
 
@@ -254,6 +257,7 @@ class AcquisitionMenuWidget(QWidget):
         super().__init__(parent=None)
 
         self.parent = parent
+        self.acquisition_done = False
 
         if self.parent is None or not hasattr(self.parent, 'wedge_factor'):
             self.wedge_factor = 1
@@ -332,8 +336,10 @@ class AcquisitionMenuWidget(QWidget):
         self.layout.addWidget(self.label_title_acquisition_menu)
         self.layout.addWidget(self.lineedit_wedge_factor)
         self.layout.addWidget(self.subwidget_start_acquisiton)
-        self.layout.addWidget(self.submenu_remove_faults)
-        self.layout.addWidget(self.subwidget_save_acquisiton)
+
+        if self.acquisition_done:
+            self.layout.addWidget(self.submenu_remove_faults)
+            self.layout.addWidget(self.subwidget_save_acquisiton)
 
         self.master_widget.setLayout(self.layout)
 
@@ -374,6 +380,7 @@ class AcquisitionMenuWidget(QWidget):
 
     def button_simple_acquisition_isClicked(self):
         self.button_simple_acquisition.setStyleSheet(actived_button)
+        time.sleep(0.1)
         print('button_simple_acquisition_isClicked')
 
         self.submenu_remove_faults.new_sample()
@@ -463,9 +470,13 @@ class AcquisitionMenuWidget(QWidget):
             except Exception as e:
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
         self.button_simple_acquisition.setStyleSheet(unactived_button)
+        self.acquisition_done = True
+        self.layout.addWidget(self.submenu_remove_faults)
+        self.layout.addWidget(self.subwidget_save_acquisiton)
 
     def button_repeated_acquisition_isClicked(self):
         self.button_repeated_acquisition.setStyleSheet(actived_button)
+        time.sleep(0.1)
         print('button_repeated_acquisition_isClicked')
 
         self.submenu_remove_faults.new_sample()
@@ -523,6 +534,9 @@ class AcquisitionMenuWidget(QWidget):
                 print(f'Exception - button_simple_acquisition_isClicked {e}')
 
         self.button_repeated_acquisition.setStyleSheet(unactived_button)
+        self.acquisition_done = True
+        self.layout.addWidget(self.submenu_remove_faults)
+        self.layout.addWidget(self.subwidget_save_acquisiton)
     
     def button_see_and_save_images_isClicked(self):
         self.button_see_and_save_images.setStyleSheet(actived_button)

@@ -1,0 +1,29 @@
+Zygo Lab GUI / IDS Camera
+#########################
+
+Documentation
+=============
+- Write doc for CameraIds class
+- Write doc for lensecam (installation and use of the package) and lensepy/css (use of the different elements)
+- Change doc of camera_gui (delete IDS/Basler + add link to lensecam)
+
+- Prepare an Installation Procedure (and store all the drivers and apps on an USB key - then in a LEnsE cloud directory or S: ) - from Python to application
+	/!\ IDS-peak must be installed in Custom Mode with the uEye Transport Layer option /!\
+
+GUI Dev
+=======
+
+Camera
+------
+- Create/Modify CameraParameters
+- Load default parameters (stored in a file ?)
+  -> See 'process' folder
+- Add default parameters (in the same file) for min and max exposure time and black level ??
+
+Piezo
+-----
+See https://nidaqmx-python.readthedocs.io/en/latest/
+
+GUI
+---
+- in TitleWidget (widgets/title_widget.py), find a way to add transparency on the logo.

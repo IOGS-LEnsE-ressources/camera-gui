@@ -1,0 +1,17 @@
+- [Acquisition Simple] Exception - update_image Unknown C++ exception from OpenCV code
+
+CALIBRATION
+- alpha is not correct (near 80° according to the acquisition error)
+
+STYLES
+- [Acquisition Menu Widget] DialBox Style
+- [Options Menu Widget] ComboBox Style
+
+SOLUTIONS
+#########
+- To import local modules from main app or specific widget, need to add a test on __name__:
+    if __name__ == '__main__':
+        from slider_bloc import SliderBloc
+    else:
+        from widgets.slider_bloc import SliderBloc
+- 08/06/2024 load_dictionary function from lensepy modified to return a dictionary

@@ -59,12 +59,6 @@ from widgets.imshow_pyqtgraph import TwoImageWidget
 
 from process.initialization_parameters import *
 
-import PyInstaller.__main__
-"""PyInstaller.__main__.run([
-    'zygo_lab_app.py',
-    '--onefile',
-    '--windowed'
-])"""
 
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
@@ -153,7 +147,7 @@ class ZygoLabApp(QWidget):
         self.analysis_window.window_closed.connect(self.signal_menu_selected_isReceived)
 
         # histogram of the camera image to optimize parameters.
-        self.histo_widget = ImageHistogramWidget()
+        self.histo_widget = QWidget() # ImageHistogramWidget()
         self.histo_activated = False
 
         # Other initializations
@@ -224,7 +218,7 @@ class ZygoLabApp(QWidget):
                 if self.zoom_activated is False:
                     frame_width = self.camera_widget.width()
                     frame_height = self.camera_widget.height()
-                    self.process_histo(image_array.squeeze())
+                    # self.process_histo(image_array.squeeze())
                     # Resize to the display size
                     image_array_disp2 = resize_image_ratio(
                         image_array,

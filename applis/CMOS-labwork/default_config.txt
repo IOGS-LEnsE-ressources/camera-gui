@@ -8,4 +8,4 @@ clock_freq; 15
 exposure; 4000
 blacklevel; 100
 framerate; 3
-colormode; Mono12
+colormode; Mono8
