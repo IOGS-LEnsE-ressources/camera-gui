@@ -1,0 +1,47 @@
+# -*- coding: utf-8 -*-
+# Dictionnaire Français
+#
+# --------------
+# MainMenuWidget
+# --------------
+window_title_main_menu_widget; Zygo : Menu Principal
+label_title_main_menu; Menu
+button_camera_settings_main_menu; Réglages caméra
+button_masks_main_menu; Masques
+button_acquisition_main_menu; Acquisition
+button_analyzes_main_menu; Analyses
+button_options_main_menu; Options
+button_help_main_menu; Aide
+
+# --------------------
+# CameraSettingsWidget
+# --------------------
+
+window_title_camera_settings;
+
+# --------------------
+# MasksMenuWidget
+# --------------------
+
+label_title_masks_menu; Sélection des Masques
+button_circle_mask; Cercle
+button_rectangle_mask; Rectangle
+button_polygon_mask; Polygone
+button_move_mask; Déplacer
+button_erase_mask; Effacer
+checkbox_apply_mask; Appliquer le masque
+checkbox_inverse_mask; Inverser le masque
+
+# --------------------
+# OptionsMenuWidget
+# --------------------
+window_title_options_menu_widget; Menu des Options
+label_title_options_menu; Options
+label_language_selector; Langue
+label_unit_selector; Unité
+
+# --------------------
+# TitleWidget
+# --------------------
+label_title; Zygo
+label_subtitle; Travaux pratiques de 1re et 2e année

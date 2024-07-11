@@ -1,0 +1,30 @@
+# -*- coding: utf-8 -*-
+# 词典中文
+#
+# --------------
+# MainMenuWidget
+# --------------
+window_title_main_menu_widget; Zygo: 主菜单
+label_title_main_menu; 菜单
+button_camera_settings_main_menu; 摄像头设置
+button_masks_main_menu; 面具
+button_acquisition_main_menu; 采集
+button_analyzes_main_menu; 分析
+button_options_main_menu; 选项
+
+# --------------------
+# CameraSettingsWidget
+# --------------------
+window_title_camera_settings;
+
+# --------------------
+# MasksMenuWidget
+# --------------------
+label_title_masks_menu; 面具选择
+button_circle_mask; 圆形
+button_rectangle_mask; 矩形
+button_polygon_mask; 多边形
+button_move_mask; 移动
+button_erase_mask; 擦除
+checkbox_apply_mask; 应用面具
+checkbox_inverse_mask; 反转面具
