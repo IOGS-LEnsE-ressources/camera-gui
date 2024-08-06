@@ -312,6 +312,20 @@ class MainWindow(QMainWindow):
                     coeff = int(self.bits_depth-8)
                     image = image >> coeff
                     image = image.astype(np.uint8)
+
+                if self.aoi_selection_started:
+                    # Display the AOI on the image
+                    x, y = self.aoi_selection.get_position()
+                    w, h = self.aoi_selection.get_size()
+
+                    for i in range(5):
+                        image[y+i, x:x + w] = 255
+                        image[y-i + h - 1, x:x + w] = 255
+
+                        # Dessiner les bords verticaux
+                        image[y:y + h, x+i] = 255
+                        image[y:y + h, x-i + w - 1] = 255
+
                 # Resize to the display size
                 frame_width = self.camera_widget.width()
                 frame_height = self.camera_widget.height()
@@ -336,7 +350,10 @@ class MainWindow(QMainWindow):
             self.histo_graph.update_info()
         if self.histo_graph_aoi_started:
             # TO CHANGE FOR AOI !!
-            self.histo_graph_aoi.set_image(image_array, fast_mode=True)
+            x, y = self.aoi_selection.get_position()
+            h, w = self.aoi_selection.get_size()
+            image_aoi = image_array[x:x+w, y:y+h]
+            self.histo_graph_aoi.set_image(image_aoi, fast_mode=True)
             self.histo_graph_aoi.update_info()
         if self.aoi_selection_started:
             # Display a rect on the image ???

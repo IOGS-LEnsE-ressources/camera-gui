@@ -120,15 +120,23 @@ class AoiSelectionWidget(QWidget):
     def xy_position_changing(self):
         x_max, y_max = self.parent.camera.get_sensor_size()
         # Verify if X and Y position are OK ! (good range of the image)
-        if 0 <= int(self.x_position_value.text()) <= x_max:
+        if 0 <= int(self.x_position_value.text()) < x_max:
             self.x_pos = int(self.x_position_value.text())
             # Test size ! and resize if necessary !!
+            if self.x_pos + int(self.width) > x_max:
+                self.width = x_max - self.x_pos - 1
+                warn = QMessageBox.warning(self, 'Resizing', 'Resizing the AOI')
+                self.width_value.setText(str(self.width))
         else:
             self.x_position_value.setText(str(self.x_pos))
             warn = QMessageBox.warning(self, 'Value Error', 'This value is out of range !')
-        if 0 <= int(self.y_position_value.text()) <= x_max:
+        if 0 <= int(self.y_position_value.text()) < y_max:
             self.y_pos = int(self.y_position_value.text())
             # Test size ! and resize if necessary !!
+            if self.y_pos + int(self.height) > y_max:
+                self.height = y_max - self.y_pos - 1
+                warn = QMessageBox.warning(self, 'Resizing', 'Resizing the AOI')
+                self.height_value.setText(str(self.height))
         else:
             self.y_position_value.setText(str(self.y_pos))
             warn = QMessageBox.warning(self, 'Value Error', 'This value is out of range !')
@@ -136,6 +144,22 @@ class AoiSelectionWidget(QWidget):
     def size_changing(self):
         x_max, y_max = self.parent.camera.get_sensor_size()
         # Verify if X+width and Y+height are OK ! (good range of the image)
+        if self.x_pos + int(self.width_value.text()) < x_max:
+            self.width = int(self.width_value.text())
+        else:
+            self.width_value.setText(str(self.width))
+            warn = QMessageBox.warning(self, 'Value Error', 'This value is out of range !')
+
+        if self.y_pos + int(self.height_value.text()) < y_max:
+            self.height = int(self.height_value.text())
+        else:
+            self.height_value.setText(str(self.height))
+            warn = QMessageBox.warning(self, 'Value Error', 'This value is out of range !')
+
+    def get_position(self):
+        return self.x_pos, self.y_pos
+    def get_size(self):
+        return self.width, self.height
 
 
 # %% Example
