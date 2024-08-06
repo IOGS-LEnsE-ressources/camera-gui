@@ -9,6 +9,7 @@
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+from gui.mini_params_widget import MiniParamsWidget
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
@@ -66,16 +67,32 @@ class MainMenuWidget(QWidget):
         self.button_options_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
-        
+
+        self.camera_params = MiniParamsWidget()
+
         self.layout.addWidget(self.label_title_main_menu)
         self.layout.addWidget(self.button_camera_settings_main_menu)
         self.layout.addWidget(self.button_aoi_main_menu)
         self.layout.addWidget(self.button_space_analysis_main_menu)
         self.layout.addWidget(self.button_time_analysis_main_menu)
         self.layout.addStretch()
+        self.layout.addWidget(self.camera_params)
+        self.layout.addStretch()
         self.layout.addWidget(self.button_options_main_menu)
         self.setLayout(self.layout)
-        
+
+    def update_parameters(self):
+        """Update camera settings (exposure time, black_level and size)"""
+        self.camera_params.set_parameters(self.parent.camera)
+
+    def set_parameters_enable(self, value):
+        """Display the parameters in the menu section (if True)"""
+        if value:
+            self.camera_params.set_enabled()
+        else:
+            self.camera_params.set_disabled()
+
+
     def unactive_buttons(self):
         """ Switches all buttons to inactive style """
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)

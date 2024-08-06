@@ -10,7 +10,6 @@ https://iogs-lense-ressources.github.io/camera-gui/
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
-.. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 
 """
 
@@ -80,7 +79,8 @@ class CameraSettingsWidget(QWidget):
         self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
 
-        self.slider_black_level = SliderBloc(name='name_slider_black_level', unit='gray', min_value=0, max_value=255)
+        self.slider_black_level = SliderBloc(name='name_slider_black_level', unit='gray',
+                                              min_value=0, max_value=255, is_integer=True)
         self.slider_black_level.slider_changed.connect(self.slider_black_level_changing)
 
         self.layout.addWidget(self.label_title_camera_settings)

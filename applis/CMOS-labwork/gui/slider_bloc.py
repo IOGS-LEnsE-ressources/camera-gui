@@ -87,7 +87,7 @@ class SliderBloc(QWidget):
 
     slider_changed = pyqtSignal(str)
 
-    def __init__(self, name:str, unit:str, min_value:float, max_value:float) -> None:
+    def __init__(self, name:str, unit:str, min_value:float, max_value:float, is_integer:bool = False) -> None:
         """
 
         """
@@ -97,6 +97,9 @@ class SliderBloc(QWidget):
         self.value = round(self.min_value + (self.max_value - self.min_value)/3, 2)
         self.ratio = 100
         self.unit = unit
+        self.is_integer = is_integer
+        if is_integer:
+            self.ratio = 1
         
         self.layout = QVBoxLayout()
         
@@ -162,8 +165,12 @@ class SliderBloc(QWidget):
         self.update_block()
     
     def update_block(self):
-        self.lineedit_value.setText(str(self.value))
-        self.slider.setValue(int(self.value*self.ratio))
+        if self.is_integer:
+            value = int(self.value)
+        else:
+            value = self.value
+        self.lineedit_value.setText(str(value))
+        self.slider.setValue(int(value*self.ratio))
 
     def get_value(self):
         """Return the value of the block."""

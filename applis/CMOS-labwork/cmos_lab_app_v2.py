@@ -31,8 +31,11 @@ from PyQt6.QtCore import QTimer
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
-from gui.x_y_chart_widget import XYChartWidget
+
 from gui.camera_params_view_widget import CameraParamsViewWidget
+from gui.mini_params_widget import MiniParamsWidget
+from gui.aoi_selection_widget import AoiSelectionWidget
+
 from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.camera_thread import CameraThread
 from lensecam.basler.camera_basler import CameraBasler
@@ -114,9 +117,10 @@ class MainWindow(QMainWindow):
         self.histo_graph = QWidget()
         self.histo_graph_started = False
         self.main_layout.addWidget(self.histo_graph, 1, 2)
-        self.time_graph = QWidget()
-        self.time_graph_started = False
-        self.main_layout.addWidget(self.time_graph, 2, 2)
+        self.histo_graph_aoi = QWidget()
+        self.histo_graph_aoi_started = False
+        self.aoi_selection = QWidget()
+        self.aoi_selection_started = False
 
         self.main_layout.setColumnStretch(0,1)
         self.main_layout.setColumnStretch(1,3)
@@ -203,7 +207,6 @@ class MainWindow(QMainWindow):
                 if 'clock_freq' in self.default_parameters:
                     c_f = float(self.default_parameters['clock_freq']) * 1e6
                     self.camera.set_clock_frequency(c_f)
-                    print(c_f)
                 if 'exposure' in self.default_parameters:
                     self.camera.set_exposure(int(self.default_parameters['exposure']))
                 if 'blacklevel' in self.default_parameters:
@@ -222,12 +225,15 @@ class MainWindow(QMainWindow):
     def menu_action(self, event) -> None:
         try:
             self.histo_graph_started = False
-            self.time_graph_started = False
             self.settings_displayed = False
+            self.aoi_selection_started = False
+            self.clear_layout(1, 2)
+            self.clear_layout(2, 1)
+            self.clear_layout(2, 2)
             if event == 'camera_settings':
+                print('>Menu / Camera Settings')
                 if self.camera is None:
                     self.mode = Modes.NOMODE
-                    self.clear_layout(2, 1)
                     self.params_widget = CameraChoice()
                     self.params_widget.selected.connect(self.action_brand_selected)
                     self.main_layout.addWidget(self.params_widget, 2, 1)
@@ -236,22 +242,21 @@ class MainWindow(QMainWindow):
                     self.mode = Modes.SETTINGS
                     self.start_cam_settings()
                     self.start_histo_graph()
-                    self.start_time_graph()
             elif event == 'aoi':
                 self.mode = Modes.AOI
+                print('>Menu / AOI Selection')
                 self.start_histo_graph()
-                self.start_time_graph()
+                self.start_histo_aoi_graph()
+                self.start_aoi_selection()
             elif event == 'space':
                 self.mode = Modes.SPACE
-                print('>Menu / Spatial')
+                print('>Menu / Spatial Analysis')
             elif event == 'time':
                 self.mode = Modes.TIME
-                print('>Menu / Timing')
+                print('>Menu / Time Analysis')
             elif event == 'options':
+                print('>Menu / Options')
                 self.mode = Modes.NOMODE
-                self.clear_layout(2, 2)
-                self.clear_layout(1, 2)
-                self.clear_layout(2, 1)
                 self.option_params_view_widget = CameraParamsViewWidget(self)
                 self.main_layout.addWidget(self.option_params_view_widget, 1, 2, 2, 1)
         except Exception as e:
@@ -323,31 +328,20 @@ class MainWindow(QMainWindow):
             print(f'Exception - update_image {e}')
 
     def process_data(self, image_array):
-        """Process data to display in histogram or/and time graph."""
-
-        if self.time_graph_started:
-            if self.x_time is None:
-                self.x_time = np.array([0])
-                self.y_time = [np.zeros(0) for _ in range(4)]
-            if self.x_time_cpt == 0:
-                self.y_time[0] = image_array[self.image_x[0], self.image_y[0]]
-                self.y_time[1] = image_array[self.image_x[1], self.image_y[1]]
-                self.y_time[2] = image_array[self.image_x[2], self.image_y[2]]
-                self.y_time[3] = image_array[self.image_x[3], self.image_y[3]]
-            else:
-                self.x_time = np.append(self.x_time, self.x_time_cpt)
-                self.y_time[0] = np.append(self.y_time[0], image_array[self.image_x[0], self.image_y[0]])
-                self.y_time[1] = np.append(self.y_time[1], image_array[self.image_x[1], self.image_y[1]])
-                self.y_time[2] = np.append(self.y_time[2], image_array[self.image_x[2], self.image_y[2]])
-                self.y_time[3] = np.append(self.y_time[3], image_array[self.image_x[3], self.image_y[3]])
-            self.x_time_cpt += 1
-
-            self.time_graph.set_data(self.x_time, self.y_time[1:])
-            self.time_graph.refresh_chart()
-
+        """Process data to display in histogram graph."""
+        if self.mode == Modes.SETTINGS:
+            self.main_menu_widget.update_parameters()
         if self.histo_graph_started:
             self.histo_graph.set_image(image_array, fast_mode=True)
             self.histo_graph.update_info()
+        if self.histo_graph_aoi_started:
+            # TO CHANGE FOR AOI !!
+            self.histo_graph_aoi.set_image(image_array, fast_mode=True)
+            self.histo_graph_aoi.update_info()
+        if self.aoi_selection_started:
+            # Display a rect on the image ???
+            pass
+
 
     def start_cam_settings(self):
         """Display camera settings widget in the good part of the layout."""
@@ -357,27 +351,27 @@ class MainWindow(QMainWindow):
         self.params_widget.update_parameters(auto_min_max=True)
         self.settings_displayed = True
 
-    def start_time_graph(self):
-        self.rand_pixels()
-        self.clear_layout(2, 2)
-        self.x_time = np.array([0])
-        self.y_time = [np.zeros(0) for _ in range(4)]
-        self.x_time_cpt = 0
-        self.time_graph = XYChartWidget()
-        self.time_graph.set_background('white')
-        self.time_graph.set_x_label('Image Number')
-        self.time_graph.set_y_label('RAW Value')
-        self.main_layout.addWidget(self.time_graph, 2, 2)
-        #self.time_graph_started = True
 
     def start_histo_graph(self):
-        self.clear_layout(1, 2)
         self.histo_graph = ImageHistogramWidget()
         self.histo_graph.set_background('white')
         self.histo_graph.set_name('Image histogram')
         self.histo_graph.set_bit_depth(self.bits_depth)
         self.main_layout.addWidget(self.histo_graph, 1, 2)
         self.histo_graph_started = True
+
+    def start_histo_aoi_graph(self):
+        self.histo_graph_aoi = ImageHistogramWidget()
+        self.histo_graph_aoi.set_background('lightgray')
+        self.histo_graph_aoi.set_name('Image histogram / AOI')
+        self.histo_graph_aoi.set_bit_depth(self.bits_depth)
+        self.main_layout.addWidget(self.histo_graph_aoi, 2, 2)
+        self.histo_graph_aoi_started = True
+
+    def start_aoi_selection(self):
+        self.aoi_selection = AoiSelectionWidget(self)
+        self.main_layout.addWidget(self.aoi_selection, 2, 1)
+        self.aoi_selection_started = True
 
     def rand_pixels(self):
         # TO DO : in the AOI !

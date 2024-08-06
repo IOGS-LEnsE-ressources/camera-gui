@@ -6,6 +6,6 @@ languages; FR,EN
 brandname; IDS
 clock_freq; 15
 exposure; 4000
-blacklevel; 100
+blacklevel; 128
 framerate; 3
 colormode; Mono12
