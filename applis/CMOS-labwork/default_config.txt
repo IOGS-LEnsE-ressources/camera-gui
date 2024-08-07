@@ -9,3 +9,9 @@ exposure; 4000
 blacklevel; 128
 framerate; 3
 colormode; Mono12
+
+# AOI
+aoi_x; 0
+aoi_y; 0
+aoi_w; 200
+aoi_h; 200

@@ -96,6 +96,7 @@ class MainWindow(QMainWindow):
         self.y_time = None
         self.x_histo = None
         self.y_histo = None
+        self.aoi = [0, 0, 0, 0]
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -215,6 +216,14 @@ class MainWindow(QMainWindow):
                     self.camera.set_frame_rate(int(self.default_parameters['framerate']))
                 if 'colormode' in self.default_parameters:
                     self.camera.set_color_mode(self.default_parameters['colormode'])
+                if 'aoi_x' in self.default_parameters:
+                    self.aoi[0] = int(self.default_parameters['aoi_x'])
+                if 'aoi_y' in self.default_parameters:
+                    self.aoi[1] = int(self.default_parameters['aoi_y'])
+                if 'aoi_w' in self.default_parameters:
+                    self.aoi[2] = int(self.default_parameters['aoi_w'])
+                if 'aoi_h' in self.default_parameters:
+                    self.aoi[3] = int(self.default_parameters['aoi_h'])
                 self.bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
                 self.clear_layout(1, 1)
                 self.main_layout.addWidget(self.camera_widget, 1, 1)
@@ -246,7 +255,7 @@ class MainWindow(QMainWindow):
                 self.mode = Modes.AOI
                 print('>Menu / AOI Selection')
                 self.start_histo_graph()
-                self.start_histo_aoi_graph()
+                # self.start_histo_aoi_graph()  # STILL PB WITH HISTO AOI !!
                 self.start_aoi_selection()
             elif event == 'space':
                 self.mode = Modes.SPACE
@@ -319,10 +328,10 @@ class MainWindow(QMainWindow):
                     w, h = self.aoi_selection.get_size()
 
                     for i in range(5):
+                        # Horizontal edges
                         image[y+i, x:x + w] = 255
                         image[y-i + h - 1, x:x + w] = 255
-
-                        # Dessiner les bords verticaux
+                        # Vertical edges
                         image[y:y + h, x+i] = 255
                         image[y:y + h, x-i + w - 1] = 255
 
@@ -349,15 +358,13 @@ class MainWindow(QMainWindow):
             self.histo_graph.set_image(image_array, fast_mode=True)
             self.histo_graph.update_info()
         if self.histo_graph_aoi_started:
-            # TO CHANGE FOR AOI !!
-            x, y = self.aoi_selection.get_position()
-            h, w = self.aoi_selection.get_size()
-            image_aoi = image_array[x:x+w, y:y+h]
-            self.histo_graph_aoi.set_image(image_aoi, fast_mode=True)
+            self.aoi[0], self.aoi[1] = self.aoi_selection.get_position()
+            x, y = self.aoi[0], self.aoi[1]
+            self.aoi[2], self.aoi[3] = self.aoi_selection.get_size()
+            h, w = self.aoi[2], self.aoi[3]
+            # image_aoi = image_array[x:x+w, y:y+h]
+            self.histo_graph_aoi.set_image(image_array, fast_mode=True)
             self.histo_graph_aoi.update_info()
-        if self.aoi_selection_started:
-            # Display a rect on the image ???
-            pass
 
 
     def start_cam_settings(self):
@@ -370,23 +377,24 @@ class MainWindow(QMainWindow):
 
 
     def start_histo_graph(self):
-        self.histo_graph = ImageHistogramWidget()
+        self.clear_layout(1, 2)
+        self.histo_graph = ImageHistogramWidget('Image histogram')
         self.histo_graph.set_background('white')
-        self.histo_graph.set_name('Image histogram')
         self.histo_graph.set_bit_depth(self.bits_depth)
         self.main_layout.addWidget(self.histo_graph, 1, 2)
         self.histo_graph_started = True
 
     def start_histo_aoi_graph(self):
-        self.histo_graph_aoi = ImageHistogramWidget()
+        self.clear_layout(2, 2)
+        self.histo_graph_aoi = ImageHistogramWidget('Image histogram / AOI')
         self.histo_graph_aoi.set_background('lightgray')
-        self.histo_graph_aoi.set_name('Image histogram / AOI')
         self.histo_graph_aoi.set_bit_depth(self.bits_depth)
         self.main_layout.addWidget(self.histo_graph_aoi, 2, 2)
         self.histo_graph_aoi_started = True
 
     def start_aoi_selection(self):
         self.aoi_selection = AoiSelectionWidget(self)
+        self.aoi_selection.set_aoi(self.aoi)  # Not working !!
         self.main_layout.addWidget(self.aoi_selection, 2, 1)
         self.aoi_selection_started = True
 

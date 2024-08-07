@@ -117,6 +117,17 @@ class AoiSelectionWidget(QWidget):
         self.layout.addStretch()
         self.setLayout(self.layout)
 
+    def set_aoi(self, aoi_values: list):
+        self.x_pos = aoi_values[0]
+        self.y_pos = aoi_values[1]
+        self.width = aoi_values[2]
+        self.height = aoi_values[3]
+
+        self.x_position_value.setText(str(self.x_pos))
+        self.y_position_value.setText(str(self.y_pos))
+        self.width_value.setText(str(self.width))
+        self.height_value.setText(str(self.height))
+
     def xy_position_changing(self):
         x_max, y_max = self.parent.camera.get_sensor_size()
         # Verify if X and Y position are OK ! (good range of the image)
