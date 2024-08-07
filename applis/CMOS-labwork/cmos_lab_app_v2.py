@@ -35,6 +35,7 @@ from gui.title_widget import TitleWidget
 from gui.camera_params_view_widget import CameraParamsViewWidget
 from gui.mini_params_widget import MiniParamsWidget
 from gui.aoi_selection_widget import AoiSelectionWidget
+from gui.spatial_analysis_widget import SpatialAnalysisWidget
 
 from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.camera_thread import CameraThread
@@ -88,6 +89,7 @@ class MainWindow(QMainWindow):
         # Parameters
         self.default_parameters = {}
         self.mode = Modes.NOMODE
+        self.snap_required = False
         # Data to display
         self.image_x = []   # 4 random pixels in the AOI - X coordinate
         self.image_y = []   # 4 random pixels in the AOI - Y coordinate
@@ -97,6 +99,7 @@ class MainWindow(QMainWindow):
         self.x_histo = None
         self.y_histo = None
         self.aoi = [0, 0, 0, 0]
+        self.saved_image = None
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -122,6 +125,7 @@ class MainWindow(QMainWindow):
         self.histo_graph_aoi_started = False
         self.aoi_selection = QWidget()
         self.aoi_selection_started = False
+        self.spatial_analysis = QWidget()
 
         self.main_layout.setColumnStretch(0,1)
         self.main_layout.setColumnStretch(1,3)
@@ -260,6 +264,8 @@ class MainWindow(QMainWindow):
             elif event == 'space':
                 self.mode = Modes.SPACE
                 print('>Menu / Spatial Analysis')
+                self.start_spatial_analysis()
+
             elif event == 'time':
                 self.mode = Modes.TIME
                 print('>Menu / Time Analysis')
@@ -355,15 +361,25 @@ class MainWindow(QMainWindow):
         if self.mode == Modes.SETTINGS:
             self.main_menu_widget.update_parameters()
         if self.histo_graph_started:
-            self.histo_graph.set_image(image_array, fast_mode=True)
-            self.histo_graph.update_info()
-        if self.histo_graph_aoi_started:
+            if self.mode == Modes.SPACE:
+                if self.snap_required:
+                    x, y = self.aoi[0], self.aoi[1]
+                    h, w = self.aoi[2], self.aoi[3]
+                    self.saved_image = image_array[x:x + w, y:y + h]
+                    self.histo_graph.set_image(self.saved_image, fast_mode=True)
+                    self.histo_graph.update_info()
+                    self.snap_required = False
+            else:
+                self.histo_graph.set_image(image_array, fast_mode=True)
+                self.histo_graph.update_info()
+        if self.aoi_selection_started:
             self.aoi[0], self.aoi[1] = self.aoi_selection.get_position()
-            x, y = self.aoi[0], self.aoi[1]
             self.aoi[2], self.aoi[3] = self.aoi_selection.get_size()
+        if self.histo_graph_aoi_started:
+            x, y = self.aoi[0], self.aoi[1]
             h, w = self.aoi[2], self.aoi[3]
-            # image_aoi = image_array[x:x+w, y:y+h]
-            self.histo_graph_aoi.set_image(image_array, fast_mode=True)
+            image_aoi = image_array[x:x+w, y:y+h]
+            self.histo_graph_aoi.set_image(image_aoi, fast_mode=True)
             self.histo_graph_aoi.update_info()
 
 
@@ -385,6 +401,7 @@ class MainWindow(QMainWindow):
         self.histo_graph_started = True
 
     def start_histo_aoi_graph(self):
+        # Still issues !
         self.clear_layout(2, 2)
         self.histo_graph_aoi = ImageHistogramWidget('Image histogram / AOI')
         self.histo_graph_aoi.set_background('lightgray')
@@ -392,22 +409,50 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.histo_graph_aoi, 2, 2)
         self.histo_graph_aoi_started = True
 
-    def start_aoi_selection(self):
-        self.aoi_selection = AoiSelectionWidget(self)
-        self.aoi_selection.set_aoi(self.aoi)  # Not working !!
+    def start_aoi_selection(self, editable: bool = True):
+        self.clear_layout(2, 1)
+        self.aoi_selection = AoiSelectionWidget(self, editable)
+        self.aoi_selection.set_aoi(self.aoi)
         self.main_layout.addWidget(self.aoi_selection, 2, 1)
         self.aoi_selection_started = True
 
+    def start_spatial_analysis(self):
+        self.clear_layout(2, 2)
+        self.spatial_analysis = SpatialAnalysisWidget(self)
+        self.spatial_analysis.snap_clicked.connect(self.spatial_action)
+        self.main_layout.addWidget(self.spatial_analysis, 2, 2)
+        self.start_histo_graph()
+        self.start_aoi_selection(editable=False)
+
+    def spatial_action(self, event):
+        """Action performed when a button in the spatial analysis is clicked."""
+        if event == 'snap':
+            self.snap_required = True
+        elif event == 'save_raw':
+            if self.saved_image is not None:
+                # saved_image to store in a raw format (???)
+                import cv2
+                cv2.imshow('Image', self.saved_image)
+                cv2.waitKey(0)  # Attendre une touche pour fermer la fenêtre
+                cv2.destroyAllWindows()
+            pass
+        elif event == 'save_png':
+            # saved_image to store in a png file
+            pass
+        elif event == 'save_hist':
+            # create an image of an histogram of the saved_image
+            pass
+
     def rand_pixels(self):
-        # TO DO : in the AOI !
-        min_val = 200
-        max_val = 300
+        """Selection of 4 pixels in the area of interest."""
+        self.aoi[0], self.aoi[1] = self.aoi_selection.get_position()
+        self.aoi[2], self.aoi[3] = self.aoi_selection.get_size()
         # Reset old coordinates
         self.image_x = []
         self.image_y = []
         for i in range(4):
-            self.image_x.append(np.random.randint(min_val, max_val + 1))
-            self.image_y.append(np.random.randint(min_val, max_val + 1))
+            self.image_x.append(np.random.randint(self.aoi[0], self.aoi[0]+self.aoi[2]))
+            self.image_y.append(np.random.randint(self.aoi[1], self.aoi[1]+self.aoi[3]))
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.

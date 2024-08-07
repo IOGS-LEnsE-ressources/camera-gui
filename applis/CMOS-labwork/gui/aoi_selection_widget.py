@@ -43,7 +43,7 @@ OPTIONS_BUTTON_HEIGHT = 20  # px
 
 # %% Widget
 class AoiSelectionWidget(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, editable: bool = True):
         """
 
         """
@@ -54,6 +54,7 @@ class AoiSelectionWidget(QWidget):
         self.width = 200
         self.height = 200
         self.parent = parent
+        self.editable = editable
 
         # Title
         # -----
@@ -116,6 +117,13 @@ class AoiSelectionWidget(QWidget):
 
         self.layout.addStretch()
         self.setLayout(self.layout)
+
+        if self.editable is False:
+            self.x_position_value.setEnabled(False)
+            self.y_position_value.setEnabled(False)
+            self.width_value.setEnabled(False)
+            self.height_value.setEnabled(False)
+
 
     def set_aoi(self, aoi_values: list):
         self.x_pos = aoi_values[0]
