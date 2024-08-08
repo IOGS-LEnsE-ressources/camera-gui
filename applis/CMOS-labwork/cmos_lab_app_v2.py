@@ -18,15 +18,18 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
+from lensepy.pyqt6.widget_histogram import HistogramWidget
 import sys
 import os
 import numpy as np
+from matplotlib import pyplot as plt
+import cv2
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow,
-                             QGridLayout, QWidget,
+                             QGridLayout, QWidget, QFileDialog,
                              QMessageBox)
-from PyQt6.QtGui import QImage, QPixmap
-from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import QDir
 
 from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
@@ -36,6 +39,7 @@ from gui.camera_params_view_widget import CameraParamsViewWidget
 from gui.mini_params_widget import MiniParamsWidget
 from gui.aoi_selection_widget import AoiSelectionWidget
 from gui.spatial_analysis_widget import SpatialAnalysisWidget
+from gui.time_analysis_widget import TimeAnalysisWidget
 
 from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.camera_thread import CameraThread
@@ -90,16 +94,17 @@ class MainWindow(QMainWindow):
         self.default_parameters = {}
         self.mode = Modes.NOMODE
         self.snap_required = False
+        self.time_acquisition_started = False
+        self.time_acquisition_nb = 0
+        self.time_acquisition_cpt = 0
         # Data to display
         self.image_x = []   # 4 random pixels in the AOI - X coordinate
         self.image_y = []   # 4 random pixels in the AOI - Y coordinate
-        self.x_time = None
-        self.x_time_cpt = 0
-        self.y_time = None
-        self.x_histo = None
-        self.y_histo = None
+        self.pixels_value = [[], [], [], []]
+
         self.aoi = [0, 0, 0, 0]
         self.saved_image = None
+        self.saved_dir = None
 
         # Define Window title
         self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
@@ -126,6 +131,7 @@ class MainWindow(QMainWindow):
         self.aoi_selection = QWidget()
         self.aoi_selection_started = False
         self.spatial_analysis = QWidget()
+        self.time_analysis = QWidget()
 
         self.main_layout.setColumnStretch(0,1)
         self.main_layout.setColumnStretch(1,3)
@@ -228,6 +234,8 @@ class MainWindow(QMainWindow):
                     self.aoi[2] = int(self.default_parameters['aoi_w'])
                 if 'aoi_h' in self.default_parameters:
                     self.aoi[3] = int(self.default_parameters['aoi_h'])
+                if 'save_images_dir' in self.default_parameters:
+                    self.saved_dir = self.default_parameters['save_images_dir']
                 self.bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
                 self.clear_layout(1, 1)
                 self.main_layout.addWidget(self.camera_widget, 1, 1)
@@ -265,10 +273,10 @@ class MainWindow(QMainWindow):
                 self.mode = Modes.SPACE
                 print('>Menu / Spatial Analysis')
                 self.start_spatial_analysis()
-
             elif event == 'time':
                 self.mode = Modes.TIME
                 print('>Menu / Time Analysis')
+                self.start_time_analysis()
             elif event == 'options':
                 print('>Menu / Options')
                 self.mode = Modes.NOMODE
@@ -327,7 +335,6 @@ class MainWindow(QMainWindow):
                     coeff = int(self.bits_depth-8)
                     image = image >> coeff
                     image = image.astype(np.uint8)
-
                 if self.aoi_selection_started:
                     # Display the AOI on the image
                     x, y = self.aoi_selection.get_position()
@@ -365,8 +372,8 @@ class MainWindow(QMainWindow):
                 if self.snap_required:
                     x, y = self.aoi[0], self.aoi[1]
                     h, w = self.aoi[2], self.aoi[3]
-                    self.saved_image = image_array[x:x + w, y:y + h]
-                    self.histo_graph.set_image(self.saved_image, fast_mode=True)
+                    self.saved_image = image_array[x:x + w, y:y + h].copy()
+                    self.histo_graph.set_image(self.saved_image, fast_mode=False)
                     self.histo_graph.update_info()
                     self.snap_required = False
             else:
@@ -379,8 +386,38 @@ class MainWindow(QMainWindow):
             x, y = self.aoi[0], self.aoi[1]
             h, w = self.aoi[2], self.aoi[3]
             image_aoi = image_array[x:x+w, y:y+h]
-            self.histo_graph_aoi.set_image(image_aoi, fast_mode=True)
+            self.histo_graph_aoi.set_image(image_aoi, fast_mode=False)
             self.histo_graph_aoi.update_info()
+        if self.mode == Modes.TIME:
+            if self.time_acquisition_started:
+                if self.time_acquisition_cpt < self.time_acquisition_nb:
+                    self.time_acquisition_cpt += 1
+                    self.time_analysis.waiting_value(self.time_acquisition_cpt)
+                    # Adding data from pixels
+                    for i in range(4):
+                        self.pixels_value[i].append(image_array[self.image_x[i],self.image_y[i]])
+                else:
+                    self.time_acquisition_started = False
+                    # Display histo of the 4 pixels
+                    histo_pixels = HistogramWidget('Time Analysis / 4 pixels')
+                    histo_pixels.set_background('white')
+
+                    # Calculate histogram
+                    mean_pixel1 = int(np.mean(self.pixels_value[0]))
+                    std_pixel1 = int(np.std(self.pixels_value[0]))
+                    if std_pixel1 == 0:
+                        std_pixel1 = 1
+                    # Create bins
+                    bins = np.linspace(mean_pixel1-8*std_pixel1, mean_pixel1+8*std_pixel1,
+                                       16 * std_pixel1+1)
+                    histo_pixels.set_data(self.pixels_value[0], bins)
+                    histo_pixels.refresh_chart()
+                    histo_pixels.update_info()
+                    self.main_layout.addWidget(histo_pixels, 1, 2)
+                    # Enable saving histograms
+                    self.time_analysis.set_enabled_save()
+                    print('Finish !')
+
 
 
     def start_cam_settings(self):
@@ -390,7 +427,6 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.params_widget, 2, 1)  # display camera images
         self.params_widget.update_parameters(auto_min_max=True)
         self.settings_displayed = True
-
 
     def start_histo_graph(self):
         self.clear_layout(1, 2)
@@ -417,11 +453,22 @@ class MainWindow(QMainWindow):
         self.aoi_selection_started = True
 
     def start_spatial_analysis(self):
+        """Start a spatial analysis of the sensor."""
         self.clear_layout(2, 2)
         self.spatial_analysis = SpatialAnalysisWidget(self)
         self.spatial_analysis.snap_clicked.connect(self.spatial_action)
         self.main_layout.addWidget(self.spatial_analysis, 2, 2)
         self.start_histo_graph()
+        self.start_aoi_selection(editable=False)
+
+    def start_time_analysis(self):
+        """Start the time analysis of 4 pixels in the image."""
+        self.clear_layout(2, 2)
+        self.clear_layout(1, 2)
+        self.time_analysis = TimeAnalysisWidget(self)
+        self.time_analysis.start_acq_clicked.connect(self.time_action)
+        self.main_layout.addWidget(self.time_analysis, 2, 2)
+        self.rand_pixels()
         self.start_aoi_selection(editable=False)
 
     def spatial_action(self, event):
@@ -431,17 +478,120 @@ class MainWindow(QMainWindow):
         elif event == 'save_raw':
             if self.saved_image is not None:
                 # saved_image to store in a raw format (???)
-                import cv2
                 cv2.imshow('Image', self.saved_image)
-                cv2.waitKey(0)  # Attendre une touche pour fermer la fenêtre
+                cv2.waitKey(0)
                 cv2.destroyAllWindows()
             pass
         elif event == 'save_png':
-            # saved_image to store in a png file
+            if self.saved_image is not None:
+                # saved_image to store in a png file
+                default_dir = QDir.homePath()
+                if self.saved_dir is not None:
+                    default_dir = self.saved_dir
+                file_path, _ = QFileDialog.getSaveFileName(self, translate('save_image_title_window'),
+                                                           default_dir + "/image.png", "Images PNG (*.png)")
+                if file_path:
+                    cv2.imwrite(file_path, self.saved_image)
+                    info = QMessageBox.information(self, 'File Saved', f'File saved to {file_path}')
+                else:
+                    warn = QMessageBox.warning(self, 'Saving Error', 'No file saved !')
+        elif event == 'save_hist':
+            if self.saved_image is not None:
+                # Create bins
+                bins = np.linspace(0, 2 ** self.bits_depth - 1, 2 ** self.bits_depth)
+                data = self.saved_image
+                plot_hist, plot_bins_data = np.histogram(data, bins=bins)
+
+                # Create histogram graph
+                mean_data = np.mean(data)
+                x, y = self.aoi_selection.get_position()
+                w, h = self.aoi_selection.get_size()
+                if mean_data > (2**self.bits_depth) // 2:
+                    x_text_pos = 0.30   # text on the left
+                else:
+                    x_text_pos = 0.95   # text on the right
+                plt.bar(plot_bins_data[:-1], plot_hist, width=np.diff(plot_bins_data),
+                        edgecolor='black', alpha=0.75, color='blue')
+                plt.title(f'Image Histogram')
+                text_str = f'Mean = {mean_data:.2f}\nStdDev = {np.std(data):.2f}'
+                plt.text(x_text_pos, 0.95, text_str, fontsize=10, verticalalignment='top',
+                         horizontalalignment='right',
+                         transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.5))
+                text_str = (f'Expo = {round(self.camera.get_exposure()/1000, 2)} ms\nBlack Level = '
+                            f'{int(self.camera.get_black_level())}\n\n'
+                            f'AOI : X={x}, Y={y}\n W={w}, H={h}')
+                plt.text(x_text_pos, 0.25, text_str, fontsize=8, verticalalignment='top',
+                         horizontalalignment='right',
+                         transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.5))
+
+                # histogram to store in a png file - and a txt file (array) ??
+                default_dir = QDir.homePath()
+                if self.saved_dir is not None:
+                    default_dir = self.saved_dir
+                file_path, _ = QFileDialog.getSaveFileName(self, translate('save_histogram_title_window'),
+                                                           default_dir + "/image_histo.png",
+                                                           "Images PNG (*.png)")
+                if file_path:
+                    # create an image of the histogram of the saved_image
+                    plt.savefig(file_path)
+                    info = QMessageBox.information(self, 'Histogram Saved', f'File saved to {file_path}')
+                else:
+                    warn = QMessageBox.warning(self, 'Saving Error', 'No file saved !')
+
+    def time_action(self, event):
+        """Action performed when a button in the time analysis is clicked."""
+        if event == 'start':
+            self.time_acquisition_cpt = 0
+            self.time_acquisition_nb = self.time_analysis.get_nb_of_points()
+            print(f'Nb of points {self.time_acquisition_nb}')
+            self.pixels_value = [[], [], [], []]
+            self.time_acquisition_started = True
             pass
         elif event == 'save_hist':
-            # create an image of an histogram of the saved_image
             pass
+            '''
+            if self.saved_image is not None:
+                # Create bins
+                bins = np.linspace(0, 2 ** self.bits_depth - 1, 2 ** self.bits_depth)
+                data = self.saved_image
+                plot_hist, plot_bins_data = np.histogram(data, bins=bins)
+
+                # Create histogram graph
+                mean_data = np.mean(data)
+                x, y = self.aoi_selection.get_position()
+                w, h = self.aoi_selection.get_size()
+                if mean_data > (2**self.bits_depth) // 2:
+                    x_text_pos = 0.30   # text on the left
+                else:
+                    x_text_pos = 0.95   # text on the right
+                plt.bar(plot_bins_data[:-1], plot_hist, width=np.diff(plot_bins_data),
+                        edgecolor='black', alpha=0.75, color='blue')
+                plt.title(f'Image Histogram')
+                text_str = f'Mean = {mean_data:.2f}\nStdDev = {np.std(data):.2f}'
+                plt.text(x_text_pos, 0.95, text_str, fontsize=10, verticalalignment='top',
+                         horizontalalignment='right',
+                         transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.5))
+                text_str = (f'Expo = {round(self.camera.get_exposure()/1000, 2)} ms\nBlack Level = '
+                            f'{int(self.camera.get_black_level())}\n\n'
+                            f'AOI : X={x}, Y={y}\n W={w}, H={h}')
+                plt.text(x_text_pos, 0.25, text_str, fontsize=8, verticalalignment='top',
+                         horizontalalignment='right',
+                         transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.5))
+
+                # histogram to store in a png file - and a txt file (array) ??
+                default_dir = QDir.homePath()
+                if self.saved_dir is not None:
+                    default_dir = self.saved_dir
+                file_path, _ = QFileDialog.getSaveFileName(self, translate('save_histogram_title_window'),
+                                                           default_dir + "/image_histo.png",
+                                                           "Images PNG (*.png)")
+                if file_path:
+                    # create an image of the histogram of the saved_image
+                    plt.savefig(file_path)
+                    info = QMessageBox.information(self, 'Histogram Saved', f'File saved to {file_path}')
+                else:
+                    warn = QMessageBox.warning(self, 'Saving Error', 'No file saved !')
+            '''
 
     def rand_pixels(self):
         """Selection of 4 pixels in the area of interest."""

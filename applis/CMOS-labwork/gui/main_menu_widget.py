@@ -38,6 +38,7 @@ class MainMenuWidget(QWidget):
         super().__init__(parent=parent)
         self.layout = QVBoxLayout()
         self.parent = parent
+        self.aoi_selected = False
 
         self.label_title_main_menu = QLabel(translate("label_title_main_menu"))
         self.label_title_main_menu.setStyleSheet(styleH1)
@@ -54,12 +55,14 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.clicked.connect(self.button_aoi_main_menu_isClicked)
         
         self.button_space_analysis_main_menu = QPushButton(translate("button_space_analysis_main_menu"))
-        self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_space_analysis_main_menu.setStyleSheet(disabled_button)
+        self.button_space_analysis_main_menu.setEnabled(False)
         self.button_space_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_space_analysis_main_menu.clicked.connect(self.button_space_analysis_main_menu_isClicked)
         
         self.button_time_analysis_main_menu = QPushButton(translate("button_time_analysis_main_menu"))
-        self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_time_analysis_main_menu.setStyleSheet(disabled_button)
+        self.button_time_analysis_main_menu.setEnabled(False)
         self.button_time_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_time_analysis_main_menu.clicked.connect(self.button_time_analysis_main_menu_isClicked)
         
@@ -97,8 +100,9 @@ class MainMenuWidget(QWidget):
         """ Switches all buttons to inactive style """
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
-        self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
-        self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
+        if self.aoi_selected:
+            self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setStyleSheet(unactived_button)
 
     def main_menu_is_clicked(self):
@@ -115,8 +119,12 @@ class MainMenuWidget(QWidget):
     def button_aoi_main_menu_isClicked(self):
         # Change style
         self.unactive_buttons()
+        self.aoi_selected = True
         self.button_aoi_main_menu.setStyleSheet(actived_button)
-        
+        self.button_space_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_space_analysis_main_menu.setEnabled(True)
+        self.button_time_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_time_analysis_main_menu.setEnabled(True)
         # Action
         self.menu_clicked.emit('aoi')
         

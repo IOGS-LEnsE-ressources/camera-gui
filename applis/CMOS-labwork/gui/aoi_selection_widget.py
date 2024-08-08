@@ -109,28 +109,44 @@ class AoiSelectionWidget(QWidget):
         self.height_sublayout.addWidget(self.height_value)
         self.height_widget.setLayout(self.height_sublayout)
 
+
+        # Center button
+        self.center_aoi_button = QPushButton('button_center_aoi')
+        self.center_aoi_button.setStyleSheet(styleH2)
+        self.center_aoi_button.setStyleSheet(unactived_button)
+        self.center_aoi_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.center_aoi_button.clicked.connect(self.centered_action)
+
+
         self.layout.addWidget(self.label_title_aoi_selection)
         self.layout.addWidget(self.x_position_widget)
         self.layout.addWidget(self.y_position_widget)
         self.layout.addWidget(self.width_widget)
         self.layout.addWidget(self.height_widget)
-
         self.layout.addStretch()
-        self.setLayout(self.layout)
-
         if self.editable is False:
             self.x_position_value.setEnabled(False)
             self.y_position_value.setEnabled(False)
             self.width_value.setEnabled(False)
             self.height_value.setEnabled(False)
-
+        else:
+            self.layout.addWidget(self.center_aoi_button)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+    def centered_action(self):
+        x_max, y_max = self.parent.camera.get_sensor_size()
+        self.x_pos = x_max // 2 - self.width // 2
+        self.y_pos = y_max // 2 - self.height // 2
+        self.update_aoi()
 
     def set_aoi(self, aoi_values: list):
-        self.x_pos = aoi_values[0]
-        self.y_pos = aoi_values[1]
-        self.width = aoi_values[2]
-        self.height = aoi_values[3]
+        self.x_pos = int(aoi_values[0])
+        self.y_pos = int(aoi_values[1])
+        self.width = int(aoi_values[2])
+        self.height = int(aoi_values[3])
+        self.update_aoi()
 
+    def update_aoi(self):
         self.x_position_value.setText(str(self.x_pos))
         self.y_position_value.setText(str(self.y_pos))
         self.width_value.setText(str(self.width))
