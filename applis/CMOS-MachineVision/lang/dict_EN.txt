@@ -1,0 +1,13 @@
+# -*- coding: utf-8 -*-
+# English dictionary
+#
+# Global information
+# ------------------
+version; D_EN_0.1
+label_title; CMOS Sensor labwork
+label_subtitle; Developed by the LEnsE
+# --------------
+# MainMenuWidget
+# --------------
+window_title_main_menu_widget; Zygo: Main Menu
+label_title_main_menu; Menu

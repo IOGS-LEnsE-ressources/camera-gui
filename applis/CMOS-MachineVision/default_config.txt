@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+# Default Parameters
+
+language; FR
+languages; FR,EN
+brandname; IDS
+clock_freq; 15
+exposure; 4000
+blacklevel; 128
+framerate; 3
+colormode; Mono12
+
+# AOI
+aoi_x; 0
+aoi_y; 0
+aoi_w; 200
+aoi_h; 200
+
+# Default directory
+save_images_dir; D:/_old_dd/
