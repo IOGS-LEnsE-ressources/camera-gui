@@ -13,12 +13,15 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 
+see : https://www.youtube.com/watch?v=7FP7ndMEfsc&list=PL2zRqk16wsdorCSZ5GWZQr1EMWXs2TDeu&index=5
+
 """
 
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 from lensepy.pyqt6.widget_histogram import HistogramWidget
+from gui.image_viewer_widget import ImageViewerWidget
 import sys
 import os
 import numpy as np
@@ -47,7 +50,8 @@ from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 from gui.camera_settings_widget import CameraSettingsWidget
-from gui.filter_choice_widget import FilterChoiceWidget
+from gui.filter_choice_widget import FilterChoiceWidget, Filter
+from gui.filter_options_widget import FilterBlurWidget
 
 from enum import Enum
 
@@ -144,7 +148,7 @@ class MainWindow(QMainWindow):
         self.option_params_view_widget = CameraParamsViewWidget(self)
 
         # Init default parameters
-        print(f"CMOS App {dictionary['version']}")
+        print(f"CMOS Machine Vision App {dictionary['version']}")
         self.init_default_parameters()
 
         # Events
@@ -333,7 +337,6 @@ class MainWindow(QMainWindow):
                 self.process_data(image)
                 frame_width = self.camera_widget.width()
                 frame_height = self.camera_widget.height()
-                no_resize = False
                 if self.bits_depth > 8:
                     coeff = int(self.bits_depth-8)
                     image = image >> coeff
@@ -350,23 +353,16 @@ class MainWindow(QMainWindow):
                         # Vertical edges
                         image[y:y + h, x+i] = 255
                         image[y:y + h, x-i + w - 1] = 255
-                elif self.aoi_selected:
+                if self.aoi_selected:
                     # Display AOI instead of whole image
                     x, y = self.aoi[0], self.aoi[1]
                     h, w = self.aoi[2], self.aoi[3]
-                    image = image[y:y + h, x:x + w]
-                    if h < frame_height and w < frame_width:
-                        no_resize = True
-                # Resize to the display size
-                if no_resize is False:
-                    image_resized = resize_image_ratio(
-                            image,
-                            frame_width,
-                            frame_height)
-                    # Convert the frame into an image
-                    qimage = array_to_qimage(image_resized) #image_array_disp2)
+                    image_resized = image[y:y + w, x:x + h].copy()
                 else:
-                    qimage = array_to_qimage(image)
+                    image_resized = resize_image_ratio(
+                            image, frame_width, frame_height)
+                # Convert the frame into an image
+                qimage = array_to_qimage(image_resized)
                 pmap = QPixmap(qimage)
                 # display it in the cameraDisplay
                 self.camera_widget.camera_display.setPixmap(pmap)
@@ -375,13 +371,13 @@ class MainWindow(QMainWindow):
 
     def process_data(self, image_array):
         """Process data to display in histogram graph."""
+        x, y = self.aoi[0], self.aoi[1]
+        h, w = self.aoi[2], self.aoi[3]
         if self.mode == Modes.SETTINGS:
             self.main_menu_widget.update_parameters()
         if self.histo_graph_started:
             if self.mode == Modes.HISTO:
                 if self.snap_required:
-                    x, y = self.aoi[0], self.aoi[1]
-                    h, w = self.aoi[2], self.aoi[3]
                     self.saved_image = image_array[x:x + w, y:y + h].copy()
                     self.top_right_widget.set_image(self.saved_image, fast_mode=False)
                     self.top_right_widget.update_info()
@@ -393,13 +389,14 @@ class MainWindow(QMainWindow):
             self.aoi[0], self.aoi[1] = self.bot_left_widget.get_position()
             self.aoi[2], self.aoi[3] = self.bot_left_widget.get_size()
         if self.histo_graph_aoi_started:
-            x, y = self.aoi[0], self.aoi[1]
-            h, w = self.aoi[2], self.aoi[3]
             image_aoi = image_array[x:x+w, y:y+h]
             self.bot_right_widget.set_image(image_aoi, fast_mode=False)
             self.bot_right_widget.update_info()
         if self.mode is Modes.FILTER:
-            pass
+            image_aoi = image_array[y:y + w, x:x + h]
+            image_aoi_filtered = self.process_filter(image_aoi)
+            self.top_right_widget.set_image_from_array(image_aoi_filtered)
+
 
 
     def start_cam_settings(self):
@@ -450,13 +447,42 @@ class MainWindow(QMainWindow):
 
 
     def start_filter_analysis(self):
-        # Still issues !
         self.clear_layout(2, 2)
         self.bot_left_widget = FilterChoiceWidget(self)
+        self.bot_left_widget.filter_clicked.connect(self.open_filter_options)
         self.main_layout.addWidget(self.bot_left_widget, 2, 1)
         self.aoi_selected = True
-        #self.main_layout.addWidget(self.histo_graph_aoi, 2, 2)
-        #self.histo_graph_aoi_started = True
+        self.top_right_widget = ImageViewerWidget()
+        self.main_layout.addWidget(self.top_right_widget, 1, 2)
+
+    def open_filter_options(self):
+        filter_selected = self.bot_left_widget.get_selection()
+        self.clear_layout(2, 2)
+        if filter_selected == Filter.BLUR:
+            self.bot_right_widget = FilterBlurWidget(self)
+            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
+
+
+    def process_filter(self, image: np.ndarray) -> np.ndarray:
+        """Process image in AOI with the selected filter.
+
+        :param image: Array to process
+        :type image: np.ndarray
+
+        :return:    Filtered image
+        :rtype: np.ndarray
+
+        """
+        diff_image = self.bot_left_widget.is_diff_checked()
+        # Read the selected filter and size
+        filter_selected = self.bot_left_widget.get_selection()
+        if filter_selected == Filter.BLUR:
+            output_image = self.bot_right_widget.get_selection(image, inverted=diff_image)
+        else:
+            output_image = 255-image
+        if output_image is None:
+            output_image = 255 - image
+        return output_image
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.

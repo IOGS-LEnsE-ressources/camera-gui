@@ -109,7 +109,7 @@ class CameraParamsViewWidget(QWidget):
             max_val = max_val//1e6
         else:
             min_val, max_val = 10, 30 # MHz
-        self.slider_clock_freq = SliderBloc(name='name_clock_freq', unit='MHz', min_value=min_val, max_value=max_val)
+        self.slider_clock_freq = SliderBloc(title='name_clock_freq', unit='MHz', min_value=min_val, max_value=max_val)
         self.slider_clock_freq.slider_changed.connect(self.slider_clock_freq_changing)
 
         # Temperature of the device
@@ -135,7 +135,7 @@ class CameraParamsViewWidget(QWidget):
         else:
             min_fps, max_fps = 2, 10 # MHz
             fps = 5
-        self.slider_frame_rate = SliderBloc(name='name_frame_rate', unit='FPS', min_value=min_fps, max_value=max_fps)
+        self.slider_frame_rate = SliderBloc(title='name_frame_rate', unit='FPS', min_value=min_fps, max_value=max_fps)
         self.slider_frame_rate.set_value(fps)
         self.slider_frame_rate.slider_changed.connect(self.slider_frame_rate_changing)
 

@@ -109,7 +109,6 @@ class AoiSelectionWidget(QWidget):
         self.height_sublayout.addWidget(self.height_value)
         self.height_widget.setLayout(self.height_sublayout)
 
-
         # Center button
         self.center_aoi_button = QPushButton('button_center_aoi')
         self.center_aoi_button.setStyleSheet(styleH2)
@@ -117,6 +116,12 @@ class AoiSelectionWidget(QWidget):
         self.center_aoi_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.center_aoi_button.clicked.connect(self.centered_action)
 
+        # All image
+        self.full_image_button = QPushButton('button_full_image')
+        self.full_image_button.setStyleSheet(styleH2)
+        self.full_image_button.setStyleSheet(unactived_button)
+        self.full_image_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.full_image_button.clicked.connect(self.full_image_action)
 
         self.layout.addWidget(self.label_title_aoi_selection)
         self.layout.addWidget(self.x_position_widget)
@@ -131,12 +136,22 @@ class AoiSelectionWidget(QWidget):
             self.height_value.setEnabled(False)
         else:
             self.layout.addWidget(self.center_aoi_button)
+            self.layout.addWidget(self.full_image_button)
         self.layout.addStretch()
         self.setLayout(self.layout)
+
     def centered_action(self):
         x_max, y_max = self.parent.camera.get_sensor_size()
         self.x_pos = x_max // 2 - self.width // 2
         self.y_pos = y_max // 2 - self.height // 2
+        self.update_aoi()
+
+    def full_image_action(self):
+        x_max, y_max = self.parent.camera.get_sensor_size()
+        self.x_pos = 0
+        self.y_pos = 0
+        self.width = x_max
+        self.height = y_max
         self.update_aoi()
 
     def set_aoi(self, aoi_values: list):
@@ -216,7 +231,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_camera_settings"))
             self.setGeometry(300, 300, 400, 600)
 
-            self.central_widget = AoiSelectionWidget()
+            self.central_widget = AoiSelectionWidget(self)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

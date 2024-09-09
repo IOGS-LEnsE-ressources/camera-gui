@@ -87,7 +87,7 @@ class SliderBloc(QWidget):
 
     slider_changed = pyqtSignal(str)
 
-    def __init__(self, name:str, unit:str, min_value:float, max_value:float, is_integer:bool = False) -> None:
+    def __init__(self, title:str, unit:str, min_value:float, max_value:float, is_integer:bool = False) -> None:
         """
 
         """
@@ -108,7 +108,7 @@ class SliderBloc(QWidget):
         self.subwidget_texts = QWidget()
         self.sublayout_texts = QHBoxLayout()
         
-        self.label_name = QLabel(translate(name)+':')
+        self.label_name = QLabel(translate(title)+':')
         self.label_name.setStyleSheet(styleH2)
         
         self.lineedit_value = QLineEdit()
@@ -215,7 +215,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_slider_block"))
             self.setGeometry(300, 300, 600, 600)
 
-            self.central_widget = SliderBloc(name='name', unit='unit', min_value=4.2, max_value=7.8)
+            self.central_widget = SliderBloc(title='name', unit='unit', min_value=4.2, max_value=7.8)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

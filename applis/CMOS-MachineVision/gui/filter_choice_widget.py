@@ -15,7 +15,7 @@ https://iogs-lense-ressources.github.io/camera-gui/
 
 import sys
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QLineEdit,
+    QMainWindow, QWidget, QLineEdit, QCheckBox,
     QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton,
     QMessageBox
@@ -24,6 +24,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+
+from enum import Enum
 
 # %% To add in lensepy librairy
 # Styles
@@ -36,9 +38,15 @@ BUTTON_HEIGHT = 60  # px
 OPTIONS_BUTTON_HEIGHT = 20  # px
 
 
+class Filter(Enum):
+    NOFILTER = 0
+    THRESHOLD = 1
+    BLUR = 2
+    MORPHO = 3
+
+
 # %% Widget
 class FilterChoiceWidget(QWidget):
-
     filter_clicked = pyqtSignal(str)
 
     def __init__(self, parent):
@@ -48,40 +56,57 @@ class FilterChoiceWidget(QWidget):
         super().__init__(parent=None)
         self.layout = QVBoxLayout()
         self.parent = parent
+        self.filter_selection = Filter.NOFILTER
 
         # Title
         # -----
         self.label_title_filter_choice = QLabel(translate('title_filter_choice'))
         self.label_title_filter_choice.setStyleSheet(styleH1)
 
+        self.check_diff_image = QCheckBox(translate('diff_image'))
 
-        '''
-        self.save_png_image_button = QPushButton('button_save_png_image_spatial')
-        self.save_png_image_button.setStyleSheet(styleH2)
-        self.save_png_image_button.setStyleSheet(disabled_button)
-        self.save_png_image_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        self.save_png_image_button.clicked.connect(self.clicked_action)
-        self.save_png_image_button.setEnabled(False)
-        '''
+        self.filter_choice_threshold = QPushButton(translate('button_filter_choice_threshold'))
+        self.filter_choice_threshold.setStyleSheet(styleH2)
+        self.filter_choice_threshold.setStyleSheet(unactived_button)
+        self.filter_choice_threshold.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.filter_choice_threshold.clicked.connect(self.clicked_action)
+
+        self.filter_choice_blur = QPushButton(translate('button_filter_choice_blur'))
+        self.filter_choice_blur.setStyleSheet(styleH2)
+        self.filter_choice_blur.setStyleSheet(unactived_button)
+        self.filter_choice_blur.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.filter_choice_blur.clicked.connect(self.clicked_action)
 
         self.layout.addWidget(self.label_title_filter_choice)
-        #self.layout.addWidget(self.snap_button)
+        self.layout.addWidget(self.check_diff_image)
+        self.layout.addWidget(self.filter_choice_threshold)
+        self.layout.addWidget(self.filter_choice_blur)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
     def clicked_action(self):
+        """Action performed when a button is clicked."""
+        self.unactive_buttons()
         sender = self.sender()
-        '''
-        if sender == self.snap_button:
-            self.snap_clicked.emit('snap')
-            self.save_histo_button.setStyleSheet(unactived_button)
-            self.save_histo_button.setEnabled(True)
-            self.save_raw_image_button.setStyleSheet(unactived_button)
-            self.save_raw_image_button.setEnabled(True)
-            self.save_png_image_button.setStyleSheet(unactived_button)
-            self.save_png_image_button.setEnabled(True)
-        '''
-        pass
+        sender.setStyleSheet(actived_button)
+        if sender == self.filter_choice_threshold:
+            self.filter_selection = Filter.THRESHOLD
+        elif sender == self.filter_choice_blur:
+            self.filter_selection = Filter.BLUR
+
+        self.filter_clicked.emit('new')
+
+    def unactive_buttons(self):
+        self.filter_choice_threshold.setStyleSheet(unactived_button)
+        self.filter_choice_blur.setStyleSheet(unactived_button)
+
+    def get_selection(self):
+        """Return the kind of filter selected."""
+        return self.filter_selection
+
+    def is_diff_checked(self):
+        return self.check_diff_image.isChecked()
+
 
 # %% Example
 if __name__ == '__main__':

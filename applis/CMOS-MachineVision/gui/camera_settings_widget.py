@@ -76,10 +76,10 @@ class CameraSettingsWidget(QWidget):
 
         # Settings
         # --------
-        self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
+        self.slider_exposure_time = SliderBloc(title='name_slider_exposure_time', unit='ms', min_value=0, max_value=10)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
 
-        self.slider_black_level = SliderBloc(name='name_slider_black_level', unit='gray',
+        self.slider_black_level = SliderBloc(title='name_slider_black_level', unit='gray',
                                               min_value=0, max_value=255, is_integer=True)
         self.slider_black_level.slider_changed.connect(self.slider_black_level_changing)
 
