@@ -68,7 +68,7 @@ class FilterBlurWidget(QWidget):
         self.label_title_filter_options = QLabel(translate('title_filter_blur'))
         self.label_title_filter_options.setStyleSheet(styleH1)
 
-        self.combobox_blur = ComboBoxBloc(title=translate('filter_type'), list_options=blur_list)
+        self.combobox_blur = ComboBoxBloc(title=translate('blur_type'), list_options=blur_list)
         self.combobox_blur.selection_changed.connect(self.text_changed)
 
         self.combobox_size = ComboBoxBloc(title=translate('kernel_size'), list_options=size_list)
@@ -129,6 +129,67 @@ class FilterBlurWidget(QWidget):
             sigma_space = self.slider_sigma_space.get_value()
             sigma_color = self.slider_sigma_color.get_value()
             output_image = cv2.bilateralFilter(image, kernel_size, sigmaSpace=sigma_space, sigmaColor=sigma_color)
+        else:
+            return None
+        if inverted:
+            return output_image - image
+        else:
+            return output_image
+
+edge_list = [translate('edge_sobel_x'), translate('edge_sobel_y'), translate('edge_sobel_xy'),
+             translate('edge_canny')]
+class FilterEdgeWidget(QWidget):
+
+    options_clicked = pyqtSignal(str)
+
+    def __init__(self, parent):
+        """
+
+        """
+        super().__init__(parent=None)
+        self.layout = QVBoxLayout()
+        self.parent = parent
+
+        # Title
+        # -----
+        self.label_title_filter_options = QLabel(translate('title_filter_blur'))
+        self.label_title_filter_options.setStyleSheet(styleH1)
+
+        self.combobox_edge = ComboBoxBloc(title=translate('edge_type'), list_options=edge_list)
+        self.combobox_edge.selection_changed.connect(self.text_changed)
+
+        self.combobox_size = ComboBoxBloc(title=translate('kernel_size'), list_options=size_list)
+        self.combobox_size.selection_changed.connect(self.text_changed)
+
+
+        self.layout.addWidget(self.label_title_filter_options)
+        self.layout.addWidget(self.combobox_edge)
+        self.layout.addWidget(self.combobox_size)
+        self.layout.addStretch()
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+
+    def text_changed(self, s):
+        pass
+
+    def get_selection(self, image: np.ndarray, inverted: bool=False):
+        filter_index = self.combobox_edge.get_index()
+        kernel_size = self.combobox_size.get_text()
+        if kernel_size.isnumeric() is False:
+            return None
+        if filter_index == 0:
+            return None
+        kernel_size = int(kernel_size)
+        # Process image
+        if filter_index == 1: # sobel X
+            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=1, dy=0, ksize=kernel_size)
+        elif filter_index == 2: # sobel Y
+            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=0, dy=1, ksize=kernel_size)
+        elif filter_index == 3: # sobel XY
+            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=1, dy=1, ksize=kernel_size)
+        elif filter_index == 4: # canny
+            # Add threshold
+            output_image = edges = cv2.Canny(image=image, threshold1=100, threshold2=200)
         else:
             return None
         if inverted:

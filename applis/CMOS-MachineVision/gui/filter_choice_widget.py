@@ -43,6 +43,7 @@ class Filter(Enum):
     THRESHOLD = 1
     BLUR = 2
     MORPHO = 3
+    EDGE = 4
 
 
 # %% Widget
@@ -77,10 +78,17 @@ class FilterChoiceWidget(QWidget):
         self.filter_choice_blur.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.filter_choice_blur.clicked.connect(self.clicked_action)
 
+        self.filter_choice_edge = QPushButton(translate('button_filter_choice_edge'))
+        self.filter_choice_edge.setStyleSheet(styleH2)
+        self.filter_choice_edge.setStyleSheet(unactived_button)
+        self.filter_choice_edge.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.filter_choice_edge.clicked.connect(self.clicked_action)
+
         self.layout.addWidget(self.label_title_filter_choice)
         self.layout.addWidget(self.check_diff_image)
         self.layout.addWidget(self.filter_choice_threshold)
         self.layout.addWidget(self.filter_choice_blur)
+        self.layout.addWidget(self.filter_choice_edge)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
@@ -93,12 +101,15 @@ class FilterChoiceWidget(QWidget):
             self.filter_selection = Filter.THRESHOLD
         elif sender == self.filter_choice_blur:
             self.filter_selection = Filter.BLUR
+        elif sender == self.filter_choice_edge:
+            self.filter_selection = Filter.EDGE
 
         self.filter_clicked.emit('new')
 
     def unactive_buttons(self):
         self.filter_choice_threshold.setStyleSheet(unactived_button)
         self.filter_choice_blur.setStyleSheet(unactived_button)
+        self.filter_choice_edge.setStyleSheet(unactived_button)
 
     def get_selection(self):
         """Return the kind of filter selected."""

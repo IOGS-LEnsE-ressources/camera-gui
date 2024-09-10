@@ -51,7 +51,7 @@ from lensecam.basler.camera_basler_widget import CameraBaslerWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 from gui.camera_settings_widget import CameraSettingsWidget
 from gui.filter_choice_widget import FilterChoiceWidget, Filter
-from gui.filter_options_widget import FilterBlurWidget
+from gui.filter_options_widget import FilterBlurWidget, FilterEdgeWidget
 
 from enum import Enum
 
@@ -341,6 +341,7 @@ class MainWindow(QMainWindow):
                     coeff = int(self.bits_depth-8)
                     image = image >> coeff
                     image = image.astype(np.uint8)
+                self.process8bits_data(image)
                 if self.aoi_selection_started:
                     # Display the AOI on the image
                     x, y = self.bot_left_widget.get_position()
@@ -392,12 +393,15 @@ class MainWindow(QMainWindow):
             image_aoi = image_array[x:x+w, y:y+h]
             self.bot_right_widget.set_image(image_aoi, fast_mode=False)
             self.bot_right_widget.update_info()
+
+    def process8bits_data(self, image_array):
+        """Process data in 8 bits depth."""
+        x, y = self.aoi[0], self.aoi[1]
+        h, w = self.aoi[2], self.aoi[3]
         if self.mode is Modes.FILTER:
-            image_aoi = image_array[y:y + w, x:x + h]
+            image_aoi = image_array[y:y + w, x: x + h]
             image_aoi_filtered = self.process_filter(image_aoi)
             self.top_right_widget.set_image_from_array(image_aoi_filtered)
-
-
 
     def start_cam_settings(self):
         """Display camera settings widget in the good part of the layout."""
@@ -461,6 +465,9 @@ class MainWindow(QMainWindow):
         if filter_selected == Filter.BLUR:
             self.bot_right_widget = FilterBlurWidget(self)
             self.main_layout.addWidget(self.bot_right_widget, 2, 2)
+        if filter_selected == Filter.EDGE:
+            self.bot_right_widget = FilterEdgeWidget(self)
+            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
 
 
     def process_filter(self, image: np.ndarray) -> np.ndarray:
@@ -476,7 +483,7 @@ class MainWindow(QMainWindow):
         diff_image = self.bot_left_widget.is_diff_checked()
         # Read the selected filter and size
         filter_selected = self.bot_left_widget.get_selection()
-        if filter_selected == Filter.BLUR:
+        if filter_selected == Filter.BLUR or filter_selected == Filter.EDGE:
             output_image = self.bot_right_widget.get_selection(image, inverted=diff_image)
         else:
             output_image = 255-image
