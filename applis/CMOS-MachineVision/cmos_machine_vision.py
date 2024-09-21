@@ -50,7 +50,7 @@ from lensecam.basler.camera_basler_widget import CameraBaslerWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 from gui.camera_settings_widget import CameraSettingsWidget
 from gui.filter_choice_widget import FilterChoiceWidget, Filter
-from gui.filter_options_widget import FilterBlurWidget, FilterEdgeWidget
+from gui.filter_options_widget import FilterBlurWidget, FilterEdgeWidget, ThresholdWidget
 
 from enum import Enum
 
@@ -461,6 +461,9 @@ class MainWindow(QMainWindow):
     def open_filter_options(self):
         filter_selected = self.bot_left_widget.get_selection()
         self.clear_layout(2, 2)
+        if filter_selected == Filter.THRESHOLD:
+            self.bot_right_widget = ThresholdWidget(self)
+            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
         if filter_selected == Filter.BLUR:
             self.bot_right_widget = FilterBlurWidget(self)
             self.main_layout.addWidget(self.bot_right_widget, 2, 2)

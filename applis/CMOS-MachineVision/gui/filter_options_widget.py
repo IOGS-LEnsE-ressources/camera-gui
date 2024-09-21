@@ -49,6 +49,78 @@ OPTIONS_BUTTON_HEIGHT = 20  # px
 blur_list = [translate('blur_averaging'), translate('blur_gaussian'),
              translate('blur_median'), translate('blur_bilateral')]
 size_list = ['1', '3', '5', '9', '15', '21', '31']
+threshold_list = [translate('th_classic'), translate('th_hat')]
+
+
+class ThresholdWidget(QWidget):
+
+    options_clicked = pyqtSignal(str)
+
+    def __init__(self, parent):
+        """
+
+        """
+        super().__init__(parent=None)
+        self.layout = QVBoxLayout()
+        self.parent = parent
+
+        # Title
+        # -----
+        self.label_title_threshold_options = QLabel(translate('title_threshold'))
+        self.label_title_threshold_options.setStyleSheet(styleH1)
+
+        self.combobox_threshold_type = ComboBoxBloc(title=translate('threshold_type'),
+                                                       list_options=threshold_list)
+        self.combobox_threshold_type.selection_changed.connect(self.text_changed)
+        max_value = (2**self.parent.bits_depth - 1)
+        self.slider_threshold_value = SliderBloc(title=translate('threshold_value'), unit='',
+                                       min_value=0, max_value=max_value, is_integer=True)
+        self.slider_threshold_value.set_value(max_value//4)
+        self.slider_threshold_value.set_enabled(False)
+        self.slider_threshold_value_hat = SliderBloc(title=translate('threshold_value_hat'), unit='',
+                                       min_value=0, max_value=max_value, is_integer=True)
+        self.slider_threshold_value_hat.set_enabled(False)
+        self.slider_threshold_value_hat.set_value(3*max_value//4)
+
+        self.layout.addWidget(self.label_title_threshold_options)
+        self.layout.addWidget(self.combobox_threshold_type)
+        self.layout.addWidget(self.slider_threshold_value)
+        self.layout.addWidget(self.slider_threshold_value_hat)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+
+    def text_changed(self):
+        if self.combobox_threshold_type.get_text() == translate('th_classic'):
+            self.slider_threshold_value.set_enabled(True)
+        elif self.combobox_threshold_type.get_text() == translate('th_hat'):
+            self.slider_threshold_value.set_enabled(True)
+            self.slider_threshold_value_hat.set_enabled(True)
+
+    def get_selection(self, image: np.ndarray, inverted: bool=False):
+        filter_index = self.combobox_edge.get_index()
+        kernel_size = self.combobox_size.get_text()
+        if kernel_size.isnumeric() is False:
+            return None
+        if filter_index == 0:
+            return None
+        kernel_size = int(kernel_size)
+        # Process image
+        if filter_index == 1: # sobel X
+            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=1, dy=0, ksize=kernel_size)
+        elif filter_index == 2: # sobel Y
+            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=0, dy=1, ksize=kernel_size)
+        elif filter_index == 3: # sobel XY
+            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=1, dy=1, ksize=kernel_size)
+        elif filter_index == 4: # canny
+            # Add threshold
+            output_image = edges = cv2.Canny(image=image, threshold1=100, threshold2=200)
+        else:
+            return None
+        if inverted:
+            return output_image - image
+        else:
+            return output_image
+
 
 # %% Widget
 class FilterBlurWidget(QWidget):

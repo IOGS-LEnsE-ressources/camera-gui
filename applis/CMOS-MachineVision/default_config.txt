@@ -13,8 +13,8 @@ colormode; Mono12
 # AOI
 aoi_x; 0
 aoi_y; 0
-aoi_w; 200
-aoi_h; 200
+aoi_w; 500
+aoi_h; 400
 
 # Default directory
 save_images_dir; D:/_old_dd/

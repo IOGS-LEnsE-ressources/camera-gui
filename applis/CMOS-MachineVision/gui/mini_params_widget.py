@@ -101,8 +101,9 @@ class MiniParamsWidget(QWidget):
         self.parent.parent.camera.set_exposure(value)
 
     def set_enabled(self):
-        self.slider_exposure.set_enabled(True)
         self.slider_exposure_enabling.setEnabled(True)
+        if self.slider_exposure_enabling.isChecked():
+            self.slider_exposure.set_enabled(True)
 
     def set_disabled(self):
         self.slider_exposure.set_enabled(False)

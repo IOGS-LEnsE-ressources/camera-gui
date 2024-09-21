@@ -65,6 +65,7 @@ class FilterChoiceWidget(QWidget):
         self.label_title_filter_choice.setStyleSheet(styleH1)
 
         self.check_diff_image = QCheckBox(translate('diff_image'))
+        self.check_noise = QCheckBox(translate('noise_image'))
 
         self.filter_choice_threshold = QPushButton(translate('button_filter_choice_threshold'))
         self.filter_choice_threshold.setStyleSheet(styleH2)
@@ -84,11 +85,16 @@ class FilterChoiceWidget(QWidget):
         self.filter_choice_edge.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.filter_choice_edge.clicked.connect(self.clicked_action)
 
+        self.noise_widget = QWidget()
+
         self.layout.addWidget(self.label_title_filter_choice)
         self.layout.addWidget(self.check_diff_image)
         self.layout.addWidget(self.filter_choice_threshold)
         self.layout.addWidget(self.filter_choice_blur)
         self.layout.addWidget(self.filter_choice_edge)
+        self.layout.addStretch()
+        self.layout.addWidget(self.check_noise)
+        self.layout.addWidget(self.noise_widget)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
