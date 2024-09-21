@@ -17,14 +17,19 @@ import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QGridLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox,
+    QLabel, QComboBox, QPushButton, QCheckBox, QSlider,
     QMessageBox
 )
-from gui.slider_bloc import SliderBloc
+from PyQt6.QtCore import Qt
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
+
+if __name__ == '__main__':
+    from slider_bloc import SliderBloc
+else:
+    from gui.slider_bloc import SliderBloc
 
 # %% To add in lensepy librairy
 # Styles
@@ -39,19 +44,21 @@ OPTIONS_BUTTON_HEIGHT = 20  # px
 
 # %% Widget
 class MiniParamsWidget(QWidget):
-    def __init__(self):
+    def __init__(self, parent):
         """
 
         """
-        super().__init__(parent=None)
+        super().__init__(parent=parent)
+        self.parent = parent
         self.layout = QGridLayout()
 
-        self.exposure_title = QLabel('Exposure Time (ms) = ')
-        self.exposure_title.setStyleSheet(styleH2)
-        self.exposure_value = QLabel('')
-        self.exposure_value.setStyleSheet(styleH2)
-        self.layout.addWidget(self.exposure_title, 0, 0)
-        self.layout.addWidget(self.exposure_value, 0, 1)
+        self.slider_exposure = SliderBloc('Exposure Time', 'ms', 0, 100)
+        self.slider_exposure.set_enabled(False)
+        self.slider_exposure.slider_changed.connect(self.action_slider_changing)
+        self.slider_exposure_enabling = QCheckBox(parent=self)
+        self.slider_exposure_enabling.clicked.connect(self.action_enabling)
+        self.layout.addWidget(self.slider_exposure, 0, 0)
+        self.layout.addWidget(self.slider_exposure_enabling, 0, 1)
 
 
         self.black_level_title = QLabel('Black Level (gray) = ')
@@ -65,6 +72,8 @@ class MiniParamsWidget(QWidget):
         self.size_title.setStyleSheet(styleH2)
         self.size_value = QLabel('')
         self.size_value.setStyleSheet(styleH2)
+
+
         self.layout.addWidget(self.size_title, 2, 0)
         self.layout.addWidget(self.size_value, 2, 1)
 
@@ -75,15 +84,29 @@ class MiniParamsWidget(QWidget):
         exposure = round(camera.get_exposure() / 1000, 2)
         black_level = int(camera.get_black_level())
         width, height = camera.get_sensor_size()
-        self.exposure_value.setText(str(exposure))
+        self.slider_exposure.set_value(exposure)
         self.black_level_value.setText(str(black_level))
         self.size_value.setText(f'{int(width)} x {int(height)}')
 
+    def action_enabling(self):
+        if self.slider_exposure_enabling.isChecked():
+            self.slider_exposure.set_enabled(True)
+            min_val, max_val = self.parent.parent.camera.get_exposure_range()
+            self.slider_exposure.set_min_max_slider_values(round(min_val/1000, 1), round(max_val/1000, 1))
+        else:
+            self.slider_exposure.set_enabled(False)
+
+    def action_slider_changing(self):
+        value = self.slider_exposure.get_value() * 1000
+        self.parent.parent.camera.set_exposure(value)
+
     def set_enabled(self):
-        pass
+        self.slider_exposure.set_enabled(True)
+        self.slider_exposure_enabling.setEnabled(True)
 
     def set_disabled(self):
-        pass
+        self.slider_exposure.set_enabled(False)
+        self.slider_exposure_enabling.setEnabled(False)
 
 # %% Example
 if __name__ == '__main__':
@@ -103,7 +126,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_camera_settings"))
             self.setGeometry(300, 300, 600, 300)
 
-            self.central_widget = MiniParamsWidget()
+            self.central_widget = MiniParamsWidget(self)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):

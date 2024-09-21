@@ -39,7 +39,6 @@ from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
 
 from gui.camera_params_view_widget import CameraParamsViewWidget
-from gui.mini_params_widget import MiniParamsWidget
 from gui.aoi_selection_widget import AoiSelectionWidget
 from gui.histo_analysis_widget import HistoAnalysisWidget
 

@@ -71,7 +71,7 @@ class MainMenuWidget(QWidget):
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
 
-        self.camera_params = MiniParamsWidget()
+        self.camera_params = MiniParamsWidget(parent=self)
 
         self.layout.addWidget(self.label_title_main_menu)
         self.layout.addWidget(self.button_camera_settings_main_menu)
@@ -98,6 +98,7 @@ class MainMenuWidget(QWidget):
 
     def unactive_buttons(self):
         """ Switches all buttons to inactive style """
+        self.camera_params.set_enabled()
         self.button_camera_settings_main_menu.setStyleSheet(unactived_button)
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
         if self.aoi_selected:
@@ -111,10 +112,9 @@ class MainMenuWidget(QWidget):
         if sender == self.button_camera_settings_main_menu:
             # Change style
             sender.setStyleSheet(actived_button)
-
+            self.camera_params.set_disabled()
             # Action
             self.menu_clicked.emit('camera_settings')
-
 
     def button_aoi_main_menu_isClicked(self):
         # Change style
