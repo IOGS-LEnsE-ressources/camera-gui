@@ -60,11 +60,20 @@ class MainMenuWidget(QWidget):
         self.button_histo_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
         self.button_histo_analysis_main_menu.clicked.connect(self.button_histo_analysis_main_menu_isClicked)
 
+        self.button_threshold_analysis_main_menu = QPushButton(translate(
+            "button_threshold_analysis_main_menu"))
+        self.button_threshold_analysis_main_menu.setStyleSheet(disabled_button)
+        self.button_threshold_analysis_main_menu.setEnabled(False)
+        self.button_threshold_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_threshold_analysis_main_menu.clicked.connect(
+            self.main_menu_is_clicked)
+
         self.button_filter_analysis_main_menu = QPushButton(translate("button_filter_analysis_main_menu"))
         self.button_filter_analysis_main_menu.setStyleSheet(disabled_button)
         self.button_filter_analysis_main_menu.setEnabled(False)
         self.button_filter_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_filter_analysis_main_menu.clicked.connect(self.button_filter_analysis_main_menu_isClicked)
+        self.button_filter_analysis_main_menu.clicked.connect(
+            self.button_filter_analysis_main_menu_isClicked)
 
         self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
         self.button_options_main_menu.setStyleSheet(unactived_button)
@@ -77,6 +86,8 @@ class MainMenuWidget(QWidget):
         self.layout.addWidget(self.button_camera_settings_main_menu)
         self.layout.addWidget(self.button_aoi_main_menu)
         self.layout.addWidget(self.button_histo_analysis_main_menu)
+        self.layout.addWidget(self.button_threshold_analysis_main_menu)
+        self.layout.addStretch()
         self.layout.addWidget(self.button_filter_analysis_main_menu)
         self.layout.addStretch()
         self.layout.addWidget(self.camera_params)
@@ -103,6 +114,7 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
         if self.aoi_selected:
             self.button_histo_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_threshold_analysis_main_menu.setStyleSheet(unactived_button)
             self.button_filter_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setStyleSheet(unactived_button)
 
@@ -115,6 +127,12 @@ class MainMenuWidget(QWidget):
             self.camera_params.set_disabled()
             # Action
             self.menu_clicked.emit('camera_settings')
+        elif sender == self.button_threshold_analysis_main_menu:
+            # Change style
+            sender.setStyleSheet(actived_button)
+            # Action
+            self.menu_clicked.emit('contrast_analysis')
+
 
     def button_aoi_main_menu_isClicked(self):
         # Change style
@@ -123,6 +141,8 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.setStyleSheet(actived_button)
         self.button_histo_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_histo_analysis_main_menu.setEnabled(True)
+        self.button_threshold_analysis_main_menu.setStyleSheet(unactived_button)
+        self.button_threshold_analysis_main_menu.setEnabled(True)
         self.button_filter_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_filter_analysis_main_menu.setEnabled(True)
         # Action

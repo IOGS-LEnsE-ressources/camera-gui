@@ -47,6 +47,63 @@ class Filter(Enum):
 
 
 # %% Widget
+class ContrastWidget(QWidget):
+    filter_clicked = pyqtSignal(str)
+
+    def __init__(self, parent):
+        """
+
+        """
+        super().__init__(parent=None)
+        self.layout = QVBoxLayout()
+        self.parent = parent
+        self.filter_selection = Filter.NOFILTER
+
+        # Title
+        # -----
+        self.label_title_contrast_choice = QLabel(translate('title_contrast_choice'))
+        self.label_title_contrast_choice.setStyleSheet(styleH1)
+
+        self.check_diff_image = QCheckBox(translate('diff_image'))
+        self.check_noise = QCheckBox(translate('noise_image'))
+
+        self.filter_choice_threshold = QPushButton(translate('button_filter_choice_threshold'))
+        self.filter_choice_threshold.setStyleSheet(styleH2)
+        self.filter_choice_threshold.setStyleSheet(unactived_button)
+        self.filter_choice_threshold.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.filter_choice_threshold.clicked.connect(self.clicked_action)
+
+        self.noise_widget = QWidget()
+
+        self.layout.addWidget(self.label_title_contrast_choice)
+        self.layout.addWidget(self.check_diff_image)
+        self.layout.addWidget(self.filter_choice_threshold)
+        self.layout.addStretch()
+        self.layout.addWidget(self.check_noise)
+        self.layout.addWidget(self.noise_widget)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+
+    def clicked_action(self):
+        """Action performed when a button is clicked."""
+        self.unactive_buttons()
+        sender = self.sender()
+        sender.setStyleSheet(actived_button)
+        if sender == self.filter_choice_threshold:
+            self.filter_selection = Filter.THRESHOLD
+
+        self.filter_clicked.emit('new')
+
+    def unactive_buttons(self):
+        self.filter_choice_threshold.setStyleSheet(unactived_button)
+
+    def get_selection(self):
+        """Return the kind of filter selected."""
+        return self.filter_selection
+
+    def is_diff_checked(self):
+        return self.check_diff_image.isChecked()
+
 class FilterChoiceWidget(QWidget):
     filter_clicked = pyqtSignal(str)
 
@@ -67,12 +124,6 @@ class FilterChoiceWidget(QWidget):
         self.check_diff_image = QCheckBox(translate('diff_image'))
         self.check_noise = QCheckBox(translate('noise_image'))
 
-        self.filter_choice_threshold = QPushButton(translate('button_filter_choice_threshold'))
-        self.filter_choice_threshold.setStyleSheet(styleH2)
-        self.filter_choice_threshold.setStyleSheet(unactived_button)
-        self.filter_choice_threshold.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        self.filter_choice_threshold.clicked.connect(self.clicked_action)
-
         self.filter_choice_blur = QPushButton(translate('button_filter_choice_blur'))
         self.filter_choice_blur.setStyleSheet(styleH2)
         self.filter_choice_blur.setStyleSheet(unactived_button)
@@ -89,7 +140,6 @@ class FilterChoiceWidget(QWidget):
 
         self.layout.addWidget(self.label_title_filter_choice)
         self.layout.addWidget(self.check_diff_image)
-        self.layout.addWidget(self.filter_choice_threshold)
         self.layout.addWidget(self.filter_choice_blur)
         self.layout.addWidget(self.filter_choice_edge)
         self.layout.addStretch()
@@ -103,9 +153,7 @@ class FilterChoiceWidget(QWidget):
         self.unactive_buttons()
         sender = self.sender()
         sender.setStyleSheet(actived_button)
-        if sender == self.filter_choice_threshold:
-            self.filter_selection = Filter.THRESHOLD
-        elif sender == self.filter_choice_blur:
+        if sender == self.filter_choice_blur:
             self.filter_selection = Filter.BLUR
         elif sender == self.filter_choice_edge:
             self.filter_selection = Filter.EDGE
@@ -113,7 +161,6 @@ class FilterChoiceWidget(QWidget):
         self.filter_clicked.emit('new')
 
     def unactive_buttons(self):
-        self.filter_choice_threshold.setStyleSheet(unactived_button)
         self.filter_choice_blur.setStyleSheet(unactived_button)
         self.filter_choice_edge.setStyleSheet(unactived_button)
 
@@ -123,7 +170,6 @@ class FilterChoiceWidget(QWidget):
 
     def is_diff_checked(self):
         return self.check_diff_image.isChecked()
-
 
 # %% Example
 if __name__ == '__main__':

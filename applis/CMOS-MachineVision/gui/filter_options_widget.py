@@ -49,7 +49,7 @@ OPTIONS_BUTTON_HEIGHT = 20  # px
 blur_list = [translate('blur_averaging'), translate('blur_gaussian'),
              translate('blur_median'), translate('blur_bilateral')]
 size_list = ['1', '3', '5', '9', '15', '21', '31']
-threshold_list = [translate('th_classic'), translate('th_hat')]
+threshold_list = [translate('th_classic'), translate('th_inverted'), translate('th_hat')]
 
 
 class ThresholdWidget(QWidget):
@@ -77,9 +77,11 @@ class ThresholdWidget(QWidget):
                                        min_value=0, max_value=max_value, is_integer=True)
         self.slider_threshold_value.set_value(max_value//4)
         self.slider_threshold_value.set_enabled(False)
+        self.slider_threshold_value.slider_changed.connect(self.action_slider_changing)
         self.slider_threshold_value_hat = SliderBloc(title=translate('threshold_value_hat'), unit='',
                                        min_value=0, max_value=max_value, is_integer=True)
         self.slider_threshold_value_hat.set_enabled(False)
+        self.slider_threshold_value_hat.slider_changed.connect(self.action_slider_changing)
         self.slider_threshold_value_hat.set_value(3*max_value//4)
 
         self.layout.addWidget(self.label_title_threshold_options)
@@ -90,30 +92,36 @@ class ThresholdWidget(QWidget):
         self.setLayout(self.layout)
 
     def text_changed(self):
-        if self.combobox_threshold_type.get_text() == translate('th_classic'):
+        if (self.combobox_threshold_type.get_text() == translate('th_classic') or
+            self.combobox_threshold_type.get_text() == translate('th_inverted')):
             self.slider_threshold_value.set_enabled(True)
+            self.slider_threshold_value_hat.set_enabled(False)
         elif self.combobox_threshold_type.get_text() == translate('th_hat'):
             self.slider_threshold_value.set_enabled(True)
             self.slider_threshold_value_hat.set_enabled(True)
 
+    def action_slider_changing(self):
+        threshold_value = int(self.slider_threshold_value.get_value())
+        threshold_value_hat = int(self.slider_threshold_value_hat.get_value())
+        if threshold_value >= threshold_value_hat:
+            threshold_value_hat = threshold_value + 1
+            self.slider_threshold_value_hat.set_value(threshold_value_hat)
+
     def get_selection(self, image: np.ndarray, inverted: bool=False):
-        filter_index = self.combobox_edge.get_index()
-        kernel_size = self.combobox_size.get_text()
-        if kernel_size.isnumeric() is False:
-            return None
-        if filter_index == 0:
-            return None
-        kernel_size = int(kernel_size)
+        """Process image in 8bits mode - for faster process"""
+        delta_image_depth = (self.parent.bits_depth - 8)  # Power of 2 for depth conversion
+        threshold_index = self.combobox_threshold_type.get_index()
+        threshold_value = int(self.slider_threshold_value.get_value() // 2**delta_image_depth)
+        threshold_value_hat = int(self.slider_threshold_value_hat.get_value() // 2**delta_image_depth)
         # Process image
-        if filter_index == 1: # sobel X
-            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=1, dy=0, ksize=kernel_size)
-        elif filter_index == 2: # sobel Y
-            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=0, dy=1, ksize=kernel_size)
-        elif filter_index == 3: # sobel XY
-            output_image = cv2.Sobel(src=image, ddepth=cv2.CV_8U, dx=1, dy=1, ksize=kernel_size)
-        elif filter_index == 4: # canny
-            # Add threshold
-            output_image = edges = cv2.Canny(image=image, threshold1=100, threshold2=200)
+        if threshold_index == 1: # classic
+            ret, output_image = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY)
+        elif threshold_index == 2: # inverted
+            ret, output_image = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY_INV)
+        elif threshold_index == 3: # hat / in range
+            output_image = cv2.inRange(image, threshold_value, threshold_value_hat)
+
+
         else:
             return None
         if inverted:

@@ -49,7 +49,7 @@ from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
 from gui.camera_settings_widget import CameraSettingsWidget
-from gui.filter_choice_widget import FilterChoiceWidget, Filter
+from gui.filter_choice_widget import FilterChoiceWidget, Filter, ContrastWidget
 from gui.filter_options_widget import FilterBlurWidget, FilterEdgeWidget, ThresholdWidget
 
 from enum import Enum
@@ -73,6 +73,7 @@ class Modes(Enum):
     FILTER = 4
     CONTOUR = 5
     POINTS = 6
+    CONTRAST = 7
 
 
 class MainWindow(QMainWindow):
@@ -275,6 +276,10 @@ class MainWindow(QMainWindow):
                 self.mode = Modes.HISTO
                 print('>Menu / Histo')
                 self.start_histo_analysis()
+            elif event == 'contrast_analysis':
+                self.mode = Modes.CONTRAST
+                print('>Menu / Contrast')
+                self.start_contrast_analysis()
             elif event == 'filter':
                 self.mode = Modes.FILTER
                 print('>Menu / Filter Transformation')
@@ -397,7 +402,7 @@ class MainWindow(QMainWindow):
         """Process data in 8 bits depth."""
         x, y = self.aoi[0], self.aoi[1]
         h, w = self.aoi[2], self.aoi[3]
-        if self.mode is Modes.FILTER:
+        if self.mode is Modes.FILTER or self.mode is Modes.CONTRAST:
             image_aoi = image_array[y:y + w, x: x + h]
             image_aoi_filtered = self.process_filter(image_aoi)
             self.top_right_widget.set_image_from_array(image_aoi_filtered)
@@ -458,6 +463,15 @@ class MainWindow(QMainWindow):
         self.top_right_widget = ImageViewerWidget()
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
 
+    def start_contrast_analysis(self):
+        self.clear_layout(2, 2)
+        self.bot_left_widget = ContrastWidget(self)
+        self.bot_left_widget.filter_clicked.connect(self.open_filter_options)
+        self.main_layout.addWidget(self.bot_left_widget, 2, 1)
+        self.aoi_selected = True
+        self.top_right_widget = ImageViewerWidget()
+        self.main_layout.addWidget(self.top_right_widget, 1, 2)
+
     def open_filter_options(self):
         filter_selected = self.bot_left_widget.get_selection()
         self.clear_layout(2, 2)
@@ -485,7 +499,8 @@ class MainWindow(QMainWindow):
         diff_image = self.bot_left_widget.is_diff_checked()
         # Read the selected filter and size
         filter_selected = self.bot_left_widget.get_selection()
-        if filter_selected == Filter.BLUR or filter_selected == Filter.EDGE:
+        if (filter_selected == Filter.BLUR or filter_selected == Filter.EDGE
+                or filter_selected == Filter.THRESHOLD):
             output_image = self.bot_right_widget.get_selection(image, inverted=diff_image)
         else:
             output_image = 255-image
