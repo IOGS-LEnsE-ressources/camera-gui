@@ -130,6 +130,64 @@ class ThresholdWidget(QWidget):
             return output_image
 
 
+class ContrastAdjustWidget(QWidget):
+
+    options_clicked = pyqtSignal(str)
+
+    def __init__(self, parent):
+        """
+
+        """
+        super().__init__(parent=None)
+        self.layout = QVBoxLayout()
+        self.parent = parent
+
+        # Title
+        # -----
+        self.label_title_contrast_adjust = QLabel(translate('title_contrast_adjust'))
+        self.label_title_contrast_adjust.setStyleSheet(styleH1)
+
+        max_value = (2**self.parent.bits_depth - 1)
+
+        self.slider_threshold_min = SliderBloc(title=translate('threshold_value_min'), unit='',
+                                       min_value=0, max_value=max_value, is_integer=True)
+        self.slider_threshold_min.set_value(0)
+        self.slider_threshold_min.slider_changed.connect(self.action_slider_changing)
+
+        self.slider_threshold_max = SliderBloc(title=translate('threshold_value_max'), unit='',
+                                       min_value=0, max_value=max_value, is_integer=True)
+        self.slider_threshold_max.set_value(max_value)
+        self.slider_threshold_max.slider_changed.connect(self.action_slider_changing)
+
+        self.layout.addWidget(self.label_title_contrast_adjust)
+        self.layout.addWidget(self.slider_threshold_min)
+        self.layout.addWidget(self.slider_threshold_max)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+
+    def text_changed(self):
+        pass
+
+    def action_slider_changing(self):
+        min_value = int(self.slider_threshold_min.get_value())
+        max_value = int(self.slider_threshold_max.get_value())
+        if min_value >= max_value:
+            self.slider_threshold_max.set_value(min_value+1)
+
+    def get_selection(self, image: np.ndarray, inverted: bool=False):
+        """Process image in 8bits mode - for faster process"""
+        delta_image_depth = (self.parent.bits_depth - 8)  # Power of 2 for depth conversion
+        min_value = int(self.slider_threshold_min.get_value() // 2**delta_image_depth)
+        max_value = int(self.slider_threshold_max.get_value() // 2**delta_image_depth)
+        max_range = 255
+        gain = max_range/(max_value-min_value)
+        print(f'gain = {gain}')
+        output_image = ((image.astype(np.int16)-min_value+1) * gain).astype(np.int16)
+        output_image[output_image > max_range] = 255
+        output_image[output_image <= 1] = 0
+        return output_image.astype(np.uint8)
+
+
 # %% Widget
 class FilterBlurWidget(QWidget):
 

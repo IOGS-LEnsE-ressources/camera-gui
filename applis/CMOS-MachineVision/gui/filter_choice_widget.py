@@ -44,6 +44,7 @@ class Filter(Enum):
     BLUR = 2
     MORPHO = 3
     EDGE = 4
+    CONTRAST = 5
 
 
 # %% Widget
@@ -65,22 +66,23 @@ class ContrastWidget(QWidget):
         self.label_title_contrast_choice.setStyleSheet(styleH1)
 
         self.check_diff_image = QCheckBox(translate('diff_image'))
-        self.check_noise = QCheckBox(translate('noise_image'))
 
-        self.filter_choice_threshold = QPushButton(translate('button_filter_choice_threshold'))
-        self.filter_choice_threshold.setStyleSheet(styleH2)
-        self.filter_choice_threshold.setStyleSheet(unactived_button)
-        self.filter_choice_threshold.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        self.filter_choice_threshold.clicked.connect(self.clicked_action)
+        self.contrast_threshold = QPushButton(translate('button_contrast_threshold'))
+        self.contrast_threshold.setStyleSheet(styleH2)
+        self.contrast_threshold.setStyleSheet(unactived_button)
+        self.contrast_threshold.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.contrast_threshold.clicked.connect(self.clicked_action)
 
-        self.noise_widget = QWidget()
+        self.contrast_process = QPushButton(translate('button_contrast_process'))
+        self.contrast_process.setStyleSheet(styleH2)
+        self.contrast_process.setStyleSheet(unactived_button)
+        self.contrast_process.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.contrast_process.clicked.connect(self.clicked_action)
 
         self.layout.addWidget(self.label_title_contrast_choice)
         self.layout.addWidget(self.check_diff_image)
-        self.layout.addWidget(self.filter_choice_threshold)
-        self.layout.addStretch()
-        self.layout.addWidget(self.check_noise)
-        self.layout.addWidget(self.noise_widget)
+        self.layout.addWidget(self.contrast_threshold)
+        self.layout.addWidget(self.contrast_process)
         self.layout.addStretch()
         self.setLayout(self.layout)
 
@@ -89,13 +91,16 @@ class ContrastWidget(QWidget):
         self.unactive_buttons()
         sender = self.sender()
         sender.setStyleSheet(actived_button)
-        if sender == self.filter_choice_threshold:
+        if sender == self.contrast_threshold:
             self.filter_selection = Filter.THRESHOLD
+        elif sender == self.contrast_process:
+            self.filter_selection = Filter.CONTRAST
 
         self.filter_clicked.emit('new')
 
     def unactive_buttons(self):
-        self.filter_choice_threshold.setStyleSheet(unactived_button)
+        self.contrast_threshold.setStyleSheet(unactived_button)
+        self.contrast_process.setStyleSheet(unactived_button)
 
     def get_selection(self):
         """Return the kind of filter selected."""

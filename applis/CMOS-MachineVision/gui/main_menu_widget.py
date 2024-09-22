@@ -85,6 +85,7 @@ class MainMenuWidget(QWidget):
         self.layout.addWidget(self.label_title_main_menu)
         self.layout.addWidget(self.button_camera_settings_main_menu)
         self.layout.addWidget(self.button_aoi_main_menu)
+        self.layout.addStretch()
         self.layout.addWidget(self.button_histo_analysis_main_menu)
         self.layout.addWidget(self.button_threshold_analysis_main_menu)
         self.layout.addStretch()
