@@ -9,7 +9,11 @@
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
-from gui.mini_params_widget import MiniParamsWidget
+
+if __name__ == '__main__':
+    from mini_params_widget import MiniParamsWidget
+else:
+    from gui.mini_params_widget import MiniParamsWidget
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
@@ -42,33 +46,43 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu = QPushButton(translate("button_aoi_main_menu"))
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
         self.button_aoi_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_aoi_main_menu.clicked.connect(self.button_aoi_main_menu_isClicked)
+        self.button_aoi_main_menu.clicked.connect(self.main_menu_is_clicked)
         
         self.button_histo_analysis_main_menu = QPushButton(translate("button_histo_analysis_main_menu"))
         self.button_histo_analysis_main_menu.setStyleSheet(disabled_button)
         self.button_histo_analysis_main_menu.setEnabled(False)
         self.button_histo_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_histo_analysis_main_menu.clicked.connect(self.button_histo_analysis_main_menu_isClicked)
+        self.button_histo_analysis_main_menu.clicked.connect(self.main_menu_is_clicked)
 
-        self.button_threshold_analysis_main_menu = QPushButton(translate(
-            "button_threshold_analysis_main_menu"))
-        self.button_threshold_analysis_main_menu.setStyleSheet(disabled_button)
-        self.button_threshold_analysis_main_menu.setEnabled(False)
-        self.button_threshold_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_threshold_analysis_main_menu.clicked.connect(
-            self.main_menu_is_clicked)
+        self.button_preprocessing_main_menu = QPushButton(translate(
+            "button_preprocessing_main_menu"))
+        self.button_preprocessing_main_menu.setStyleSheet(disabled_button)
+        self.button_preprocessing_main_menu.setEnabled(False)
+        self.button_preprocessing_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_preprocessing_main_menu.clicked.connect(self.main_menu_is_clicked)
 
         self.button_filter_analysis_main_menu = QPushButton(translate("button_filter_analysis_main_menu"))
         self.button_filter_analysis_main_menu.setStyleSheet(disabled_button)
         self.button_filter_analysis_main_menu.setEnabled(False)
         self.button_filter_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
-        self.button_filter_analysis_main_menu.clicked.connect(
-            self.button_filter_analysis_main_menu_isClicked)
+        self.button_filter_analysis_main_menu.clicked.connect(self.main_menu_is_clicked)
+
+        self.button_edge_analysis_main_menu = QPushButton(translate("button_edge_analysis_main_menu"))
+        self.button_edge_analysis_main_menu.setStyleSheet(disabled_button)
+        self.button_edge_analysis_main_menu.setEnabled(False)
+        self.button_edge_analysis_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_edge_analysis_main_menu.clicked.connect(self.main_menu_is_clicked)
+
+        self.button_segmentation_main_menu = QPushButton(translate("button_segmentation_main_menu"))
+        self.button_segmentation_main_menu.setStyleSheet(disabled_button)
+        self.button_segmentation_main_menu.setEnabled(False)
+        self.button_segmentation_main_menu.setFixedHeight(BUTTON_HEIGHT)
+        self.button_segmentation_main_menu.clicked.connect(self.main_menu_is_clicked)
 
         self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
         self.button_options_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
+        #self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
 
         self.camera_params = MiniParamsWidget(parent=self)
 
@@ -77,9 +91,12 @@ class MainMenuWidget(QWidget):
         self.layout.addWidget(self.button_aoi_main_menu)
         self.layout.addStretch()
         self.layout.addWidget(self.button_histo_analysis_main_menu)
-        self.layout.addWidget(self.button_threshold_analysis_main_menu)
         self.layout.addStretch()
+        self.layout.addWidget(self.button_preprocessing_main_menu)
         self.layout.addWidget(self.button_filter_analysis_main_menu)
+        self.layout.addWidget(self.button_edge_analysis_main_menu)
+        self.layout.addStretch()
+        self.layout.addWidget(self.button_segmentation_main_menu)
         self.layout.addStretch()
         self.layout.addWidget(self.camera_params)
         self.layout.addStretch()
@@ -105,8 +122,10 @@ class MainMenuWidget(QWidget):
         self.button_aoi_main_menu.setStyleSheet(unactived_button)
         if self.aoi_selected:
             self.button_histo_analysis_main_menu.setStyleSheet(unactived_button)
-            self.button_threshold_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_preprocessing_main_menu.setStyleSheet(unactived_button)
             self.button_filter_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_segmentation_main_menu.setStyleSheet(unactived_button)
+            self.button_edge_analysis_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setStyleSheet(unactived_button)
 
     def main_menu_is_clicked(self):
@@ -118,43 +137,47 @@ class MainMenuWidget(QWidget):
             self.camera_params.set_disabled()
             # Action
             self.menu_clicked.emit('camera_settings')
-        elif sender == self.button_threshold_analysis_main_menu:
+        elif sender == self.button_preprocessing_main_menu:
             # Change style
             sender.setStyleSheet(actived_button)
             # Action
-            self.menu_clicked.emit('contrast_analysis')
-
-
-    def button_aoi_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.aoi_selected = True
-        self.button_aoi_main_menu.setStyleSheet(actived_button)
-        self.button_histo_analysis_main_menu.setStyleSheet(unactived_button)
-        self.button_histo_analysis_main_menu.setEnabled(True)
-        self.button_threshold_analysis_main_menu.setStyleSheet(unactived_button)
-        self.button_threshold_analysis_main_menu.setEnabled(True)
-        self.button_filter_analysis_main_menu.setStyleSheet(unactived_button)
-        self.button_filter_analysis_main_menu.setEnabled(True)
-        # Action
-        self.menu_clicked.emit('aoi')
-
-
-    def button_histo_analysis_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_histo_analysis_main_menu.setStyleSheet(actived_button)
-        
-        # Action
-        self.menu_clicked.emit('histo')
-
-    def button_filter_analysis_main_menu_isClicked(self):
-        # Change style
-        self.unactive_buttons()
-        self.button_filter_analysis_main_menu.setStyleSheet(actived_button)
-
-        # Action
-        self.menu_clicked.emit('filter')
+            self.menu_clicked.emit('pre_processing')
+        elif sender == self.button_aoi_main_menu:
+            self.unactive_buttons()
+            self.aoi_selected = True
+            sender.setStyleSheet(actived_button)
+            self.button_histo_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_histo_analysis_main_menu.setEnabled(True)
+            self.button_preprocessing_main_menu.setStyleSheet(unactived_button)
+            self.button_preprocessing_main_menu.setEnabled(True)
+            self.button_filter_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_filter_analysis_main_menu.setEnabled(True)
+            self.button_edge_analysis_main_menu.setStyleSheet(unactived_button)
+            self.button_edge_analysis_main_menu.setEnabled(True)
+            self.button_segmentation_main_menu.setStyleSheet(unactived_button)
+            self.button_segmentation_main_menu.setEnabled(True)
+            # Action
+            self.menu_clicked.emit('aoi')
+        elif sender == self.button_histo_analysis_main_menu:
+            self.unactive_buttons()
+            sender.setStyleSheet(actived_button)
+            # Action
+            self.menu_clicked.emit('histo')
+        elif sender == self.button_edge_analysis_main_menu:
+            self.unactive_buttons()
+            sender.setStyleSheet(actived_button)
+            # Action
+            self.menu_clicked.emit('edge')
+        elif sender == self.button_filter_analysis_main_menu:
+            self.unactive_buttons()
+            sender.setStyleSheet(actived_button)
+            # Action
+            self.menu_clicked.emit('filter')
+        elif sender == self.button_segmentation_main_menu:
+            self.unactive_buttons()
+            sender.setStyleSheet(actived_button)
+            # Action
+            self.menu_clicked.emit('segmentation')
 
         
     def button_options_main_menu_isClicked(self):

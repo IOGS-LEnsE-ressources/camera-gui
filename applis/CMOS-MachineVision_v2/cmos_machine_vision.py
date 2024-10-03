@@ -71,10 +71,10 @@ class Modes(Enum):
     SETTINGS = 1
     AOI = 2
     HISTO = 3
-    FILTER = 4
-    CONTOUR = 5
-    POINTS = 6
-    CONTRAST = 7
+    PREPROC = 4
+    EDGE = 5
+    SEGMENT = 6
+    FILTER = 7
 
 
 class MainWindow(QMainWindow):
@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
         self.saved_dir = None
 
         # Define Window title
-        self.setWindowTitle("LEnsE - CMOS Sensor Labwork")
+        self.setWindowTitle("LEnsE - CMOS Sensor / Machine Vision / Labwork")
         # Main Widget
         self.main_widget = QWidget()
 
@@ -123,13 +123,22 @@ class MainWindow(QMainWindow):
         self.camera_widget = QWidget()
         self.camera_widget.setStyleSheet("background-color: lightblue;")
         self.top_right_widget = QWidget()
+        self.submenu_widget = QWidget()
+        self.submenu_layout = QGridLayout()
         self.bot_left_widget = QWidget()
+        self.bot_center_widget = QWidget()
+        self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
+        self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
+        self.submenu_widget.setLayout(self.submenu_layout)
+        self.submenu_layout.setColumnStretch(0, 1)
+        self.submenu_layout.setColumnStretch(1, 1)
+
         self.bot_right_widget = QWidget()
         self.main_layout.addWidget(self.title_widget, 0, 0, 1, 3)
         self.main_layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
         self.main_layout.addWidget(self.camera_widget, 1, 1)
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
-        self.main_layout.addWidget(self.bot_left_widget, 2, 1)
+        self.main_layout.addWidget(self.submenu_widget, 2, 1)
         self.main_layout.addWidget(self.bot_right_widget, 2, 2)
         self.settings_displayed = False
         self.histo_graph_started = False
@@ -249,16 +258,15 @@ class MainWindow(QMainWindow):
             self.settings_displayed = False
             self.aoi_selection_started = False
             self.clear_layout(1, 2)
-            self.clear_layout(2, 1)
             self.clear_layout(2, 2)
             self.aoi_selected = False
             if event == 'camera_settings':
                 print('>Menu / Camera Settings')
                 if self.camera is None:
                     self.mode = Modes.NOMODE
-                    self.bot_left_widget = CameraChoice()
-                    self.bot_left_widget.selected.connect(self.action_brand_selected)
-                    self.main_layout.addWidget(self.bot_left_widget, 2, 1)
+                    self.submenu_widget = CameraChoice()
+                    self.submenu_widget.selected.connect(self.action_brand_selected)
+                    self.main_layout.addWidget(self.submenu_widget, 2, 1)
                 else:
                     # display camera settings and sliders
                     self.mode = Modes.SETTINGS
@@ -274,13 +282,21 @@ class MainWindow(QMainWindow):
                 self.mode = Modes.HISTO
                 print('>Menu / Histo')
                 self.start_histo_analysis()
-            elif event == 'contrast_analysis':
-                self.mode = Modes.CONTRAST
-                print('>Menu / Contrast')
-                self.start_contrast_analysis()
+            elif event == 'pre_processing':
+                self.mode = Modes.PREPROC
+                print('>Menu / Pre-Processing')
+                self.start_preprocessing_analysis()
             elif event == 'filter':
                 self.mode = Modes.FILTER
-                print('>Menu / Filter Transformation')
+                print('>Menu / Blur-Mean Filter')
+                self.start_filter_analysis()
+            elif event == 'edge':
+                self.mode = Modes.EDGE
+                print('>Menu / Edge Detection')
+                self.start_filter_analysis()
+            elif event == 'segmentation':
+                self.mode = Modes.SEGMENT
+                print('>Menu / Segmentation Mode')
                 self.start_filter_analysis()
 
             elif event == 'options':
@@ -346,8 +362,8 @@ class MainWindow(QMainWindow):
                 self.process8bits_data(image)
                 if self.aoi_selection_started:
                     # Display the AOI on the image
-                    x, y = self.bot_left_widget.get_position()
-                    w, h = self.bot_left_widget.get_size()
+                    x, y = self.submenu_widget.get_position()
+                    w, h = self.submenu_widget.get_size()
 
                     for i in range(5):
                         # Horizontal edges
@@ -389,8 +405,8 @@ class MainWindow(QMainWindow):
                 self.top_right_widget.set_image(image_array, fast_mode=True)
                 self.top_right_widget.update_info()
         if self.aoi_selection_started:
-            self.aoi[0], self.aoi[1] = self.bot_left_widget.get_position()
-            self.aoi[2], self.aoi[3] = self.bot_left_widget.get_size()
+            self.aoi[0], self.aoi[1] = self.submenu_widget.get_position()
+            self.aoi[2], self.aoi[3] = self.submenu_widget.get_size()
         if self.histo_graph_aoi_started:
             image_aoi = image_array[x:x+w, y:y+h]
             self.bot_right_widget.set_image(image_aoi, fast_mode=False)
@@ -400,16 +416,16 @@ class MainWindow(QMainWindow):
         """Process data in 8 bits depth."""
         x, y = self.aoi[0], self.aoi[1]
         h, w = self.aoi[2], self.aoi[3]
-        if self.mode is Modes.FILTER or self.mode is Modes.CONTRAST:
+        if self.mode is Modes.FILTER or self.mode is Modes.PREPROC:
             image_aoi = image_array[y:y + w, x: x + h]
             image_aoi_filtered = self.process_filter(image_aoi)
             self.top_right_widget.set_image_from_array(image_aoi_filtered)
 
     def start_cam_settings(self):
         """Display camera settings widget in the good part of the layout."""
-        self.clear_layout(2, 1)
+        self.clear_sublayout(0, 0)
         self.bot_left_widget = CameraSettingsWidget(self.camera)
-        self.main_layout.addWidget(self.bot_left_widget, 2, 1)  # display camera images
+        self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)  # display camera images
         self.bot_left_widget.update_parameters(auto_min_max=True)
         self.settings_displayed = True
 
@@ -432,9 +448,9 @@ class MainWindow(QMainWindow):
 
     def start_aoi_selection(self, editable: bool = True):
         self.clear_layout(2, 1)
-        self.bot_left_widget = AoiSelectionWidget(self, editable)
-        self.bot_left_widget.set_aoi(self.aoi)
-        self.main_layout.addWidget(self.bot_left_widget, 2, 1)
+        self.submenu_widget = AoiSelectionWidget(self, editable)
+        self.submenu_widget.set_aoi(self.aoi)
+        self.main_layout.addWidget(self.submenu_widget, 2, 1)
         self.aoi_selection_started = True
 
     def start_histo_analysis(self):
@@ -454,29 +470,29 @@ class MainWindow(QMainWindow):
 
     def start_filter_analysis(self):
         self.clear_layout(2, 2)
-        self.bot_left_widget = FilterChoiceWidget(self)
-        self.bot_left_widget.filter_clicked.connect(self.open_filter_options)
-        self.main_layout.addWidget(self.bot_left_widget, 2, 1)
+        self.submenu_widget = FilterChoiceWidget(self)
+        self.submenu_widget.filter_clicked.connect(self.open_filter_options)
+        self.main_layout.addWidget(self.submenu_widget, 2, 1)
         self.aoi_selected = True
         self.top_right_widget = ImageViewerWidget()
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
 
-    def start_contrast_analysis(self):
+    def start_preprocessing_analysis(self):
         self.clear_layout(2, 2)
-        self.bot_left_widget = ContrastWidget(self)
-        self.bot_left_widget.filter_clicked.connect(self.open_filter_options)
-        self.main_layout.addWidget(self.bot_left_widget, 2, 1)
+        self.submenu_widget = ContrastWidget(self)
+        self.submenu_widget.filter_clicked.connect(self.open_filter_options)
+        self.main_layout.addWidget(self.submenu_widget, 2, 1)
         self.aoi_selected = True
         self.top_right_widget = ImageViewerWidget()
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
 
     def open_filter_options(self):
-        filter_selected = self.bot_left_widget.get_selection()
+        filter_selected = self.submenu_widget.get_selection()
         self.clear_layout(2, 2)
         if filter_selected == Filter.THRESHOLD:
             self.bot_right_widget = ThresholdWidget(self)
             self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        if filter_selected == Filter.CONTRAST:
+        if filter_selected == Filter.PREPROC:
             self.bot_right_widget = ContrastAdjustWidget(self)
             self.main_layout.addWidget(self.bot_right_widget, 2, 2)
         if filter_selected == Filter.BLUR:
@@ -497,12 +513,12 @@ class MainWindow(QMainWindow):
         :rtype: np.ndarray
 
         """
-        diff_image = self.bot_left_widget.is_diff_checked()
-        noise_image = self.bot_left_widget.is_noise_checked()
+        diff_image = self.submenu_widget.is_diff_checked()
+        noise_image = self.submenu_widget.is_noise_checked()
         # Read the selected filter and size
-        filter_selected = self.bot_left_widget.get_selection()
+        filter_selected = self.submenu_widget.get_selection()
         if (filter_selected == Filter.BLUR or filter_selected == Filter.EDGE
-                or filter_selected == Filter.THRESHOLD or filter_selected == Filter.CONTRAST):
+                or filter_selected == Filter.THRESHOLD or filter_selected == Filter.PREPROC):
             output_image = self.bot_right_widget.get_selection(image, inverted=diff_image)
         else:
             output_image = 255-image
@@ -530,6 +546,25 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f'Exception - clear_layout {e}')
 
+    def clear_sublayout(self, row: int, column: int) -> None:
+        """Remove widgets from a specific position in the layout.
+
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
+
+        """
+        try:
+            item = self.submenu_layout.itemAtPosition(row, column)
+            if item is not None:
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+                else:
+                    self.submenu_layout.removeItem(item)
+        except Exception as e:
+            print(f'Exception - clear_layout {e}')
 
     def closeEvent(self, event):
         """
