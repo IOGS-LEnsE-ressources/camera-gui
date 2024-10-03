@@ -29,6 +29,7 @@ else:
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
+from lensecam.basler.camera_basler import CameraBasler
 
 # %% To add in lensepy librairy
 # Styles
@@ -43,7 +44,7 @@ OPTIONS_BUTTON_HEIGHT = 20  # px
 
 # %% Widget
 class CameraSettingsWidget(QWidget):
-    def __init__(self, camera: CameraIds):
+    def __init__(self, camera: CameraIds or CameraBasler):
         """
 
         """
@@ -112,6 +113,8 @@ class CameraSettingsWidget(QWidget):
         """
         if auto_min_max:
             exposure_min, exposure_max = self.camera.get_exposure_range()
+            if exposure_max > 100000:
+                exposure_max = 100000
             self.slider_exposure_time.set_min_max_slider_values(exposure_min // 1000, exposure_max // 1000)
             bl_min, bl_max = self.camera.get_black_level_range()
             self.slider_black_level.set_min_max_slider_values(bl_min, bl_max)

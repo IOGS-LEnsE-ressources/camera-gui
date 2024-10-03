@@ -212,9 +212,7 @@ class MainWindow(QMainWindow):
                 if self.camera.find_first_camera() is False:
                     print(f'No {self.brand} Camera Connected')
                     sys.exit(-1)
-
                 self.camera.init_camera(self.camera.camera_device)
-                self.camera.init_camera()
                 self.camera_widget = cam_widget_brands[self.brand](self.camera)
                 self.camera_thread.set_camera(self.camera)
                 # Init default param
@@ -244,7 +242,6 @@ class MainWindow(QMainWindow):
                 self.main_layout.addWidget(self.camera_widget, 1, 1)
                 self.mode = Modes.SETTINGS
                 self.camera_thread.start()
-                self.camera_widget.camera_display_params.update_params()
 
     def menu_action(self, event) -> None:
         try:

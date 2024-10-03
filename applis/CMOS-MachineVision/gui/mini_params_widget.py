@@ -92,6 +92,9 @@ class MiniParamsWidget(QWidget):
         if self.slider_exposure_enabling.isChecked():
             self.slider_exposure.set_enabled(True)
             min_val, max_val = self.parent.parent.camera.get_exposure_range()
+            if self.parent.parent.brand == "Basler":
+                if max_val > 100000:
+                    max_val = 100000
             self.slider_exposure.set_min_max_slider_values(round(min_val/1000, 1), round(max_val/1000, 1))
         else:
             self.slider_exposure.set_enabled(False)

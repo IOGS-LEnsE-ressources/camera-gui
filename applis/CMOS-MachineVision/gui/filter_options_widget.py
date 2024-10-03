@@ -181,7 +181,6 @@ class ContrastAdjustWidget(QWidget):
         max_value = int(self.slider_threshold_max.get_value() // 2**delta_image_depth)
         max_range = 255
         gain = max_range/(max_value-min_value)
-        print(f'gain = {gain}')
         output_image = ((image.astype(np.int16)-min_value+1) * gain).astype(np.int16)
         output_image[output_image > max_range] = 255
         output_image[output_image <= 1] = 0
