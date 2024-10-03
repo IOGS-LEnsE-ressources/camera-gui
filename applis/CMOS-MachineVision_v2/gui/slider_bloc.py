@@ -23,23 +23,13 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox, QSlider, QLineEdit,
     QMessageBox
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
+from PyQt6.QtCore import pyqtSignal, Qt
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
 # Translation
 dictionary = {}
-
-# %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Is number
 def is_number(value, min_val=0, max_val=0):
@@ -162,6 +152,7 @@ class SliderBloc(QWidget):
     
     def input_changed(self):
         self.value = max(self.min_value, min(self.max_value,float(self.lineedit_value.text())))
+        self.slider_changed.emit(f'TO CHANGE')
         self.update_block()
     
     def update_block(self):

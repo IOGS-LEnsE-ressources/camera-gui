@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
-
+from PyQt6.QtCore import pyqtSignal
 if __name__ == '__main__':
     from slider_bloc import SliderBloc
 else:
@@ -34,6 +34,9 @@ from lensecam.basler.camera_basler import CameraBasler
 
 # %% Widget
 class CameraSettingsWidget(QWidget):
+
+    settings_changed = pyqtSignal(str)
+
     def __init__(self, camera: CameraIds or CameraBasler):
         """
 
@@ -86,6 +89,7 @@ class CameraSettingsWidget(QWidget):
         if self.camera is not None:
             exposure_time_value = self.slider_exposure_time.get_value() * 1000
             self.camera.set_exposure(exposure_time_value)
+            self.settings_changed.emit('changed')
         else:
             print('No Camera Connected')
 
@@ -93,7 +97,8 @@ class CameraSettingsWidget(QWidget):
         """Action performed when the exposure time slider changed."""
         if self.camera is not None:
             black_level_value = self.slider_black_level.get_value()
-            self.camera.set_black_level(black_level_value)
+            self.camera.set_black_level((black_level_value//4) * 4)
+            self.settings_changed.emit('changed')
         else:
             print('No Camera Connected')
 
@@ -112,14 +117,6 @@ class CameraSettingsWidget(QWidget):
         self.slider_exposure_time.set_value(exposure_time / 1000)
         bl = self.camera.get_black_level()
         self.slider_black_level.set_value(bl)
-        print('Updated')
-
-    def set_parameters(self, color_mode: str = 'Mono8', frame_rate: float = 3,
-                       exposure: float = 2, black_level: int = 10):
-        """Useful ?
-
-        """
-        pass
 
 
 class CameraInfosWidget(QWidget):
@@ -179,12 +176,39 @@ class CameraInfosWidget(QWidget):
         self.sublayout_camera_size.setContentsMargins(0, 0, 0, 0)
         self.subwidget_camera_size.setLayout(self.sublayout_camera_size)
 
+        # Camera Main Parameters / Exposure Time
+        self.subwidget_camera_expo = QWidget()
+        self.sublayout_camera_expo = QHBoxLayout()
+        self.label_title_camera_exposure = QLabel(translate("label_title_camera_exposure"))
+        self.label_title_camera_exposure.setStyleSheet(styleH2)
+        self.label_value_camera_exposure = QLabel()
+        self.label_value_camera_exposure.setStyleSheet(styleH3)
+        self.sublayout_camera_expo.addWidget(self.label_title_camera_exposure)
+        self.sublayout_camera_expo.addStretch()
+        self.sublayout_camera_expo.addWidget(self.label_value_camera_exposure)
+        self.sublayout_camera_expo.setContentsMargins(0, 0, 0, 0)
+        self.subwidget_camera_expo.setLayout(self.sublayout_camera_expo)
+        # Camera Main Parameters / FPS
+        self.subwidget_camera_fps = QWidget()
+        self.sublayout_camera_fps = QHBoxLayout()
+        self.label_title_camera_fps = QLabel(translate("label_title_camera_fps"))
+        self.label_title_camera_fps.setStyleSheet(styleH2)
+        self.label_value_camera_fps = QLabel()
+        self.label_value_camera_fps.setStyleSheet(styleH3)
+        self.sublayout_camera_fps.addWidget(self.label_title_camera_fps)
+        self.sublayout_camera_fps.addStretch()
+        self.sublayout_camera_fps.addWidget(self.label_value_camera_fps)
+        self.sublayout_camera_fps.setContentsMargins(0, 0, 0, 0)
+        self.subwidget_camera_fps.setLayout(self.sublayout_camera_fps)
+
         # Add elements
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_name)
         self.layout.addWidget(self.subwidget_camera_id)
         self.layout.addWidget(self.subwidget_camera_size)
         self.layout.addStretch()
+        self.layout.addWidget(self.subwidget_camera_expo)
+        self.layout.addWidget(self.subwidget_camera_fps)
         self.setLayout(self.layout)
         self.update_parameters()
 
@@ -195,6 +219,10 @@ class CameraInfosWidget(QWidget):
             self.label_value_camera_id.setText(serial_no)
             max_width, max_height = self.parent.camera.get_sensor_size()
             self.label_value_camera_size.setText(f'W={max_width} x H={max_height} px')
+            fps = self.parent.camera.get_frame_rate()
+            self.label_value_camera_fps.setText(f'{fps} Frame/s (fps)')
+            expo = self.parent.camera.get_exposure() / 1000
+            self.label_value_camera_exposure.setText(f'{expo} ms')
         else:
             self.label_value_camera_name.setText('No Camera')
             self.label_value_camera_id.setText('No Camera')

@@ -163,6 +163,7 @@ class MainWindow(QMainWindow):
 
         # Events
         self.main_menu_widget.menu_clicked.connect(self.menu_action)
+        self.main_menu_widget.settings_changed.connect(self.update_infos)
 
     def load_file(self, file_path: str) -> dict:
         """
@@ -313,8 +314,17 @@ class MainWindow(QMainWindow):
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
             self.bot_left_widget.update_parameters(auto_min_max=True)
             self.settings_displayed = True
+            self.bot_left_widget.settings_changed.connect(self.update_infos)
+        elif self.mode == Modes.AOI:
+            self.bot_left_widget = AoiSelectionWidget(self, editable=True)
+            self.bot_left_widget.set_aoi(self.aoi)
+            self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
+            self.aoi_selection_started = True
         elif self.mode == Modes.HISTO:
-            pass
+            self.bot_left_widget = CameraSettingsWidget(self.camera)
+            self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
+            self.bot_left_widget.update_parameters(auto_min_max=True)
+            self.settings_displayed = True
         elif self.mode == Modes.PREPROC:
             pass
         elif self.mode == Modes.FILTER:
@@ -328,7 +338,7 @@ class MainWindow(QMainWindow):
 
     def options_display(self):
         self.clear_sublayout(0, 1)
-        if self.mode == Modes.SETTINGS:
+        if self.mode == Modes.SETTINGS or self.mode == Modes.AOI:
             self.bot_center_widget = CameraInfosWidget(self)
             self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
             self.bot_center_widget.update_parameters()
@@ -344,6 +354,10 @@ class MainWindow(QMainWindow):
             pass
         else:
             pass
+
+    def update_infos(self):
+        if self.mode == Modes.SETTINGS or self.mode == Modes.AOI:
+            self.bot_center_widget.update_parameters()
 
     def action_brand_selected(self, event):
         type_event = event.split(':')[0]
@@ -398,10 +412,10 @@ class MainWindow(QMainWindow):
                     image = image >> coeff
                     image = image.astype(np.uint8)
                 self.process8bits_data(image)
-                if self.aoi_selection_started:
+                if self.mode == Modes.AOI:
                     # Display the AOI on the image
-                    x, y = self.submenu_widget.get_position()
-                    w, h = self.submenu_widget.get_size()
+                    x, y = self.bot_left_widget.get_position()
+                    w, h = self.bot_left_widget.get_size()
 
                     for i in range(5):
                         # Horizontal edges
@@ -428,6 +442,7 @@ class MainWindow(QMainWindow):
 
     def process_data(self, image_array):
         """Process data to display in histogram graph."""
+        '''
         x, y = self.aoi[0], self.aoi[1]
         h, w = self.aoi[2], self.aoi[3]
         if self.mode == Modes.SETTINGS:
@@ -449,6 +464,7 @@ class MainWindow(QMainWindow):
             image_aoi = image_array[x:x+w, y:y+h]
             self.bot_right_widget.set_image(image_aoi, fast_mode=False)
             self.bot_right_widget.update_info()
+        '''
 
     def process8bits_data(self, image_array):
         """Process data in 8 bits depth."""

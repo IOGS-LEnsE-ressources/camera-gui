@@ -26,6 +26,7 @@ else:
 class MainMenuWidget(QWidget):
 
     menu_clicked = pyqtSignal(str)
+    settings_changed = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -84,6 +85,7 @@ class MainMenuWidget(QWidget):
         #self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
 
         self.camera_params = MiniParamsWidget(parent=self)
+        self.camera_params.settings_changed.connect(self.update_parameters)
 
         self.layout.addWidget(self.label_title_main_menu)
         self.layout.addWidget(self.button_camera_settings_main_menu)
@@ -105,6 +107,7 @@ class MainMenuWidget(QWidget):
     def update_parameters(self):
         """Update camera settings (exposure time, black_level and size)"""
         self.camera_params.set_parameters(self.parent.camera)
+        self.settings_changed.emit('changed')
 
     def set_parameters_enable(self, value):
         """Display the parameters in the menu section (if True)"""
@@ -189,6 +192,9 @@ class MainMenuWidget(QWidget):
 
 
 class MiniParamsWidget(QWidget):
+
+    settings_changed = pyqtSignal(str)
+
     def __init__(self, parent):
         """
 
@@ -205,33 +211,12 @@ class MiniParamsWidget(QWidget):
         self.layout.addWidget(self.slider_exposure, 0, 0)
         self.layout.addWidget(self.slider_exposure_enabling, 0, 1)
 
-
-        self.black_level_title = QLabel('Black Level (gray) = ')
-        self.black_level_title.setStyleSheet(styleH2)
-        self.black_level_value = QLabel('')
-        self.black_level_value.setStyleSheet(styleH2)
-        self.layout.addWidget(self.black_level_title, 1, 0)
-        self.layout.addWidget(self.black_level_value, 1, 1)
-
-        self.size_title = QLabel('Size (W x H) = ')
-        self.size_title.setStyleSheet(styleH2)
-        self.size_value = QLabel('')
-        self.size_value.setStyleSheet(styleH2)
-
-
-        self.layout.addWidget(self.size_title, 2, 0)
-        self.layout.addWidget(self.size_value, 2, 1)
-
         self.setLayout(self.layout)
 
     def set_parameters(self, camera):
         """ Update displayed parameters from the sensor."""
         exposure = round(camera.get_exposure() / 1000, 2)
-        black_level = int(camera.get_black_level())
-        width, height = camera.get_sensor_size()
         self.slider_exposure.set_value(exposure)
-        self.black_level_value.setText(str(black_level))
-        self.size_value.setText(f'{int(width)} x {int(height)}')
 
     def action_enabling(self):
         if self.slider_exposure_enabling.isChecked():
@@ -241,12 +226,14 @@ class MiniParamsWidget(QWidget):
                 if max_val > 100000:
                     max_val = 100000
             self.slider_exposure.set_min_max_slider_values(round(min_val/1000, 1), round(max_val/1000, 1))
+            self.settings_changed.emit('changed')
         else:
             self.slider_exposure.set_enabled(False)
 
     def action_slider_changing(self):
         value = self.slider_exposure.get_value() * 1000
         self.parent.parent.camera.set_exposure(value)
+        self.settings_changed.emit('changed')
 
     def set_enabled(self):
         self.slider_exposure_enabling.setEnabled(True)
@@ -256,7 +243,6 @@ class MiniParamsWidget(QWidget):
     def set_disabled(self):
         self.slider_exposure.set_enabled(False)
         self.slider_exposure_enabling.setEnabled(False)
-
 
 
 # %% Example
