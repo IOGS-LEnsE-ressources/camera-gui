@@ -48,7 +48,7 @@ from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from lensecam.basler.camera_basler_widget import CameraBaslerWidget
 from lensepy.images.conversion import array_to_qimage, resize_image_ratio
-from gui.camera_settings_widget import CameraSettingsWidget
+from gui.camera_settings_widget import CameraSettingsWidget, CameraInfosWidget
 from gui.filter_choice_widget import FilterChoiceWidget, Filter, ContrastWidget
 from gui.filter_options_widget import (
     FilterBlurWidget, FilterEdgeWidget, ThresholdWidget, ContrastAdjustWidget)
@@ -270,42 +270,80 @@ class MainWindow(QMainWindow):
                 else:
                     # display camera settings and sliders
                     self.mode = Modes.SETTINGS
-                    self.start_cam_settings()
                     self.start_histo_graph()
             elif event == 'aoi':
                 self.mode = Modes.AOI
                 print('>Menu / AOI Selection')
-                self.start_histo_graph()
+                #self.start_histo_graph()
                 # self.start_histo_aoi_graph()  # STILL PB WITH HISTO AOI !!
-                self.start_aoi_selection()
+                #self.start_aoi_selection()
             elif event == 'histo':
                 self.mode = Modes.HISTO
                 print('>Menu / Histo')
-                self.start_histo_analysis()
+                #self.start_histo_analysis()
             elif event == 'pre_processing':
                 self.mode = Modes.PREPROC
                 print('>Menu / Pre-Processing')
-                self.start_preprocessing_analysis()
+                #self.start_preprocessing_analysis()
             elif event == 'filter':
                 self.mode = Modes.FILTER
                 print('>Menu / Blur-Mean Filter')
-                self.start_filter_analysis()
+                #self.start_filter_analysis()
             elif event == 'edge':
                 self.mode = Modes.EDGE
                 print('>Menu / Edge Detection')
-                self.start_filter_analysis()
             elif event == 'segmentation':
                 self.mode = Modes.SEGMENT
                 print('>Menu / Segmentation Mode')
-                self.start_filter_analysis()
 
             elif event == 'options':
                 print('>Menu / Options')
                 self.mode = Modes.NOMODE
                 self.option_params_view_widget = CameraParamsViewWidget(self)
                 self.main_layout.addWidget(self.option_params_view_widget, 1, 2, 2, 1)
+            self.sub_menu_display()
+            self.options_display()
         except Exception as e:
             print(f'Exception - menu_action {e}')
+
+    def sub_menu_display(self):
+        self.clear_sublayout(0, 0)
+        if self.mode == Modes.SETTINGS:
+            self.bot_left_widget = CameraSettingsWidget(self.camera)
+            self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
+            self.bot_left_widget.update_parameters(auto_min_max=True)
+            self.settings_displayed = True
+        elif self.mode == Modes.HISTO:
+            pass
+        elif self.mode == Modes.PREPROC:
+            pass
+        elif self.mode == Modes.FILTER:
+            pass
+        elif self.mode == Modes.EDGE:
+            pass
+        elif self.mode == Modes.SEGMENT:
+            pass
+        else:
+            pass
+
+    def options_display(self):
+        self.clear_sublayout(0, 1)
+        if self.mode == Modes.SETTINGS:
+            self.bot_center_widget = CameraInfosWidget(self)
+            self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
+            self.bot_center_widget.update_parameters()
+        elif self.mode == Modes.HISTO:
+            pass
+        elif self.mode == Modes.PREPROC:
+            pass
+        elif self.mode == Modes.FILTER:
+            pass
+        elif self.mode == Modes.EDGE:
+            pass
+        elif self.mode == Modes.SEGMENT:
+            pass
+        else:
+            pass
 
     def action_brand_selected(self, event):
         type_event = event.split(':')[0]
@@ -420,14 +458,6 @@ class MainWindow(QMainWindow):
             image_aoi = image_array[y:y + w, x: x + h]
             image_aoi_filtered = self.process_filter(image_aoi)
             self.top_right_widget.set_image_from_array(image_aoi_filtered)
-
-    def start_cam_settings(self):
-        """Display camera settings widget in the good part of the layout."""
-        self.clear_sublayout(0, 0)
-        self.bot_left_widget = CameraSettingsWidget(self.camera)
-        self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)  # display camera images
-        self.bot_left_widget.update_parameters(auto_min_max=True)
-        self.settings_displayed = True
 
     def start_histo_graph(self):
         self.clear_layout(1, 2)

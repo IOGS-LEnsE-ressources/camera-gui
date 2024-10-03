@@ -29,15 +29,12 @@ else:
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
-
-# %% Params
-BUTTON_HEIGHT = 60  # px
-OPTIONS_BUTTON_HEIGHT = 20  # px
+from lensecam.basler.camera_basler import CameraBasler
 
 
 # %% Widget
 class CameraParamsViewWidget(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent = None, editable: bool = False):
         """
 
         """

@@ -31,16 +31,6 @@ from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
 from lensecam.basler.camera_basler import CameraBasler
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
-# %% Params
-BUTTON_HEIGHT = 60  # px
-OPTIONS_BUTTON_HEIGHT = 20  # px
-
 
 # %% Widget
 class CameraSettingsWidget(QWidget):
@@ -130,6 +120,88 @@ class CameraSettingsWidget(QWidget):
 
         """
         pass
+
+
+class CameraInfosWidget(QWidget):
+    def __init__(self, parent = None):
+        """
+
+        """
+        super().__init__(parent=None)
+        self.layout = QVBoxLayout()
+        self.parent = parent
+        self.first_display = True
+
+        # Title
+        # -----
+        self.label_title_camera_settings = QLabel(translate('title_camera_infos_view'))
+        self.label_title_camera_settings.setStyleSheet(styleH1)
+
+        # Camera Name
+        # ---------
+        self.subwidget_camera_name = QWidget()
+        self.sublayout_camera_name = QHBoxLayout()
+        self.label_title_camera_name = QLabel(translate("label_title_camera_name"))
+        self.label_title_camera_name.setStyleSheet(styleH2)
+        self.label_value_camera_name = QLabel()
+        self.label_value_camera_name.setStyleSheet(styleH3)
+        self.sublayout_camera_name.addWidget(self.label_title_camera_name)
+        self.sublayout_camera_name.addStretch()
+        self.sublayout_camera_name.addWidget(self.label_value_camera_name)
+        self.sublayout_camera_name.setContentsMargins(0, 0, 0, 0)
+        self.subwidget_camera_name.setLayout(self.sublayout_camera_name)
+
+        # Camera ID
+        # ---------
+        self.subwidget_camera_id = QWidget()
+        self.sublayout_camera_id = QHBoxLayout()
+        self.label_title_camera_id = QLabel(translate("label_title_camera_id"))
+        self.label_title_camera_id.setStyleSheet(styleH2)
+        self.label_value_camera_id = QLabel()
+        self.label_value_camera_id.setStyleSheet(styleH3)
+        self.sublayout_camera_id.addWidget(self.label_title_camera_id)
+        self.sublayout_camera_id.addStretch()
+        self.sublayout_camera_id.addWidget(self.label_value_camera_id)
+        self.sublayout_camera_id.setContentsMargins(0, 0, 0, 0)
+        self.subwidget_camera_id.setLayout(self.sublayout_camera_id)
+
+        # Camera Size
+        # ---------
+        self.subwidget_camera_size = QWidget()
+        self.sublayout_camera_size = QHBoxLayout()
+        self.label_title_camera_size = QLabel(translate("label_title_camera_size"))
+        self.label_title_camera_size.setStyleSheet(styleH2)
+        self.label_value_camera_size = QLabel()
+        self.label_value_camera_size.setStyleSheet(styleH3)
+        self.sublayout_camera_size.addWidget(self.label_title_camera_size)
+        self.sublayout_camera_size.addStretch()
+        self.sublayout_camera_size.addWidget(self.label_value_camera_size)
+        self.sublayout_camera_size.setContentsMargins(0, 0, 0, 0)
+        self.subwidget_camera_size.setLayout(self.sublayout_camera_size)
+
+        # Add elements
+        self.layout.addWidget(self.label_title_camera_settings)
+        self.layout.addWidget(self.subwidget_camera_name)
+        self.layout.addWidget(self.subwidget_camera_id)
+        self.layout.addWidget(self.subwidget_camera_size)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+        self.update_parameters()
+
+    def update_parameters(self):
+        if self.parent.camera is not None:
+            serial_no, camera_name = self.parent.camera.get_cam_info()
+            self.label_value_camera_name.setText(camera_name)
+            self.label_value_camera_id.setText(serial_no)
+            max_width, max_height = self.parent.camera.get_sensor_size()
+            self.label_value_camera_size.setText(f'W={max_width} x H={max_height} px')
+        else:
+            self.label_value_camera_name.setText('No Camera')
+            self.label_value_camera_id.setText('No Camera')
+
+
+
+
 
 
 # %% Example

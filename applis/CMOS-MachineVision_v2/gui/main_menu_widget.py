@@ -6,22 +6,21 @@
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
-
-from lensepy import load_dictionary, translate
-from lensepy.css import *
-
-if __name__ == '__main__':
-    from mini_params_widget import MiniParamsWidget
-else:
-    from gui.mini_params_widget import MiniParamsWidget
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
-    QVBoxLayout, QGridLayout,
+    QVBoxLayout, QGridLayout, QHBoxLayout,
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from lensepy import load_dictionary, translate
+from lensepy.css import *
+
+if __name__ == '__main__':
+    from slider_bloc import SliderBloc
+else:
+    from gui.slider_bloc import SliderBloc
 
 # %% Widget
 class MainMenuWidget(QWidget):
@@ -188,7 +187,78 @@ class MainMenuWidget(QWidget):
         # Action
         self.menu_clicked.emit('options')
 
-        
+
+class MiniParamsWidget(QWidget):
+    def __init__(self, parent):
+        """
+
+        """
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.layout = QGridLayout()
+
+        self.slider_exposure = SliderBloc('Exposure Time', 'ms', 0, 100)
+        self.slider_exposure.set_enabled(False)
+        self.slider_exposure.slider_changed.connect(self.action_slider_changing)
+        self.slider_exposure_enabling = QCheckBox(parent=self)
+        self.slider_exposure_enabling.clicked.connect(self.action_enabling)
+        self.layout.addWidget(self.slider_exposure, 0, 0)
+        self.layout.addWidget(self.slider_exposure_enabling, 0, 1)
+
+
+        self.black_level_title = QLabel('Black Level (gray) = ')
+        self.black_level_title.setStyleSheet(styleH2)
+        self.black_level_value = QLabel('')
+        self.black_level_value.setStyleSheet(styleH2)
+        self.layout.addWidget(self.black_level_title, 1, 0)
+        self.layout.addWidget(self.black_level_value, 1, 1)
+
+        self.size_title = QLabel('Size (W x H) = ')
+        self.size_title.setStyleSheet(styleH2)
+        self.size_value = QLabel('')
+        self.size_value.setStyleSheet(styleH2)
+
+
+        self.layout.addWidget(self.size_title, 2, 0)
+        self.layout.addWidget(self.size_value, 2, 1)
+
+        self.setLayout(self.layout)
+
+    def set_parameters(self, camera):
+        """ Update displayed parameters from the sensor."""
+        exposure = round(camera.get_exposure() / 1000, 2)
+        black_level = int(camera.get_black_level())
+        width, height = camera.get_sensor_size()
+        self.slider_exposure.set_value(exposure)
+        self.black_level_value.setText(str(black_level))
+        self.size_value.setText(f'{int(width)} x {int(height)}')
+
+    def action_enabling(self):
+        if self.slider_exposure_enabling.isChecked():
+            self.slider_exposure.set_enabled(True)
+            min_val, max_val = self.parent.parent.camera.get_exposure_range()
+            if self.parent.parent.brand == "Basler":
+                if max_val > 100000:
+                    max_val = 100000
+            self.slider_exposure.set_min_max_slider_values(round(min_val/1000, 1), round(max_val/1000, 1))
+        else:
+            self.slider_exposure.set_enabled(False)
+
+    def action_slider_changing(self):
+        value = self.slider_exposure.get_value() * 1000
+        self.parent.parent.camera.set_exposure(value)
+
+    def set_enabled(self):
+        self.slider_exposure_enabling.setEnabled(True)
+        if self.slider_exposure_enabling.isChecked():
+            self.slider_exposure.set_enabled(True)
+
+    def set_disabled(self):
+        self.slider_exposure.set_enabled(False)
+        self.slider_exposure_enabling.setEnabled(False)
+
+
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
