@@ -40,7 +40,7 @@ from gui.title_widget import TitleWidget
 
 from gui.camera_params_view_widget import CameraParamsViewWidget
 from gui.aoi_selection_widget import AoiSelectionWidget
-from gui.histo_analysis_widget import HistoAnalysisWidget
+from gui.histo_analysis_widget import HistoAnalysisWidget, HistoSubMenuWidget
 
 from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.camera_thread import CameraThread
@@ -307,6 +307,13 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f'Exception - menu_action {e}')
 
+
+    def submenu_changed_action(self, event):
+        if event == 'histo_space':
+            print('Histo Space')
+        elif event == 'histo_time':
+            print('Histo Time')
+            
     def sub_menu_display(self):
         self.clear_sublayout(0, 0)
         if self.mode == Modes.SETTINGS:
@@ -321,10 +328,9 @@ class MainWindow(QMainWindow):
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
             self.aoi_selection_started = True
         elif self.mode == Modes.HISTO:
-            self.bot_left_widget = CameraSettingsWidget(self.camera)
+            self.bot_left_widget = HistoSubMenuWidget(self)
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
-            self.bot_left_widget.update_parameters(auto_min_max=True)
-            self.settings_displayed = True
+            self.bot_left_widget.histo_submenu_changed.connect(self.submenu_changed_action)
         elif self.mode == Modes.PREPROC:
             pass
         elif self.mode == Modes.FILTER:
@@ -355,9 +361,12 @@ class MainWindow(QMainWindow):
         else:
             pass
 
-    def update_infos(self):
+    def update_infos(self, event):
         if self.mode == Modes.SETTINGS or self.mode == Modes.AOI:
-            self.bot_center_widget.update_parameters()
+            if event == 'camera_settings_changed':
+                self.main_menu_widget.update_parameters()
+            else:
+                self.bot_center_widget.update_parameters()
 
     def action_brand_selected(self, event):
         type_event = event.split(':')[0]

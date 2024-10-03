@@ -31,16 +31,50 @@ from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensecam.ids.camera_ids import CameraIds
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
-# %% Params
-BUTTON_HEIGHT = 60  # px
-OPTIONS_BUTTON_HEIGHT = 20  # px
+class HistoSubMenuWidget(QWidget):
 
+    histo_submenu_changed = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.layout = QVBoxLayout()
+        self.parent = parent
+
+        # Title
+        # -----
+        self.label_title_histo_analysis = QLabel(translate('title_histo_analysis'))
+        self.label_title_histo_analysis.setStyleSheet(styleH1)
+
+        self.button_space_analysis = QPushButton(translate("button_space_analysis"))
+        self.button_space_analysis.setStyleSheet(unactived_button)
+        self.button_space_analysis.setFixedHeight(BUTTON_HEIGHT)
+        self.button_space_analysis.clicked.connect(self.histo_menu_action)
+        self.button_time_analysis = QPushButton(translate("button_time_analysis"))
+        self.button_time_analysis.setStyleSheet(unactived_button)
+        self.button_time_analysis.setFixedHeight(BUTTON_HEIGHT)
+        self.button_time_analysis.clicked.connect(self.histo_menu_action)
+
+        self.layout.addWidget(self.label_title_histo_analysis)
+        self.layout.addWidget(self.button_space_analysis)
+        self.layout.addWidget(self.button_time_analysis)
+        self.layout.addStretch()
+        self.setLayout(self.layout)
+
+    def unactive_buttons(self):
+        """ Switches all buttons to inactive style """
+        self.button_space_analysis.setStyleSheet(unactived_button)
+        self.button_time_analysis.setStyleSheet(unactived_button)
+
+    def histo_menu_action(self):
+        self.unactive_buttons()
+        sender = self.sender()
+        if sender == self.button_space_analysis:
+            sender.setStyleSheet(actived_button)
+            self.histo_submenu_changed.emit('histo_space')
+        elif sender == self.button_time_analysis:
+            sender.setStyleSheet(actived_button)
+            self.histo_submenu_changed.emit('histo_time')
 
 # %% Widget
 class HistoAnalysisWidget(QWidget):

@@ -107,7 +107,7 @@ class MainMenuWidget(QWidget):
     def update_parameters(self):
         """Update camera settings (exposure time, black_level and size)"""
         self.camera_params.set_parameters(self.parent.camera)
-        self.settings_changed.emit('changed')
+        self.settings_changed.emit('main_menu_changed')
 
     def set_parameters_enable(self, value):
         """Display the parameters in the menu section (if True)"""

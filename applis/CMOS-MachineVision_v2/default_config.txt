@@ -6,8 +6,8 @@ languages; FR,EN
 brandname; Basler
 clock_freq; 15
 exposure; 4000
-blacklevel; 128
-framerate; 3
+blacklevel; 0
+framerate; 10
 colormode; Mono12
 
 # AOI
