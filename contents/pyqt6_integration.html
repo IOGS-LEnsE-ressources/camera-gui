@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -6,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PyQt6 Widget Integration &mdash; Camera GUI 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=7ab3649f" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-toolbox-code.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/css/lense-ressources.css?v=bc9b2a83" />
@@ -14,17 +16,13 @@
       <link rel="stylesheet" type="text/css" href="https://iogs-lense.github.io/lense.tech/assets/css/fontawesome/css/all.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=2709fde1"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-        <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -111,7 +109,8 @@
 <p>PyQt provides a wide range of pre-built widgets that you can use to create GUI applications. These widgets are subclasses of QWidget, the base class for all GUI objects in PyQt.</p>
 <p>The LEnsE team also proposed a serie of widgets to integrate camera previzualisation in your graphical user interface.</p>
 <figure class="align-center" id="id1">
-<a class="reference internal image-reference" href="../_images/biophotonique_labwork_interface.png"><img alt="../_images/biophotonique_labwork_interface.png" src="../_images/biophotonique_labwork_interface.png" style="width: 60%;" /></a>
+<a class="reference internal image-reference" href="../_images/biophotonique_labwork_interface.png"><img alt="../_images/biophotonique_labwork_interface.png" src="../_images/biophotonique_labwork_interface.png" style="width: 60%;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Example of Basler camera integration in a PyQt6 application. <a class="reference external" href="https://iogs-lense-platforms.github.io/">Biophotonic labwork - Structured illumination microscope</a></span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
 </figcaption>
@@ -181,7 +180,8 @@
 <h5>List the cameras<a class="headerlink" href="#list-the-cameras" title="Link to this heading"></a></h5>
 <p>In the first menu, you have the possibility to select one of the connected camera:</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../_images/widget_test_list.png"><img alt="../_images/widget_test_list.png" src="../_images/widget_test_list.png" style="width: 50%;" /></a>
+<a class="reference internal image-reference" href="../_images/widget_test_list.png"><img alt="../_images/widget_test_list.png" src="../_images/widget_test_list.png" style="width: 50%;" />
+</a>
 </figure>
 <p>You can also refresh this list if you didn’t connect the camera at the launch of the application.</p>
 </section>
@@ -189,21 +189,24 @@
 <h5>Connect to a camera<a class="headerlink" href="#connect-to-a-camera" title="Link to this heading"></a></h5>
 <p>You can then setup the selected camera by clicking on <span class="menuselection">Connect</span>:</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../_images/widget_test_connect.png"><img alt="../_images/widget_test_connect.png" src="../_images/widget_test_connect.png" style="width: 50%;" /></a>
+<a class="reference internal image-reference" href="../_images/widget_test_connect.png"><img alt="../_images/widget_test_connect.png" src="../_images/widget_test_connect.png" style="width: 50%;" />
+</a>
 </figure>
 </section>
 <section id="display-images-from-a-camera">
 <h5>Display images from a camera<a class="headerlink" href="#display-images-from-a-camera" title="Link to this heading"></a></h5>
 <p>Real-time images from your camera are now displayed in the main part of the widget:</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../_images/widget_test_image.png"><img alt="../_images/widget_test_image.png" src="../_images/widget_test_image.png" style="width: 50%;" /></a>
+<a class="reference internal image-reference" href="../_images/widget_test_image.png"><img alt="../_images/widget_test_image.png" src="../_images/widget_test_image.png" style="width: 50%;" />
+</a>
 </figure>
 </section>
 <section id="access-to-the-parameters">
 <h5>Access to the parameters<a class="headerlink" href="#access-to-the-parameters" title="Link to this heading"></a></h5>
 <p>By clicking on <span class="menuselection">Parameters</span>, you can modify some main parameters of your camera:</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../_images/widget_test_params.png"><img alt="../_images/widget_test_params.png" src="../_images/widget_test_params.png" style="width: 50%;" /></a>
+<a class="reference internal image-reference" href="../_images/widget_test_params.png"><img alt="../_images/widget_test_params.png" src="../_images/widget_test_params.png" style="width: 50%;" />
+</a>
 </figure>
 </section>
 </section>
