@@ -76,6 +76,11 @@ class Modes(Enum):
     SEGMENT = 6
     FILTER = 7
 
+class SubModes(Enum):
+    NOMODE = 0
+    HISTO_TIME = 1
+    HISTO_SPACE = 2
+
 
 class MainWindow(QMainWindow):
     """
@@ -100,8 +105,8 @@ class MainWindow(QMainWindow):
         # Parameters
         self.default_parameters = {}
         self.mode = Modes.NOMODE
+        self.sub_mode = SubModes.NOMODE
         self.snap_required = False
-        self.aoi_selected = False
         # Data to display
         self.image_x = []   # 4 random pixels in the AOI - X coordinate
         self.image_y = []   # 4 random pixels in the AOI - Y coordinate
@@ -140,10 +145,8 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
         self.main_layout.addWidget(self.submenu_widget, 2, 1)
         self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        self.settings_displayed = False
         self.histo_graph_started = False
         self.histo_graph_aoi_started = False
-        self.aoi_selection_started = False
 
         self.main_layout.setColumnStretch(0,1)
         self.main_layout.setColumnStretch(1,3)
@@ -250,17 +253,13 @@ class MainWindow(QMainWindow):
                 self.bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
                 self.clear_layout(1, 1)
                 self.main_layout.addWidget(self.camera_widget, 1, 1)
-                self.mode = Modes.SETTINGS
+                self.mode = Modes.NOMODE
                 self.camera_thread.start()
 
     def menu_action(self, event) -> None:
         try:
-            self.histo_graph_started = False
-            self.settings_displayed = False
-            self.aoi_selection_started = False
             self.clear_layout(1, 2)
             self.clear_layout(2, 2)
-            self.aoi_selected = False
             if event == 'camera_settings':
                 print('>Menu / Camera Settings')
                 if self.camera is None:
@@ -271,17 +270,13 @@ class MainWindow(QMainWindow):
                 else:
                     # display camera settings and sliders
                     self.mode = Modes.SETTINGS
-                    self.start_histo_graph()
             elif event == 'aoi':
                 self.mode = Modes.AOI
                 print('>Menu / AOI Selection')
-                #self.start_histo_graph()
-                # self.start_histo_aoi_graph()  # STILL PB WITH HISTO AOI !!
-                #self.start_aoi_selection()
             elif event == 'histo':
                 self.mode = Modes.HISTO
+                self.sub_mode = SubModes.NOMODE
                 print('>Menu / Histo')
-                #self.start_histo_analysis()
             elif event == 'pre_processing':
                 self.mode = Modes.PREPROC
                 print('>Menu / Pre-Processing')
@@ -309,24 +304,29 @@ class MainWindow(QMainWindow):
 
 
     def submenu_changed_action(self, event):
-        if event == 'histo_space':
-            print('Histo Space')
-        elif event == 'histo_time':
-            print('Histo Time')
+        if self.mode == Modes.HISTO:
+            self.clear_sublayout(0, 1)
+            if event == 'histo_space':
+                self.sub_mode = SubModes.HISTO_SPACE
+                print('Histo Space')
+            elif event == 'histo_time':
+                self.sub_mode = SubModes.HISTO_TIME
+                print('Histo Time')
+        self.sub_menu_display(sub=False)
             
-    def sub_menu_display(self):
-        self.clear_sublayout(0, 0)
+    def sub_menu_display(self, sub: bool = True):
+        if sub:
+            self.clear_sublayout(0, 0)
+        self.clear_sublayout(0, 1)
         if self.mode == Modes.SETTINGS:
             self.bot_left_widget = CameraSettingsWidget(self.camera)
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
             self.bot_left_widget.update_parameters(auto_min_max=True)
-            self.settings_displayed = True
             self.bot_left_widget.settings_changed.connect(self.update_infos)
         elif self.mode == Modes.AOI:
             self.bot_left_widget = AoiSelectionWidget(self, editable=True)
             self.bot_left_widget.set_aoi(self.aoi)
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
-            self.aoi_selection_started = True
         elif self.mode == Modes.HISTO:
             self.bot_left_widget = HistoSubMenuWidget(self)
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
@@ -344,12 +344,30 @@ class MainWindow(QMainWindow):
 
     def options_display(self):
         self.clear_sublayout(0, 1)
-        if self.mode == Modes.SETTINGS or self.mode == Modes.AOI:
+        if self.mode == Modes.SETTINGS:
             self.bot_center_widget = CameraInfosWidget(self)
             self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
             self.bot_center_widget.update_parameters()
+            # Histogram
+            self.start_histo_graph()
+        elif self.mode == Modes.AOI:
+            self.bot_center_widget = CameraInfosWidget(self)
+            self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
+            self.bot_center_widget.update_parameters()
+            # Histogram
+            self.start_histo_graph()
+            self.start_histo_aoi_graph()
         elif self.mode == Modes.HISTO:
-            pass
+            print('Histo OK')
+            print(f'Sub mode Histo = {self.sub_mode}')
+            if self.sub_mode == SubModes.NOMODE:
+                # Histogram
+                self.start_histo_graph()
+            elif self.sub_mode == SubModes.HISTO_SPACE:
+                self.start_histo_space_analysis()
+            elif self.sub_mode == SubModes.HISTO_TIME:
+                print('Histo Time 2')
+                pass
         elif self.mode == Modes.PREPROC:
             pass
         elif self.mode == Modes.FILTER:
@@ -365,8 +383,6 @@ class MainWindow(QMainWindow):
         if self.mode == Modes.SETTINGS or self.mode == Modes.AOI:
             if event == 'camera_settings_changed':
                 self.main_menu_widget.update_parameters()
-            else:
-                self.bot_center_widget.update_parameters()
 
     def action_brand_selected(self, event):
         type_event = event.split(':')[0]
@@ -433,7 +449,7 @@ class MainWindow(QMainWindow):
                         # Vertical edges
                         image[y:y + h, x+i] = 255
                         image[y:y + h, x-i + w - 1] = 255
-                if self.aoi_selected:
+                if self.mode == Modes.HISTO:
                     # Display AOI instead of whole image
                     x, y = self.aoi[0], self.aoi[1]
                     h, w = self.aoi[2], self.aoi[3]
@@ -449,31 +465,33 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f'Exception - update_image {e}')
 
-    def process_data(self, image_array):
-        """Process data to display in histogram graph."""
-        '''
+    def process_data(self, image_array: np.ndarray):
+        """Process data to display in the different sections of the GUI.
+        :param image_array: Image data to process.
+        """
         x, y = self.aoi[0], self.aoi[1]
         h, w = self.aoi[2], self.aoi[3]
+
         if self.mode == Modes.SETTINGS:
             self.main_menu_widget.update_parameters()
-        if self.histo_graph_started:
-            if self.mode == Modes.HISTO:
+            self.display_histo_graph(image_array)
+        elif self.mode == Modes.AOI:
+            self.aoi[0], self.aoi[1] = self.bot_left_widget.get_position()
+            self.aoi[2], self.aoi[3] = self.bot_left_widget.get_size()
+            self.display_histo_graph(image_array)
+            image_aoi = image_array[x:x + w, y:y + h]
+            self.display_histo_aoi_graph(image_aoi)
+        elif self.mode == Modes.HISTO:
+            if self.sub_mode == SubModes.NOMODE:
+                image_aoi = image_array[x:x + w, y:y + h]
+                self.display_histo_graph(image_aoi)
+            elif self.sub_mode == SubModes.HISTO_SPACE:
                 if self.snap_required:
                     self.saved_image = image_array[x:x + w, y:y + h].copy()
-                    self.top_right_widget.set_image(self.saved_image, fast_mode=False)
-                    self.top_right_widget.update_info()
+                    self.display_histo_graph(self.saved_image)
                     self.snap_required = False
             else:
-                self.top_right_widget.set_image(image_array, fast_mode=True)
-                self.top_right_widget.update_info()
-        if self.aoi_selection_started:
-            self.aoi[0], self.aoi[1] = self.submenu_widget.get_position()
-            self.aoi[2], self.aoi[3] = self.submenu_widget.get_size()
-        if self.histo_graph_aoi_started:
-            image_aoi = image_array[x:x+w, y:y+h]
-            self.bot_right_widget.set_image(image_aoi, fast_mode=False)
-            self.bot_right_widget.update_info()
-        '''
+                pass
 
     def process8bits_data(self, image_array):
         """Process data in 8 bits depth."""
@@ -485,39 +503,49 @@ class MainWindow(QMainWindow):
             self.top_right_widget.set_image_from_array(image_aoi_filtered)
 
     def start_histo_graph(self):
+        """
+        Set up for histogram displaying in the TOP RIGHT section.
+        """
         self.clear_layout(1, 2)
         self.top_right_widget = ImageHistogramWidget('Image histogram')
         self.top_right_widget.set_background('white')
         self.top_right_widget.set_bit_depth(self.bits_depth)
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
-        self.histo_graph_started = True
+
+    def display_histo_graph(self, image_array: np.ndarray):
+        """
+        Display the histogram of the image in the TOP RIGHT section.
+        :param image_array: Image data to display.
+        """
+        self.top_right_widget.set_image(image_array, fast_mode=True)
+        self.top_right_widget.update_info()
 
     def start_histo_aoi_graph(self):
-        # Still issues !
+        """
+        Set up for histogram displaying in the TOP RIGHT section.
+        """
         self.clear_layout(2, 2)
         self.bot_right_widget = ImageHistogramWidget('Image histogram / AOI')
         self.bot_right_widget.set_background('lightgray')
         self.bot_right_widget.set_bit_depth(self.bits_depth)
         self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        self.histo_graph_aoi_started = True
 
-    def start_aoi_selection(self, editable: bool = True):
-        self.clear_layout(2, 1)
-        self.submenu_widget = AoiSelectionWidget(self, editable)
-        self.submenu_widget.set_aoi(self.aoi)
-        self.main_layout.addWidget(self.submenu_widget, 2, 1)
-        self.aoi_selection_started = True
+    def display_histo_aoi_graph(self, image_array: np.ndarray):
+        """
+        Display the histogram of the image in the BOT RIGHT section.
+        :param image_array: Image data to display.
+        """
+        self.bot_right_widget.set_image(image_array, fast_mode=True)
+        self.bot_right_widget.update_info()
 
-    def start_histo_analysis(self):
+    def start_histo_space_analysis(self):
         """Start a histogram analysis of the sensor."""
-        self.clear_layout(2, 2)
-        self.bot_right_widget = HistoAnalysisWidget(self)
-        self.bot_right_widget.snap_clicked.connect(self.histo_action)
-        self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        self.start_histo_graph()
-        self.start_aoi_selection(editable=False)
+        print("HISTO Start Space")
+        self.bot_center_widget = HistoAnalysisWidget(self)
+        self.bot_center_widget.snap_clicked.connect(self.histo_space_action)
+        self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
 
-    def histo_action(self, event):
+    def histo_space_action(self, event):
         """Action performed when a button in the histogram analysis is clicked."""
         if event == 'snap':
             self.snap_required = True
@@ -528,7 +556,6 @@ class MainWindow(QMainWindow):
         self.submenu_widget = FilterChoiceWidget(self)
         self.submenu_widget.filter_clicked.connect(self.open_filter_options)
         self.main_layout.addWidget(self.submenu_widget, 2, 1)
-        self.aoi_selected = True
         self.top_right_widget = ImageViewerWidget()
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
 
@@ -537,7 +564,6 @@ class MainWindow(QMainWindow):
         self.submenu_widget = ContrastWidget(self)
         self.submenu_widget.filter_clicked.connect(self.open_filter_options)
         self.main_layout.addWidget(self.submenu_widget, 2, 1)
-        self.aoi_selected = True
         self.top_right_widget = ImageViewerWidget()
         self.main_layout.addWidget(self.top_right_widget, 1, 2)
 

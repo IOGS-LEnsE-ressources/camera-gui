@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton,
     QMessageBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 
 if __name__ == '__main__':
     from slider_bloc import SliderBloc
@@ -29,10 +29,12 @@ else:
 
 from lensepy import load_dictionary, translate
 from lensepy.css import *
-from lensecam.ids.camera_ids import CameraIds
 
 
 class HistoSubMenuWidget(QWidget):
+    """
+
+    """
 
     histo_submenu_changed = pyqtSignal(str)
 
@@ -67,14 +69,19 @@ class HistoSubMenuWidget(QWidget):
         self.button_time_analysis.setStyleSheet(unactived_button)
 
     def histo_menu_action(self):
-        self.unactive_buttons()
-        sender = self.sender()
-        if sender == self.button_space_analysis:
-            sender.setStyleSheet(actived_button)
-            self.histo_submenu_changed.emit('histo_space')
-        elif sender == self.button_time_analysis:
-            sender.setStyleSheet(actived_button)
-            self.histo_submenu_changed.emit('histo_time')
+        try:
+            self.unactive_buttons()
+            sender = self.sender()
+            if sender == self.button_space_analysis:
+                print('Sender OK - Space')
+                sender.setStyleSheet(actived_button)
+                self.histo_submenu_changed.emit('histo_space')
+            elif sender == self.button_time_analysis:
+                print('Sender OK - Time')
+                sender.setStyleSheet(actived_button)
+                #self.histo_submenu_changed.emit('histo_time')
+        except Exception as e:
+            print(e)
 
 # %% Widget
 class HistoAnalysisWidget(QWidget):
