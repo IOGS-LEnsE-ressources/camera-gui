@@ -3,8 +3,9 @@
 
 *cmos_lab_app* file that contains :class::CmosLabApp
 
-This file is attached to a 2nd year of engineer training labwork in photonics.
-Subject : http://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-Detection.EN.pdf
+This file is attached to engineer training labworks in photonics.
+- 1st year subject :
+- 2nd year subject : http://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-Detection.EN.pdf
 
 More about the development of this interface :
 https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
@@ -13,8 +14,7 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 
-see : https://www.youtube.com/watch?v=7FP7ndMEfsc&list=PL2zRqk16wsdorCSZ5GWZQr1EMWXs2TDeu&index=5
-
+Creation : sept/2023
 """
 
 from lensepy import load_dictionary, translate, dictionary
@@ -41,6 +41,7 @@ from gui.title_widget import TitleWidget
 from gui.camera_params_view_widget import CameraParamsViewWidget
 from gui.aoi_selection_widget import AoiSelectionWidget
 from gui.histo_analysis_widget import HistoAnalysisWidget, HistoSubMenuWidget, TimeAnalysisWidget
+from gui.preprocessing_widget import PreprocSubMenuWidget
 
 from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.camera_thread import CameraThread
@@ -264,6 +265,7 @@ class MainWindow(QMainWindow):
         try:
             self.clear_layout(1, 2)
             self.clear_layout(2, 2)
+            self.time_acquisition_started = False
             if event == 'camera_settings':
                 print('>Menu / Camera Settings')
                 if self.camera is None:
@@ -300,21 +302,40 @@ class MainWindow(QMainWindow):
                 self.mode = Modes.NOMODE
                 self.option_params_view_widget = CameraParamsViewWidget(self)
                 self.main_layout.addWidget(self.option_params_view_widget, 1, 2, 2, 1)
+            else:
+                pass
             self.sub_menu_display()
             self.options_display()
         except Exception as e:
             print(f'Exception - menu_action {e}')
 
-
     def submenu_changed_action(self, event):
         if self.mode == Modes.HISTO:
+            self.time_acquisition_started = False
+            self.sub_mode = SubModes.NOMODE
             self.clear_sublayout(0, 1)
             if event == 'histo_space':
                 self.sub_mode = SubModes.HISTO_SPACE
+                self.clear_layout(1,2)
                 self.start_histo_space_analysis()
             elif event == 'histo_time':
                 self.sub_mode = SubModes.HISTO_TIME
+                self.clear_layout(1,2)
                 self.start_histo_time_analysis()
+        if self.mode == Modes.PREPROC:
+            self.sub_mode = SubModes.NOMODE
+            self.clear_sublayout(0, 1)
+            if event == 'preproc_contrast':
+                print('preproc Contrast')
+            elif event == 'preproc_enhance':
+                print('preproc Enhance')
+            elif event == 'preproc_erosion':
+                print('preproc Erosion')
+            elif event == 'preproc_opening':
+                print('preproc Opening')
+            elif event == 'preproc_gradient':
+                print('preproc Gradient')
+
             
     def sub_menu_display(self, sub: bool = True):
         if sub:
@@ -334,6 +355,9 @@ class MainWindow(QMainWindow):
             self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
             self.bot_left_widget.histo_submenu_changed.connect(self.submenu_changed_action)
         elif self.mode == Modes.PREPROC:
+            self.bot_left_widget = PreprocSubMenuWidget()
+            self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
+            self.bot_left_widget.preproc_submenu_changed.connect(self.submenu_changed_action)
             pass
         elif self.mode == Modes.FILTER:
             pass
@@ -366,7 +390,7 @@ class MainWindow(QMainWindow):
             elif self.sub_mode == SubModes.HISTO_SPACE:
                 self.start_histo_space_analysis()
             elif self.sub_mode == SubModes.HISTO_TIME:
-                pass
+                self.start_histo_time_analysis()
         elif self.mode == Modes.PREPROC:
             pass
         elif self.mode == Modes.FILTER:
@@ -435,20 +459,20 @@ class MainWindow(QMainWindow):
                     coeff = int(self.bits_depth-8)
                     image = image >> coeff
                     image = image.astype(np.uint8)
-                self.process8bits_data(image)
+                #self.process8bits_data(image)
                 if self.mode == Modes.AOI:
                     # Display the AOI on the image
                     x, y = self.bot_left_widget.get_position()
                     w, h = self.bot_left_widget.get_size()
 
-                    for i in range(5):
+                    for i in range(10):
                         # Horizontal edges
                         image[y+i, x:x + w] = 255
                         image[y-i + h - 1, x:x + w] = 255
                         # Vertical edges
                         image[y:y + h, x+i] = 255
                         image[y:y + h, x-i + w - 1] = 255
-                if self.mode == Modes.HISTO:
+                if self.mode != Modes.AOI and self.mode != Modes.SETTINGS and self.mode != Modes.NOMODE:
                     # Display AOI instead of whole image
                     x, y = self.aoi[0], self.aoi[1]
                     h, w = self.aoi[2], self.aoi[3]
@@ -511,6 +535,8 @@ class MainWindow(QMainWindow):
                         self.display_histo_time(self.time_histo_pixel+1)
                         # Enable saving histograms
                         self.bot_center_widget.set_enabled_save()
+        elif self.mode == Modes.PREPROC:
+            pass
 
 
     def process8bits_data(self, image_array):
@@ -561,6 +587,10 @@ class MainWindow(QMainWindow):
 
     def start_histo_space_analysis(self):
         """Start a histogram analysis of the sensor."""
+        self.top_right_widget = ImageHistogramWidget('Image histogram')
+        self.top_right_widget.set_background('white')
+        self.top_right_widget.set_bit_depth(self.bits_depth)
+        self.main_layout.addWidget(self.top_right_widget, 1, 2)
         self.bot_center_widget = HistoAnalysisWidget(self)
         self.bot_center_widget.snap_clicked.connect(self.histo_space_action)
         self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
@@ -643,10 +673,11 @@ class MainWindow(QMainWindow):
         Display the histogram of the image in the TOP RIGHT section for a specific pixel.
         :param pixel_index: Index of the pixel (from 1 to 4)
         """
+        self.clear_layout(0,1)
         # Display histo of the 4 pixels
-        histo_pixels = HistogramWidget(f'Time Analysis / 4 pixels / '
+        self.top_right_widget = HistogramWidget(f'Time Analysis / 4 pixels / '
                                        f'Pixel {pixel_index}')
-        histo_pixels.set_background('white')
+        self.top_right_widget.set_background('white')
 
         # Calculate histogram
         mean_pixel1 = int(np.mean(self.pixels_value[pixel_index-1]))
@@ -656,10 +687,10 @@ class MainWindow(QMainWindow):
         # Create bins
         bins = np.linspace(mean_pixel1 - 8 * std_pixel1, mean_pixel1 + 8 * std_pixel1,
                            16 * std_pixel1 + 1)
-        histo_pixels.set_data(self.pixels_value[pixel_index-1], bins)
-        histo_pixels.refresh_chart()
-        histo_pixels.update_info()
-        self.main_layout.addWidget(histo_pixels, 1, 2)
+        self.top_right_widget.set_data(self.pixels_value[pixel_index-1], bins)
+        self.top_right_widget.refresh_chart()
+        self.top_right_widget.update_info()
+        self.main_layout.addWidget(self.top_right_widget, 1, 2)
 
 
     def rand_pixels(self):
