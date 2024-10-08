@@ -308,11 +308,11 @@ class MainWindow(QMainWindow):
             self.clear_sublayout(0, 1)
             if event == 'histo_space':
                 self.sub_mode = SubModes.HISTO_SPACE
-                print('Histo Space')
+                self.start_histo_space_analysis()
             elif event == 'histo_time':
                 self.sub_mode = SubModes.HISTO_TIME
-                print('Histo Time')
-        self.sub_menu_display(sub=False)
+                self.bot_center_widget = QWidget()
+                self.bot_center_widget.setStyleSheet('background-color:blue;')
             
     def sub_menu_display(self, sub: bool = True):
         if sub:
@@ -358,15 +358,12 @@ class MainWindow(QMainWindow):
             self.start_histo_graph()
             self.start_histo_aoi_graph()
         elif self.mode == Modes.HISTO:
-            print('Histo OK')
-            print(f'Sub mode Histo = {self.sub_mode}')
             if self.sub_mode == SubModes.NOMODE:
                 # Histogram
                 self.start_histo_graph()
             elif self.sub_mode == SubModes.HISTO_SPACE:
                 self.start_histo_space_analysis()
             elif self.sub_mode == SubModes.HISTO_TIME:
-                print('Histo Time 2')
                 pass
         elif self.mode == Modes.PREPROC:
             pass
@@ -540,7 +537,6 @@ class MainWindow(QMainWindow):
 
     def start_histo_space_analysis(self):
         """Start a histogram analysis of the sensor."""
-        print("HISTO Start Space")
         self.bot_center_widget = HistoAnalysisWidget(self)
         self.bot_center_widget.snap_clicked.connect(self.histo_space_action)
         self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
@@ -549,6 +545,15 @@ class MainWindow(QMainWindow):
         """Action performed when a button in the histogram analysis is clicked."""
         if event == 'snap':
             self.snap_required = True
+        elif event == 'save_hist':
+            # Save histogram in a CSV file
+            pass
+        elif event == 'save_raw':
+            # Save image in a ??
+            pass
+        elif event == 'save_png':
+            # Save the histogram as a PNG image
+            pass
 
 
     def start_filter_analysis(self):

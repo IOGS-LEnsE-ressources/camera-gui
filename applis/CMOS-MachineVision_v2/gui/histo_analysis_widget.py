@@ -69,19 +69,15 @@ class HistoSubMenuWidget(QWidget):
         self.button_time_analysis.setStyleSheet(unactived_button)
 
     def histo_menu_action(self):
-        try:
-            self.unactive_buttons()
-            sender = self.sender()
-            if sender == self.button_space_analysis:
-                print('Sender OK - Space')
-                sender.setStyleSheet(actived_button)
-                self.histo_submenu_changed.emit('histo_space')
-            elif sender == self.button_time_analysis:
-                print('Sender OK - Time')
-                sender.setStyleSheet(actived_button)
-                #self.histo_submenu_changed.emit('histo_time')
-        except Exception as e:
-            print(e)
+        """Action performed when a button is clicked."""
+        self.unactive_buttons()
+        sender = self.sender()
+        if sender == self.button_space_analysis:
+            sender.setStyleSheet(actived_button)
+            self.histo_submenu_changed.emit('histo_space')
+        elif sender == self.button_time_analysis:
+            sender.setStyleSheet(actived_button)
+            self.histo_submenu_changed.emit('histo_time')
 
 # %% Widget
 class HistoAnalysisWidget(QWidget):
