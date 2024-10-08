@@ -211,7 +211,7 @@ class TimeAnalysisWidget(QWidget):
         elif sender == self.save_histo_button:
             self.start_acq_clicked.emit('save_hist')
         elif sender == self.pixel_select:
-            print(self.pixel_select.currentText())
+            self.start_acq_clicked.emit('time_hist')
 
     def get_nb_of_points(self):
         return self.nb_of_points
@@ -234,9 +234,16 @@ class TimeAnalysisWidget(QWidget):
             # Save histo is possible
             self.save_histo_button.setStyleSheet(unactived_button)
             self.save_histo_button.setEnabled(True)
+            self.pixel_select.setEnabled(True)
+            self.pixel_select.setCurrentIndex(0)
         else:
             self.save_histo_button.setStyleSheet(disabled_button)
             self.save_histo_button.setEnabled(False)
+            self.pixel_select.setEnabled(False)
+
+    def get_pixel_index(self):
+        """Return the selected pixel index."""
+        return self.pixel_select.currentIndex()
 
 
 # %% Example
