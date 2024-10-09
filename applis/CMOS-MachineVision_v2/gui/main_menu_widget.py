@@ -82,7 +82,7 @@ class MainMenuWidget(QWidget):
         self.button_options_main_menu = QPushButton(translate("button_options_main_menu"))
         self.button_options_main_menu.setStyleSheet(unactived_button)
         self.button_options_main_menu.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        #self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
+        self.button_options_main_menu.clicked.connect(self.button_options_main_menu_isClicked)
 
         self.camera_params = MiniParamsWidget(parent=self)
         self.camera_params.settings_changed.connect(self.update_parameters)

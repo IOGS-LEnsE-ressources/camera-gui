@@ -47,9 +47,10 @@ title_histo_analysis; Histogrammes
 button_space_analysis; Analyse 2D
 button_time_analysis; Analyse temporelle
 button_acquire_histo; Acquisition Histogramme
-button_save_png_image_spatial; Sauvegarde PNG
+button_save_png_image_spatial; Sauvegarder PNG
 button_start_time; Démarrer Analyse
-button_save_histo_spatial; Sauvegarde PNG
+button_save_histo_spatial; Sauvegarder PNG
+label_pixel_select; Pixel à afficher
 # --------------
 # PreprocessingWidget
 # --------------

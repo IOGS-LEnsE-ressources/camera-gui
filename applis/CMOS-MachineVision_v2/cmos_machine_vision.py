@@ -38,7 +38,7 @@ from gui.camera_choice_widget import CameraChoice
 from gui.main_menu_widget import MainMenuWidget
 from gui.title_widget import TitleWidget
 
-from gui.camera_params_view_widget import CameraParamsViewWidget
+from gui.camera_params_view_widget import CameraParamsViewWidget, CameraParamsInfosWidget
 from gui.aoi_selection_widget import AoiSelectionWidget
 from gui.histo_analysis_widget import HistoAnalysisWidget, HistoSubMenuWidget, TimeAnalysisWidget
 from gui.preprocessing_widget import PreprocSubMenuWidget
@@ -76,6 +76,7 @@ class Modes(Enum):
     EDGE = 5
     SEGMENT = 6
     FILTER = 7
+    OPTIONS = 8
 
 class SubModes(Enum):
     NOMODE = 0
@@ -176,7 +177,6 @@ class MainWindow(QMainWindow):
 
         # Init default parameters
         self.init_default_parameters()
-        print(f"CMOS Machine Vision App {translate('version')}")
 
         # Events
         self.main_menu_widget.menu_clicked.connect(self.menu_action)
@@ -316,9 +316,9 @@ class MainWindow(QMainWindow):
 
             elif event == 'options':
                 print('>Menu / Options')
-                self.mode = Modes.NOMODE
-                self.option_params_view_widget = CameraParamsViewWidget(self)
-                self.main_layout.addWidget(self.option_params_view_widget, 1, 2, 2, 1)
+                self.mode = Modes.OPTIONS
+                self.bot_left_widget = CameraParamsViewWidget(self)
+                self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
             else:
                 pass
             self.sub_menu_display()
@@ -387,6 +387,9 @@ class MainWindow(QMainWindow):
             pass
         elif self.mode == Modes.SEGMENT:
             pass
+        elif self.mode == Modes.OPTIONS:
+            self.bot_left_widget = CameraParamsViewWidget(self)
+            self.submenu_layout.addWidget(self.bot_left_widget, 0, 0)
         else:
             pass
 
@@ -421,6 +424,9 @@ class MainWindow(QMainWindow):
             pass
         elif self.mode == Modes.SEGMENT:
             pass
+        elif self.mode == Modes.OPTIONS:
+            self.bot_center_widget = CameraParamsInfosWidget(self)
+            self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
         else:
             pass
 
@@ -494,7 +500,8 @@ class MainWindow(QMainWindow):
                         # Vertical edges
                         image[y:y + h, x+i] = 255
                         image[y:y + h, x-i + w - 1] = 255
-                if self.mode != Modes.AOI and self.mode != Modes.SETTINGS and self.mode != Modes.NOMODE:
+                if (self.mode != Modes.AOI and self.mode != Modes.SETTINGS and self.mode != Modes.NOMODE
+                    and self.mode != Modes.OPTIONS):
                     # Display AOI instead of whole image
                     x, y = self.aoi[0], self.aoi[1]
                     h, w = self.aoi[2], self.aoi[3]
@@ -506,7 +513,8 @@ class MainWindow(QMainWindow):
                 # Convert the frame into an image
                 qimage = array_to_qimage(image_resized)
 
-                if self.mode != Modes.SETTINGS and self.mode != Modes.NOMODE and self.mode != Modes.AOI:
+                if (self.mode != Modes.SETTINGS and self.mode != Modes.NOMODE and self.mode != Modes.AOI
+                        and self.mode != Modes.OPTIONS):
                     painter = QPainter(qimage)
                     painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
                     painter.setFont(QFont("Arial", 15))  # Police et taille
