@@ -18,19 +18,9 @@ from PyQt6.QtCore import Qt
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
-# %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
-
 # %% Widget
 class TitleWidget(QWidget):
-    def __init__(self, dictionary_in=None):
+    def __init__(self):
         super().__init__(parent=None)
         self.layout = QGridLayout()
 
@@ -64,12 +54,11 @@ if __name__ == '__main__':
         def __init__(self):
             super().__init__()
 
-            # Translation
-            dictionary = {}
             # Load French dictionary
             #dictionary = load_dictionary('../lang/dict_FR.txt')
             # Load English dictionary
-            dictionary = load_dictionary('../lang/dict_EN.txt')
+            load_dictionary('../lang/dict_EN.txt')
+            print(translate('version'))
 
             self.setWindowTitle(translate("window_title_main_menu_widget"))
             self.setGeometry(300, 300, 800, 200)

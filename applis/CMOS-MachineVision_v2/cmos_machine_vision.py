@@ -81,6 +81,11 @@ class SubModes(Enum):
     NOMODE = 0
     HISTO_TIME = 1
     HISTO_SPACE = 2
+    PREPROC_CONTRAST = 3
+    PREPROC_EROSION = 4
+    PREPROC_OPENING = 5
+    PREPROC_GRADIENT = 6
+    PREPROC_ENHANCE = 7
 
 
 class MainWindow(QMainWindow):
@@ -126,9 +131,13 @@ class MainWindow(QMainWindow):
         # Main Widget
         self.main_widget = QWidget()
 
+        # Load dictionary
+        self.load_default_dictionary()
+        print(f"CMOS Machine Vision App {translate('version')}")
+
         # Main Layout
         self.main_layout = QGridLayout()
-        self.title_widget = TitleWidget(dictionary)
+        self.title_widget = TitleWidget()
         self.main_menu_widget = MainMenuWidget(self)
         self.camera_widget = QWidget()
         self.camera_widget.setStyleSheet("background-color: lightblue;")
@@ -166,8 +175,8 @@ class MainWindow(QMainWindow):
         self.option_params_view_widget = CameraParamsViewWidget(self)
 
         # Init default parameters
-        print(f"CMOS Machine Vision App {dictionary['version']}")
         self.init_default_parameters()
+        print(f"CMOS Machine Vision App {translate('version')}")
 
         # Events
         self.main_menu_widget.menu_clicked.connect(self.menu_action)
@@ -216,14 +225,22 @@ class MainWindow(QMainWindow):
             print('File error')
             return {}
 
-    def init_default_parameters(self) -> bool:
-        """Initialize default parameters from default_config.txt file"""
+    def load_default_dictionary(self) -> bool:
+        """Initialize default dictionary from default_config.txt file"""
         file_path = './default_config.txt'
         if os.path.exists(file_path):
             self.default_parameters = self.load_file(file_path)
             if 'language' in self.default_parameters:
                 file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
-                dict = load_dictionary(file_name_dict)
+                load_dictionary(file_name_dict)
+                print(translate('version'))
+
+
+    def init_default_parameters(self):
+        """Initialize default parameters from default_config.txt file"""
+        file_path = './default_config.txt'
+        if os.path.exists(file_path):
+            self.default_parameters = self.load_file(file_path)
             if 'brandname' in self.default_parameters:
                 self.brand = self.default_parameters["brandname"]
                 self.camera = cam_from_brands[self.brand]()
@@ -326,14 +343,19 @@ class MainWindow(QMainWindow):
             self.sub_mode = SubModes.NOMODE
             self.clear_sublayout(0, 1)
             if event == 'preproc_contrast':
+                self.sub_mode = SubModes.PREPROC_CONTRAST
                 print('preproc Contrast')
             elif event == 'preproc_enhance':
+                self.sub_mode = SubModes.PREPROC_ENHANCE
                 print('preproc Enhance')
             elif event == 'preproc_erosion':
+                self.sub_mode = SubModes.PREPROC_EROSION
                 print('preproc Erosion')
             elif event == 'preproc_opening':
+                self.sub_mode = SubModes.PREPROC_OPENING
                 print('preproc Opening')
             elif event == 'preproc_gradient':
+                self.sub_mode = SubModes.PREPROC_GRADIENT
                 print('preproc Gradient')
 
             
