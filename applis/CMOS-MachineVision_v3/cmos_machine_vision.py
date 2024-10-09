@@ -56,6 +56,50 @@ from gui.filter_options_widget import (
 
 from enum import Enum
 
+
+def load_file(file_path: str) -> dict:
+    """
+    Load parameter from a CSV file.
+
+    Parameters
+    ----------
+    file_path : str
+        The file path to specify which CSV file to load.
+
+    Returns
+    -------
+    dict containing 'key_1': 'language_word_1'
+
+    Notes
+    -----
+    This function reads a CSV file that contains key-value pairs separated by semicolons (';')
+    and stores them in a global dictionary variable. The CSV file may contain comments
+    prefixed by '#', which will be ignored.
+
+    The file should have the following format:
+        # comment
+        # comment
+        key_1 ; language_word_1
+        key_2 ; language_word_2
+
+    The function will strip any leading or trailing whitespace from the keys and values.
+
+    See Also
+    --------
+    numpy.genfromtxt : Load data from a text file, with missing values handled as specified.
+    """
+    dictionary_loaded = {}
+    if os.path.exists(file_path):
+        # Read the CSV file, ignoring lines starting with '//'
+        data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
+        # Populate the dictionary with key-value pairs from the CSV file
+        for key, value in data:
+            dictionary_loaded[key.strip()] = value.strip()
+        return dictionary_loaded
+    else:
+        print('File error')
+        return {}
+
 cam_widget_brands = {
     'Basler': CameraBaslerWidget,
     'IDS': CameraIdsWidget,
@@ -88,6 +132,8 @@ class SubModes(Enum):
     PREPROC_GRADIENT = 6
     PREPROC_ENHANCE = 7
 
+TOP_LEFT_ROW = 0
+TOP_LEFT_COL = 0
 
 class MainWindow(QMainWindow):
     """
@@ -109,6 +155,7 @@ class MainWindow(QMainWindow):
         self.camera_thread.image_acquired.connect(self.thread_update_image)
         self.bits_depth = 0
         self.brand = None
+        self.lang = 'FR'
         # Parameters
         self.default_parameters = {}
         self.mode = Modes.NOMODE
@@ -182,64 +229,21 @@ class MainWindow(QMainWindow):
         self.main_menu_widget.menu_clicked.connect(self.menu_action)
         self.main_menu_widget.settings_changed.connect(self.update_infos)
 
-    def load_file(self, file_path: str) -> dict:
-        """
-        Load parameter from a CSV file.
-
-        Parameters
-        ----------
-        file_path : str
-            The file path to specify which CSV file to load.
-
-        Returns
-        -------
-        dict containing 'key_1': 'language_word_1'
-
-        Notes
-        -----
-        This function reads a CSV file that contains key-value pairs separated by semicolons (';')
-        and stores them in a global dictionary variable. The CSV file may contain comments
-        prefixed by '#', which will be ignored.
-
-        The file should have the following format:
-            # comment
-            # comment
-            key_1 ; language_word_1
-            key_2 ; language_word_2
-
-        The function will strip any leading or trailing whitespace from the keys and values.
-
-        See Also
-        --------
-        numpy.genfromtxt : Load data from a text file, with missing values handled as specified.
-        """
-        dictionary_loaded = {}
-        if os.path.exists(file_path):
-            # Read the CSV file, ignoring lines starting with '//'
-            data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
-            # Populate the dictionary with key-value pairs from the CSV file
-            for key, value in data:
-                dictionary_loaded[key.strip()] = value.strip()
-            return dictionary_loaded
-        else:
-            print('File error')
-            return {}
-
     def load_default_dictionary(self) -> bool:
         """Initialize default dictionary from default_config.txt file"""
         file_path = './default_config.txt'
         if os.path.exists(file_path):
-            self.default_parameters = self.load_file(file_path)
-            if 'language' in self.default_parameters:
-                file_name_dict = './lang/dict_' + str(self.default_parameters['language']) + '.txt'
+            language = load_file(file_path)
+            if 'language' in language:
+                self.lang = str(language['language'])
+                file_name_dict = f'./lang/dict_{self.lang}.txt'
                 load_dictionary(file_name_dict)
-                print(translate('version'))
 
     def init_default_parameters(self):
         """Initialize default parameters from default_config.txt file"""
         file_path = './default_config.txt'
         if os.path.exists(file_path):
-            self.default_parameters = self.load_file(file_path)
+            self.default_parameters = load_file(file_path)
             if 'brandname' in self.default_parameters:
                 self.brand = self.default_parameters["brandname"]
                 self.camera = cam_from_brands[self.brand]()
@@ -485,7 +489,7 @@ class MainWindow(QMainWindow):
                 else:
                     image = image_array.view(np.uint8)
                 image = image.squeeze()
-                self.process_data(image)
+                #self.process_data(image)
                 frame_width = self.camera_widget.width()
                 frame_height = self.camera_widget.height()
                 if self.bits_depth > 8:
@@ -531,298 +535,6 @@ class MainWindow(QMainWindow):
                 self.camera_widget.camera_display.setPixmap(pmap)
         except Exception as e:
             print(f'Exception - update_image {e}')
-
-    def process_data(self, image_array: np.ndarray):
-        """Process data to display in the different sections of the GUI.
-        :param image_array: Image data to process.
-        """
-        x, y = self.aoi[0], self.aoi[1]
-        h, w = self.aoi[2], self.aoi[3]
-
-        if self.mode == Modes.SETTINGS:
-            self.main_menu_widget.update_parameters()
-            self.display_histo_graph(image_array)
-        elif self.mode == Modes.AOI:
-            self.aoi[0], self.aoi[1] = self.bot_left_widget.get_position()
-            self.aoi[2], self.aoi[3] = self.bot_left_widget.get_size()
-            self.display_histo_graph(image_array)
-            image_aoi = image_array[x:x + w, y:y + h]
-            self.display_histo_aoi_graph(image_aoi)
-        elif self.mode == Modes.HISTO:
-            if self.sub_mode == SubModes.NOMODE:
-                image_aoi = image_array[x:x + w, y:y + h]
-                self.display_histo_graph(image_aoi)
-            elif self.sub_mode == SubModes.HISTO_SPACE:
-                if self.snap_required:
-                    self.saved_image = image_array[x:x + w, y:y + h].copy()
-                    self.display_histo_graph(self.saved_image, fast_mode=False)
-                    self.snap_required = False
-            elif self.sub_mode == SubModes.HISTO_TIME:
-                if self.time_acquisition_started:
-                    if self.time_acquisition_cpt < self.time_acquisition_nb:
-                        self.time_acquisition_cpt += 1
-                        self.bot_center_widget.waiting_value(self.time_acquisition_cpt)
-                        # Adding data from pixels
-                        for i in range(4):
-                            self.pixels_value[i].append(image_array[self.image_x[i], self.image_y[i]])
-                    else:
-                        self.time_acquisition_started = False
-                        self.display_histo_time(self.time_histo_pixel+1)
-                        # Enable saving histograms
-                        self.bot_center_widget.set_enabled_save()
-        elif self.mode == Modes.PREPROC:
-            pass
-
-
-    def process8bits_data(self, image_array):
-        """Process data in 8 bits depth."""
-        x, y = self.aoi[0], self.aoi[1]
-        h, w = self.aoi[2], self.aoi[3]
-        if self.mode is Modes.FILTER or self.mode is Modes.PREPROC:
-            image_aoi = image_array[y:y + w, x: x + h]
-            image_aoi_filtered = self.process_filter(image_aoi)
-            self.top_right_widget.set_image_from_array(image_aoi_filtered)
-
-    def start_histo_graph(self):
-        """
-        Set up for histogram displaying in the TOP RIGHT section.
-        """
-        self.clear_layout(1, 2)
-        self.top_right_widget = ImageHistogramWidget('Image histogram')
-        self.top_right_widget.set_background('white')
-        self.top_right_widget.set_bit_depth(self.bits_depth)
-        self.main_layout.addWidget(self.top_right_widget, 1, 2)
-
-    def display_histo_graph(self, image_array: np.ndarray, fast_mode: bool=True):
-        """
-        Display the histogram of the image in the TOP RIGHT section.
-        :param fast_mode: To display a histogram with a picture size reduced by 4x4.
-        :param image_array: Image data to display.
-        """
-        self.top_right_widget.set_image(image_array, fast_mode=fast_mode)
-        self.top_right_widget.update_info()
-
-    def start_histo_aoi_graph(self):
-        """
-        Set up for histogram displaying in the TOP RIGHT section.
-        """
-        self.clear_layout(2, 2)
-        self.bot_right_widget = ImageHistogramWidget('Image histogram / AOI')
-        self.bot_right_widget.set_background('lightgray')
-        self.bot_right_widget.set_bit_depth(self.bits_depth)
-        self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-
-    def display_histo_aoi_graph(self, image_array: np.ndarray):
-        """
-        Display the histogram of the image in the BOT RIGHT section.
-        :param image_array: Image data to display.
-        """
-        self.bot_right_widget.set_image(image_array, fast_mode=True)
-        self.bot_right_widget.update_info()
-
-    def start_histo_space_analysis(self):
-        """Start a histogram analysis of the sensor."""
-        self.top_right_widget = ImageHistogramWidget('Image histogram')
-        self.top_right_widget.set_background('white')
-        self.top_right_widget.set_bit_depth(self.bits_depth)
-        self.main_layout.addWidget(self.top_right_widget, 1, 2)
-        self.bot_center_widget = HistoAnalysisWidget(self)
-        self.bot_center_widget.snap_clicked.connect(self.histo_space_action)
-        self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
-
-    def histo_space_action(self, event):
-        """Action performed when a button in the histogram analysis is clicked."""
-        if event == 'snap':
-            self.snap_required = True
-        elif event == 'save_png':
-            # Save the histogram as a PNG image
-            # Create bins
-            bins = np.linspace(0, 2 ** self.bits_depth - 1, 2 ** self.bits_depth)
-            expo_time = round(self.camera.get_exposure() / 1000, 1)
-            bins, hist_data = self.process_hist_from_array(self.saved_image, bins)
-            self.save_hist(self.saved_image, hist_data, bins,
-                           f'Image Histogram - Exposure {expo_time} ms',
-                           f'/image_histo_{expo_time}ms.png')
-
-    def process_hist_from_array(self, array, bins):
-        plot_hist, plot_bins_data = np.histogram(array, bins=bins)
-        return plot_bins_data, plot_hist
-
-    def save_hist(self, data: np.ndarray, data_hist: np.ndarray, bins: np.ndarray,
-                  title: str = 'Image Histogram', file_name: str = 'histogram.png'):
-        """
-        Create a PNG from histogram data.
-        :param data: Data to process.
-        :param data_hist: Histogram data from np.histogram function.
-        :param bins: Bins of the histogram.
-        :param title: Title of the figure. Default: Image Histogram.
-        :param file_name: Name of the file to store the PNG image. Default: histogram.png.
-        """
-        expo_time = round(self.camera.get_exposure()/1000, 1)
-        # Create histogram graph
-        mean_data = np.mean(data)
-        x, y = self.aoi[0], self.aoi[1]
-        h, w = self.aoi[2], self.aoi[3]
-        if mean_data > (2 ** self.bits_depth) // 2:
-            x_text_pos = 0.30  # text on the left
-        else:
-            x_text_pos = 0.95  # text on the right
-        plt.figure()
-        plt.bar(bins[:-1], data_hist, width=np.diff(bins),
-                edgecolor='black', alpha=0.75, color='blue')
-        plt.title(title)
-        text_str = f'Mean = {mean_data:.2f}\nStdDev = {np.std(data):.2f}'
-        plt.text(x_text_pos, 0.95, text_str, fontsize=10, verticalalignment='top',
-                 horizontalalignment='right',
-                 transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.5))
-        text_str = (f'Expo = {expo_time} ms\nBlack Level = '
-                    f'{int(self.camera.get_black_level())}\n\n'
-                    f'AOI : X={x}, Y={y}\n W={w}, H={h}')
-        plt.text(x_text_pos, 0.25, text_str, fontsize=8, verticalalignment='top',
-                 horizontalalignment='right',
-                 transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.5))
-
-        # histogram to store in a png file - and a txt file (array) ??
-        default_dir = QDir.homePath()
-        if self.saved_dir is not None:
-            default_dir = self.saved_dir
-        file_path, _ = QFileDialog.getSaveFileName(self, translate('save_histogram_title_window'),
-                                                   default_dir + file_name,
-                                                   "Images PNG (*.png)")
-        if file_path:
-            # create an image of the histogram of the saved_image
-            plt.savefig(file_path)
-            info = QMessageBox.information(self, 'Histogram Saved', f'File saved to {file_path}')
-        else:
-            warn = QMessageBox.warning(self, 'Saving Error', 'No file saved !')
-
-    def start_histo_time_analysis(self):
-        """Start a histogram analysis of the sensor on 4 random pixels."""
-        self.bot_center_widget = TimeAnalysisWidget(self)
-        self.bot_center_widget.start_acq_clicked.connect(self.histo_time_action)
-        self.submenu_layout.addWidget(self.bot_center_widget, 0, 1)
-        self.rand_pixels()
-
-    def display_histo_time(self, pixel_index: int):
-        """
-        Display the histogram of the image in the TOP RIGHT section for a specific pixel.
-        :param pixel_index: Index of the pixel (from 1 to 4)
-        """
-        self.clear_layout(0,1)
-        # Display histo of the 4 pixels
-        self.top_right_widget = HistogramWidget(f'Time Analysis / 4 pixels / '
-                                       f'Pixel {pixel_index}')
-        self.top_right_widget.set_background('white')
-
-        # Calculate histogram
-        mean_pixel1 = int(np.mean(self.pixels_value[pixel_index-1]))
-        std_pixel1 = int(np.std(self.pixels_value[pixel_index-1]))
-        if std_pixel1 == 0:
-            std_pixel1 = 1
-        # Create bins
-        bins = np.linspace(mean_pixel1 - 8 * std_pixel1, mean_pixel1 + 8 * std_pixel1,
-                           16 * std_pixel1 + 1)
-        self.top_right_widget.set_data(self.pixels_value[pixel_index-1], bins)
-        self.top_right_widget.refresh_chart()
-        self.top_right_widget.update_info()
-        self.main_layout.addWidget(self.top_right_widget, 1, 2)
-
-    def rand_pixels(self):
-        """Selection of 4 pixels in the area of interest."""
-        x, y = self.aoi[0], self.aoi[1]
-        h, w = self.aoi[2], self.aoi[3]
-        # Reset old coordinates
-        self.image_x = []
-        self.image_y = []
-        for i in range(4):
-            self.image_x.append(np.random.randint(x, x+h))
-            self.image_y.append(np.random.randint(y, y+h))
-
-    def histo_time_action(self, event):
-        """Action performed when a button in the time analysis is clicked."""
-        if event == 'start':
-            self.time_acquisition_cpt = 0
-            self.time_acquisition_nb = self.bot_center_widget.get_nb_of_points()
-            print(f'Nb of points {self.time_acquisition_nb}')
-            self.pixels_value = [[], [], [], []]
-            self.time_acquisition_started = True
-        elif event == 'save_hist':
-            # Calculate histogram
-            mean_pixel1 = int(np.mean(self.pixels_value[self.time_histo_pixel]))
-            std_pixel1 = int(np.std(self.pixels_value[self.time_histo_pixel]))
-            if std_pixel1 == 0:
-                std_pixel1 = 1
-            # Create bins
-            bins = np.linspace(mean_pixel1 - 8 * std_pixel1, mean_pixel1 + 8 * std_pixel1,
-                               16 * std_pixel1 + 1)
-            expo_time = round(self.camera.get_exposure() / 1000, 1)
-            bins, hist_data = self.process_hist_from_array(self.pixels_value[self.time_histo_pixel], bins)
-            self.save_hist(self.pixels_value[self.time_histo_pixel], hist_data, bins,
-                           f'Time Histogram - Exposure {expo_time} ms - Pixel {self.time_histo_pixel+1}',
-                           f'/image_time_histo_{expo_time}ms_pixel{self.time_histo_pixel+1}.png')
-
-        elif event == 'time_hist':
-            self.time_histo_pixel = self.bot_center_widget.get_pixel_index()
-            self.display_histo_time(self.time_histo_pixel+1)
-
-    def start_filter_analysis(self):
-        self.clear_layout(2, 2)
-        self.submenu_widget = FilterChoiceWidget(self)
-        self.submenu_widget.filter_clicked.connect(self.open_filter_options)
-        self.main_layout.addWidget(self.submenu_widget, 2, 1)
-        self.top_right_widget = ImageViewerWidget()
-        self.main_layout.addWidget(self.top_right_widget, 1, 2)
-
-    def start_preproc_contrast(self):
-        self.clear_layout(2, 2)
-        self.clear_layout(1, 2)
-        '''
-        self.submenu_widget = ContrastWidget(self)
-        self.submenu_widget.filter_clicked.connect(self.open_filter_options)
-        self.main_layout.addWidget(self.submenu_widget, 2, 1)
-        '''
-        self.top_right_widget = ImageViewerWidget()
-        self.main_layout.addWidget(self.top_right_widget, 1, 2)
-
-    def open_filter_options(self):
-        filter_selected = self.submenu_widget.get_selection()
-        self.clear_layout(2, 2)
-        if filter_selected == Filter.THRESHOLD:
-            self.bot_right_widget = ThresholdWidget(self)
-            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        if filter_selected == Filter.PREPROC:
-            self.bot_right_widget = ContrastAdjustWidget(self)
-            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        if filter_selected == Filter.BLUR:
-            self.bot_right_widget = FilterBlurWidget(self)
-            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-        if filter_selected == Filter.EDGE:
-            self.bot_right_widget = FilterEdgeWidget(self)
-            self.main_layout.addWidget(self.bot_right_widget, 2, 2)
-
-
-    def process_filter(self, image: np.ndarray) -> np.ndarray:
-        """Process image in AOI with the selected filter.
-
-        :param image: Array to process
-        :type image: np.ndarray
-
-        :return:    Filtered image
-        :rtype: np.ndarray
-
-        """
-        diff_image = self.submenu_widget.is_diff_checked()
-        noise_image = self.submenu_widget.is_noise_checked()
-        # Read the selected filter and size
-        filter_selected = self.submenu_widget.get_selection()
-        if (filter_selected == Filter.BLUR or filter_selected == Filter.EDGE
-                or filter_selected == Filter.THRESHOLD or filter_selected == Filter.PREPROC):
-            output_image = self.bot_right_widget.get_selection(image, inverted=diff_image)
-        else:
-            output_image = 255-image
-        if output_image is None:
-            output_image = 255 - image
-        return output_image
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
