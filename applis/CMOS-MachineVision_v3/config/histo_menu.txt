@@ -1,0 +1,5 @@
+# Camera Settings Menu
+# Type; Title; Signal;
+B; histo_space; histo_space;
+B; histo_time; histo_time;
+S; ; ;

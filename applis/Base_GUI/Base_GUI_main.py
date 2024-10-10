@@ -1,23 +1,4 @@
 # -*- coding: utf-8 -*-
-"""*cmos_lab_app.py* file.
-
-*cmos_lab_app* file that contains :class::CmosLabApp
-
-This file is attached to engineer training labworks in photonics.
-- 1st year subject :
-- 2nd year subject : http://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-Detection.EN.pdf
-
-More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
-
-.. note:: LEnsE - Institut d'Optique - version 1.0
-
-.. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
-
-Creation : sept/2023
-Modification : oct/2024
-"""
-# -*- coding: utf-8 -*-
 """*base_gui_main.py* file.
 
 *base_gui_main* file that contains :class::BaseGUI, an example of a
@@ -50,7 +31,6 @@ class MainWindow(QMainWindow):
         Initialisation of the main Window.
         """
         super().__init__()
-        self.setWindowTitle("LEnsE - CMOS Sensor / Machine Vision / Labwork")
         # GUI structure
         self.central_widget = MainWidget(self)
         self.setCentralWidget(self.central_widget)
