@@ -11,13 +11,16 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
     QLabel, QComboBox, QPushButton, QCheckBox,
-    QMessageBox
+    QMessageBox, QSizePolicy
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+from widgets.images_widget import ImagesFileOpeningWidget, ImagesCameraOpeningWidget, ImagesDisplayWidget
 
+BOT_HEIGHT, TOP_HEIGHT = 45, 50
+LEFT_WIDTH, RIGHT_WIDTH = 45, 45
 TOP_LEFT_ROW, TOP_LEFT_COL = 1, 1
 TOP_RIGHT_ROW, TOP_RIGHT_COL = 1, 2
 BOT_LEFT_ROW, BOT_LEFT_COL = 2, 1
@@ -30,7 +33,6 @@ def load_menu(file_path: str, menu):
     """
     Load parameter from a CSV file.
     """
-    print(file_path)
     if os.path.exists(file_path):
         # Read the CSV file, ignoring lines starting with '//'
         data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
@@ -62,9 +64,9 @@ class MenuWidget(QWidget):
         :param sub:
         """
         super().__init__(parent=parent)
-        self.layout = QVBoxLayout()
         self.parent = parent
         self.submenu = sub
+        self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.buttons_list = []
         self.buttons_signal = []
@@ -218,11 +220,13 @@ class MainWidget(QWidget):
         :param parent: Parent window of the main widget.
         """
         super().__init__(parent=parent)
+        self.parent = parent
         # GUI Structure
         self.layout = QGridLayout()
+        self.setLayout(self.layout)
         self.title_label = TitleWidget(self)
         self.main_menu = MenuWidget(self)
-        self.top_left_widget = QWidget()
+        self.top_left_widget = ImagesDisplayWidget(self)
         self.top_right_widget = QWidget()
         self.bot_right_widget = QWidget()
         # Submenu and option widgets in the bottom left corner of the GUI
@@ -233,7 +237,23 @@ class MainWidget(QWidget):
         self.bot_left_layout.setColumnStretch(1, 50)
         self.submenu_widget = QWidget()
         self.options_widget = QWidget()
+
+        # Adding actions
+        self.main_menu.menu_clicked.connect(self.menu_action)
+
+        # Fixing sizes
+        width = self.parent.width()
+        height = self.parent.height()
+        self.layout.setColumnStretch(0, 10)
+        self.layout.setColumnStretch(1, LEFT_WIDTH)
+        self.layout.setColumnStretch(2, RIGHT_WIDTH)
+        self.layout.setRowStretch(0, 5)
+        self.layout.setRowStretch(1, TOP_HEIGHT)
+        self.layout.setRowStretch(2, BOT_HEIGHT)
+
+        # Adding elements in the layout
         self.layout.addWidget(self.title_label, 0, 0, 1, 3)
+        self.layout.addWidget(self.main_menu, 1, 0, 2, 1)
         self.bot_left_layout.addWidget(self.submenu_widget, SUBMENU_ROW, SUBMENU_COL)
         self.bot_left_layout.addWidget(self.options_widget, OPTIONS_ROW, OPTIONS_COL)
         self.layout.addWidget(self.bot_left_widget, BOT_LEFT_ROW, BOT_LEFT_COL)
@@ -241,18 +261,7 @@ class MainWidget(QWidget):
         self.layout.addWidget(self.top_left_widget, TOP_LEFT_ROW, TOP_LEFT_COL)
         self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL)
         self.layout.addWidget(self.bot_right_widget, BOT_RIGHT_ROW, BOT_RIGHT_COL)
-
-        self.main_menu.menu_clicked.connect(self.menu_action)
-
-        # Adding elements in the layout
-        self.layout.addWidget(self.main_menu, 1, 0, 2, 1)
-        self.layout.setColumnStretch(0, 10)
-        self.layout.setColumnStretch(1, 45)
-        self.layout.setColumnStretch(2, 45)
-        self.layout.setRowStretch(0, 5)
-        self.layout.setRowStretch(1, 50)
-        self.layout.setRowStretch(2, 45)
-        self.setLayout(self.layout)
+        self.top_left_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def clear_layout(self, row: int, column: int) -> None:
         """
@@ -282,15 +291,6 @@ class MainWidget(QWidget):
                 widget.deleteLater()
             else:
                 self.layout.removeItem(item)
-
-    def set_top_left_widget(self, widget):
-        """
-        Modify the top left widget.
-        :param widget: Widget to include inside the application.
-        """
-        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
-        self.top_left_widget = widget
-        self.layout.addWidget(self.top_left_widget, TOP_LEFT_ROW, TOP_LEFT_COL)
 
     def set_top_right_widget(self, widget):
         """
@@ -343,7 +343,18 @@ class MainWidget(QWidget):
         Only GUI actions are performed in this section.
         :param event: Event that triggered the action.
         """
+        if self.parent.image is not None:
+            print('Image OK')
+        self.clear_sublayout(OPTIONS_COL)
+        if event == 'open_image':
+            self.options_widget = ImagesFileOpeningWidget(self)
+            self.set_options_widget(self.options_widget)
+        elif event == 'open_camera':
+            self.options_widget = ImagesCameraOpeningWidget(self)
+            self.set_options_widget(self.options_widget)
+
         self.main_signal.emit(event)
+
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
@@ -359,9 +370,6 @@ if __name__ == '__main__':
             self.setCentralWidget(self.central_widget)
 
         def create_gui(self):
-            widget1 = QWidget()
-            widget1.setStyleSheet('background-color: red;')
-            self.central_widget.set_top_left_widget(widget1)
             widget2 = QWidget()
             widget2.setStyleSheet('background-color: blue;')
             self.central_widget.set_top_right_widget(widget2)

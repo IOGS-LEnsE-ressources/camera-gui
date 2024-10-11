@@ -1,10 +1,11 @@
 # Menu MAIN
 # Type; Title; Signal;
-B;button_camera_settings;camera_settings;
+B;button_images;images;
 S;;;
 B;button_aoi_select;aoi_select;
 S;;;
 B;button_histo_analysis;histo;
+B;button_sampling;sampling;
 S;;;
 B;button_contrast;contrast;
 B;button_edge;edge;

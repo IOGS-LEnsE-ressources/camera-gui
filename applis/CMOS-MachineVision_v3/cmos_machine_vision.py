@@ -31,10 +31,12 @@ Creation : oct/2024
 """
 from lensepy import load_dictionary, translate, dictionary
 import sys
+import numpy as np
+from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget, QPushButton,
     QMainWindow, QApplication, QMessageBox)
-from widgets.main_widget import MainWidget, load_menu
+from widgets.main_widget import *
 
 
 class MainWindow(QMainWindow):
@@ -56,7 +58,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.main_signal.connect(self.main_action)
-
+        # Objects
+        self.camera = None
+        self.image = None
 
     def main_action(self, event):
         """
@@ -64,6 +68,17 @@ class MainWindow(QMainWindow):
         :param event: Event that triggered the action.
         """
         print(f'Main {event}')
+        if event == 'open_image':
+            self.central_widget.options_widget.image_opened.connect(self.action_image_from_file)
+
+    def action_image_from_file(self, event: np.ndarray):
+        """
+        Action performed when an image file is opened.
+        :param event: Event that triggered the action - np.ndarray.
+        """
+        self.image = event.copy()
+        self.central_widget.top_left_widget.set_image_from_array(self.image)
+        self.central_widget.options_widget.button_open_image.setStyleSheet(unactived_button)
 
     def closeEvent(self, event):
         """

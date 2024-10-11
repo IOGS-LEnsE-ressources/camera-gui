@@ -24,12 +24,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-# %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
-
 
 class ImageViewerWidget(QWidget):
     """ImageViewerWidget class, children of QWidget.
