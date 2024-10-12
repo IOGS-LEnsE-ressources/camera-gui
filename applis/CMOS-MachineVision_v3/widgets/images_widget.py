@@ -55,18 +55,19 @@ class ImagesFileOpeningWidget(QWidget):
         self.layout.addWidget(self.button_open_image)
         self.layout.addStretch()
 
-    def action_open_image(self, gray: bool=False):
+    def action_open_image(self, event, gray: bool=True):
         """
         Open an image from a file.
         """
         self.button_open_image.setStyleSheet(actived_button)
         file_dialog = QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(self, translate('dialog_open_image'),
-                                                   "", "Images (*.png *.jpg " "*.jpeg)")
+                                                   "", "Images (*.png *.jpg *.jpeg)")
         if file_path != '':
-            image_array = cv2.imread(file_path)
             if gray:
-                image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+                image_array = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+            else:
+                image_array = cv2.imread(file_path)
             self.image_opened.emit(image_array)
         else:
             self.button_open_image.setStyleSheet(unactived_button)
@@ -164,7 +165,7 @@ class ImagesDisplayWidget(QWidget):
         if self.image is not None:
             image_to_display = self.image
             if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-                image_to_display = resize_image_ratio(self.image, self.width-20, self.height-50)
+                image_to_display = resize_image_ratio(self.image, self.height-30, self.width-20)
             qimage = array_to_qimage(image_to_display)
             pmap = QPixmap.fromImage(qimage)
             self.image_display.setPixmap(pmap)
@@ -177,8 +178,7 @@ class ImagesDisplayWidget(QWidget):
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-            print('Resizing !')
-            image_to_display = resize_image_ratio(self.image, self.width, self.height)
+            image_to_display = resize_image_ratio(self.image, self.height-30, self.width-20)
         qimage = array_to_qimage(image_to_display)
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)

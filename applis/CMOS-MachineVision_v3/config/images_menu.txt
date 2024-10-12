@@ -1,4 +1,4 @@
-# Camera Settings Menu
+# Images Menu
 # Type; Title; Signal;
 B;button_open_image;open_image;
 B;button_open_camera;open_camera;

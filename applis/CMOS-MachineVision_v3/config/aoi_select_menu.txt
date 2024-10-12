@@ -1,0 +1,4 @@
+# AOI Select Menu
+# Type; Title; Signal;
+S; ; ;
+S; ; ;

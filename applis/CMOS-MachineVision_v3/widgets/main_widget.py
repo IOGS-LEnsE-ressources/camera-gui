@@ -9,16 +9,18 @@ import sys, os
 import numpy as np
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
-    QVBoxLayout, QGridLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox,
+    QVBoxLayout, QGridLayout,
+    QLabel, QPushButton,
     QMessageBox, QSizePolicy
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate
+from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 from lensepy.css import *
-from widgets.images_widget import ImagesFileOpeningWidget, ImagesCameraOpeningWidget, ImagesDisplayWidget
-from widgets.histo_widget import HistoSpaceOptionsWidget
+from widgets.images_widget import *
+from widgets.histo_widget import HistoSpaceOptionsWidget, HistoTimeOptionsWidget
+from widgets.aoi_select_widget import *
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -79,6 +81,8 @@ class MenuWidget(QWidget):
 
         self.layout.addWidget(self.label_title_main_menu)
 
+        self.actual_button = None
+
     def display_layout(self):
         """
         Update the layout with all the elements.
@@ -110,7 +114,6 @@ class MenuWidget(QWidget):
             if element is not None:
                 if self.buttons_enabled[i]:
                     element.setStyleSheet(unactived_button)
-
 
     def set_button_enabled(self, button_index: int, value: bool):
         """
@@ -152,6 +155,7 @@ class MenuWidget(QWidget):
     def menu_is_clicked(self):
         self.inactive_buttons()
         sender = self.sender()
+        self.actual_button = sender
 
         for i, element in enumerate(self.buttons_list):
             if sender == element:
@@ -166,9 +170,27 @@ class MenuWidget(QWidget):
                     self.parent.set_sub_menu_widget(self.parent.submenu_widget)
                     self.parent.submenu_widget.display_layout()
                 # Change button style
-                sender.setStyleSheet(actived_button)
+                if self.buttons_enabled[i] is True and sender is not None:
+                    sender.setStyleSheet(actived_button)
                 # Send signal
                 self.menu_clicked.emit(self.buttons_signal[i])
+            else:
+                if element is not None:
+                    if self.buttons_enabled[i] is True:
+                        element.setStyleSheet(unactived_button)
+                    else:
+                        element.setStyleSheet(disabled_button)
+
+    def update_menu_display(self):
+        """Update the menu."""
+        for i, element in enumerate(self.buttons_list):
+            if element is not None:
+                if self.actual_button == element:
+                    element.setStyleSheet(actived_button)
+                elif self.buttons_enabled[i] is True:
+                    element.setStyleSheet(unactived_button)
+                else:
+                    element.setStyleSheet(disabled_button)
 
     def set_enabled(self, index: int, value:bool=True):
         """
@@ -178,17 +200,10 @@ class MenuWidget(QWidget):
         """
         if isinstance(index, list):
             for i in index:
-                self.buttons_list[i-1].setEnabled(value)
-                if value:
-                    self.buttons_list[i-1].setStyleSheet(unactived_button)
-                else:
-                    self.buttons_list[i-1].setStyleSheet(disabled_button)
+                self.buttons_enabled[i-1] = value
         else:
-            self.buttons_list[index-1].setEnabled(value)
-            if value:
-                self.buttons_list[index-1].setStyleSheet(unactived_button)
-            else:
-                self.buttons_list[index-1].setStyleSheet(disabled_button)
+            self.buttons_enabled[index-1] = value
+        self.update_menu_display()
 
     def submenu_is_clicked(self, event):
         self.menu_clicked.emit(event)
@@ -359,31 +374,82 @@ class MainWidget(QWidget):
         self.options_widget = widget
         self.bot_left_layout.addWidget(self.options_widget, OPTIONS_ROW, OPTIONS_COL)
 
+    def update_image(self, aoi: bool = False, aoi_disp: bool = False):
+        if aoi:
+            image = get_aoi_array(self.parent.image, self.parent.aoi)
+            self.top_left_widget.set_image_from_array(image)
+        else:
+            if aoi_disp:
+                image = display_aoi(self.parent.image, self.parent.aoi)
+                self.top_left_widget.set_image_from_array(image)
+            else:
+                self.top_left_widget.set_image_from_array(self.parent.image)
+
     def menu_action(self, event):
         """
         Action performed when a button of the main menu is clicked.
         Only GUI actions are performed in this section.
         :param event: Event that triggered the action.
         """
+        self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], True)
         if self.parent.image is None:
             self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
+        if self.parent.aoi is None:
+            self.main_menu.set_enabled([5, 6, 8, 9, 10, 12], False)
         self.clear_sublayout(OPTIONS_COL)
+        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
         self.mode = event
-        if self.mode == 'open_image':
+        if self.mode == 'images':
+            if self.parent.image is not None:
+                self.update_image()
+        elif self.mode == 'open_image':
+            if self.parent.image is not None:
+                self.update_image()
             self.options_widget = ImagesFileOpeningWidget(self)
             self.set_options_widget(self.options_widget)
         elif self.mode == 'open_camera':
             self.options_widget = ImagesCameraOpeningWidget(self)
             self.set_options_widget(self.options_widget)
         elif self.mode == 'aoi_select':
-            pass
+            if self.parent.aoi is not None:
+                self.update_image(aoi_disp=True)
+            self.options_widget = AoiSelectOptionsWidget(self)
+            if self.parent.aoi is not None:
+                self.options_widget.set_aoi(self.parent.aoi)
+            self.set_options_widget(self.options_widget)
+            self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+            self.top_right_widget = ImageHistogramWidget('Image Histogram')
+            self.top_right_widget.set_background('white')
+            self.set_top_right_widget(self.top_right_widget)
+            self.bot_right_widget = ImageHistogramWidget('AOI Histogram')
+            self.bot_right_widget.set_background('lightgray')
+            self.set_bot_right_widget(self.bot_right_widget)
+
         elif self.mode == 'histo':
-            pass
+            self.update_image(aoi=True)
+            self.top_right_widget = ImageHistogramWidget('Image Histogram')
+            self.top_right_widget.set_background('white')
+            self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL)
+            if self.parent.camera is None:
+                self.submenu_widget.set_enabled(2, False)
+
         elif self.mode == 'histo_space':
+            self.update_image(aoi=True)
             self.options_widget = HistoSpaceOptionsWidget(self)
             self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImageHistogramWidget('Image Histogram')
+            self.top_right_widget.set_background('white')
+            self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL)
+            if self.parent.camera is None:
+                self.submenu_widget.set_enabled(2, False)
+
         elif self.mode == 'histo_time':
-            pass
+            self.options_widget = HistoTimeOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            if self.parent.camera is None:
+                self.submenu_widget.set_enabled(2, False)
+
 
         self.main_signal.emit(event)
 
