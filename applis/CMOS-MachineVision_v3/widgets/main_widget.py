@@ -18,6 +18,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from widgets.images_widget import ImagesFileOpeningWidget, ImagesCameraOpeningWidget, ImagesDisplayWidget
+from widgets.histo_widget import HistoSpaceOptionsWidget
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -59,9 +60,9 @@ class MenuWidget(QWidget):
     def __init__(self, parent=None, title: str='label_title_main_menu', sub: bool=False):
         """
         Default Constructor.
-        :param parent:
-        :param title:
-        :param sub:
+        :param parent: Parent widget of the menu widget.
+        :param title: Title of the menu.
+        :param sub: True if it is a submenu.
         """
         super().__init__(parent=parent)
         self.parent = parent
@@ -169,6 +170,26 @@ class MenuWidget(QWidget):
                 # Send signal
                 self.menu_clicked.emit(self.buttons_signal[i])
 
+    def set_enabled(self, index: int, value:bool=True):
+        """
+        Set enabled a button.
+        :param index:
+        :param value:
+        """
+        if isinstance(index, list):
+            for i in index:
+                self.buttons_list[i-1].setEnabled(value)
+                if value:
+                    self.buttons_list[i-1].setStyleSheet(unactived_button)
+                else:
+                    self.buttons_list[i-1].setStyleSheet(disabled_button)
+        else:
+            self.buttons_list[index-1].setEnabled(value)
+            if value:
+                self.buttons_list[index-1].setStyleSheet(unactived_button)
+            else:
+                self.buttons_list[index-1].setStyleSheet(disabled_button)
+
     def submenu_is_clicked(self, event):
         self.menu_clicked.emit(event)
 
@@ -221,6 +242,7 @@ class MainWidget(QWidget):
         """
         super().__init__(parent=parent)
         self.parent = parent
+        self.mode = None
         # GUI Structure
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -343,17 +365,38 @@ class MainWidget(QWidget):
         Only GUI actions are performed in this section.
         :param event: Event that triggered the action.
         """
-        if self.parent.image is not None:
-            print('Image OK')
+        if self.parent.image is None:
+            self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
         self.clear_sublayout(OPTIONS_COL)
-        if event == 'open_image':
+        self.mode = event
+        if self.mode == 'open_image':
             self.options_widget = ImagesFileOpeningWidget(self)
             self.set_options_widget(self.options_widget)
-        elif event == 'open_camera':
+        elif self.mode == 'open_camera':
             self.options_widget = ImagesCameraOpeningWidget(self)
             self.set_options_widget(self.options_widget)
+        elif self.mode == 'aoi_select':
+            pass
+        elif self.mode == 'histo':
+            pass
+        elif self.mode == 'histo_space':
+            self.options_widget = HistoSpaceOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+        elif self.mode == 'histo_time':
+            pass
 
         self.main_signal.emit(event)
+
+    def update_size(self):
+        """
+        Update the size of the main widget.
+        """
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width*LEFT_WIDTH)//100
+        he = (height*TOP_HEIGHT)//100
+        self.top_left_widget.update_size(wi, he)
 
 
 if __name__ == '__main__':

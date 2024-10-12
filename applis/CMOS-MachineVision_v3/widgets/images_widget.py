@@ -152,13 +152,22 @@ class ImagesDisplayWidget(QWidget):
         # GUI Elements
         self.image_display = QLabel('Image to display')
         self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_display.setScaledContents(False)
         self.layout.addWidget(self.image_display)
 
-    def update_size(self):
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        new_size = self.size()
-        self.width = new_size.width()
-        self.height = new_size.height()
+    def update_size(self, width, height):
+        """
+        Update the size of this widget.
+        """
+        self.width = width
+        self.height = height
+        if self.image is not None:
+            image_to_display = self.image
+            if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+                image_to_display = resize_image_ratio(self.image, self.width-20, self.height-50)
+            qimage = array_to_qimage(image_to_display)
+            pmap = QPixmap.fromImage(qimage)
+            self.image_display.setPixmap(pmap)
 
     def set_image_from_array(self, pixels: np.ndarray) -> None:
         """
@@ -167,9 +176,9 @@ class ImagesDisplayWidget(QWidget):
         """
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image
-        if self.image.shape[0] > self.width and self.image.shape[1] > self.height:
+        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+            print('Resizing !')
             image_to_display = resize_image_ratio(self.image, self.width, self.height)
         qimage = array_to_qimage(image_to_display)
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)
-

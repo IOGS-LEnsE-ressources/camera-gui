@@ -31,6 +31,7 @@ Creation : oct/2024
 """
 from lensepy import load_dictionary, translate, dictionary
 import sys
+import time
 import numpy as np
 from lensepy.css import *
 from PyQt6.QtWidgets import (
@@ -58,6 +59,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.main_signal.connect(self.main_action)
+        self.central_widget.main_menu.set_enabled([3,5,6,8,9,10,12], False)
         # Objects
         self.camera = None
         self.image = None
@@ -67,8 +69,7 @@ class MainWindow(QMainWindow):
         Action performed by an event in the main widget.
         :param event: Event that triggered the action.
         """
-        print(f'Main {event}')
-        if event == 'open_image':
+        if self.central_widget.mode == 'open_image':
             self.central_widget.options_widget.image_opened.connect(self.action_image_from_file)
 
     def action_image_from_file(self, event: np.ndarray):
@@ -79,6 +80,14 @@ class MainWindow(QMainWindow):
         self.image = event.copy()
         self.central_widget.top_left_widget.set_image_from_array(self.image)
         self.central_widget.options_widget.button_open_image.setStyleSheet(unactived_button)
+        self.central_widget.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], True)
+
+    def resizeEvent(self, event):
+        """
+        Action performed when the main window is resized.
+        :param event: Object that triggered the event.
+        """
+        self.central_widget.update_size()
 
     def closeEvent(self, event):
         """
@@ -99,5 +108,4 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.showMaximized()
-
     sys.exit(app.exec())
