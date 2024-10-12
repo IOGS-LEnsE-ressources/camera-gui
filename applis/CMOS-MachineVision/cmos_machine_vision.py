@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         self.option_params_view_widget = CameraParamsViewWidget(self)
 
         # Init default parameters
-        print(f"CMOS Machine Vision App {dictionary['version']}")
+        print(f"CMOS Machine Vision App")
         self.init_default_parameters()
 
         # Events
@@ -498,7 +498,7 @@ class MainWindow(QMainWindow):
 
         """
         diff_image = self.bot_left_widget.is_diff_checked()
-        noise_image = self.bot_left_widget.is_noise_checked()
+        # noise_image = self.bot_left_widget.is_noise_checked()
         # Read the selected filter and size
         filter_selected = self.bot_left_widget.get_selection()
         if (filter_selected == Filter.BLUR or filter_selected == Filter.EDGE

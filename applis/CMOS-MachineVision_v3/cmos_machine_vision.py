@@ -40,6 +40,9 @@ from PyQt6.QtWidgets import (
 from widgets.main_widget import *
 from widgets.histo_widget import *
 from widgets.aoi_select_widget import *
+from widgets.camera import *
+from lensecam.camera_thread import CameraThread
+from lensecam.ids.camera_ids import get_bits_per_pixel
 
 
 class MainWindow(QMainWindow):
@@ -57,11 +60,17 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("LEnsE - CMOS Sensor / Machine Vision / Labwork")
         # Objects
-        self.camera = None
         self.image = None
+        self.saved_image = None
         self.aoi = None
         self.fast_mode = False
         self.image_bits_depth = 8
+        # Camera
+        self.brand_camera = None
+        self.camera_device = None
+        self.camera = None
+        self.camera_thread = CameraThread()
+        self.camera_thread.image_acquired.connect(self.thread_update_image)
         # GUI structure
         self.central_widget = MainWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -77,12 +86,17 @@ class MainWindow(QMainWindow):
         if self.image is not None:
             size = self.image.shape[1] * self.image.shape[0]
             self.fast_mode = size > 1e5 # Fast mode if number of pixels > 1e5
+
         if self.central_widget.mode == 'open_image':
+            self.aoi = None
+            if self.camera is not None:
+                self.camera_thread.stop()
             self.central_widget.options_widget.image_opened.connect(self.action_image_from_file)
             self.image_bits_depth = 8
 
         elif self.central_widget.mode == 'open_camera':
-            pass
+            self.aoi = None
+            self.central_widget.options_widget.camera_opened.connect(self.action_camera_selected)
 
         elif self.central_widget.mode == 'aoi_select':
             # Histogram of the global image.
@@ -121,7 +135,24 @@ class MainWindow(QMainWindow):
 
         elif self.central_widget.mode == 'histo_time':
             self.central_widget.options_widget.start_acq_clicked.connect(self.action_histo_time)
-            pass
+
+
+    def thread_update_image(self, image_array):
+        if image_array is not None:
+            if self.image_bits_depth > 8:
+                image = image_array.view(np.uint16)
+            else:
+                image = image_array.view(np.uint8)
+            self.image = image.squeeze()
+        self.central_widget.top_left_widget.set_image_from_array(self.image)
+        if self.central_widget.mode == 'aoi_select':
+            self.action_aoi_selected('aoi_selected')
+        elif self.central_widget.mode == 'histo':
+            self.action_histo_space('snap')
+        elif self.central_widget.mode == 'histo_space':
+            self.central_widget.update_image(aoi=True)
+        elif self.central_widget.mode == 'histo_time':
+            self.central_widget.update_image(aoi=True)
 
 
     def action_image_from_file(self, event: np.ndarray):
@@ -129,12 +160,36 @@ class MainWindow(QMainWindow):
         Action performed when an image file is opened.
         :param event: Event that triggered the action - np.ndarray.
         """
+        if self.camera is not None:
+            self.camera_thread.stop()
+            self.camera.stop_acquisition()
+            self.camera.disconnect()
+            self.camera = None
+            self.camera_device = None
         self.image = event.copy()
         self.aoi = None
         self.central_widget.top_left_widget.set_image_from_array(self.image)
+        self.central_widget.top_left_widget.repaint()
         self.central_widget.options_widget.button_open_image.setStyleSheet(unactived_button)
         self.central_widget.main_menu.set_enabled([3], True)
         self.central_widget.main_menu.set_enabled([5, 6, 8, 9, 10, 12], False)
+
+    def action_camera_selected(self, event):
+        """
+        Action performed when an industrial camera is selected.
+        :param event: Event that triggered the action - np.ndarray.
+        """
+        self.brand_camera = event['brand']
+        camera_list = cam_list_brands[self.brand_camera]()
+        self.camera_device = camera_list.get_cam_device(int(event['cam_dev']))
+        self.camera = cam_from_brands[self.brand_camera](self.camera_device)
+        self.camera.init_camera()
+        self.camera_thread.set_camera(self.camera)
+        # Init default parameters !
+        # TO DO
+        # Start Thread
+        self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
+        self.camera_thread.start()
 
     def action_aoi_selected(self, event):
         """Action performed when an event occurred in the aoi select options widget."""
@@ -161,19 +216,24 @@ class MainWindow(QMainWindow):
             # Display the image with a rectangle for the AOI.
             self.central_widget.update_image(aoi_disp=True)
 
-
     def action_histo_space(self, event):
         """Action performed when an event occurred in the histo space options widget."""
         image = get_aoi_array(self.image, self.aoi)
         if event == 'snap':
+            self.saved_image = self.image
+            self.central_widget.top_right_widget.set_image(image)
+            self.central_widget.top_right_widget.update_info()
+        elif event == 'live':
             self.central_widget.top_right_widget.set_image(image)
             self.central_widget.top_right_widget.update_info()
         elif event == 'save_png':
-            bins = np.linspace(0, 2 ** self.image_bits_depth - 1, 2 ** self.image_bits_depth)
-            bins, hist_data = process_hist_from_array(image, bins)
-            save_hist(self.image, hist_data, bins,
-                           f'Image Histogram',
-                           f'image_histo.png')
+            if self.saved_image is not None:
+                image = get_aoi_array(self.saved_image, self.aoi)
+                bins = np.linspace(0, 2 ** self.image_bits_depth - 1, 2 ** self.image_bits_depth)
+                bins, hist_data = process_hist_from_array(image, bins)
+                save_hist(image, hist_data, bins,
+                               f'Image Histogram',
+                               f'image_histo.png')
         # Display the AOI.
         self.central_widget.update_image(aoi=True)
 
@@ -200,6 +260,10 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
+            if self.camera is not None:
+                self.camera_thread.stop()
+                self.camera.stop_acquisition()
+                self.camera.disconnect()
             event.accept()
         else:
             event.ignore()

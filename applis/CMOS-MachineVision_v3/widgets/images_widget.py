@@ -16,13 +16,13 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
     QLabel, QComboBox, QPushButton, QCheckBox,
-    QMessageBox, QFileDialog, QSizePolicy
+    QMessageBox, QFileDialog, QSizePolicy, QSpacerItem
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate
 from lensepy.css import *
-from lensepy.images.conversion import *
+from widgets.camera import *
 
 
 class ImagesFileOpeningWidget(QWidget):
@@ -85,8 +85,7 @@ class ImagesCameraOpeningWidget(QWidget):
     Options widget of the image opening menu.
     """
 
-    camera_opening = pyqtSignal(str)
-    camera_opened = pyqtSignal(np.ndarray)
+    camera_opened = pyqtSignal(dict)
 
     def __init__(self, parent=None):
         """
@@ -94,6 +93,7 @@ class ImagesCameraOpeningWidget(QWidget):
         :param parent: Parent widget of this widget.
         """
         super().__init__(parent=parent)
+        self.parent = parent
         # GUI Structure
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -122,14 +122,23 @@ class ImagesCameraOpeningWidget(QWidget):
         """
         Open an industrial camera.
         """
-        self.camera_opening.emit('camera_opening')
         self.button_open_camera.setStyleSheet(actived_button)
+        self.repaint()
+        self.parent.bot_right_widget = CameraChoice()
+        self.parent.bot_right_widget.camera_selected.connect(self.action_camera_selected)
+        self.parent.set_bot_right_widget(self.parent.bot_right_widget)
 
-    def action_open_webcam(self):
+    def action_camera_selected(self, event):
+        """Action performed when a camera is selected."""
+        self.camera_opened.emit(event)
+
+    def action_open_webcam(self, event):
         """
         Open an industrial camera.
         """
+        print(event)
         self.camera_opening.emit('webcam_opening')
+
 
 class ImagesDisplayWidget(QWidget):
     """
@@ -182,3 +191,4 @@ class ImagesDisplayWidget(QWidget):
         qimage = array_to_qimage(image_to_display)
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)
+

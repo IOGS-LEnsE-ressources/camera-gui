@@ -411,6 +411,7 @@ class MainWidget(QWidget):
         elif self.mode == 'open_camera':
             self.options_widget = ImagesCameraOpeningWidget(self)
             self.set_options_widget(self.options_widget)
+
         elif self.mode == 'aoi_select':
             if self.parent.aoi is not None:
                 self.update_image(aoi_disp=True)
@@ -449,7 +450,6 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             if self.parent.camera is None:
                 self.submenu_widget.set_enabled(2, False)
-
 
         self.main_signal.emit(event)
 

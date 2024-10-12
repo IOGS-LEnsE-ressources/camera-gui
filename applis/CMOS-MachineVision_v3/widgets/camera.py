@@ -1,35 +1,29 @@
 # -*- coding: utf-8 -*-
-"""*camera_choice_widget* file.
+"""*images_widget.py* file.
 
-*camera_choice_widget* file that contains :class::CameraChoice
+This file contains graphical elements to display images in a widget.
+Image is coming from a file (JPG, PNG...) or an industrial camera (IDS, Basler...).
 
-This file is attached to a 2nd year of engineer training labwork in photonics.
-Subject : http://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2324-Detection.EN.pdf
+.. note:: LEnsE - Institut d'Optique - version 1.0
 
-More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
-
-.. note:: LEnsE - Institut d'Optique - version 0.1
-
-.. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
-.. moduleauthor:: Dorian MENDES (Promo 2026)<dorian.mendes@institutoptique.fr>
-
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+Creation : oct/2024
 """
-
-from lensepy import load_dictionary, translate
-from lensepy.css import *
-
+import sys, os
+import numpy as np
 from PyQt6.QtWidgets import (
-    QWidget,
-    QGridLayout,QMessageBox,
+    QWidget, QGridLayout,
     QLabel, QComboBox, QPushButton,
-    QSpacerItem, QSizePolicy
+    QSizePolicy, QSpacerItem, QMainWindow
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from lensepy import load_dictionary, translate
+from lensepy.css import *
+from lensepy.images.conversion import *
 from lensecam.basler.camera_basler_widget import CameraBaslerListWidget
 from lensecam.basler.camera_basler import CameraBasler
 from lensecam.ids.camera_ids_widget import CameraIdsListWidget
-from lensecam.ids.camera_ids import CameraIds
+from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.ids.camera_list import CameraList as CameraIdsList
 from lensecam.basler.camera_list import CameraList as CameraBaslerList
 
@@ -48,16 +42,18 @@ cam_from_brands = {
     'IDS': CameraIds,
 }
 
+
 class CameraChoice(QWidget):
     """Camera Choice."""
 
-    selected = pyqtSignal(str)
+    brand_selected = pyqtSignal(str)
+    camera_selected = pyqtSignal(dict)
 
-    def __init__(self) -> None:
+    def __init__(self, parent=None) -> None:
         """Default constructor of the class.
         """
         super().__init__(parent=None)
-
+        self.parent = parent
         self.layout = QGridLayout()
 
         self.label_camera_choice_title = QLabel(translate("label_camera_choice_title"))
@@ -128,20 +124,16 @@ class CameraChoice(QWidget):
         self.layout.addWidget(self.brand_return_button, 4, 0) # 4,0 brand_select_button
         self.brand_refresh_button.setEnabled(False)
         self.layout.addItem(self.spacer, 5, 0)
-        self.selected.emit('brand:'+self.brand_choice)
-        '''
+        self.brand_selected.emit('brand:'+self.brand_choice)
         self.cam_choice_widget = cam_list_widget_brands[self.brand_choice]()
-        self.camera_list = self.cam_choice_widget.cam_list
         self.cam_choice_widget.connected.connect(self.action_camera_selected)
         self.layout.addWidget(self.cam_choice_widget, 5, 0)
-        self.layout.addItem(self.spacer, 6, 0)
-        '''
 
     def action_camera_selected(self, event):
-        selected_camera = self.cam_choice_widget.get_selected_camera_dev()
+        selected_camera = self.cam_choice_widget.get_selected_camera_index()
         self.brand_return_button.setEnabled(False)
         dict_brand = {'brand': self.brand_choice, 'cam_dev': selected_camera}
-        self.selected.emit(dict_brand)
+        self.camera_selected.emit(dict_brand)
 
     def action_brand_return_button(self, event) -> None:
         """Action performed when the brand_return button is clicked."""
@@ -170,7 +162,7 @@ class CameraChoice(QWidget):
             self.layout.addWidget(self.brand_select_button, 4, 0)
             self.layout.addItem(self.spacer, 5, 0)
             self.brand_refresh_button.setEnabled(True)
-            self.selected.emit('nobrand:')
+            self.brand_selected.emit('nobrand:')
         except Exception as e:
             print(f'Exception - action_brand_return {e}')
 
@@ -203,49 +195,21 @@ class CameraChoice(QWidget):
             else:
                 self.layout.removeItem(item)
 
-# -------------------------------
-# Launching as main for tests
-if __name__ == "__main__":
-    import sys
-    from PyQt6.QtWidgets import QApplication, QMainWindow
 
-    class MainWindow(QMainWindow):
-        """
-        Our main window.
+if __name__ == '__main__':
+    from PyQt6.QtWidgets import QApplication
 
-        Args:
-            QMainWindow (class): QMainWindow can contain several widgets.
-        """
-
+    class MyWindow(QMainWindow):
         def __init__(self):
-            """
-            Initialisation of the main Window.
-            """
             super().__init__()
-            # Define Window title
-            self.setWindowTitle("LEnsE - Test")
-            cameras_list = []
-            # Main Widget
-            self.main_widget = CameraChoice()
-            self.setCentralWidget(self.main_widget)
 
-        def closeEvent(self, event):
-            """
-            closeEvent redefinition. Use when the user clicks
-            on the red cross to close the window
-            """
-            reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                         QMessageBox.StandardButton.No)
+            self.setWindowTitle(translate("window_title_main_menu_widget"))
+            self.setGeometry(100, 200, 800, 600)
 
-            if reply == QMessageBox.StandardButton.Yes:
-                event.accept()
-            else:
-                event.ignore()
+            self.central_widget = CameraChoice(self)
+            self.setCentralWidget(self.central_widget)
 
     app = QApplication(sys.argv)
-
-    window = MainWindow()
-    window.show()
-
+    main = MyWindow()
+    main.show()
     sys.exit(app.exec())
