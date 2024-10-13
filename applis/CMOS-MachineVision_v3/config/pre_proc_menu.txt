@@ -1,0 +1,9 @@
+# Pre Processing Menu
+# Type; Title; Signal;
+B;button_bright_contrast;bright_contrast;
+B;button_enhance_contrast;enhance_contrast;
+S;;;
+B;button_erosion_dilation;erosion_dilation;
+B;button_opening_closing;opening_closing;
+B;button_gradient;gradient;
+S;;;

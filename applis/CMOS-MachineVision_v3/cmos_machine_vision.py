@@ -17,6 +17,8 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 Creation : sept/2023
 Modification : oct/2024
 """
+import numpy as np
+
 # -*- coding: utf-8 -*-
 """*base_gui_main.py* file.
 
@@ -33,6 +35,7 @@ from widgets.main_widget import *
 from lensecam.camera_thread import CameraThread
 from lensecam.ids.camera_ids import get_bits_per_pixel
 from PyQt6.QtWidgets import QMainWindow, QApplication
+from lensepy.images.processing import *
 
 class MainWindow(QMainWindow):
     """
@@ -135,6 +138,9 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'sampling':
             self.central_widget.options_widget.resampled.connect(self.action_sampling_image)
 
+        elif self.central_widget.mode == 'erosion_dilation':
+            self.central_widget.options_widget.ero_dil_changed.connect(self.action_erosion_dilation)
+
 
     def thread_update_image(self, image_array):
         if image_array is not None:
@@ -163,7 +169,6 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'sampling':
             self.central_widget.update_image(aoi=True)
             self.action_sampling_image('resampled')
-
 
     def action_image_from_file(self, event: np.ndarray):
         """
@@ -294,6 +299,30 @@ class MainWindow(QMainWindow):
             self.central_widget.top_right_widget.set_image_from_array(downsampled_image)
             self.central_widget.bot_right_widget.set_bit_depth(8)
             self.central_widget.bot_right_widget.set_images(aoi_array, small_image)
+
+    def action_erosion_dilation(self, event):
+        """Action performed when an event occurred in the erosion/dilation options widget."""
+        if event == 'erosion':
+            self.central_widget.mode = 'erosion'
+            event = 'pixel'
+        elif event == 'dilation':
+            self.central_widget.mode = 'dilation'
+            event = 'pixel'
+
+        if event == 'pixel':
+            kernel = self.central_widget.options_widget.get_kernel().T
+            aoi_array = get_aoi_array(self.image, self.aoi)
+            if self.central_widget.mode == 'erosion':
+                eroded = erode_image(aoi_array, kernel)
+            elif self.central_widget.mode == 'dilation':
+                eroded = dilate_image(aoi_array, kernel)
+            else:
+                eroded = aoi_array
+            self.central_widget.top_right_widget.set_image_from_array(eroded)
+            self.central_widget.bot_right_widget.set_bit_depth(8)
+            self.central_widget.bot_right_widget.set_images(aoi_array, eroded)
+
+
 
     def resizeEvent(self, event):
         """

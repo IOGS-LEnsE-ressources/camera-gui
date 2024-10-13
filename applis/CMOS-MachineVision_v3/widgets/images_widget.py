@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QCheckBox,
     QMessageBox, QFileDialog, QSizePolicy, QSpacerItem
 )
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate
 from lensepy.css import *
@@ -42,16 +42,11 @@ class ImagesFileOpeningWidget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.label_title_images_options = QLabel(translate('title_images_opening'))
-        self.label_title_images_options.setStyleSheet(styleH1)
-        self.label_title_images_options.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         self.button_open_image = QPushButton(translate('button_open_image_from_file'))
         self.button_open_image.setStyleSheet(unactived_button)
         self.button_open_image.setFixedHeight(BUTTON_HEIGHT)
         self.button_open_image.clicked.connect(self.action_open_image)
 
-        self.layout.addWidget(self.label_title_images_options)
         self.layout.addWidget(self.button_open_image)
         self.layout.addStretch()
 
@@ -98,10 +93,6 @@ class ImagesCameraOpeningWidget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.label_title_camera_options = QLabel(translate('title_camera_opening'))
-        self.label_title_camera_options.setStyleSheet(styleH1)
-        self.label_title_camera_options.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         self.button_open_camera = QPushButton(translate('button_open_camera_indus'))
         self.button_open_camera.setStyleSheet(unactived_button)
         self.button_open_camera.setFixedHeight(BUTTON_HEIGHT)
@@ -113,7 +104,6 @@ class ImagesCameraOpeningWidget(QWidget):
         self.button_open_webcam.clicked.connect(self.action_open_webcam)
         self.button_open_webcam.setEnabled(False)
 
-        self.layout.addWidget(self.label_title_camera_options)
         self.layout.addWidget(self.button_open_camera)
         self.layout.addWidget(self.button_open_webcam)
         self.layout.addStretch()
@@ -165,7 +155,7 @@ class ImagesDisplayWidget(QWidget):
         self.image_display.setScaledContents(False)
         self.layout.addWidget(self.image_display)
 
-    def update_size(self, width, height):
+    def update_size(self, width, height, aoi: bool = False):
         """
         Update the size of this widget.
         """
@@ -179,16 +169,23 @@ class ImagesDisplayWidget(QWidget):
             pmap = QPixmap.fromImage(qimage)
             self.image_display.setPixmap(pmap)
 
-    def set_image_from_array(self, pixels: np.ndarray) -> None:
+    def set_image_from_array(self, pixels: np.ndarray, aoi: bool = False) -> None:
         """
         Display a new image from an array (Numpy)
         :param pixels: Array of pixels to display.
+        :param aoi: If True, print 'AOI' on the image.
         """
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
             image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
         qimage = array_to_qimage(image_to_display)
+        if aoi:
+            painter = QPainter(qimage)
+            painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
+            painter.setFont(QFont("Arial", 15))  # Police et taille
+            painter.drawText(20, 20, 'AOI')
+            painter.end()
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)
 

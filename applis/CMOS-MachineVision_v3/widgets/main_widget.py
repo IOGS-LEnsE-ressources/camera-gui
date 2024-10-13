@@ -22,6 +22,7 @@ from widgets.images_widget import *
 from widgets.histo_widget import *
 from widgets.aoi_select_widget import *
 from widgets.quant_samp_widget import *
+from widgets.pre_processing_widget import *
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -113,12 +114,6 @@ class MenuWidget(QWidget):
         self.buttons_list = []
         self.buttons_signal = []
         self.buttons_enabled = []
-
-        self.label_title_main_menu = QLabel(translate(self.title))
-        self.label_title_main_menu.setStyleSheet(styleH1)
-        self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.layout.addWidget(self.label_title_main_menu)
 
         self.actual_button = None
 
@@ -421,9 +416,14 @@ class MainWidget(QWidget):
         self.bot_left_layout.addWidget(self.options_widget, OPTIONS_ROW, OPTIONS_COL)
 
     def update_image(self, aoi: bool = False, aoi_disp: bool = False):
+        """
+        Update image display in the top left widget.
+        :param aoi: Only AOI is displayed.
+        :param aoi_disp: The whole image is displayed with a rectangle around the AOI.
+        """
         if aoi:
             image = get_aoi_array(self.parent.image, self.parent.aoi)
-            self.top_left_widget.set_image_from_array(image)
+            self.top_left_widget.set_image_from_array(image, aoi)
         else:
             if aoi_disp:
                 image = display_aoi(self.parent.image, self.parent.aoi)
@@ -543,12 +543,23 @@ class MainWidget(QWidget):
             self.top_right_widget.update_size(wi, he)
             self.parent.action_sampling_image('resampled')
 
-        elif self.mode == 'sampling':
-            pass
-
+        elif self.mode == 'erosion_dilation':
+            self.update_image(aoi=True)
+            self.options_widget = ErosionDilationOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
+            self.top_right_widget.update_size(wi, he)
+            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_eroded_image'))
+            self.set_bot_right_widget(self.bot_right_widget)
         self.main_signal.emit(event)
 
-    def update_size(self):
+    def update_size(self, aoi: bool = False):
         """
         Update the size of the main widget.
         """
@@ -557,7 +568,7 @@ class MainWidget(QWidget):
         height = new_size.height()
         wi = (width*LEFT_WIDTH)//100
         he = (height*TOP_HEIGHT)//100
-        self.top_left_widget.update_size(wi, he)
+        self.top_left_widget.update_size(wi, he, aoi)
 
 
 if __name__ == '__main__':

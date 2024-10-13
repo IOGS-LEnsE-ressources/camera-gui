@@ -14,8 +14,8 @@ label_title_main_menu;Menu Principal
 button_images;Image ou Caméra
 button_aoi_select;Zone d'Intérêt
 button_histo_analysis;Histogrammes
-button_quant_samp;Quantification/Echantillonnage
-button_contrast;Contraste/Luminosité
+button_quant_samp;Quantif./Echant.
+button_pre_proc;Pré-Traitement
 button_edge;Contours
 button_filters;Filtres
 button_segmentation;Segmentation
@@ -24,12 +24,9 @@ button_options;Options Interface
 # ------------------
 # Images
 # ------------------
-sub_menu_images;Ouverture Image/Caméra
 button_open_image;Ouvrir une image
 button_open_camera;Ouvrir une caméra
-title_images_opening;Ouverture d'une image
 button_open_image_from_file;Ouvrir depuis un fichier...
-title_camera_opening;Choix d'une camera
 button_open_camera;Sélectionner caméra
 button_open_camera_indus;Sélectionner caméra industrielle
 button_open_webcam;Sélectionner webcam
@@ -38,7 +35,6 @@ dialog_open_image;Ouverture d'une image depuis un fichier...
 # ------------------
 # AOI
 # ------------------
-sub_menu_aoi_select;Sélection d'une Zone d'Intérêt
 title_aoi_selection;Choix des paramètres
 button_center_aoi;Centrer la ZdI
 button_full_image;Sélectionner l'image entière
@@ -46,9 +42,8 @@ button_full_image;Sélectionner l'image entière
 # ------------------
 # Histograms
 # ------------------
-sub_menu_histo;Histogrammes
-histo_space;Répartition spatiale
-histo_time;Etude temporelle
+button_histo_space;Répartition spatiale
+button_histo_time;Etude temporelle
 title_histo_analysis;Histogramme de l'image
 button_acquire_histo;Acquérir un nouvel histogramme
 button_save_png_image_spatial;Sauvegarder l'histogramme (PNG)
@@ -56,7 +51,6 @@ button_save_png_image_spatial;Sauvegarder l'histogramme (PNG)
 # ------------------
 # Quantification / Echantillonnage
 # ------------------
-sub_menu_quant_samp;Quantification / Echantillonnage
 button_quantization;Impact de la Quantification
 button_sampling;Impact de l'Echantillonnage
 title_quantization;Impact de la Quantification

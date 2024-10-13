@@ -28,16 +28,6 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS}; font-weight: bold;"
-styleH3 = f"font-size:15px; color:{BLUE_IOGS}; font-weight: normal"
-
-# Translation
-dictionary = {}
-
-
 # %% Widget
 class ComboBoxBloc(QWidget):
     selection_changed = pyqtSignal(str)

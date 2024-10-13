@@ -1,5 +1,5 @@
 # Histo Menu
 # Type; Title; Signal;
-B;histo_space;histo_space;
-B;histo_time;histo_time;
+B;button_histo_space;histo_space;
+B;button_histo_time;histo_time;
 S;;;
