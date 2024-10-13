@@ -1,0 +1,5 @@
+# Sampling Menu
+# Type; Title; Signal;
+B;button_quantization;quantization;
+B;button_sampling;sampling;
+S;;;

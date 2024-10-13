@@ -15,12 +15,13 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
-from lensepy import load_dictionary, translate
+from lensepy import load_dictionary, translate, dictionary
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 from lensepy.css import *
 from widgets.images_widget import *
-from widgets.histo_widget import HistoSpaceOptionsWidget, HistoTimeOptionsWidget
+from widgets.histo_widget import *
 from widgets.aoi_select_widget import *
+from widgets.quant_samp_widget import *
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -51,6 +52,42 @@ def load_menu(file_path: str, menu):
     else:
         print('MENU File error')
 
+def load_default_parameters() -> dict:
+    """
+    Load parameter from a CSV file.
+
+    :return: Dict containing 'key_1': 'language_word_1'.
+
+    Notes
+    -----
+    This function reads a CSV file that contains key-value pairs separated by semicolons (';')
+    and stores them in a global dictionary variable. The CSV file may contain comments
+    prefixed by '#', which will be ignored.
+
+    The file should have the following format:
+        # comment
+        # comment
+        key_1 ; language_word_1
+        key_2 ; language_word_2
+    """
+    dictionary_loaded = {}
+    if os.path.exists('./config/default_config.txt'):
+        # Read the CSV file, ignoring lines starting with '//'
+        data = np.genfromtxt('./config/default_config.txt', delimiter=';',
+                             dtype=str, comments='#', encoding='UTF-8')
+        # Populate the dictionary with key-value pairs from the CSV file
+        for key, value in data:
+            dictionary_loaded[key.strip()] = value.strip()
+        return dictionary_loaded
+    else:
+        print('File error')
+        return {}
+
+def load_default_dictionary(language: str) -> bool:
+    """Initialize default dictionary from default_config.txt file"""
+    file_name_dict = f'./lang/dict_{language}.txt'
+    load_dictionary(file_name_dict)
+
 # %% Widgets
 class MenuWidget(QWidget):
     """
@@ -69,13 +106,15 @@ class MenuWidget(QWidget):
         super().__init__(parent=parent)
         self.parent = parent
         self.submenu = sub
+        self.title = title
+        # Layout and graphical elements
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.buttons_list = []
         self.buttons_signal = []
         self.buttons_enabled = []
 
-        self.label_title_main_menu = QLabel(translate(title))
+        self.label_title_main_menu = QLabel(translate(self.title))
         self.label_title_main_menu.setStyleSheet(styleH1)
         self.label_title_main_menu.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -187,10 +226,13 @@ class MenuWidget(QWidget):
             if element is not None:
                 if self.actual_button == element:
                     element.setStyleSheet(actived_button)
+                    element.setEnabled(True)
                 elif self.buttons_enabled[i] is True:
                     element.setStyleSheet(unactived_button)
+                    element.setEnabled(True)
                 else:
                     element.setStyleSheet(disabled_button)
+                    element.setEnabled(False)
 
     def set_enabled(self, index: int, value:bool=True):
         """
@@ -258,6 +300,10 @@ class MainWidget(QWidget):
         super().__init__(parent=parent)
         self.parent = parent
         self.mode = None
+        # Read default parameters
+        self.default_parameters = load_default_parameters()
+        if 'language' in self.default_parameters:
+            load_default_dictionary(self.default_parameters['language'])
         # GUI Structure
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -401,13 +447,16 @@ class MainWidget(QWidget):
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
         self.mode = event
         if self.mode == 'images':
+            # Display a label with definition or what to do in the options view ?
             if self.parent.image is not None:
                 self.update_image()
+
         elif self.mode == 'open_image':
             if self.parent.image is not None:
                 self.update_image()
             self.options_widget = ImagesFileOpeningWidget(self)
             self.set_options_widget(self.options_widget)
+
         elif self.mode == 'open_camera':
             self.options_widget = ImagesCameraOpeningWidget(self)
             self.set_options_widget(self.options_widget)
@@ -428,6 +477,7 @@ class MainWidget(QWidget):
             self.set_bot_right_widget(self.bot_right_widget)
 
         elif self.mode == 'histo':
+            # Display a label with definition or what to do in the options view ?
             self.update_image(aoi=True)
             self.top_right_widget = ImageHistogramWidget('Image Histogram')
             self.top_right_widget.set_background('white')
@@ -448,8 +498,53 @@ class MainWidget(QWidget):
         elif self.mode == 'histo_time':
             self.options_widget = HistoTimeOptionsWidget(self)
             self.set_options_widget(self.options_widget)
+            pixels_x, pixels_y = rand_pixels(self.parent.aoi)
+            self.options_widget.set_pixels_x_y(pixels_x, pixels_y)
             if self.parent.camera is None:
                 self.submenu_widget.set_enabled(2, False)
+            self.top_right_widget = ImageHistogramWidget('Image Histogram')
+            self.top_right_widget.set_background('white')
+            self.set_top_right_widget(self.top_right_widget)
+
+        elif self.mode == 'quant_samp':
+            self.update_image(aoi=True)
+            # Display a label with definition or what to do in the options view ?
+            pass
+
+        elif self.mode == 'quantization':
+            self.update_image(aoi=True)
+            self.options_widget = QuantizationOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_quantized_image'))
+            self.set_bot_right_widget(self.bot_right_widget)
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
+            self.top_right_widget.update_size(wi, he)
+            self.parent.action_quantize_image('quantized')
+
+        elif self.mode == 'sampling':
+            self.update_image(aoi=True)
+            self.options_widget = SamplingOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_quantized_image'))
+            self.set_bot_right_widget(self.bot_right_widget)
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
+            self.top_right_widget.update_size(wi, he)
+            self.parent.action_sampling_image('resampled')
+
+        elif self.mode == 'sampling':
+            pass
 
         self.main_signal.emit(event)
 

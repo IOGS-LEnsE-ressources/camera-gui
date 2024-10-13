@@ -50,7 +50,7 @@ def save_hist(data: np.ndarray, data_hist: np.ndarray, bins: np.ndarray,
         x_text_pos = 0.30  # text on the left
     else:
         x_text_pos = 0.95  # text on the right
-    plt.figure()
+    plt.figure(figsize=(10, 8), dpi=150)
     plt.bar(bins[:-1], data_hist, width=np.diff(bins),
             edgecolor='black', alpha=0.75, color='blue')
     plt.title(title)
@@ -74,6 +74,17 @@ def save_hist(data: np.ndarray, data_hist: np.ndarray, bins: np.ndarray,
         info = QMessageBox.information(None, 'Histogram Saved', f'File saved to {file_path}')
     else:
         warn = QMessageBox.warning(None, 'Saving Error', 'No file saved !')
+
+def rand_pixels(aoi: list) -> (list, list):
+    """Selection of 4 pixels in the area of interest."""
+    x, y, h, w = aoi
+    # Reset old coordinates
+    image_x = []
+    image_y = []
+    for i in range(4):
+        image_x.append(np.random.randint(x, x+h))
+        image_y.append(np.random.randint(y, y+h))
+    return image_x, image_y
 
 class HistoSpaceOptionsWidget(QWidget):
     """
@@ -138,6 +149,11 @@ class HistoTimeOptionsWidget(QWidget):
         self.layout = QVBoxLayout()
         self.parent = parent
         self.nb_of_points = 0
+        self.image_x = []
+        self.image_y = []
+        self.pixels_value = [[], [], [], []]
+        self.counter = 0
+        self.acquiring = False
 
         # Title
         # -----
@@ -207,23 +223,52 @@ class HistoTimeOptionsWidget(QWidget):
             else:
                 warn = QMessageBox.warning(self, 'Wrong value', 'The value is not in the range 1 to 2000')
         elif sender == self.save_histo_button:
-            self.start_acq_clicked.emit('save_hist')
+            self.start_acq_clicked.emit('save_hist_time')
         elif sender == self.pixel_select:
-            self.start_acq_clicked.emit('time_hist')
+            self.start_acq_clicked.emit('pixel_changed')
 
-    def get_nb_of_points(self):
-        return self.nb_of_points
+    def is_acquiring(self):
+        """Return true if the acquisition is running."""
+        return self.acquiring
 
-    def waiting_value(self, value: int):
+    def start_acquisition(self):
+        """
+        Start a new time acquisition for 4 pixels.
+        """
+        self.pixels_value = [[], [], [], []]
+        self.acquiring = True
+        self.counter = 0
+
+    def increase_counter(self, image_array: np.ndarray):
+        """
+        Increase the counter of acquisition and add the data to the list of each pixel.
+        :param image_array: Array containing the image.
+        """
+        for i in range(4):
+            self.pixels_value[i].append(image_array[self.image_y[i], self.image_x[i]])
+        self.counter += 1
+        self.waiting_value()
+
+    def get_pixels(self, index: int):
+        """
+        Return data for 1 pixel.
+        :param index: Index of the pixel to return.
+        :return: List of the data.
+        """
+        return self.pixels_value[index]
+
+    def waiting_value(self):
         # Display time elapsed...
-        self.progress_bar.setValue(value)
+        self.progress_bar.setValue(self.counter)
         # Enable or disable buttons
-        if value < self.nb_of_points:
+        if self.counter < self.nb_of_points:
             self.start_button.setStyleSheet(disabled_button)
             self.start_button.setEnabled(False)
             self.save_histo_button.setStyleSheet(disabled_button)
             self.save_histo_button.setEnabled(False)
         else:
+            self.acquiring = False
+            self.start_acq_clicked.emit('acq_end')
             self.start_button.setStyleSheet(unactived_button)
             self.start_button.setEnabled(True)
 
@@ -242,3 +287,8 @@ class HistoTimeOptionsWidget(QWidget):
     def get_pixel_index(self):
         """Return the selected pixel index."""
         return self.pixel_select.currentIndex()
+
+    def set_pixels_x_y(self, pixels_x: list, pixels_y: list):
+        """Set random pixels X and Y coordinates."""
+        self.image_x = pixels_x
+        self.image_y = pixels_y

@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-"""*main_menu_widget.py* file.
+"""*slider_bloc.py* file.
 
-...
-
-This file is attached to a 1st year of engineer training labwork in photonics.
-Subject : http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
-
-More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.html
+A widget containing a Slider.
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
@@ -18,28 +12,15 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 
 import sys
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget,
-    QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox, QSlider, QLineEdit,
-    QMessageBox
+    QMainWindow, QWidget, QMessageBox,
+    QVBoxLayout, QHBoxLayout,
+    QLabel, QSlider, QLineEdit,
 )
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
+from PyQt6.QtCore import pyqtSignal, Qt
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-# %% To add in lensepy librairy
-# Styles
-# ------
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
-# Translation
-dictionary = {}
-
-# %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Is number
 def is_number(value, min_val=0, max_val=0):

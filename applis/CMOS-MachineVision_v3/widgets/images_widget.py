@@ -102,7 +102,7 @@ class ImagesCameraOpeningWidget(QWidget):
         self.label_title_camera_options.setStyleSheet(styleH1)
         self.label_title_camera_options.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.button_open_camera = QPushButton(translate('button_open_camera'))
+        self.button_open_camera = QPushButton(translate('button_open_camera_indus'))
         self.button_open_camera.setStyleSheet(unactived_button)
         self.button_open_camera.setFixedHeight(BUTTON_HEIGHT)
         self.button_open_camera.clicked.connect(self.action_open_camera)
@@ -187,7 +187,7 @@ class ImagesDisplayWidget(QWidget):
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-            image_to_display = resize_image_ratio(self.image, self.height-30, self.width-20)
+            image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
         qimage = array_to_qimage(image_to_display)
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)
