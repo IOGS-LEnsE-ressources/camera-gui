@@ -26,6 +26,7 @@ button_options;Options Interface
 # ------------------
 button_open_image;Ouvrir une image
 button_open_camera;Ouvrir une caméra
+button_open_brand_cam;Ouvrir la première caméra
 button_open_image_from_file;Ouvrir depuis un fichier...
 button_open_camera;Sélectionner caméra
 button_open_camera_indus;Sélectionner caméra industrielle

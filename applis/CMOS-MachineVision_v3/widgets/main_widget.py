@@ -18,6 +18,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 from lensepy.css import *
+from widgets.camera import *
 from widgets.images_widget import *
 from widgets.histo_widget import *
 from widgets.aoi_select_widget import *
@@ -337,6 +338,37 @@ class MainWidget(QWidget):
         self.layout.addWidget(self.bot_right_widget, BOT_RIGHT_ROW, BOT_RIGHT_COL)
         self.top_left_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
+    def auto_connect_camera(self):
+        """Auto connect a camera, depending on the option in default_config.txt."""
+        if 'autoconnect' in self.default_parameters:
+            if self.default_parameters['autoconnect'] == 'Yes':
+                if 'brandname' in self.default_parameters:
+                    camera = cam_from_brands[self.default_parameters['brandname']]()
+                    if camera.find_first_camera():
+                        self.parent.camera = camera
+                        self.parent.camera.init_camera()
+                        self.parent.camera_thread.set_camera(self.parent.camera)
+                        # Init default parameters !
+                        self.init_default_camera_params()
+                        # Start Thread
+                        self.parent.image_bits_depth = get_bits_per_pixel(self.parent.camera.get_color_mode())
+                        self.parent.camera_thread.start()
+                        self.menu_action(None)
+                    print('AutoConnect')
+
+    def init_default_camera_params(self):
+        """Initialize a camera with default_config.txt."""
+        print('Default Parameters')
+        if 'exposure' in self.default_parameters:
+            self.parent.camera.set_exposure(int(self.default_parameters['exposure']))
+        if 'blacklevel' in self.default_parameters:
+            self.parent.camera.set_black_level(int(self.default_parameters['blacklevel']))
+        if 'framerate' in self.default_parameters:
+            self.parent.camera.set_frame_rate(int(self.default_parameters['framerate']))
+        if 'colormode' in self.default_parameters:
+            self.parent.camera.set_color_mode(self.default_parameters['colormode'])
+        self.bot_right_widget.update_parameters()
+
     def clear_layout(self, row: int, column: int) -> None:
         """
         Remove widgets from a specific position in the layout.
@@ -434,18 +466,30 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], True)
-        if self.parent.image is None:
+        if self.parent.image is None and self.parent.camera is None:
             self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
         if self.parent.aoi is None:
             self.main_menu.set_enabled([5, 6, 8, 9, 10, 12], False)
         self.clear_sublayout(OPTIONS_COL)
         self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+
         self.mode = event
         if self.mode == 'images':
             # Display a label with definition or what to do in the options view ?
             if self.parent.image is not None:
                 self.update_image()
+            if self.parent.camera is not None:
+                # Open camera settings
+                self.bot_right_widget = CameraSettingsWidget(self, self.parent.camera)
+                self.set_bot_right_widget(self.bot_right_widget)
+                self.options_widget = CameraInfosWidget(self)
+                self.set_options_widget(self.options_widget)
+                self.top_right_widget = ImageHistogramWidget('Image Histogram')
+                self.top_right_widget.set_background('white')
+                self.set_top_right_widget(self.top_right_widget)
+                # Display expo time setting in main menu
+
 
         elif self.mode == 'open_image':
             if self.parent.image is not None:
@@ -458,10 +502,9 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
 
         elif self.mode == 'aoi_select':
-            if self.parent.aoi is not None:
-                self.update_image(aoi_disp=True)
             self.options_widget = AoiSelectOptionsWidget(self)
             if self.parent.aoi is not None:
+                self.update_image(aoi_disp=True)
                 self.options_widget.set_aoi(self.parent.aoi)
             self.set_options_widget(self.options_widget)
             self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
@@ -553,6 +596,22 @@ class MainWidget(QWidget):
             self.top_right_widget.update_size(wi, he)
             self.bot_right_widget = DoubleHistoWidget(self, translate('histo_eroded_image'))
             self.set_bot_right_widget(self.bot_right_widget)
+
+        elif self.mode == 'opening_closing':
+            self.update_image(aoi=True)
+            self.options_widget = OpeningClosingOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
+            self.top_right_widget.update_size(wi, he)
+            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_eroded_image'))
+            self.set_bot_right_widget(self.bot_right_widget)
+
         self.main_signal.emit(event)
 
     def update_size(self, aoi: bool = False):

@@ -141,7 +141,10 @@ class ErosionDilationOptionsWidget(QWidget):
         self.kernel_preselect_layout.addWidget(self.kernel_rect)
 
         self.kernel_choice = ImagePixelsWidget(self)
-        self.kernel_choice.set_size(7,7)
+        size = int(self.list_options[self.selected_size])
+        pixel_size = int(self.size_options[self.selected_size])
+        self.kernel_choice.set_size(size,size)
+        self.kernel_choice.set_pixel_size(pixel_size)
         self.kernel_choice.pixel_changed.connect(self.action_button_clicked)
         self.kernel_choice.setMinimumHeight(8*20)
 
@@ -242,7 +245,9 @@ class OpeningClosingOptionsWidget(QWidget):
         self.select_closing.clicked.connect(self.action_button_clicked)
 
         self.kernel_size_widget = ButtonSelectionWidget(parent=self, name='label_kernel_size')
-        self.list_options = ['7', '5', '3']
+        self.list_options = ['15', '9', '5', '3']
+        self.size_options = ['10', '15', '20', '20']
+        self.selected_size = 0
         self.kernel_size_widget.set_list_options(self.list_options)
         self.kernel_size_widget.clicked.connect(self.action_button_clicked)
         self.kernel_size_widget.activate_index(1)
@@ -264,7 +269,10 @@ class OpeningClosingOptionsWidget(QWidget):
         self.kernel_preselect_layout.addWidget(self.kernel_rect)
 
         self.kernel_choice = ImagePixelsWidget(self)
-        self.kernel_choice.set_size(7,7)
+        size = int(self.list_options[self.selected_size])
+        pixel_size = int(self.size_options[self.selected_size])
+        self.kernel_choice.set_size(size,size)
+        self.kernel_choice.set_pixel_size(pixel_size)
         self.kernel_choice.pixel_changed.connect(self.action_button_clicked)
         self.kernel_choice.setMinimumHeight(8*20)
 
@@ -284,11 +292,11 @@ class OpeningClosingOptionsWidget(QWidget):
             self.open_close_changed.emit(f'check_diff:{check_ok}')
 
         elif sender == self.select_opening:
-            self.open_close_changed.emit('erosion')
+            self.open_close_changed.emit('opening')
             self.select_opening.setStyleSheet(actived_button)
             self.select_closing.setStyleSheet(unactived_button)
         elif sender == self.select_closing:
-            self.open_close_changed.emit('dilation')
+            self.open_close_changed.emit('closing')
             self.select_opening.setStyleSheet(unactived_button)
             self.select_closing.setStyleSheet(actived_button)
         elif sender == self.kernel_choice:
@@ -299,9 +307,18 @@ class OpeningClosingOptionsWidget(QWidget):
             self.kernel_choice.repaint()
             self.open_close_changed.emit('kernel')
         elif sender == self.kernel_cross:
+            self.kernel_cross.setStyleSheet(actived_button)
+            self.kernel_rect.setStyleSheet(unactived_button)
             self.open_close_changed.emit('cross')
         elif sender == self.kernel_rect:
+            self.kernel_cross.setStyleSheet(unactived_button)
+            self.kernel_rect.setStyleSheet(actived_button)
             self.open_close_changed.emit('rect')
+
+    def inactivate_kernel(self):
+        """Set cross/rect kernel button style to inactive."""
+        self.kernel_cross.setStyleSheet(unactived_button)
+        self.kernel_rect.setStyleSheet(unactived_button)
 
     def get_kernel(self) -> np.ndarray:
         """Return an array containing the kernel."""
@@ -310,6 +327,15 @@ class OpeningClosingOptionsWidget(QWidget):
     def set_kernel(self, kernel: np.ndarray):
         """Set a kernel."""
         self.kernel_choice.set_image(kernel)
+
+    def resize_kernel(self):
+        """Resize the displayed kernel."""
+        self.selected_size = self.kernel_size_widget.get_selection_index()
+        size = self.list_options[self.selected_size]
+        size_pixel = self.size_options[self.selected_size]
+        self.kernel_choice.set_pixel_size(int(size_pixel))
+        self.kernel_choice.set_size(int(size), int(size))
+        self.kernel_choice.repaint()
 
 
 # MOVING TO LENSEPY

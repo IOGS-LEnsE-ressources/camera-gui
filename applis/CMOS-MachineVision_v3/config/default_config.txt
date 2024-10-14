@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 # Default Parameters
 
-language; FR
-languages; FR,EN
-brandname; Basler
-clock_freq; 15
-exposure; 4000
-blacklevel; 0
-framerate; 10
-colormode; Mono12
+language;FR
+languages;FR,EN
+autoconnect;No
+brandname;Basler
+clock_freq;15
+exposure;4000
+blacklevel;0
+framerate;10
+colormode;Mono12
 
 # AOI
-aoi_x; 0
-aoi_y; 0
-aoi_w; 500
-aoi_h; 400
+aoi_x;0
+aoi_y;0
+aoi_w;500
+aoi_h;400
 
 # Default directory
-save_images_dir; D:/_old_dd/
+save_images_dir;D:/_old_dd/

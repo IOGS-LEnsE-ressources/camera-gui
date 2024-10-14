@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("LEnsE - CMOS Sensor / Machine Vision / Lab work")
         # Objects
         self.image = None
+        self.raw_image = None
         self.saved_image = None
         self.aoi = None
         self.fast_mode = False
@@ -70,6 +71,7 @@ class MainWindow(QMainWindow):
         self.central_widget = MainWidget(self)
         self.setCentralWidget(self.central_widget)
         load_menu('./config/menu.txt', self.central_widget.main_menu)
+        self.central_widget.auto_connect_camera()
         self.central_widget.main_signal.connect(self.main_action)
         self.central_widget.main_menu.set_enabled([3,5,6,8,9,10,12], False)
 
@@ -86,11 +88,19 @@ class MainWindow(QMainWindow):
             self.aoi = None
             if self.camera is not None:
                 self.camera_thread.stop()
+                self.camera.stop_acquisition()
+                self.camera.disconnect()
+                self.central_widget.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
             self.central_widget.options_widget.image_opened.connect(self.action_image_from_file)
             self.image_bits_depth = 8
 
         elif self.central_widget.mode == 'open_camera':
             self.aoi = None
+            if self.camera is not None:
+                self.camera_thread.stop()
+                self.camera.stop_acquisition()
+                self.camera.disconnect()
+                self.central_widget.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
             self.central_widget.options_widget.camera_opened.connect(self.action_camera_selected)
 
         elif self.central_widget.mode == 'aoi_select':
@@ -146,7 +156,8 @@ class MainWindow(QMainWindow):
 
         elif self.central_widget.mode == 'erosion_dilation':
             self.central_widget.options_widget.ero_dil_changed.connect(self.action_erosion_dilation)
-
+        elif self.central_widget.mode == 'opening_closing':
+            self.central_widget.options_widget.open_close_changed.connect(self.action_erosion_dilation)
 
     def thread_update_image(self, image_array):
         if image_array is not None:
@@ -154,9 +165,20 @@ class MainWindow(QMainWindow):
                 image = image_array.view(np.uint16)
             else:
                 image = image_array.view(np.uint8)
-            self.image = image.squeeze()
+            self.raw_image = image.squeeze()
+
+        self.image = self.raw_image >> (self.image_bits_depth-8)
+
         self.central_widget.top_left_widget.set_image_from_array(self.image)
-        if self.central_widget.mode == 'aoi_select':
+
+        if self.central_widget.mode == 'images':
+            if self.camera is not None:
+                # Histogram of the global image.
+                self.central_widget.top_right_widget.set_bit_depth(self.image_bits_depth)
+                self.central_widget.top_right_widget.set_image(self.raw_image, fast_mode=self.fast_mode)
+                self.central_widget.top_right_widget.update_info()
+
+        elif self.central_widget.mode == 'aoi_select':
             self.action_aoi_selected('aoi_selected')
         elif self.central_widget.mode == 'histo':
             self.action_histo_space('snap')
@@ -165,7 +187,7 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'histo_time':
             self.central_widget.update_image(aoi=True)
             if self.central_widget.options_widget.is_acquiring():
-                self.central_widget.options_widget.increase_counter(self.image)
+                self.central_widget.options_widget.increase_counter(self.raw_image)
 
         elif self.central_widget.mode == 'quant_samp':
             self.central_widget.update_image(aoi=True)
@@ -184,6 +206,13 @@ class MainWindow(QMainWindow):
                 self.action_erosion_dilation('erosion')
             elif self.central_widget.mode == 'dilation':
                 self.action_erosion_dilation('dilation')
+        elif self.central_widget.mode == 'opening_closing':
+            self.central_widget.update_image(aoi=True)
+            self.action_erosion_dilation(None)
+            if self.central_widget.submode == 'opening':
+                self.action_erosion_dilation('opening')
+            elif self.central_widget.mode == 'closing':
+                self.action_erosion_dilation('closing')
 
     def action_image_from_file(self, event: np.ndarray):
         """
@@ -198,7 +227,7 @@ class MainWindow(QMainWindow):
             self.camera_device = None
         self.image = event.copy()
         self.aoi = None
-        self.central_widget.top_left_widget.set_image_from_array(self.image)
+        self.central_widget.top_left_widget.set_image_from_array(self.raw_image)
         self.central_widget.top_left_widget.repaint()
         self.central_widget.options_widget.button_open_image.setStyleSheet(unactived_button)
         self.central_widget.main_menu.set_enabled([3], True)
@@ -217,8 +246,8 @@ class MainWindow(QMainWindow):
         self.camera = cam_from_brands[self.brand_camera](self.camera_device)
         self.camera.init_camera()
         self.camera_thread.set_camera(self.camera)
-        # Init default parameters !
-        # TO DO
+        # Init default parameters
+        self.central_widget.init_default_camera_params()
         # Start Thread
         self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
         self.camera_thread.start()
@@ -233,11 +262,11 @@ class MainWindow(QMainWindow):
 
             # Histogram of the global image.
             self.central_widget.top_right_widget.set_bit_depth(self.image_bits_depth)
-            self.central_widget.top_right_widget.set_image(self.image, fast_mode=self.fast_mode)
+            self.central_widget.top_right_widget.set_image(self.raw_image, fast_mode=self.fast_mode)
             self.central_widget.top_right_widget.update_info()
             # Histogram of the AOI.
             if self.aoi is not None:
-                aoi_array = get_aoi_array(self.image, self.aoi)
+                aoi_array = get_aoi_array(self.raw_image, self.aoi)
                 if aoi_array.shape[0]*aoi_array.shape[1] < 1000:
                     fast = False
                 else:
@@ -250,9 +279,9 @@ class MainWindow(QMainWindow):
 
     def action_histo_space(self, event):
         """Action performed when an event occurred in the histo_space options widget."""
-        image = get_aoi_array(self.image, self.aoi)
+        image = get_aoi_array(self.raw_image, self.aoi)
         if event == 'snap':
-            self.saved_image = self.image
+            self.saved_image = self.raw_image
             self.central_widget.top_right_widget.set_image(image)
             self.central_widget.top_right_widget.update_info()
         elif event == 'live':
@@ -325,6 +354,10 @@ class MainWindow(QMainWindow):
             self.central_widget.submode = 'erosion'
         elif event == 'dilation':
             self.central_widget.submode = 'dilation'
+        elif event == 'opening':
+            self.central_widget.submode = 'opening'
+        elif event == 'closing':
+            self.central_widget.submode = 'closing'
 
         if event == 'resize':
             self.central_widget.options_widget.resize_kernel()
@@ -353,6 +386,10 @@ class MainWindow(QMainWindow):
             eroded = erode_image(aoi_array, kernel)
         elif self.central_widget.submode == 'dilation':
             eroded = dilate_image(aoi_array, kernel)
+        elif self.central_widget.submode == 'opening':
+            eroded = opening_image(aoi_array, kernel)
+        elif self.central_widget.submode == 'closing':
+            eroded = closing_image(aoi_array, kernel)
         else:
             eroded = aoi_array
         self.central_widget.bot_right_widget.set_bit_depth(8)

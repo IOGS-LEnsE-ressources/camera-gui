@@ -104,6 +104,17 @@ class ImagesCameraOpeningWidget(QWidget):
         self.button_open_webcam.clicked.connect(self.action_open_webcam)
         self.button_open_webcam.setEnabled(False)
 
+        self.button_open_brand_cam = QLabel('')
+        default_brand = 'brandname' in self.parent.default_parameters
+        if default_brand:
+            self.button_open_brand_cam = QPushButton(translate('button_open_brand_cam'))
+            self.button_open_brand_cam.setStyleSheet(unactived_button)
+            self.button_open_brand_cam.setFixedHeight(BUTTON_HEIGHT)
+            self.button_open_camera.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+            self.button_open_brand_cam.clicked.connect(self.action_open_brand_cam)
+            self.layout.addWidget(self.button_open_brand_cam)
+            self.layout.addStretch()
+
         self.layout.addWidget(self.button_open_camera)
         self.layout.addWidget(self.button_open_webcam)
         self.layout.addStretch()
@@ -118,6 +129,31 @@ class ImagesCameraOpeningWidget(QWidget):
         self.parent.bot_right_widget.camera_selected.connect(self.action_camera_selected)
         self.parent.set_bot_right_widget(self.parent.bot_right_widget)
 
+    def action_open_brand_cam(self):
+        """
+        Open an industrial camera.
+        """
+        if 'brandname' in self.parent.default_parameters:
+            camera = cam_from_brands[self.parent.default_parameters['brandname']]()
+            if camera.find_first_camera():
+                self.parent.parent.camera = camera
+                self.parent.parent.camera.init_camera()
+                self.parent.parent.camera_thread.set_camera(self.parent.parent.camera)
+                # Init default parameters !
+                self.parent.menu_action('images')
+                self.parent.init_default_camera_params()
+                self.parent.bot_right_widget.update_parameters(auto_min_max=True)
+
+                print(f'Expo = {self.parent.parent.camera.get_exposure()}')
+                print(f'FPS  = {self.parent.parent.camera.get_frame_rate()}')
+                print(f'Colo = {self.parent.parent.camera.get_color_mode()}')
+                print(f'ExpoRange = {self.parent.parent.camera.get_exposure_range()}')
+
+                # Start Thread
+                self.parent.parent.image_bits_depth = get_bits_per_pixel(
+                    self.parent.parent.camera.get_color_mode())
+                self.parent.parent.camera_thread.start()
+
     def action_camera_selected(self, event):
         """Action performed when a camera is selected."""
         self.camera_opened.emit(event)
@@ -129,6 +165,23 @@ class ImagesCameraOpeningWidget(QWidget):
         print(event)
         self.camera_opening.emit('webcam_opening')
 
+
+class ImagesCreateWidget(QWidget):
+    """
+    Options widget of the image creating menu.
+    """
+
+    image_opened = pyqtSignal(np.ndarray)
+
+    def __init__(self, parent=None):
+        """
+        Default Constructor.
+        :param parent: Parent widget of this widget.
+        """
+        super().__init__(parent=parent)
+        # GUI Structure
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
 
 class ImagesDisplayWidget(QWidget):
     """
