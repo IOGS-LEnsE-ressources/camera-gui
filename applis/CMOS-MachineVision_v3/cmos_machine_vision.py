@@ -57,6 +57,9 @@ class MainWindow(QMainWindow):
         self.aoi = None
         self.fast_mode = False
         self.image_bits_depth = 8
+        # Displayed image
+        self.check_diff = False
+        self.kernel_type = None
         # Camera
         self.brand_camera = None
         self.camera_device = None
@@ -138,6 +141,9 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'sampling':
             self.central_widget.options_widget.resampled.connect(self.action_sampling_image)
 
+        elif self.central_widget.mode == 'pre_proc':
+            self.kernel_type = 'cross'
+
         elif self.central_widget.mode == 'erosion_dilation':
             self.central_widget.options_widget.ero_dil_changed.connect(self.action_erosion_dilation)
 
@@ -169,6 +175,15 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'sampling':
             self.central_widget.update_image(aoi=True)
             self.action_sampling_image('resampled')
+        elif self.central_widget.mode == 'pre_proc':
+            self.central_widget.update_image(aoi=True)
+        elif self.central_widget.mode == 'erosion_dilation':
+            self.central_widget.update_image(aoi=True)
+            self.action_erosion_dilation(None)
+            if self.central_widget.submode == 'erorion':
+                self.action_erosion_dilation('erosion')
+            elif self.central_widget.mode == 'dilation':
+                self.action_erosion_dilation('dilation')
 
     def action_image_from_file(self, event: np.ndarray):
         """
@@ -302,27 +317,49 @@ class MainWindow(QMainWindow):
 
     def action_erosion_dilation(self, event):
         """Action performed when an event occurred in the erosion/dilation options widget."""
-        if event == 'erosion':
-            self.central_widget.mode = 'erosion'
-            event = 'pixel'
+        if event == 'check_diff:0':
+            self.check_diff = False
+        elif event == 'check_diff:1':
+            self.check_diff = True
+        elif event == 'erosion':
+            self.central_widget.submode = 'erosion'
         elif event == 'dilation':
-            self.central_widget.mode = 'dilation'
-            event = 'pixel'
+            self.central_widget.submode = 'dilation'
+
+        if event == 'resize':
+            self.central_widget.options_widget.resize_kernel()
 
         if event == 'pixel':
-            kernel = self.central_widget.options_widget.get_kernel().T
-            aoi_array = get_aoi_array(self.image, self.aoi)
-            if self.central_widget.mode == 'erosion':
-                eroded = erode_image(aoi_array, kernel)
-            elif self.central_widget.mode == 'dilation':
-                eroded = dilate_image(aoi_array, kernel)
-            else:
-                eroded = aoi_array
-            self.central_widget.top_right_widget.set_image_from_array(eroded)
-            self.central_widget.bot_right_widget.set_bit_depth(8)
-            self.central_widget.bot_right_widget.set_images(aoi_array, eroded)
+            self.kernel_type = None
+        elif event == 'cross':
+            self.kernel_type = 'cross'
+        elif event == 'rect':
+            self.kernel_type = 'rect'
+
+        kernel = self.central_widget.options_widget.get_kernel().T
+        if self.kernel_type == 'cross':
+            kernel = get_cross_kernel(kernel.shape[0])
+            self.central_widget.options_widget.set_kernel(kernel)
+        elif self.kernel_type == 'rect':
+            kernel = get_rect_kernel(kernel.shape[0])
+            self.central_widget.options_widget.set_kernel(kernel)
+        else:
+            self.central_widget.options_widget.inactivate_kernel()
+            self.central_widget.options_widget.set_kernel(kernel)
 
 
+        aoi_array = get_aoi_array(self.image, self.aoi)
+        if self.central_widget.submode == 'erosion':
+            eroded = erode_image(aoi_array, kernel)
+        elif self.central_widget.submode == 'dilation':
+            eroded = dilate_image(aoi_array, kernel)
+        else:
+            eroded = aoi_array
+        self.central_widget.bot_right_widget.set_bit_depth(8)
+        self.central_widget.bot_right_widget.set_images(aoi_array, eroded)
+        if self.check_diff:
+            eroded = aoi_array - eroded
+        self.central_widget.top_right_widget.set_image_from_array(eroded)
 
     def resizeEvent(self, event):
         """

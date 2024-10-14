@@ -130,8 +130,8 @@ class MenuWidget(QWidget):
     def add_button(self, title: str, signal: str=None):
         """
         Add a button into the interface.
-        :param title:
-        :param signal:
+        :param title: Title of the button.
+        :param signal: Signal triggered by the button.
         :return:
         """
         button = QPushButton(translate(title))
@@ -165,9 +165,7 @@ class MenuWidget(QWidget):
     def add_label_title(self, title):
         """
         Add a space in the menu.
-        :param title:
-        :param signal:
-        :return:
+        :param title: Title of the label.
         """
         label = QLabel(title)
         label.setStyleSheet(styleH1)
@@ -178,9 +176,6 @@ class MenuWidget(QWidget):
     def add_space(self):
         """
         Add a space in the menu.
-        :param title:
-        :param signal:
-        :return:
         """
         self.buttons_list.append(None)
         self.buttons_signal.append(None)
@@ -295,6 +290,7 @@ class MainWidget(QWidget):
         super().__init__(parent=parent)
         self.parent = parent
         self.mode = None
+        self.submode = None
         # Read default parameters
         self.default_parameters = load_default_parameters()
         if 'language' in self.default_parameters:
