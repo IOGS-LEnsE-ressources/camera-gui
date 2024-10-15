@@ -13,7 +13,7 @@ from lensepy import translate
 from lensepy.css import *
 import numpy as np
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout,
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QLineEdit,
     QMessageBox,
 )
@@ -239,3 +239,64 @@ class AoiSelectOptionsWidget(QWidget):
 
     def get_size(self):
         return self.width, self.height
+
+
+class AoiZoomOptionsWidget(QWidget):
+    """
+    Options widget of the AOI Zoom menu.
+    """
+
+    zoom_changed = pyqtSignal(str)
+
+    def __init__(self, parent):
+        """
+        Default Constructor.
+        :param parent: Parent window of the main widget.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+        self.zoom_max = 4
+        self.zoom = 1
+
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
+
+        self.label_zoom = QLabel('')
+        self.label_zoom.setStyleSheet(styleH3)
+        self.label_zoom.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_zoom.setText(str(self.zoom))
+        self.label_zoom.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.zoom_more = QPushButton('Zoom +')
+        self.zoom_more.setStyleSheet(styleH3)
+        self.zoom_more.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.zoom_less = QPushButton('Zoom -')
+        self.zoom_less.setStyleSheet(styleH3)
+        self.zoom_less.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.layout.addWidget(self.zoom_less, 0, 0)
+        self.layout.addWidget(self.label_zoom, 0, 1)
+        self.layout.addWidget(self.zoom_more, 0, 2)
+        self.layout.setColumnStretch(0, 2)
+        self.layout.setColumnStretch(1, 3)
+        self.layout.setColumnStretch(2, 2)
+
+    def set_zoom_max(self, value):
+        """Set the maximum value for the zoom in the AOI."""
+        self.zoom_max = value
+
+    def get_zoom(self):
+        """Return the value of the zoom."""
+        return self.zoom
+
+    def reset_zoom(self):
+        """Reset the zoom value to 1."""
+        self.zoom = 1
+
+    def inc_zoom(self):
+        """Increase the zoom value of 1."""
+        if self.zoom + 1 <= self.zoom_max:
+            self.zoom += 1
+
+    def dec_zoom(self):
+        """Decrease the zoom value of 1."""
+        if self.zoom - 1 >= 1:
+            self.zoom -= 1

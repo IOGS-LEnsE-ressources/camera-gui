@@ -231,6 +231,12 @@ class MainWindow(QMainWindow):
             self.camera = None
             self.camera_device = None
         self.raw_image = event.copy()
+        if self.image_bits_depth > 8:
+            image = self.raw_image.view(np.uint16)
+        else:
+            image = self.raw_image.view(np.uint8)
+        self.raw_image = image.squeeze()
+        self.image = self.raw_image
         self.aoi = None
         self.central_widget.top_left_widget.set_image_from_array(self.raw_image)
         self.central_widget.top_left_widget.repaint()
@@ -334,7 +340,7 @@ class MainWindow(QMainWindow):
 
     def action_quantize_image(self, event):
         """Action performed when an event occurred in the quantization options widget."""
-        aoi_array = get_aoi_array(self.raw_image, self.aoi)
+        aoi_array = get_aoi_array(self.image, self.aoi)
         if event == 'quantized':
             bit_depth = self.central_widget.options_widget.get_bits_depth()
             quantized_image = quantize_image(aoi_array, bit_depth)
@@ -344,7 +350,7 @@ class MainWindow(QMainWindow):
 
     def action_sampling_image(self, event):
         """Action performed when an event occurred in the sampling options widget."""
-        aoi_array = get_aoi_array(self.raw_image, self.aoi)
+        aoi_array = get_aoi_array(self.image, self.aoi)
         if event == 'resampled':
             sample_factor = self.central_widget.options_widget.get_sample_factor()
             small_image, downsampled_image = downsample_and_upscale(aoi_array, sample_factor)
@@ -389,7 +395,7 @@ class MainWindow(QMainWindow):
             self.central_widget.options_widget.set_kernel(kernel)
 
 
-        aoi_array = get_aoi_array(self.raw_image, self.aoi)
+        aoi_array = get_aoi_array(self.image, self.aoi)
         if self.central_widget.submode == 'erosion':
             eroded = erode_image(aoi_array, kernel)
         elif self.central_widget.submode == 'dilation':
@@ -434,7 +440,7 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
-
+app.setStyleSheet(StyleSheet)
 window = MainWindow()
 window.showMaximized()
 sys.exit(app.exec())

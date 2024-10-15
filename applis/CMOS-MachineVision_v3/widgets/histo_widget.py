@@ -83,7 +83,7 @@ def rand_pixels(aoi: list) -> (list, list):
     image_y = []
     for i in range(4):
         image_x.append(np.random.randint(x, x+h))
-        image_y.append(np.random.randint(y, y+h))
+        image_y.append(np.random.randint(y, y+w))
     return image_x, image_y
 
 class HistoSpaceOptionsWidget(QWidget):
@@ -178,7 +178,8 @@ class HistoTimeOptionsWidget(QWidget):
         self.start_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.start_button.clicked.connect(self.clicked_action)
 
-        self.progress_bar = QProgressBar(self)
+        self.progress_bar = QProgressBar(self, objectName="IOGSProgressBar")
+
 
         self.save_histo_button = QPushButton(translate('button_save_histo_spatial'))
         self.save_histo_button.setStyleSheet(styleH2)

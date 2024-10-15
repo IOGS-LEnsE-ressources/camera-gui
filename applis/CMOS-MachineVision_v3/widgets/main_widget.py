@@ -115,6 +115,7 @@ class MenuWidget(QWidget):
         self.buttons_list = []
         self.buttons_signal = []
         self.buttons_enabled = []
+        self.zoom_widget = AoiZoomOptionsWidget(self)
 
         self.actual_button = None
 
@@ -127,6 +128,9 @@ class MenuWidget(QWidget):
                 self.layout.addWidget(element)
             else:
                 self.layout.addStretch()
+        if self.parent.parent.aoi is not None:
+            self.layout.addWidget(self.zoom_widget)
+
 
     def add_button(self, title: str, signal: str=None):
         """
@@ -356,11 +360,11 @@ class MainWidget(QWidget):
                         self.parent.camera.init_camera()
                         self.parent.camera_thread.set_camera(self.parent.camera)
                         # Init default parameters !
+                        self.menu_action('images')
                         self.init_default_camera_params()
                         # Start Thread
                         self.parent.image_bits_depth = get_bits_per_pixel(self.parent.camera.get_color_mode())
                         self.parent.camera_thread.start()
-                        self.menu_action(None)
                     print('AutoConnect')
 
     def init_default_camera_params(self):
@@ -374,7 +378,11 @@ class MainWidget(QWidget):
             self.parent.camera.set_frame_rate(int(self.default_parameters['framerate']))
         if 'colormode' in self.default_parameters:
             self.parent.camera.set_color_mode(self.default_parameters['colormode'])
-        self.bot_right_widget.update_parameters()
+        camera = self.parent.camera
+        print(f'Expo = {camera.get_exposure()}')
+        print(f'FPS  = {camera.get_frame_rate()}')
+        print(f'Colo = {camera.get_color_mode()}')
+        print(f'ExpoRange = {camera.get_exposure_range()}')
 
     def clear_layout(self, row: int, column: int) -> None:
         """
@@ -409,7 +417,6 @@ class MainWidget(QWidget):
         """ """
         if menu in self.default_parameters:
             return [int(x) for x in self.default_parameters[menu].split(',')]
-
 
     def set_top_right_widget(self, widget):
         """
@@ -463,11 +470,11 @@ class MainWidget(QWidget):
         :param aoi_disp: The whole image is displayed with a rectangle around the AOI.
         """
         if aoi:
-            image = get_aoi_array(self.parent.raw_image, self.parent.aoi)
+            image = get_aoi_array(self.parent.image, self.parent.aoi)
             self.top_left_widget.set_image_from_array(image, aoi)
         else:
             if aoi_disp:
-                image = display_aoi(self.parent.raw_image, self.parent.aoi)
+                image = display_aoi(self.parent.image, self.parent.aoi)
                 self.top_left_widget.set_image_from_array(image)
             else:
                 self.top_left_widget.set_image_from_array(self.parent.raw_image)
@@ -481,9 +488,11 @@ class MainWidget(QWidget):
         menu = self.get_list_menu('type1')
         self.main_menu.set_enabled(menu, True)
         if self.parent.raw_image is None and self.parent.camera is None:
+            print('NOTHING !')
             menu = self.get_list_menu('type1')
             self.main_menu.set_enabled(menu, False)
         if self.parent.aoi is None:
+            print('NO AOI !')
             menu = self.get_list_menu('type2')
             self.main_menu.set_enabled(menu, False)
         self.clear_sublayout(OPTIONS_COL)
@@ -504,8 +513,8 @@ class MainWidget(QWidget):
                 self.top_right_widget = ImageHistogramWidget('Image Histogram')
                 self.top_right_widget.set_background('white')
                 self.set_top_right_widget(self.top_right_widget)
+                self.bot_right_widget.update_parameters(auto_min_max=True)
                 # Display expo time setting in main menu
-
 
         elif self.mode == 'open_image':
             if self.parent.raw_image is not None:

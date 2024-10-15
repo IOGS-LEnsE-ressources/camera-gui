@@ -3,7 +3,7 @@
 
 language;FR
 languages;FR,EN
-autoconnect;No
+autoconnect;Yes
 brandname;Basler
 clock_freq;15
 exposure;4000
