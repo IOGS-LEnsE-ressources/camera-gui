@@ -1,0 +1,4 @@
+# Detection Menu
+# Type; Title; Signal;
+B;button_detect_harrys;detect_harrys;
+S;;;

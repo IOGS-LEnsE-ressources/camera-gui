@@ -46,8 +46,10 @@ button_full_image;Sélectionner l'image entière
 button_histo_space;Répartition spatiale
 button_histo_time;Etude temporelle
 title_histo_analysis;Histogramme de l'image
-button_acquire_histo;Acquérir un nouvel histogramme
+button_acquire_histo;Nouvel histogramme
 button_save_png_image_spatial;Sauvegarder l'histogramme (PNG)
+histo_original_image;Histogramme Image originale
+histo_eroded_image;Histogramme Image modifiée
 #
 # ------------------
 # Quantification / Echantillonnage
@@ -57,4 +59,50 @@ button_sampling;Impact de l'Echantillonnage
 title_quantization;Impact de la Quantification
 slider_quantization;Profondeur de gris
 title_resampling;Impact de l'Echantillonnage
-slider_quantization;Valeur de sous-échantillonnage
+slider_sampling;Valeur de sous-échantillonnage
+#
+# ------------------
+# Outils Images
+# ------------------
+button_tools;Outils pour Images
+button_tools_slice;Coupe dans l'image
+button_tools_vignettage;Vignettage
+#
+# ------------------
+# PreTraitement
+# ------------------
+button_bright_contrast;Contraste / Luminosité
+button_enhance_contrast;Amélioration du contraste
+button_erosion_dilation;Erosion / Dilatation
+button_opening_closing;Ouverture / Fermeture
+button_gradient;Gradient
+check_diff_image;Image - effet
+button_select_erosion;Erosion
+button_select_dilation;Dilatation
+label_kernel_size;Taille Noyau
+button_select_opening;Ouverture
+button_select_closing;Fermeture
+kernel_preselect_cross;CROSS
+kernel_preselect_rect;RECT
+#
+# ------------------
+# Filtres
+# ------------------
+button_filter_blur;Filtre de flou (blur)
+button_filter_mean;Filtre moyenneur (mean)
+#
+# ------------------
+# Contours
+# ------------------
+button_edge_sobel;Méthode Sobel
+button_edge_canny;Méthode Canny
+#
+# ------------------
+# Segmentation
+# ------------------
+button_segment_watershed;Méthode Watershed
+#
+# ------------------
+# Détection
+# ------------------
+button_detect_harrys;Détection de coins (Harrys)

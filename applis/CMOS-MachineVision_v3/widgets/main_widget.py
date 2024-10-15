@@ -231,11 +231,18 @@ class MenuWidget(QWidget):
         :param index:
         :param value:
         """
+        menu = self.parent.get_list_menu('off_menu')
         if isinstance(index, list):
             for i in index:
-                self.buttons_enabled[i-1] = value
+                if i not in menu:
+                    self.buttons_enabled[i-1] = value
+                else:
+                    self.buttons_enabled[i - 1] = False
         else:
-            self.buttons_enabled[index-1] = value
+            if index not in menu:
+                self.buttons_enabled[index - 1] = value
+            else:
+                self.buttons_enabled[index - 1] = False
         self.update_menu_display()
 
     def submenu_is_clicked(self, event):
@@ -398,6 +405,12 @@ class MainWidget(QWidget):
             else:
                 self.layout.removeItem(item)
 
+    def get_list_menu(self, menu):
+        """ """
+        if menu in self.default_parameters:
+            return [int(x) for x in self.default_parameters[menu].split(',')]
+
+
     def set_top_right_widget(self, widget):
         """
         Modify the top right widget.
@@ -450,14 +463,14 @@ class MainWidget(QWidget):
         :param aoi_disp: The whole image is displayed with a rectangle around the AOI.
         """
         if aoi:
-            image = get_aoi_array(self.parent.image, self.parent.aoi)
+            image = get_aoi_array(self.parent.raw_image, self.parent.aoi)
             self.top_left_widget.set_image_from_array(image, aoi)
         else:
             if aoi_disp:
-                image = display_aoi(self.parent.image, self.parent.aoi)
+                image = display_aoi(self.parent.raw_image, self.parent.aoi)
                 self.top_left_widget.set_image_from_array(image)
             else:
-                self.top_left_widget.set_image_from_array(self.parent.image)
+                self.top_left_widget.set_image_from_array(self.parent.raw_image)
 
     def menu_action(self, event):
         """
@@ -465,11 +478,14 @@ class MainWidget(QWidget):
         Only GUI actions are performed in this section.
         :param event: Event that triggered the action.
         """
-        self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], True)
-        if self.parent.image is None and self.parent.camera is None:
-            self.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
+        menu = self.get_list_menu('type1')
+        self.main_menu.set_enabled(menu, True)
+        if self.parent.raw_image is None and self.parent.camera is None:
+            menu = self.get_list_menu('type1')
+            self.main_menu.set_enabled(menu, False)
         if self.parent.aoi is None:
-            self.main_menu.set_enabled([5, 6, 8, 9, 10, 12], False)
+            menu = self.get_list_menu('type2')
+            self.main_menu.set_enabled(menu, False)
         self.clear_sublayout(OPTIONS_COL)
         self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
@@ -477,7 +493,7 @@ class MainWidget(QWidget):
         self.mode = event
         if self.mode == 'images':
             # Display a label with definition or what to do in the options view ?
-            if self.parent.image is not None:
+            if self.parent.raw_image is not None:
                 self.update_image()
             if self.parent.camera is not None:
                 # Open camera settings
@@ -492,7 +508,7 @@ class MainWidget(QWidget):
 
 
         elif self.mode == 'open_image':
-            if self.parent.image is not None:
+            if self.parent.raw_image is not None:
                 self.update_image()
             self.options_widget = ImagesFileOpeningWidget(self)
             self.set_options_widget(self.options_widget)

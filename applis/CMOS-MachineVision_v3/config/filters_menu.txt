@@ -1,0 +1,5 @@
+# Filters Menu
+# Type; Title; Signal;
+B;button_filter_blur;filter_blur;
+B;button_filter_mean;filter_mean;
+S;;;

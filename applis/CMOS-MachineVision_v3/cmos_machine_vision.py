@@ -73,15 +73,16 @@ class MainWindow(QMainWindow):
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.auto_connect_camera()
         self.central_widget.main_signal.connect(self.main_action)
-        self.central_widget.main_menu.set_enabled([3,5,6,8,9,10,12], False)
+        menu1 = self.central_widget.get_list_menu('type1')
+        self.central_widget.main_menu.set_enabled(menu1, False)
 
     def main_action(self, event):
         """
         Action performed by an event in the main widget.
         :param event: Event that triggered the action.
         """
-        if self.image is not None:
-            size = self.image.shape[1] * self.image.shape[0]
+        if self.raw_image is not None:
+            size = self.raw_image.shape[1] * self.raw_image.shape[0]
             self.fast_mode = size > 1e5 # Fast mode if number of pixels > 1e5
 
         if self.central_widget.mode == 'open_image':
@@ -90,7 +91,8 @@ class MainWindow(QMainWindow):
                 self.camera_thread.stop()
                 self.camera.stop_acquisition()
                 self.camera.disconnect()
-                self.central_widget.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
+                menu1 = self.central_widget.get_list_menu('type1')
+                self.central_widget.main_menu.set_enabled(menu1, False)
             self.central_widget.options_widget.image_opened.connect(self.action_image_from_file)
             self.image_bits_depth = 8
 
@@ -100,17 +102,18 @@ class MainWindow(QMainWindow):
                 self.camera_thread.stop()
                 self.camera.stop_acquisition()
                 self.camera.disconnect()
-                self.central_widget.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], False)
+                menu1 = self.central_widget.get_list_menu('type1')
+                self.central_widget.main_menu.set_enabled(menu1, False)
             self.central_widget.options_widget.camera_opened.connect(self.action_camera_selected)
 
         elif self.central_widget.mode == 'aoi_select':
             # Histogram of the global image.
             self.central_widget.top_right_widget.set_bit_depth(self.image_bits_depth)
-            self.central_widget.top_right_widget.set_image(self.image, fast_mode=self.fast_mode)
+            self.central_widget.top_right_widget.set_image(self.raw_image, fast_mode=self.fast_mode)
             self.central_widget.top_right_widget.update_info()
             # Histogram of the AOI.
             if self.aoi is not None:
-                aoi_array = get_aoi_array(self.image, self.aoi)
+                aoi_array = get_aoi_array(self.raw_image, self.aoi)
                 self.central_widget.bot_right_widget.set_bit_depth(self.image_bits_depth)
                 self.central_widget.bot_right_widget.set_image(aoi_array, fast_mode=self.fast_mode)
                 self.central_widget.bot_right_widget.update_info()
@@ -118,7 +121,7 @@ class MainWindow(QMainWindow):
             self.central_widget.options_widget.aoi_selected.connect(self.action_aoi_selected)
 
         elif self.central_widget.mode == 'histo':
-            aoi_array = get_aoi_array(self.image, self.aoi)
+            aoi_array = get_aoi_array(self.raw_image, self.aoi)
             if aoi_array.shape[0] * aoi_array.shape[1] < 1000:
                 fast = False
             else:
@@ -129,7 +132,7 @@ class MainWindow(QMainWindow):
 
         elif self.central_widget.mode == 'histo_space':
             self.central_widget.options_widget.snap_clicked.connect(self.action_histo_space)
-            aoi_array = get_aoi_array(self.image, self.aoi)
+            aoi_array = get_aoi_array(self.raw_image, self.aoi)
             if aoi_array.shape[0] * aoi_array.shape[1] < 1000:
                 fast = False
             else:
@@ -155,8 +158,10 @@ class MainWindow(QMainWindow):
             self.kernel_type = 'cross'
 
         elif self.central_widget.mode == 'erosion_dilation':
+            self.check_diff = False
             self.central_widget.options_widget.ero_dil_changed.connect(self.action_erosion_dilation)
         elif self.central_widget.mode == 'opening_closing':
+            self.check_diff = False
             self.central_widget.options_widget.open_close_changed.connect(self.action_erosion_dilation)
 
     def thread_update_image(self, image_array):
@@ -225,13 +230,14 @@ class MainWindow(QMainWindow):
             self.camera.disconnect()
             self.camera = None
             self.camera_device = None
-        self.image = event.copy()
+        self.raw_image = event.copy()
         self.aoi = None
         self.central_widget.top_left_widget.set_image_from_array(self.raw_image)
         self.central_widget.top_left_widget.repaint()
         self.central_widget.options_widget.button_open_image.setStyleSheet(unactived_button)
         self.central_widget.main_menu.set_enabled([3], True)
-        self.central_widget.main_menu.set_enabled([5, 6, 8, 9, 10, 12], False)
+        menu2 = self.central_widget.get_list_menu('type2')
+        self.central_widget.main_menu.set_enabled(menu2, False)
 
     def action_camera_selected(self, event):
         """
@@ -239,7 +245,8 @@ class MainWindow(QMainWindow):
         :param event: Event that triggered the action - np.ndarray.
         """
         self.central_widget.main_menu.set_enabled([3], True)
-        self.central_widget.main_menu.set_enabled([5, 6, 8, 9, 10, 12], False)
+        menu2 = self.central_widget.get_list_menu('type2')
+        self.central_widget.main_menu.set_enabled(menu2, False)
         self.brand_camera = event['brand']
         camera_list = cam_list_brands[self.brand_camera]()
         self.camera_device = camera_list.get_cam_device(int(event['cam_dev']))
@@ -258,7 +265,8 @@ class MainWindow(QMainWindow):
             x, y = self.central_widget.options_widget.get_position()
             w, h = self.central_widget.options_widget.get_size()
             self.aoi = (x, y, w, h)
-            self.central_widget.main_menu.set_enabled([3, 5, 6, 8, 9, 10, 12], True)
+            menu1 = self.central_widget.get_list_menu('type1')
+            self.central_widget.main_menu.set_enabled(menu1, True)
 
             # Histogram of the global image.
             self.central_widget.top_right_widget.set_bit_depth(self.image_bits_depth)
@@ -326,7 +334,7 @@ class MainWindow(QMainWindow):
 
     def action_quantize_image(self, event):
         """Action performed when an event occurred in the quantization options widget."""
-        aoi_array = get_aoi_array(self.image, self.aoi)
+        aoi_array = get_aoi_array(self.raw_image, self.aoi)
         if event == 'quantized':
             bit_depth = self.central_widget.options_widget.get_bits_depth()
             quantized_image = quantize_image(aoi_array, bit_depth)
@@ -336,7 +344,7 @@ class MainWindow(QMainWindow):
 
     def action_sampling_image(self, event):
         """Action performed when an event occurred in the sampling options widget."""
-        aoi_array = get_aoi_array(self.image, self.aoi)
+        aoi_array = get_aoi_array(self.raw_image, self.aoi)
         if event == 'resampled':
             sample_factor = self.central_widget.options_widget.get_sample_factor()
             small_image, downsampled_image = downsample_and_upscale(aoi_array, sample_factor)
@@ -381,7 +389,7 @@ class MainWindow(QMainWindow):
             self.central_widget.options_widget.set_kernel(kernel)
 
 
-        aoi_array = get_aoi_array(self.image, self.aoi)
+        aoi_array = get_aoi_array(self.raw_image, self.aoi)
         if self.central_widget.submode == 'erosion':
             eroded = erode_image(aoi_array, kernel)
         elif self.central_widget.submode == 'dilation':

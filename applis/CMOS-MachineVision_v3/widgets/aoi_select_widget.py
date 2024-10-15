@@ -157,16 +157,16 @@ class AoiSelectOptionsWidget(QWidget):
         self.full_image_action()
 
     def centered_action(self):
-        if self.parent.parent.image is not None:
-            x_max, y_max = self.parent.parent.image.shape[1], self.parent.parent.image.shape[0]
+        if self.parent.parent.raw_image is not None:
+            x_max, y_max = self.parent.parent.raw_image.shape[1], self.parent.parent.raw_image.shape[0]
             self.x_pos = x_max // 2 - self.width // 2
             self.y_pos = y_max // 2 - self.height // 2
             self.update_aoi()
             self.aoi_selected.emit('aoi_selected')
 
     def full_image_action(self):
-        if self.parent.parent.image is not None:
-            x_max, y_max = self.parent.parent.image.shape[1], self.parent.parent.image.shape[0]
+        if self.parent.parent.raw_image is not None:
+            x_max, y_max = self.parent.parent.raw_image.shape[1], self.parent.parent.raw_image.shape[0]
             self.x_pos = 0
             self.y_pos = 0
             self.width = x_max
@@ -188,10 +188,10 @@ class AoiSelectOptionsWidget(QWidget):
         self.height_value.setText(str(self.height))
 
     def xy_position_changing(self):
-        if self.parent.parent.image is not None:
-            x_max, y_max = self.parent.parent.image.shape[1], self.parent.parent.image.shape[0]
-        else:
-            x_max, y_max = self.parent.camera.get_sensor_size()
+        if self.parent.parent.raw_image is not None:
+            x_max, y_max = self.parent.parent.raw_image.shape[1], self.parent.parent.raw_image.shape[0]
+        elif self.parent.parent.camera is not None:
+            x_max, y_max = self.parent.parent.camera.get_sensor_size()
         # Verify if X and Y position are OK ! (good range of the image)
         if 0 <= int(self.x_position_value.text()) < x_max:
             self.x_pos = int(self.x_position_value.text())
@@ -216,10 +216,10 @@ class AoiSelectOptionsWidget(QWidget):
         self.aoi_selected.emit('aoi_selected')
 
     def size_changing(self):
-        if self.parent.parent.image is not None:
-            x_max, y_max = self.parent.parent.image.shape[1], self.parent.parent.image.shape[0]
-        else:
-            x_max, y_max = self.parent.camera.get_sensor_size()
+        if self.parent.parent.raw_image is not None:
+            x_max, y_max = self.parent.parent.raw_image.shape[1], self.parent.parent.raw_image.shape[0]
+        elif self.parent.parent.camera is not None:
+            x_max, y_max = self.parent.parent.camera.get_sensor_size()
         # Verify if X+width and Y+height are OK ! (good range of the image)
         if self.x_pos + int(self.width_value.text()) <= x_max:
             self.width = int(self.width_value.text())

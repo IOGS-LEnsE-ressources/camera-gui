@@ -1,0 +1,5 @@
+# Edge Menu
+# Type; Title; Signal;
+B;button_edge_sobel;edge_sobel;
+B;button_edge_canny;edge_canny;
+S;;;

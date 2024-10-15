@@ -19,3 +19,8 @@ aoi_h;400
 
 # Default directory
 save_images_dir;D:/_old_dd/
+
+# Default Menu
+off_menu;15
+type1;3,5,6,8,10,11,12,14,15
+type2;5,6,8,10,11,12,14,15

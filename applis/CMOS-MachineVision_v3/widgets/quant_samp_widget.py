@@ -46,7 +46,7 @@ class QuantizationOptionsWidget(QWidget):
 
         # Quantization factor
         # -------------------
-        self.slider_quantization = SliderBloc('slider_quantization', unit='bits', min_value=1,
+        self.slider_quantization = SliderBloc(translate('slider_quantization'), unit='bits', min_value=1,
                                               max_value=8, integer=True)
         self.slider_quantization.set_value(8)
         self.slider_quantization.slider_changed.connect(self.action_slider_bits_depth_changed)
@@ -90,7 +90,7 @@ class SamplingOptionsWidget(QWidget):
 
         # Quantization factor
         # -------------------
-        self.slider_sampling = SliderBloc('slider_sampling', unit='pixels', min_value=1,
+        self.slider_sampling = SliderBloc(translate('slider_sampling'), unit='pixels', min_value=1,
                                               max_value=32, integer=True)
         self.slider_sampling.set_value(1)
         self.slider_sampling.slider_changed.connect(self.action_slider_samples_changed)

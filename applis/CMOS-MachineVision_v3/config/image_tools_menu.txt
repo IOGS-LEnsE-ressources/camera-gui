@@ -1,0 +1,5 @@
+# Options Menu
+# Type; Title; Signal;
+B;button_tools_slice;tools_slice;
+B;button_tools_vignettage;tools_vignettage;
+S;;;

@@ -153,6 +153,15 @@ class ImagesCameraOpeningWidget(QWidget):
                 self.parent.parent.image_bits_depth = get_bits_per_pixel(
                     self.parent.parent.camera.get_color_mode())
                 self.parent.parent.camera_thread.start()
+            else:
+                dlg = QMessageBox(self)
+                dlg.setWindowTitle("Warning - No Camera")
+                dlg.setText("No camera is connected to this computer...")
+                dlg.setStandardButtons(
+                    QMessageBox.StandardButton.Ok
+                )
+                dlg.setIcon(QMessageBox.Icon.Warning)
+                button = dlg.exec()
 
     def action_camera_selected(self, event):
         """Action performed when a camera is selected."""
