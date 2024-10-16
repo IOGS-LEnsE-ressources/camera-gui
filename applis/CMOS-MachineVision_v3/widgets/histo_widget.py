@@ -8,7 +8,7 @@ This file contains graphical elements to display histograms of images in a widge
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 Creation : oct/2024
 """
-from lensepy import translate
+from lensepy import *
 from lensepy.css import *
 import sys, os
 import numpy as np

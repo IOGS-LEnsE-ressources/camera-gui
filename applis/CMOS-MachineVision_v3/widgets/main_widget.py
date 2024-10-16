@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
-from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
+from lensepy.pyqt6.widget_image_histogram import *
 from lensepy.css import *
 from lensepy.images import *
 from widgets.camera import *
@@ -605,7 +605,8 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.start_double_histo_widget(translate('histo_quantized_image'))
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_quantized_image'))
             self.parent.action_quantize_image('quantized')
 
         elif self.mode == 'sampling':
@@ -614,7 +615,8 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.start_double_histo_widget(translate('histo_quantized_image'))
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_quantized_image'))
             self.parent.action_sampling_image('resampled')
 
         elif self.mode == 'threshold':
@@ -635,7 +637,17 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.start_double_histo_widget(translate('histo_contr_bright_image'))
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_contr_bright_image'))
+
+        elif self.mode == 'enhance_contrast':
+            self.update_image(aoi=True)
+            self.options_widget = ContrastAdjustOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_contr_bright_image'))
 
         elif self.mode == 'erosion_dilation':
             self.update_image(aoi=True)
@@ -643,7 +655,8 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.start_double_histo_widget(translate('histo_eroded_image'))
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_eroded_image'))
 
         elif self.mode == 'opening_closing':
             self.update_image(aoi=True)
@@ -651,7 +664,18 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.start_double_histo_widget(translate('histo_eroded_image'))
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_eroded_image'))
+
+        elif self.mode == 'gradient':
+            self.submode = 'gradient'
+            self.update_image(aoi=True)
+            self.options_widget = GradientOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            self.start_double_histo_widget(name1=translate('histo_original_image'),
+                                           name2=translate('histo_gradient_image'))
 
         self.main_signal.emit(event)
 
@@ -664,10 +688,11 @@ class MainWidget(QWidget):
         he = (height * TOP_HEIGHT) // 100
         self.top_right_widget.update_size(wi, he)
 
-    def start_double_histo_widget(self, name: str):
+    def start_double_histo_widget(self, name1: str = 'Original Image',
+                                  name2: str = 'Modified Image'):
         """Start a widget containing a double histogram in the bottom right corner."""
         self.resize_top_right_image()
-        self.bot_right_widget = DoubleHistoWidget(self, name)
+        self.bot_right_widget = DoubleHistoWidget(self, name_histo_1=name1, name_histo_2=name2)
         self.set_bot_right_widget(self.bot_right_widget)
 
     def update_size(self, aoi: bool = False):

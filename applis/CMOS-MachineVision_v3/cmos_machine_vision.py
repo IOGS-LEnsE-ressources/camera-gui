@@ -110,10 +110,7 @@ class MainWindow(QMainWindow):
 
         elif self.central_widget.mode == 'histo':
             aoi_array = get_aoi_array(self.raw_image, self.aoi)
-            if aoi_array.shape[0] * aoi_array.shape[1] < 1000:
-                fast = False
-            else:
-                fast = True
+            fast = (aoi_array.shape[0] * aoi_array.shape[1]) < 1000
             self.central_widget.top_right_widget.set_bit_depth(self.image_bits_depth)
             self.central_widget.top_right_widget.set_image(aoi_array, fast_mode=fast)
             self.central_widget.top_right_widget.update_info()
@@ -160,6 +157,10 @@ class MainWindow(QMainWindow):
             self.check_diff = False
             self.central_widget.options_widget.open_close_changed.connect(self.action_erosion_dilation)
 
+        elif self.central_widget.mode == 'gradient':
+            self.check_diff = False
+            self.central_widget.options_widget.gradient_changed.connect(self.action_erosion_dilation)
+
     def thread_update_image(self, image_array):
         if image_array is not None:
             if self.image_bits_depth > 8:
@@ -204,6 +205,10 @@ class MainWindow(QMainWindow):
             self.central_widget.update_image(aoi=True)
             self.action_threshold(None)
 
+        elif self.central_widget.mode == 'enhance_contrast':
+            self.central_widget.update_image(aoi=True)
+            self.action_enhance_contrast('contrast_brightness')
+
         elif self.central_widget.mode == 'bright_contrast':
             self.central_widget.update_image(aoi=True)
             self.action_contrast_brightness('contrast_brightness')
@@ -222,6 +227,9 @@ class MainWindow(QMainWindow):
                 self.action_erosion_dilation('opening')
             elif self.central_widget.mode == 'closing':
                 self.action_erosion_dilation('closing')
+        elif self.central_widget.mode == 'gradient':
+            self.central_widget.update_image(aoi=True)
+            self.action_erosion_dilation('gradient')
 
     def action_image_from_file(self, event: np.ndarray):
         """
@@ -384,6 +392,26 @@ class MainWindow(QMainWindow):
             eroded = aoi_array - eroded
         self.central_widget.top_right_widget.set_image_from_array(eroded)
 
+    def action_enhance_contrast(self, event):
+        """Action performed when an event occurred in the erosion/dilation options widget."""
+        aoi_array = get_aoi_array(self.image, self.aoi)
+
+        delta_image_depth = (self.image_bits_depth - 8)  # Power of 2 for depth conversion
+        min_value = int(self.central_widget.options_widget.get_min() // 2**delta_image_depth)
+        max_value = int(self.central_widget.options_widget.get_max() // 2**delta_image_depth)
+        max_range = 255
+        gain = max_range/(max_value-min_value)
+        output_image = ((self.image.astype(np.int16)-min_value+1) * gain).astype(np.int16)
+        output_image[output_image > max_range] = 255
+        output_image[output_image <= 1] = 0
+        output_image = output_image.astype(np.uint8)
+
+        self.central_widget.bot_right_widget.set_bit_depth(8)
+        self.central_widget.bot_right_widget.set_images(aoi_array, output_image)
+        if self.check_diff:
+            output_image = aoi_array - output_image
+        self.central_widget.top_right_widget.set_image_from_array(output_image)
+
     def action_threshold(self, event):
         """Action performed when an event occurred in the threshold options widget."""
         if event == 'threshold_type':
@@ -460,6 +488,8 @@ class MainWindow(QMainWindow):
             eroded = opening_image(aoi_array, kernel)
         elif self.central_widget.submode == 'closing':
             eroded = closing_image(aoi_array, kernel)
+        elif self.central_widget.submode == 'gradient':
+            eroded = gradient_image(aoi_array, kernel)
         else:
             eroded = aoi_array
         self.central_widget.bot_right_widget.set_bit_depth(8)

@@ -25,6 +25,9 @@ from lensepy.pyqt6.widget_slider import *
 
 
 class ThresholdOptionsWidget(QWidget):
+    """
+    Widget containing the threshold options.
+    """
 
     threshold_changed = pyqtSignal(str)
 
@@ -105,7 +108,11 @@ class ThresholdOptionsWidget(QWidget):
         return int(self.buttons_choice.get_selection_index()+1)
 
 
-class ContrastAdjustWidget(QWidget):
+class ContrastAdjustOptionsWidget(QWidget):
+    """
+    Widget containing the adjusting contrast options.
+    # TO DO
+    """
 
     options_clicked = pyqtSignal(str)
 
@@ -122,15 +129,15 @@ class ContrastAdjustWidget(QWidget):
         self.label_title_contrast_adjust = QLabel(translate('title_contrast_adjust'))
         self.label_title_contrast_adjust.setStyleSheet(styleH1)
 
-        max_value = (2**self.parent.bits_depth - 1)
+        max_value = (2**self.parent.parent.image_bits_depth - 1)
 
-        self.slider_threshold_min = SliderBloc(title=translate('threshold_value_min'), unit='',
-                                       min_value=0, max_value=max_value, is_integer=True)
+        self.slider_threshold_min = SliderBloc(name=translate('threshold_value_min'), unit='',
+                                       min_value=0, max_value=max_value, integer=True)
         self.slider_threshold_min.set_value(0)
         self.slider_threshold_min.slider_changed.connect(self.action_slider_changing)
 
-        self.slider_threshold_max = SliderBloc(title=translate('threshold_value_max'), unit='',
-                                       min_value=0, max_value=max_value, is_integer=True)
+        self.slider_threshold_max = SliderBloc(name=translate('threshold_value_max'), unit='',
+                                       min_value=0, max_value=max_value, integer=True)
         self.slider_threshold_max.set_value(max_value)
         self.slider_threshold_max.slider_changed.connect(self.action_slider_changing)
 
@@ -147,7 +154,16 @@ class ContrastAdjustWidget(QWidget):
         min_value = int(self.slider_threshold_min.get_value())
         max_value = int(self.slider_threshold_max.get_value())
         if min_value >= max_value:
+            max_value += 1
             self.slider_threshold_max.set_value(min_value+1)
+
+    def get_max(self):
+        """Return the value of the maximum slider."""
+        return self.slider_threshold_max.get_value()
+
+    def get_min(self):
+        """Return the value of the minimum slider."""
+        return self.slider_threshold_min.get_value()
 
     def get_selection(self, image: np.ndarray, inverted: bool=False):
         """Process image in 8bits mode - for faster process"""
@@ -164,7 +180,7 @@ class ContrastAdjustWidget(QWidget):
 
 class ErosionDilationOptionsWidget(QWidget):
     """
-    Options widget of the AOI select menu.
+    Widget containing the erosion/dilation options.
     """
 
     ero_dil_changed = pyqtSignal(str)
@@ -306,7 +322,7 @@ class ErosionDilationOptionsWidget(QWidget):
 
 class OpeningClosingOptionsWidget(QWidget):
     """
-    Options widget of the AOI select menu.
+    Widget containing the opening/closing options.
     """
 
     open_close_changed = pyqtSignal(str)
@@ -444,7 +460,7 @@ class OpeningClosingOptionsWidget(QWidget):
 
 class ContrastBrightnessOptionsWidget(QWidget):
     """
-    Options widget of the AOI select menu.
+    Widget containing the contrast/brightness options.
     """
 
     contrast_brithtness_changed = pyqtSignal(str)
@@ -494,6 +510,122 @@ class ContrastBrightnessOptionsWidget(QWidget):
     def get_brightness(self):
         """Return the value of the contrast slider."""
         return float(self.slider_brightness.get_value())
+
+
+class GradientOptionsWidget(QWidget):
+    """
+    Widget containing the gradient options.
+    """
+
+    gradient_changed = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        """
+        Default Constructor.
+        :param parent: Parent window of the main widget.
+        """
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.check_diff = QCheckBox(text=translate('check_diff_image'))
+        self.check_diff.stateChanged.connect(self.action_button_clicked)
+
+        self.kernel_size_widget = ButtonSelectionWidget(parent=self, name='label_kernel_size')
+        self.list_options = ['15', '9', '5', '3']
+        self.size_options = ['10', '15', '20', '20']
+        self.selected_size = 0
+        self.kernel_size_widget.set_list_options(self.list_options)
+        self.kernel_size_widget.clicked.connect(self.action_button_clicked)
+        self.kernel_size_widget.activate_index(1)
+
+        self.kernel_preselect = QWidget()
+        self.kernel_preselect_layout = QHBoxLayout()
+        self.kernel_preselect.setLayout(self.kernel_preselect_layout)
+        self.kernel_cross = QPushButton(translate('kernel_preselect_cross'))
+        self.kernel_cross.setStyleSheet(styleH2)
+        self.kernel_cross.setStyleSheet(unactived_button)
+        self.kernel_cross.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.kernel_cross.clicked.connect(self.action_button_clicked)
+        self.kernel_rect = QPushButton(translate('kernel_preselect_rect'))
+        self.kernel_rect.setStyleSheet(styleH2)
+        self.kernel_rect.setStyleSheet(unactived_button)
+        self.kernel_rect.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.kernel_rect.clicked.connect(self.action_button_clicked)
+        self.kernel_ellip = QPushButton(translate('kernel_preselect_ellip'))
+        self.kernel_ellip.setStyleSheet(styleH2)
+        self.kernel_ellip.setStyleSheet(unactived_button)
+        self.kernel_ellip.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.kernel_ellip.clicked.connect(self.action_button_clicked)
+        self.kernel_preselect_layout.addWidget(self.kernel_cross)
+        self.kernel_preselect_layout.addWidget(self.kernel_rect)
+        self.kernel_preselect_layout.addWidget(self.kernel_ellip)
+
+        self.kernel_choice = ImagePixelsWidget(self)
+        size = int(self.list_options[self.selected_size])
+        pixel_size = int(self.size_options[self.selected_size])
+        self.kernel_choice.set_size(size,size)
+        self.kernel_choice.set_pixel_size(pixel_size)
+        self.kernel_choice.pixel_changed.connect(self.action_button_clicked)
+        self.kernel_choice.setMinimumHeight(8*20)
+
+        self.layout.addWidget(self.check_diff)
+        self.layout.addWidget(self.kernel_size_widget)
+        self.layout.addWidget(self.kernel_preselect)
+        self.layout.addWidget(self.kernel_choice)
+        self.layout.addStretch()
+
+    def action_button_clicked(self, event):
+        """Action performed when a button is clicked."""
+        sender = self.sender()
+        if sender == self.check_diff:
+            check_ok = 1 if self.check_diff.isChecked() else 0
+            self.gradient_changed.emit(f'check_diff:{check_ok}')
+        elif sender == self.kernel_choice:
+            self.gradient_changed.emit('pixel')
+        elif sender == self.kernel_size_widget:
+            k_size = int(self.kernel_size_widget.get_selection())
+            self.kernel_choice.set_size(k_size, k_size)
+            self.kernel_choice.repaint()
+            self.gradient_changed.emit('kernel')
+        elif sender == self.kernel_cross:
+            self.kernel_cross.setStyleSheet(actived_button)
+            self.kernel_rect.setStyleSheet(unactived_button)
+            self.kernel_ellip.setStyleSheet(unactived_button)
+            self.gradient_changed.emit('cross')
+        elif sender == self.kernel_rect:
+            self.kernel_cross.setStyleSheet(unactived_button)
+            self.kernel_rect.setStyleSheet(actived_button)
+            self.kernel_ellip.setStyleSheet(unactived_button)
+            self.gradient_changed.emit('rect')
+        elif sender == self.kernel_ellip:
+            self.kernel_cross.setStyleSheet(unactived_button)
+            self.kernel_rect.setStyleSheet(unactived_button)
+            self.kernel_ellip.setStyleSheet(actived_button)
+            self.gradient_changed.emit('ellip')
+
+    def inactivate_kernel(self):
+        """Set cross/rect kernel button style to inactive."""
+        self.kernel_cross.setStyleSheet(unactived_button)
+        self.kernel_rect.setStyleSheet(unactived_button)
+
+    def get_kernel(self) -> np.ndarray:
+        """Return an array containing the kernel."""
+        return self.kernel_choice.get_image()
+
+    def set_kernel(self, kernel: np.ndarray):
+        """Set a kernel."""
+        self.kernel_choice.set_image(kernel)
+
+    def resize_kernel(self):
+        """Resize the displayed kernel."""
+        self.selected_size = self.kernel_size_widget.get_selection_index()
+        size = self.list_options[self.selected_size]
+        size_pixel = self.size_options[self.selected_size]
+        self.kernel_choice.set_pixel_size(int(size_pixel))
+        self.kernel_choice.set_size(int(size), int(size))
+        self.kernel_choice.repaint()
 
 
 if __name__ == '__main__':
