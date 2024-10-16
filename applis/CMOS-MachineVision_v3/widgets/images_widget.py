@@ -75,6 +75,7 @@ class ImagesFileOpeningWidget(QWidget):
             dlg.setIcon(QMessageBox.Icon.Warning)
             button = dlg.exec()
 
+
 class ImagesCameraOpeningWidget(QWidget):
     """
     Options widget of the image opening menu.
@@ -191,6 +192,7 @@ class ImagesCreateWidget(QWidget):
         # GUI Structure
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+
 
 class ImagesDisplayWidget(QWidget):
     """

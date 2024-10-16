@@ -59,7 +59,7 @@ button_sampling;Impact de l'Echantillonnage
 title_quantization;Impact de la Quantification
 slider_quantization;Profondeur de gris
 title_resampling;Impact de l'Echantillonnage
-slider_sampling;Valeur de sous-échantillonnage
+slider_sampling;Sous-échantillonnage
 #
 # ------------------
 # Outils Images
@@ -84,6 +84,14 @@ button_select_opening;Ouverture
 button_select_closing;Fermeture
 kernel_preselect_cross;CROSS
 kernel_preselect_rect;RECT
+kernel_preselect_ellip;ELLIPSE
+button_threshold;Seuillage
+label_threshold_type;Type
+threshold_normal;Normal
+threshold_inverted;Inversé
+threshold_hat;Double
+threshold_value;Valeur Seuil 1
+threshold_value_hat;Valeur Seuil 2
 #
 # ------------------
 # Filtres

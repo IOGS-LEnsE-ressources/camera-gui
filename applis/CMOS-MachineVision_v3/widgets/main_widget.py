@@ -18,6 +18,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
 from lensepy.css import *
+from lensepy.images import *
 from widgets.camera import *
 from widgets.images_widget import *
 from widgets.histo_widget import *
@@ -115,6 +116,7 @@ class MenuWidget(QWidget):
         self.buttons_list = []
         self.buttons_signal = []
         self.buttons_enabled = []
+        print('create New AOI Zoom')
         self.zoom_widget = AoiZoomOptionsWidget(self)
 
         self.actual_button = None
@@ -130,6 +132,7 @@ class MenuWidget(QWidget):
                 self.layout.addStretch()
         if self.parent.parent.aoi is not None:
             self.layout.addWidget(self.zoom_widget)
+            self.zoom_widget.zoom_changed.connect(self.action_zoom_changed)
 
 
     def add_button(self, title: str, signal: str=None):
@@ -252,6 +255,10 @@ class MenuWidget(QWidget):
     def submenu_is_clicked(self, event):
         self.menu_clicked.emit(event)
 
+    def action_zoom_changed(self, event):
+        self.zoom_factor = self.zoom_widget.get_zoom()
+        print(f'Zoom {self.zoom_factor}')
+
 class TitleWidget(QWidget):
     """
     Widget containing the title of the application and the LEnsE logo.
@@ -303,6 +310,8 @@ class MainWidget(QWidget):
         self.parent = parent
         self.mode = None
         self.submode = None
+        # Parameters
+        self.zoom_factor = 1
         # Read default parameters
         self.default_parameters = load_default_parameters()
         if 'language' in self.default_parameters:
@@ -463,7 +472,7 @@ class MainWidget(QWidget):
         self.options_widget = widget
         self.bot_left_layout.addWidget(self.options_widget, OPTIONS_ROW, OPTIONS_COL)
 
-    def update_image(self, aoi: bool = False, aoi_disp: bool = False):
+    def update_image(self, aoi: bool = False, aoi_disp: bool = False, zoom_factor: int = 1):
         """
         Update image display in the top left widget.
         :param aoi: Only AOI is displayed.
@@ -471,6 +480,8 @@ class MainWidget(QWidget):
         """
         if aoi:
             image = get_aoi_array(self.parent.image, self.parent.aoi)
+            image = zoom_array(image, self.zoom_factor)
+            #print(f'Z = {self.zoom_factor}')
             self.top_left_widget.set_image_from_array(image, aoi)
         else:
             if aoi_disp:
@@ -486,13 +497,26 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         menu = self.get_list_menu('type1')
+        self.zoom_factor = 1
+        # Reset zoom factor
+        self.main_menu.zoom_widget.reset_zoom()
+        # Update maximum value of the zoom
+        widget_width, widget_height = self.width(), self.height()
+        if self.parent.aoi is not None:
+            image = get_aoi_array(self.parent.image, self.parent.aoi)
+            image_width, image_height = image.shape[1], image.shape[0]
+            zoom_max = int(np.min([widget_width/image_width, widget_height/image_height])) - 1
+            if zoom_max < 1:
+                zoom_max = 1
+        else:
+            zoom_max = 1
+        self.main_menu.zoom_widget.set_zoom_max(zoom_max)
+        # Update main menu
         self.main_menu.set_enabled(menu, True)
         if self.parent.raw_image is None and self.parent.camera is None:
-            print('NOTHING !')
             menu = self.get_list_menu('type1')
             self.main_menu.set_enabled(menu, False)
         if self.parent.aoi is None:
-            print('NO AOI !')
             menu = self.get_list_menu('type2')
             self.main_menu.set_enabled(menu, False)
         self.clear_sublayout(OPTIONS_COL)
@@ -581,14 +605,7 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_quantized_image'))
-            self.set_bot_right_widget(self.bot_right_widget)
-            new_size = self.parent.size()
-            width = new_size.width()
-            height = new_size.height()
-            wi = (width * RIGHT_WIDTH) // 100
-            he = (height * TOP_HEIGHT) // 100
-            self.top_right_widget.update_size(wi, he)
+            self.start_double_histo_widget(translate('histo_quantized_image'))
             self.parent.action_quantize_image('quantized')
 
         elif self.mode == 'sampling':
@@ -597,15 +614,28 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_quantized_image'))
-            self.set_bot_right_widget(self.bot_right_widget)
-            new_size = self.parent.size()
-            width = new_size.width()
-            height = new_size.height()
-            wi = (width * RIGHT_WIDTH) // 100
-            he = (height * TOP_HEIGHT) // 100
-            self.top_right_widget.update_size(wi, he)
+            self.start_double_histo_widget(translate('histo_quantized_image'))
             self.parent.action_sampling_image('resampled')
+
+        elif self.mode == 'threshold':
+            self.submode = None
+            self.update_image(aoi=True)
+            self.options_widget = ThresholdOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            self.resize_top_right_image()
+            self.bot_right_widget = ImageHistogramWidget(self)
+            self.bot_right_widget.set_background('white')
+            self.set_bot_right_widget(self.bot_right_widget)
+
+        elif self.mode == 'bright_contrast':
+            self.update_image(aoi=True)
+            self.options_widget = ContrastBrightnessOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+            self.start_double_histo_widget(translate('histo_contr_bright_image'))
 
         elif self.mode == 'erosion_dilation':
             self.update_image(aoi=True)
@@ -613,14 +643,7 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            new_size = self.parent.size()
-            width = new_size.width()
-            height = new_size.height()
-            wi = (width * RIGHT_WIDTH) // 100
-            he = (height * TOP_HEIGHT) // 100
-            self.top_right_widget.update_size(wi, he)
-            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_eroded_image'))
-            self.set_bot_right_widget(self.bot_right_widget)
+            self.start_double_histo_widget(translate('histo_eroded_image'))
 
         elif self.mode == 'opening_closing':
             self.update_image(aoi=True)
@@ -628,16 +651,24 @@ class MainWidget(QWidget):
             self.set_options_widget(self.options_widget)
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
-            new_size = self.parent.size()
-            width = new_size.width()
-            height = new_size.height()
-            wi = (width * RIGHT_WIDTH) // 100
-            he = (height * TOP_HEIGHT) // 100
-            self.top_right_widget.update_size(wi, he)
-            self.bot_right_widget = DoubleHistoWidget(self, translate('histo_eroded_image'))
-            self.set_bot_right_widget(self.bot_right_widget)
+            self.start_double_histo_widget(translate('histo_eroded_image'))
 
         self.main_signal.emit(event)
+
+    def resize_top_right_image(self):
+        """Resize the top right corner widget to adapt image size to window size."""
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width * RIGHT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
+        self.top_right_widget.update_size(wi, he)
+
+    def start_double_histo_widget(self, name: str):
+        """Start a widget containing a double histogram in the bottom right corner."""
+        self.resize_top_right_image()
+        self.bot_right_widget = DoubleHistoWidget(self, name)
+        self.set_bot_right_widget(self.bot_right_widget)
 
     def update_size(self, aoi: bool = False):
         """

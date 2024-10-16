@@ -17,20 +17,8 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/appli_CMOS_labwork.h
 Creation : sept/2023
 Modification : oct/2024
 """
+import cv2
 import numpy as np
-
-# -*- coding: utf-8 -*-
-"""*base_gui_main.py* file.
-
-*base_gui_main* file that contains :class::BaseGUI, an example of a
-complete 5 areas GUI: 1 main menu on the left and 4 equivalent area on the right.
-
-.. note:: LEnsE - Institut d'Optique - version 1.0
-
-.. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
-
-Creation : oct/2024
-"""
 from widgets.main_widget import *
 from lensecam.camera_thread import CameraThread
 from lensecam.ids.camera_ids import get_bits_per_pixel
@@ -154,8 +142,16 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'sampling':
             self.central_widget.options_widget.resampled.connect(self.action_sampling_image)
 
+        elif self.central_widget.mode == 'threshold':
+            self.central_widget.options_widget.threshold_changed.connect(self.action_threshold)
+
         elif self.central_widget.mode == 'pre_proc':
             self.kernel_type = 'cross'
+
+        elif self.central_widget.mode == 'bright_contrast':
+            self.check_diff = False
+            self.central_widget.options_widget.contrast_brithtness_changed.connect(self.action_contrast_brightness)
+            self.action_contrast_brightness('contrast_brightness')
 
         elif self.central_widget.mode == 'erosion_dilation':
             self.check_diff = False
@@ -204,6 +200,14 @@ class MainWindow(QMainWindow):
             self.action_sampling_image('resampled')
         elif self.central_widget.mode == 'pre_proc':
             self.central_widget.update_image(aoi=True)
+        elif self.central_widget.mode == 'threshold':
+            self.central_widget.update_image(aoi=True)
+            self.action_threshold(None)
+
+        elif self.central_widget.mode == 'bright_contrast':
+            self.central_widget.update_image(aoi=True)
+            self.action_contrast_brightness('contrast_brightness')
+
         elif self.central_widget.mode == 'erosion_dilation':
             self.central_widget.update_image(aoi=True)
             self.action_erosion_dilation(None)
@@ -358,6 +362,56 @@ class MainWindow(QMainWindow):
             self.central_widget.bot_right_widget.set_bit_depth(8)
             self.central_widget.bot_right_widget.set_images(aoi_array, small_image)
 
+    def action_contrast_brightness(self, event):
+        """Action performed when an event occurred in the erosion/dilation options widget."""
+        if event == 'check_diff:0':
+            self.check_diff = False
+        elif event == 'check_diff:1':
+            self.check_diff = True
+        elif event == 'contrast_brightness':
+            self.central_widget.submode = 'contrast_brightness'
+
+        aoi_array = get_aoi_array(self.image, self.aoi)
+        if self.central_widget.submode == 'contrast_brightness':
+            contrast_value = self.central_widget.options_widget.get_contrast()
+            brightness_value = self.central_widget.options_widget.get_brightness()
+            eroded = contrast_brightness_image(aoi_array, contrast_value, brightness_value)
+        else:
+            eroded = aoi_array
+        self.central_widget.bot_right_widget.set_bit_depth(8)
+        self.central_widget.bot_right_widget.set_images(aoi_array, eroded)
+        if self.check_diff:
+            eroded = aoi_array - eroded
+        self.central_widget.top_right_widget.set_image_from_array(eroded)
+
+    def action_threshold(self, event):
+        """Action performed when an event occurred in the threshold options widget."""
+        if event == 'threshold_type':
+            threshold_index = self.central_widget.options_widget.get_threshold_type_index()
+            self.central_widget.submode = threshold_index
+        aoi_array = get_aoi_array(self.image, self.aoi)
+
+        delta_image_depth = (self.image_bits_depth - 8)  # Power of 2 for depth conversion
+        threshold_value = int(self.central_widget.options_widget.get_threshold_value())
+        threshold_value = threshold_value  >> delta_image_depth
+        threshold_value_hat = int(self.central_widget.options_widget.get_threshold_hat_value())
+        threshold_value_hat = threshold_value_hat  >> delta_image_depth
+
+        if self.central_widget.submode == 1: # Normal threshold
+            ret, output_image = cv2.threshold(aoi_array, threshold_value, 255, cv2.THRESH_BINARY)
+        elif self.central_widget.submode == 2: # Inverted threshold
+            ret, output_image = cv2.threshold(aoi_array, threshold_value, 255, cv2.THRESH_BINARY_INV)
+        elif self.central_widget.submode == 3: # Hat threshold
+            output_image = cv2.inRange(aoi_array, threshold_value, threshold_value_hat)
+        else:
+            output_image = aoi_array
+
+        self.central_widget.bot_right_widget.set_bit_depth(self.image_bits_depth)
+        self.central_widget.bot_right_widget.set_image(aoi_array, fast_mode=True)
+        if self.check_diff:
+            output_image = aoi_array - output_image
+        self.central_widget.top_right_widget.set_image_from_array(output_image)
+
     def action_erosion_dilation(self, event):
         """Action performed when an event occurred in the erosion/dilation options widget."""
         if event == 'check_diff:0':
@@ -382,6 +436,8 @@ class MainWindow(QMainWindow):
             self.kernel_type = 'cross'
         elif event == 'rect':
             self.kernel_type = 'rect'
+        elif event == 'ellip':
+            self.kernel_type = 'ellip'
 
         kernel = self.central_widget.options_widget.get_kernel().T
         if self.kernel_type == 'cross':
@@ -390,10 +446,13 @@ class MainWindow(QMainWindow):
         elif self.kernel_type == 'rect':
             kernel = get_rect_kernel(kernel.shape[0])
             self.central_widget.options_widget.set_kernel(kernel)
+        elif self.kernel_type == 'ellip':
+            kernel = get_ellip_kernel(kernel.shape[0])
+            self.central_widget.options_widget.set_kernel(kernel)
         else:
             self.central_widget.options_widget.inactivate_kernel()
-            self.central_widget.options_widget.set_kernel(kernel)
-
+            self.central_widget.options_widget.set_kernel(kernel.T)
+        self.central_widget.options_widget.repaint()
 
         aoi_array = get_aoi_array(self.image, self.aoi)
         if self.central_widget.submode == 'erosion':

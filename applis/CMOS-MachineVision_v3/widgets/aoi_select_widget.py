@@ -41,7 +41,7 @@ def display_aoi(array: np.ndarray, aoi: (int, int, int, int)) -> np.ndarray:
         color = 255
     # Size of the rectangle edge
     min_size = np.min([array.shape[0], array.shape[1]])
-    rect_size = int(min_size // 25)
+    rect_size = int(min_size // 45)
     if rect_size > 20:
         rect_size = 20
     # Add a rectangle - Change Size ??
@@ -254,6 +254,7 @@ class AoiZoomOptionsWidget(QWidget):
         :param parent: Parent window of the main widget.
         """
         super().__init__(parent=None)
+        print('create_ new_zoom__')
         self.parent = parent
         self.zoom_max = 4
         self.zoom = 1
@@ -269,22 +270,45 @@ class AoiZoomOptionsWidget(QWidget):
         self.zoom_more = QPushButton('Zoom +')
         self.zoom_more.setStyleSheet(styleH3)
         self.zoom_more.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.zoom_more.clicked.connect(self.action_zoom_changing)
         self.zoom_less = QPushButton('Zoom -')
         self.zoom_less.setStyleSheet(styleH3)
         self.zoom_less.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.zoom_less.clicked.connect(self.action_zoom_changing)
+        self.button_reset_zoom = QPushButton('Reset')
+        self.button_reset_zoom.setStyleSheet(styleH3)
+        self.button_reset_zoom.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.button_reset_zoom.clicked.connect(self.action_zoom_changing)
         self.layout.addWidget(self.zoom_less, 0, 0)
         self.layout.addWidget(self.label_zoom, 0, 1)
-        self.layout.addWidget(self.zoom_more, 0, 2)
+        self.layout.addWidget(self.button_reset_zoom, 0, 2)
+        self.layout.addWidget(self.zoom_more, 0, 3)
         self.layout.setColumnStretch(0, 2)
         self.layout.setColumnStretch(1, 3)
         self.layout.setColumnStretch(2, 2)
+        self.layout.setColumnStretch(3, 2)
+
+    def action_zoom_changing(self, event):
+
+        sender = self.sender()
+        if sender == self.zoom_more:
+            if self.inc_zoom():
+                self.zoom_changed.emit('zoom_more')
+        elif sender == self.zoom_less:
+            if self.dec_zoom():
+                self.zoom_changed.emit('zoom_less')
+        elif sender == self.button_reset_zoom:
+            self.reset_zoom()
+            self.zoom_changed.emit('zoom_reset')
 
     def set_zoom_max(self, value):
         """Set the maximum value for the zoom in the AOI."""
         self.zoom_max = value
+        #print(f'ZMax = {self.zoom_max}')
 
     def get_zoom(self):
         """Return the value of the zoom."""
+        #print('GET_ZOOM')
         return self.zoom
 
     def reset_zoom(self):
@@ -293,10 +317,17 @@ class AoiZoomOptionsWidget(QWidget):
 
     def inc_zoom(self):
         """Increase the zoom value of 1."""
+        #print(f'INC - ZMax = {self.zoom_max}')
         if self.zoom + 1 <= self.zoom_max:
             self.zoom += 1
+            return True
+        else:
+            return False
 
     def dec_zoom(self):
         """Decrease the zoom value of 1."""
         if self.zoom - 1 >= 1:
             self.zoom -= 1
+            return True
+        else:
+            return False
