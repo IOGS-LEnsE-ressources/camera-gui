@@ -389,27 +389,24 @@ class MainWindow(QMainWindow):
         if event == 'threshold_type':
             threshold_index = self.central_widget.options_widget.get_threshold_type_index()
             self.central_widget.submode = threshold_index
-        aoi_array = get_aoi_array(self.image, self.aoi)
+        aoi_array_raw = get_aoi_array(self.raw_image, self.aoi)
 
-        delta_image_depth = (self.image_bits_depth - 8)  # Power of 2 for depth conversion
         threshold_value = int(self.central_widget.options_widget.get_threshold_value())
-        threshold_value = threshold_value  >> delta_image_depth
         threshold_value_hat = int(self.central_widget.options_widget.get_threshold_hat_value())
-        threshold_value_hat = threshold_value_hat  >> delta_image_depth
 
         if self.central_widget.submode == 1: # Normal threshold
-            ret, output_image = cv2.threshold(aoi_array, threshold_value, 255, cv2.THRESH_BINARY)
+            ret, output_image = cv2.threshold(aoi_array_raw, threshold_value, 255, cv2.THRESH_BINARY)
         elif self.central_widget.submode == 2: # Inverted threshold
-            ret, output_image = cv2.threshold(aoi_array, threshold_value, 255, cv2.THRESH_BINARY_INV)
+            ret, output_image = cv2.threshold(aoi_array_raw, threshold_value,
+                                              255, cv2.THRESH_BINARY_INV)
         elif self.central_widget.submode == 3: # Hat threshold
-            output_image = cv2.inRange(aoi_array, threshold_value, threshold_value_hat)
+            output_image = cv2.inRange(aoi_array_raw, threshold_value, threshold_value_hat)
         else:
-            output_image = aoi_array
+            delta_depth = self.image_bits_depth - 8
+            output_image = (aoi_array_raw >> delta_depth).astype(np.uint8)
 
         self.central_widget.bot_right_widget.set_bit_depth(self.image_bits_depth)
-        self.central_widget.bot_right_widget.set_image(aoi_array, fast_mode=True)
-        if self.check_diff:
-            output_image = aoi_array - output_image
+        self.central_widget.bot_right_widget.set_image(aoi_array_raw, fast_mode=True)
         self.central_widget.top_right_widget.set_image_from_array(output_image)
 
     def action_erosion_dilation(self, event):
