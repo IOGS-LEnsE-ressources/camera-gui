@@ -162,6 +162,7 @@ class MainWindow(QMainWindow):
             self.central_widget.options_widget.gradient_changed.connect(self.action_erosion_dilation)
 
     def thread_update_image(self, image_array):
+        '''
         if image_array is not None:
             if self.image_bits_depth > 8:
                 image = image_array.view(np.uint16)
@@ -230,6 +231,8 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'gradient':
             self.central_widget.update_image(aoi=True)
             self.action_erosion_dilation('gradient')
+        '''
+        pass
 
     def action_image_from_file(self, event: np.ndarray):
         """
