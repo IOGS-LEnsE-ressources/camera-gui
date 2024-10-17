@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
         self.brand_camera = None
         self.camera_device = None
         self.camera = None
+        self.camera_index = 0  # TO UPDATE !! when a new camera is selected with a camera_list object
         self.camera_thread = CameraThread()
         self.camera_thread.image_acquired.connect(self.thread_update_image)
         # GUI structure
@@ -150,6 +151,11 @@ class MainWindow(QMainWindow):
             self.central_widget.options_widget.contrast_brithtness_changed.connect(self.action_contrast_brightness)
             self.action_contrast_brightness('contrast_brightness')
 
+        elif self.central_widget.mode == 'enhance_contrast':
+            self.check_diff = False
+            self.central_widget.options_widget.options_clicked.connect(self.action_enhance_contrast)
+            self.action_enhance_contrast('enhance_contrast')
+
         elif self.central_widget.mode == 'erosion_dilation':
             self.check_diff = False
             self.central_widget.options_widget.ero_dil_changed.connect(self.action_erosion_dilation)
@@ -161,8 +167,11 @@ class MainWindow(QMainWindow):
             self.check_diff = False
             self.central_widget.options_widget.gradient_changed.connect(self.action_erosion_dilation)
 
+        elif self.central_widget.mode == 'filter_smooth':
+            self.check_diff = False
+            self.central_widget.options_widget.options_changed.connect(self.action_filter_smooth)
+
     def thread_update_image(self, image_array):
-        '''
         if image_array is not None:
             if self.image_bits_depth > 8:
                 image = image_array.view(np.uint16)
@@ -231,8 +240,9 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'gradient':
             self.central_widget.update_image(aoi=True)
             self.action_erosion_dilation('gradient')
-        '''
-        pass
+        elif self.central_widget.mode == 'filter_smooth':
+            self.central_widget.update_image(aoi=True)
+            self.action_filter_smooth(None)
 
     def action_image_from_file(self, event: np.ndarray):
         """
@@ -501,6 +511,24 @@ class MainWindow(QMainWindow):
             eroded = aoi_array - eroded
         self.central_widget.top_right_widget.set_image_from_array(eroded)
 
+    def action_filter_smooth(self, event):
+        """Action performed when an event occurred in the erosion/dilation options widget."""
+        if event == 'check_diff:0':
+            self.check_diff = False
+        elif event == 'check_diff:1':
+            self.check_diff = True
+
+        aoi_array = get_aoi_array(self.image, self.aoi)
+        eroded = aoi_array #self.central_widget.options_widget.get_selection(aoi_array)
+        '''
+        self.central_widget.bot_right_widget.set_bit_depth(8)
+        self.central_widget.bot_right_widget.set_images(aoi_array, eroded)
+        '''
+        if self.check_diff:
+            eroded = aoi_array - eroded
+        self.central_widget.top_right_widget.set_image_from_array(eroded)
+
+
     def resizeEvent(self, event):
         """
         Action performed when the main window is resized.
@@ -518,9 +546,13 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
+            print('Closing App')
             if self.camera is not None:
-                self.camera_thread.stop()
-                self.camera.stop_acquisition()
+                print('With camera')
+                if self.brand_camera == 'IDS':
+                    self.camera_thread.stop(timeout=False)
+                else:
+                    self.camera_thread.stop()
                 self.camera.disconnect()
             event.accept()
         else:

@@ -23,7 +23,6 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QRect
 from lensepy.pyqt6.widget_combobox import *
 from lensepy.pyqt6.widget_slider import *
 
-
 class ThresholdOptionsWidget(QWidget):
     """
     Widget containing the threshold options.
@@ -46,7 +45,6 @@ class ThresholdOptionsWidget(QWidget):
         #self.list_options = ['1', '2', '3']
         self.buttons_choice.set_list_options(self.list_options)
         self.buttons_choice.clicked.connect(self.action_type_changing)
-        self.buttons_choice.activate_index(1)
 
         max_value = (2**self.parent.parent.image_bits_depth - 1)
         self.slider_threshold_value = SliderBloc(name=translate('threshold_value'), unit='',
@@ -124,11 +122,6 @@ class ContrastAdjustOptionsWidget(QWidget):
         self.layout = QVBoxLayout()
         self.parent = parent
 
-        # Title
-        # -----
-        self.label_title_contrast_adjust = QLabel(translate('title_contrast_adjust'))
-        self.label_title_contrast_adjust.setStyleSheet(styleH1)
-
         max_value = (2**self.parent.parent.image_bits_depth - 1)
 
         self.slider_threshold_min = SliderBloc(name=translate('threshold_value_min'), unit='',
@@ -141,7 +134,6 @@ class ContrastAdjustOptionsWidget(QWidget):
         self.slider_threshold_max.set_value(max_value)
         self.slider_threshold_max.slider_changed.connect(self.action_slider_changing)
 
-        self.layout.addWidget(self.label_title_contrast_adjust)
         self.layout.addWidget(self.slider_threshold_min)
         self.layout.addWidget(self.slider_threshold_max)
         self.layout.addStretch()

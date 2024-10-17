@@ -25,6 +25,7 @@ from widgets.histo_widget import *
 from widgets.aoi_select_widget import *
 from widgets.quant_samp_widget import *
 from widgets.pre_processing_widget import *
+from widgets.filters_widget import *
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -365,6 +366,7 @@ class MainWidget(QWidget):
                 if 'brandname' in self.default_parameters:
                     camera = cam_from_brands[self.default_parameters['brandname']]()
                     if camera.find_first_camera():
+                        self.parent.brand_camera = self.default_parameters['brandname']
                         self.parent.camera = camera
                         self.parent.camera.init_camera()
                         self.parent.camera_thread.set_camera(self.parent.camera)
@@ -524,8 +526,8 @@ class MainWidget(QWidget):
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
         self.mode = event
+        print(f'Mode = {self.mode}')
         if self.mode == 'images':
-            # Display a label with definition or what to do in the options view ?
             if self.parent.raw_image is not None:
                 self.update_image()
             if self.parent.camera is not None:
@@ -541,12 +543,32 @@ class MainWidget(QWidget):
                 # Display expo time setting in main menu
 
         elif self.mode == 'open_image':
+            if self.parent.camera is not None:
+                self.parent.camera.stop_acquisition()
+                if self.parent.brand_camera == 'IDS':
+                    self.parent.camera_thread.stop(timeout=False)
+                else:
+                    self.parent.camera_thread.stop()
+                self.parent.camera.disconnect()
+                self.parent.camera_device = None
+                self.parent.camera.destroy_camera(self.parent.camera_index)
+                self.parent.camera = None
             if self.parent.raw_image is not None:
                 self.update_image()
             self.options_widget = ImagesFileOpeningWidget(self)
             self.set_options_widget(self.options_widget)
 
         elif self.mode == 'open_camera':
+            if self.parent.camera is not None:
+                self.parent.camera.stop_acquisition()
+                if self.parent.brand_camera == 'IDS':
+                    self.parent.camera_thread.stop(timeout=False)
+                else:
+                    self.parent.camera_thread.stop()
+                self.parent.camera.disconnect()
+                self.parent.camera_device = None
+                self.parent.camera.destroy_camera(self.parent.camera_index)
+                self.parent.camera = None
             self.options_widget = ImagesCameraOpeningWidget(self)
             self.set_options_widget(self.options_widget)
 
@@ -641,6 +663,7 @@ class MainWidget(QWidget):
                                            name2=translate('histo_contr_bright_image'))
 
         elif self.mode == 'enhance_contrast':
+            # self.submode = 'enhance_contrast'
             self.update_image(aoi=True)
             self.options_widget = ContrastAdjustOptionsWidget(self)
             self.set_options_widget(self.options_widget)
@@ -676,6 +699,19 @@ class MainWidget(QWidget):
             self.set_top_right_widget(self.top_right_widget)
             self.start_double_histo_widget(name1=translate('histo_original_image'),
                                            name2=translate('histo_gradient_image'))
+
+        elif self.mode == 'filters':
+            self.update_image(aoi=True)
+            print('filters')
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
+
+        elif self.mode == 'filter_smooth':
+            self.update_image(aoi=True)
+            self.options_widget = SmoothFilterOptionsWidget(self)
+            self.set_options_widget(self.options_widget)
+            self.top_right_widget = ImagesDisplayWidget(self)
+            self.set_top_right_widget(self.top_right_widget)
 
         self.main_signal.emit(event)
 

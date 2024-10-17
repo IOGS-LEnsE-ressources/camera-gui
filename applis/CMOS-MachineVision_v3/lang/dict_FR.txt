@@ -50,6 +50,7 @@ button_acquire_histo;Nouvel histogramme
 button_save_png_image_spatial;Sauvegarder l'histogramme (PNG)
 histo_original_image;Histogramme Image originale
 histo_eroded_image;Histogramme Image modifiée
+histo_quantized_image;Histogramme Image modifiée
 #
 # ------------------
 # Quantification / Echantillonnage
@@ -77,6 +78,10 @@ button_erosion_dilation;Erosion / Dilatation
 button_opening_closing;Ouverture / Fermeture
 button_gradient;Gradient
 check_diff_image;Image - effet
+slider_contrast;Contraste
+slider_brightness;Luminosité
+threshold_value_min;Seuil minimal
+threshold_value_max;Seuil maximal
 button_select_erosion;Erosion
 button_select_dilation;Dilatation
 label_kernel_size;Taille Noyau
