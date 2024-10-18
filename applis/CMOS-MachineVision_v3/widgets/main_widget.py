@@ -117,7 +117,6 @@ class MenuWidget(QWidget):
         self.buttons_list = []
         self.buttons_signal = []
         self.buttons_enabled = []
-        print('create New AOI Zoom')
         self.zoom_widget = AoiZoomOptionsWidget(self)
 
         self.actual_button = None
@@ -375,8 +374,11 @@ class MainWidget(QWidget):
                         self.init_default_camera_params()
                         # Start Thread
                         self.parent.image_bits_depth = get_bits_per_pixel(self.parent.camera.get_color_mode())
+                        print(f'BD = {self.parent.image_bits_depth}')
                         self.parent.camera_thread.start()
-                    print('AutoConnect')
+                        self.fast_mode = True
+                    return True
+            return False
 
     def init_default_camera_params(self):
         """Initialize a camera with default_config.txt."""
@@ -526,7 +528,6 @@ class MainWidget(QWidget):
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
         self.mode = event
-        print(f'Mode = {self.mode}')
         if self.mode == 'images':
             if self.parent.raw_image is not None:
                 self.update_image()
@@ -567,7 +568,7 @@ class MainWidget(QWidget):
                     self.parent.camera_thread.stop()
                 self.parent.camera.disconnect()
                 self.parent.camera_device = None
-                self.parent.camera.destroy_camera(self.parent.camera_index)
+                self.parent.camera.destroy_camera()
                 self.parent.camera = None
             self.options_widget = ImagesCameraOpeningWidget(self)
             self.set_options_widget(self.options_widget)
@@ -702,7 +703,6 @@ class MainWidget(QWidget):
 
         elif self.mode == 'filters':
             self.update_image(aoi=True)
-            print('filters')
             self.top_right_widget = ImagesDisplayWidget(self)
             self.set_top_right_widget(self.top_right_widget)
 

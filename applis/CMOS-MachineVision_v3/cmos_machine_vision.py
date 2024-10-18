@@ -19,6 +19,8 @@ Modification : oct/2024
 """
 import cv2
 import numpy as np
+from lensepy.images.conversion import quantize_image
+
 from widgets.main_widget import *
 from lensecam.camera_thread import CameraThread
 from lensecam.ids.camera_ids import get_bits_per_pixel
@@ -60,7 +62,8 @@ class MainWindow(QMainWindow):
         self.central_widget = MainWidget(self)
         self.setCentralWidget(self.central_widget)
         load_menu('./config/menu.txt', self.central_widget.main_menu)
-        self.central_widget.auto_connect_camera()
+        if self.central_widget.auto_connect_camera():
+            self.main_action('images')
         self.central_widget.main_signal.connect(self.main_action)
         menu1 = self.central_widget.get_list_menu('type1')
         self.central_widget.main_menu.set_enabled(menu1, False)
@@ -174,12 +177,12 @@ class MainWindow(QMainWindow):
     def thread_update_image(self, image_array):
         if image_array is not None:
             if self.image_bits_depth > 8:
-                image = image_array.view(np.uint16)
+                self.raw_image = image_array.view(np.uint16)
+                self.image = self.raw_image >> (self.image_bits_depth-8)
+                self.image = self.image.astype(np.uint8)
             else:
-                image = image_array.view(np.uint8)
-            self.raw_image = image.squeeze()
-
-        self.image = self.raw_image >> (self.image_bits_depth-8)
+                self.raw_image = image_array.view(np.uint8)
+                self.image = self.raw_image
 
         self.central_widget.top_left_widget.set_image_from_array(self.image)
 
@@ -193,7 +196,7 @@ class MainWindow(QMainWindow):
         elif self.central_widget.mode == 'aoi_select':
             self.action_aoi_selected('aoi_selected')
         elif self.central_widget.mode == 'histo':
-            self.action_histo_space('snap')
+            self.action_histo_space('live')
         elif self.central_widget.mode == 'histo_space':
             self.central_widget.update_image(aoi=True)
         elif self.central_widget.mode == 'histo_time':
@@ -324,7 +327,7 @@ class MainWindow(QMainWindow):
             self.central_widget.top_right_widget.set_image(image)
             self.central_widget.top_right_widget.update_info()
         elif event == 'live':
-            self.central_widget.top_right_widget.set_image(image)
+            self.central_widget.top_right_widget.set_image(image, self.fast_mode)
             self.central_widget.top_right_widget.update_info()
         elif event == 'save_png':
             if self.saved_image is not None:
@@ -365,13 +368,14 @@ class MainWindow(QMainWindow):
 
     def action_quantize_image(self, event):
         """Action performed when an event occurred in the quantization options widget."""
+        aoi_array_raw = get_aoi_array(self.raw_image, self.aoi)
         aoi_array = get_aoi_array(self.image, self.aoi)
         if event == 'quantized':
             bit_depth = self.central_widget.options_widget.get_bits_depth()
             quantized_image = quantize_image(aoi_array, bit_depth)
             self.central_widget.top_right_widget.set_image_from_array(quantized_image << (8-bit_depth))
-            self.central_widget.bot_right_widget.set_bit_depth(bit_depth)
-            self.central_widget.bot_right_widget.set_images(aoi_array, quantized_image)
+            self.central_widget.bot_right_widget.set_bit_depth(bit_depth, histo1=self.image_bits_depth)
+            self.central_widget.bot_right_widget.set_images(aoi_array_raw, quantized_image)
 
     def action_sampling_image(self, event):
         """Action performed when an event occurred in the sampling options widget."""

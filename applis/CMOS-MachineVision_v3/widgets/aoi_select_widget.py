@@ -254,7 +254,6 @@ class AoiZoomOptionsWidget(QWidget):
         :param parent: Parent window of the main widget.
         """
         super().__init__(parent=None)
-        print('create_ new_zoom__')
         self.parent = parent
         self.zoom_max = 4
         self.zoom = 1

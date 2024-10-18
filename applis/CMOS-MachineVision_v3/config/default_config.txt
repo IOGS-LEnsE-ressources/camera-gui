@@ -4,9 +4,9 @@
 language;FR
 languages;FR,EN
 autoconnect;Yes
-brandname;IDS
+brandname;Basler
 clock_freq;15
-exposure;4000
+exposure;40000
 blacklevel;0
 framerate;10
 colormode;Mono12
