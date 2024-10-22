@@ -220,7 +220,7 @@ class MainWindow(QMainWindow):
 
         elif self.central_widget.mode == 'enhance_contrast':
             self.central_widget.update_image(aoi=True)
-            self.action_enhance_contrast('contrast_brightness')
+            self.action_enhance_contrast('enhance_contrast')
 
         elif self.central_widget.mode == 'bright_contrast':
             self.central_widget.update_image(aoi=True)
@@ -289,6 +289,14 @@ class MainWindow(QMainWindow):
         self.camera_thread.set_camera(self.camera)
         # Init default parameters
         self.central_widget.init_default_camera_params()
+        # Update menu exposure time slider
+        min_expo, max_expo = self.camera.get_exposure_range()
+        if min_expo < 100:
+            min_expo = 100
+        if max_expo > 400000:
+            max_expo = 400000
+        self.central_widget.main_menu.expo_widget.set_min_max_values(min_expo/1000,
+                                                                     max_expo/1000)
         # Start Thread
         self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
         self.camera_thread.start()
@@ -412,7 +420,7 @@ class MainWindow(QMainWindow):
     def action_enhance_contrast(self, event):
         """Action performed when an event occurred in the erosion/dilation options widget."""
         aoi_array = get_aoi_array(self.image, self.aoi)
-
+        print(f'Shape = {self.image.shape}')
         delta_image_depth = (self.image_bits_depth - 8)  # Power of 2 for depth conversion
         min_value = int(self.central_widget.options_widget.get_min() // 2**delta_image_depth)
         max_value = int(self.central_widget.options_widget.get_max() // 2**delta_image_depth)
