@@ -5,10 +5,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt, pyqtSignal
-
 from lensepy.css import *
-
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 
 class ImageWidget(QWidget):
     """

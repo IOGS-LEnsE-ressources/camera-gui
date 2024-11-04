@@ -49,7 +49,6 @@ from widgets.main_menu_widget import MainMenuWidget
 from widgets.camera_settings_widget import CameraSettingsWidget
 '''
 from analyses_app import AnalysisApp
-
 from widgets.masks_menu_widget import MasksMenuWidget
 from widgets.acquisition_menu_widget import AcquisitionMenuWidget
 from widgets.results_menu_widget import ResultsMenuWidget
@@ -58,7 +57,6 @@ from widgets.options_menu_widget import OptionsMenuWidget
 from widgets.x_y_z_chart_widget import Surface3DWidget
 from widgets.imshow_pyqtgraph import TwoImageWidget
 #from widgets.display_zernike_widget import *
-
 '''
 
 def load_default_dictionary(language: str) -> bool:
@@ -95,6 +93,14 @@ class ZygoLabApp(QWidget):
         if self.camera_connected:
             self.camera.init_camera()
         else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No Camera Connected")
+            dlg.setText("No IDS Camera is connected to the computer...\n\nThe application will not start.")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
             sys.exit(-1)
         self.zoom_activated = False     # Camera is started in a large window (imshow_pyqtgraph)
         self.mask_created = False       # Almost one mask is created and selected

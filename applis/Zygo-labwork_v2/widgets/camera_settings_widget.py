@@ -27,22 +27,17 @@ from PyQt6.QtCore import pyqtSignal, QTimer, Qt
 from PyQt6.QtGui import QPixmap
 
 if __name__ == '__main__':
-    from slider_bloc import SliderBloc
     from imshow_pyqtgraph import TwoImageWidget
 else:
-    from widgets.slider_bloc import SliderBloc
     from widgets.imshow_pyqtgraph import TwoImageWidget
 import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
+from lensepy.pyqt6.widget_slider import *
 from lensecam.ids.camera_ids import CameraIds
 
 from process.initialization_parameters import *
 
-
-# %% Params
-BUTTON_HEIGHT = 30  # px
-OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class CameraSettingsWidget(QWidget):

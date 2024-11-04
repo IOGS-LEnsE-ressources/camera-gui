@@ -18,17 +18,6 @@ from PyQt6.QtCore import Qt
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-# %% To add in lensepy library
-# Styles
-# ------
-styleH1 = f"font-size:20px; padding:7px; color:{BLUE_IOGS}; font-weight: bold;"  # Added missing styleH1
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS}; font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
-# %% Params
-BUTTON_HEIGHT = 60  # px
-OPTIONS_BUTTON_HEIGHT = 20  # px
-
 # %% Widget
 class TitleWidget(QWidget):
     def __init__(self):
