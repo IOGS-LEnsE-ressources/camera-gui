@@ -35,7 +35,7 @@ import numpy as np
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
 from lensecam.ids.camera_ids import CameraIds
 from lensecam.camera_thread import CameraThread
-from ids_peak import ids_peak
+from drivers.nidaq_piezo import *
 
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
@@ -61,6 +61,11 @@ from widgets.imshow_pyqtgraph import TwoImageWidget
 
 '''
 
+def load_default_dictionary(language: str) -> bool:
+    """Initialize default dictionary from default_config.txt file"""
+    file_name_dict = f'./lang/dict_{language}.txt'
+    load_dictionary(file_name_dict)
+
 class ZygoLabApp(QWidget):
     analysis_requested = pyqtSignal()
 
@@ -68,76 +73,47 @@ class ZygoLabApp(QWidget):
         """Default constructor of the class.
         """
         super().__init__(parent=None)
-
-        # Initialization of the camera
-        # ----------------------------
-        self.camera_device = self.init_camera()
-        self.camera = CameraIds()
-
-        self.camera_connected = self.camera.init_camera(self.camera_device)
-        self.zoom_activated = False     # Camera is started in a large window (imshow_pyqtgraph)
-        self.mask_created = False       # Almost one mask is created and selected
-        self.phase_calculated = False   # Phase from acquisition is unwrapped
-        self.coeff_calculated = False   # Zernike coefficients are calculated
-        self.acquisition_done = False   # Almost one acquisition is done and data are acquired
-        
-        # Default settings
-        # ----------------
-        dictionary = load_dictionary('lang\dict_FR.txt')
-        default_settings_dict = read_default_parameters('config.txt')
-
-        if 'Exposure time' in default_settings_dict:
-            default_exposure = float(default_settings_dict['Exposure time']) # ms
-        else:
-            default_exposure = 100
-        default_exposure *= 1000 # µs
-        self.camera.set_exposure(default_exposure) # µs
-
-        if 'Exposure time' in default_settings_dict:
-            default_black_level = int(default_settings_dict['Black level'])
-        else:
-            default_black_level = 100
-        self.camera.set_black_level(default_black_level)
-
-        # Initialisation of the mask selection attributes
-        # -----------------------------------------------
-        self.mask = None
-        self.list_masks = []
-        self.list_original_masks = []
-        self.mask_unactived = None
-
-        self.phase = None
-
         self.layout = QGridLayout()
         self.setLayout(self.layout)
-        
+
         # Columns stretch: 10%, 45%, 45%
         self.layout.setColumnStretch(0, 10)
         self.layout.setColumnStretch(1, 45)
         self.layout.setColumnStretch(2, 45)
-        
+
         # Rows stretch: 4%, 48%, 48%
         self.layout.setRowStretch(0, 4)
         self.layout.setRowStretch(1, 48)
         self.layout.setRowStretch(2, 48)
 
+        load_default_dictionary('FR')
+
+        # Initialization of the camera
+        # ----------------------------
+        self.camera = CameraIds()
+        self.camera_connected = self.camera.find_first_camera()
+        if self.camera_connected:
+            self.camera.init_camera()
+        else:
+            sys.exit(-1)
+        self.zoom_activated = False     # Camera is started in a large window (imshow_pyqtgraph)
+        self.mask_created = False       # Almost one mask is created and selected
+        self.phase_calculated = False   # Phase from acquisition is unwrapped
+        self.coeff_calculated = False   # Zernike coefficients are calculated
+        self.acquisition_done = False   # Almost one acquisition is done and data are acquired
+
+        # Initialization of the piezo
+        # ---------------------------
+        self.piezo = NIDaqPiezo()
+        self.piezo_connected = False
+
         # Permanent Widgets
         # -----------------
         # Title Widget: first row of the grid layout
-        self.title_widget = TitleWidget() 
+        self.title_widget = TitleWidget()
         self.layout.addWidget(self.title_widget, 0, 0, 1, 3)
 
-        # Main Menu Widget: fist column of the grid layout
         self.main_menu_widget = MainMenuWidget()
-        self.main_menu_widget.add_item_menu(translate("button_camera_settings_main_menu"))
-        self.main_menu_widget.add_item_menu(translate("button_masks_main_menu"))
-        self.main_menu_widget.add_item_menu(translate("button_acquisition_main_menu"), disabled=True)
-        self.main_menu_widget.add_item_menu(translate("button_analyzes_main_menu"), disabled=True)
-        self.main_menu_widget.add_option_item_menu(translate("button_help_main_menu"))
-        self.main_menu_widget.add_option_item_menu(translate("button_options_main_menu"))
-        self.main_menu_widget.refresh_menu()
-
-
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
 
         # Camera Widget: top-left corner
@@ -171,6 +147,49 @@ class ZygoLabApp(QWidget):
         '''
         self.histo_activated = False
 
+        # Default settings
+        # ----------------
+        default_settings_dict = read_default_parameters('config.txt')
+
+        if self.piezo.get_piezo() is not None:
+            self.piezo_connected = True
+            print('Piezo OK')
+            if 'Piezo Channel' in default_settings_dict:
+                self.piezo.set_channel(int(default_settings_dict['Piezo Channel']))
+
+        if 'Exposure time' in default_settings_dict:
+            default_exposure = float(default_settings_dict['Exposure time']) # ms
+        else:
+            default_exposure = 10
+        default_exposure *= 1000 # µs
+        self.camera.set_exposure(default_exposure) # µs
+
+        if 'Exposure time' in default_settings_dict:
+            default_black_level = int(default_settings_dict['Black level'])
+        else:
+            default_black_level = 100
+        self.camera.set_black_level(default_black_level)
+
+        # Main Menu Widget: fist column of the grid layout
+        # ------------------------------------------------
+        self.main_menu_widget.add_item_menu(translate("button_camera_settings_main_menu"))
+        self.main_menu_widget.add_item_menu(translate("button_masks_main_menu"))
+        self.main_menu_widget.add_item_menu(translate("button_acquisition_main_menu"), disabled=True)
+        self.main_menu_widget.add_item_menu(translate("button_analyzes_main_menu"), disabled=True)
+        self.main_menu_widget.add_option_item_menu(translate("button_help_main_menu"))
+        self.main_menu_widget.add_option_item_menu(translate("button_options_main_menu"))
+        self.main_menu_widget.add_option_item_menu(translate("button_piezo_main_menu"), disabled=not self.piezo_connected)
+        self.main_menu_widget.refresh_menu()
+
+        # Initialisation of the mask selection attributes
+        # -----------------------------------------------
+        self.mask = None
+        self.list_masks = []
+        self.list_original_masks = []
+        self.mask_unactived = None
+
+        self.phase = None
+
         # Other initializations
         # ---------------------
         self.camera_thread = CameraThread()
@@ -183,6 +202,7 @@ class ZygoLabApp(QWidget):
         # self.analysis_requested.connect(self.show_analysis_window_maximized)
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
 
+    '''
     def init_camera(self) -> ids_peak.Device:
         """Initialisation of the camera.
         If no IDS camera, display options to connect a camera"""
@@ -202,6 +222,7 @@ class ZygoLabApp(QWidget):
         else:
             device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
         return device
+    '''
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout without deleting them.

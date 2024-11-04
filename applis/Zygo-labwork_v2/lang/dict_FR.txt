@@ -12,6 +12,7 @@ button_acquisition_main_menu; Acquisition
 button_analyzes_main_menu; Analyses
 button_options_main_menu; Options
 button_help_main_menu; Aide
+button_piezo_main_menu; Piezo
 
 # --------------------
 # CameraSettingsWidget
