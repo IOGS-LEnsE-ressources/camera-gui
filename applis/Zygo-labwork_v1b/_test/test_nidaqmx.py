@@ -27,7 +27,7 @@ else:
 def set_daq_output(voltage) -> bool:
     with nidaqmx.Task() as task:
         # Add an analog output channel
-        task.ao_channels.add_ao_voltage_chan("Dev1/ao1", min_val=volt_min, max_val=volt_max)
+        task.ao_channels.add_ao_voltage_chan("Dev2/ao1", min_val=volt_min, max_val=volt_max)
         task.start()
         if volt_min <= voltage <= volt_max:
             task.write(voltage)
@@ -50,7 +50,7 @@ def daq_ramp(val_min, val_max, duration=1, step_nb=100):
     # Créer une tâche pour générer la rampe de tension
     with nidaqmx.Task() as task:
         # Ajouter un canal de sortie analogique
-        task.ao_channels.add_ao_voltage_chan("Dev1/ao1", min_val=start_voltage, max_val=end_voltage)
+        task.ao_channels.add_ao_voltage_chan("Dev2/ao1", min_val=start_voltage, max_val=end_voltage)
 
         # Démarrer la tâche
         task.start()
