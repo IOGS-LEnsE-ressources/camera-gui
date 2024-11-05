@@ -29,11 +29,6 @@ import numpy as np
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 
-disabled_button = f"background-color:gray; color:white; font-size:15px; border-radius: 10px;"
-
-# %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
 
 # %% Widget
 class MainMenuWidget(QWidget):

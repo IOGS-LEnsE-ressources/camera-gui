@@ -95,13 +95,14 @@ class ZygoLabApp(QWidget):
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No Camera Connected")
-            dlg.setText("No IDS Camera is connected to the computer...\n\nThe application will not start.")
+            dlg.setText("No IDS Camera is connected to the computer...\n\nThe application will not start "
+                        "correctly.\n\nYou will only access to a pre-established data set.")
             dlg.setStandardButtons(
                 QMessageBox.StandardButton.Ok
             )
             dlg.setIcon(QMessageBox.Icon.Warning)
             button = dlg.exec()
-            sys.exit(-1)
+            # sys.exit(-1)
         self.zoom_activated = False     # Camera is started in a large window (imshow_pyqtgraph)
         self.mask_created = False       # Almost one mask is created and selected
         self.phase_calculated = False   # Phase from acquisition is unwrapped
@@ -110,7 +111,7 @@ class ZygoLabApp(QWidget):
 
         # Initialization of the piezo
         # ---------------------------
-        self.piezo = NIDaqPiezo()
+        # self.piezo = NIDaqPiezo()
         self.piezo_connected = False
 
         # Permanent Widgets
@@ -121,18 +122,26 @@ class ZygoLabApp(QWidget):
 
         self.main_menu_widget = MainMenuWidget()
         self.layout.addWidget(self.main_menu_widget, 1, 0, 2, 1)
+        self.top_left_widget = QWidget()
+        self.bot_left_widget = QWidget()
+        self.top_right_widget = QWidget()
+        self.bot_right_widget = QWidget()
 
         # Camera Widget: top-left corner
-        self.camera_widget = CameraIdsWidget(self.camera, params_disp=False)
-        self.camera_widget.camera_display_params.update_params()
-        self.camera_widget.camera_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if self.camera_connected:
+            self.camera_widget = CameraIdsWidget(self.camera, params_disp=False)
+            self.camera_widget.camera_display_params.update_params()
+            self.camera_widget.camera_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        else:
+            self.camera_widget = QWidget(self)
         self.layout.addWidget(self.camera_widget, 1, 1)
         self.zoom_window = ImageDisplayWidget()
         self.zoom_window.window_closed.connect(self.zoom_closed_action)
 
         # Other Widgets
         # -------------
-        self.camera_settings_widget = CameraSettingsWidget(self.camera)
+        if self.camera_connected:
+            self.top_left_widget = CameraSettingsWidget(self.camera)
         '''
         self.masks_menu_widget = MasksMenuWidget()
         self.acquisition_menu_widget = AcquisitionMenuWidget(parent=self)
@@ -156,30 +165,32 @@ class ZygoLabApp(QWidget):
         # Default settings
         # ----------------
         default_settings_dict = read_default_parameters('config.txt')
-
+        '''
         if self.piezo.get_piezo() is not None:
             self.piezo_connected = True
             print('Piezo OK')
             if 'Piezo Channel' in default_settings_dict:
                 self.piezo.set_channel(int(default_settings_dict['Piezo Channel']))
+        '''
+        if self.camera_connected:
+            if 'Exposure time' in default_settings_dict:
+                default_exposure = float(default_settings_dict['Exposure time']) # ms
+            else:
+                default_exposure = 10
+            default_exposure *= 1000 # µs
+            self.camera.set_exposure(default_exposure) # µs
 
-        if 'Exposure time' in default_settings_dict:
-            default_exposure = float(default_settings_dict['Exposure time']) # ms
-        else:
-            default_exposure = 10
-        default_exposure *= 1000 # µs
-        self.camera.set_exposure(default_exposure) # µs
-
-        if 'Exposure time' in default_settings_dict:
-            default_black_level = int(default_settings_dict['Black level'])
-        else:
-            default_black_level = 100
-        self.camera.set_black_level(default_black_level)
+            if 'Exposure time' in default_settings_dict:
+                default_black_level = int(default_settings_dict['Black level'])
+            else:
+                default_black_level = 100
+            self.camera.set_black_level(default_black_level)
 
         # Main Menu Widget: fist column of the grid layout
         # ------------------------------------------------
-        self.main_menu_widget.add_item_menu(translate("button_camera_settings_main_menu"))
-        self.main_menu_widget.add_item_menu(translate("button_masks_main_menu"))
+        self.main_menu_widget.add_item_menu(translate("button_camera_settings_main_menu"), disabled=not self.camera_connected)
+        self.main_menu_widget.add_item_menu(translate("button_masks_main_menu"), disabled=not self.camera_connected)
+        self.main_menu_widget.add_item_menu(translate("button_data_analysis"), disabled=self.camera_connected)
         self.main_menu_widget.add_item_menu(translate("button_acquisition_main_menu"), disabled=True)
         self.main_menu_widget.add_item_menu(translate("button_analyzes_main_menu"), disabled=True)
         self.main_menu_widget.add_option_item_menu(translate("button_help_main_menu"))
@@ -198,37 +209,17 @@ class ZygoLabApp(QWidget):
 
         # Other initializations
         # ---------------------
+        """
         self.camera_thread = CameraThread()
         self.camera_thread.set_camera(self.camera)
         self.camera_thread.image_acquired.connect(self.thread_update_image)
         self.camera_thread.start()
+        """
 
         # Signals
         # -------
         # self.analysis_requested.connect(self.show_analysis_window_maximized)
         self.main_menu_widget.signal_menu_selected.connect(self.signal_menu_selected_isReceived)
-
-    '''
-    def init_camera(self) -> ids_peak.Device:
-        """Initialisation of the camera.
-        If no IDS camera, display options to connect a camera"""
-        # Init IDS Peak
-        ids_peak.Library.Initialize()
-        # Create a camera manager
-        manager = ids_peak.DeviceManager.Instance()
-        manager.Update()
-
-        if manager.Devices().empty():
-            device = None
-            msg_box = QMessageBox()
-            msg_box.setStyleSheet(styleH3)
-            msg_box.warning(self, 'Erreur', 'Aucune caméra connectée')
-            print('No cam => Quit')
-            sys.exit(QApplication.instance())
-        else:
-            device = manager.Devices()[0].OpenDevice(ids_peak.DeviceAccessType_Exclusive)
-        return device
-    '''
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout without deleting them.
@@ -286,13 +277,13 @@ class ZygoLabApp(QWidget):
 
         # Update the interface depending on the menu item selected
         if event == translate("button_camera_settings_main_menu"):
-            self.camera_settings_widget = CameraSettingsWidget(self.camera)
-            self.camera_settings_widget.update_parameters()
-            self.layout.addWidget(self.camera_settings_widget, 2, 1)
-            self.camera_settings_widget.zoom_activated.connect(self.zoom_action)
-            self.histo_widget = ImageHistogramWidget()
-            self.histo_widget.set_background('white')
-            self.layout.addWidget(self.histo_widget, 2, 2)
+            self.top_left_widget = CameraSettingsWidget(self.camera)
+            self.top_left_widget.update_parameters()
+            self.layout.addWidget(self.self.top_left_widget, 2, 1)
+            self.top_left_widget.zoom_activated.connect(self.zoom_action)
+            self.bot_right_widget = ImageHistogramWidget()
+            self.bot_right_widget.set_background('white')
+            self.layout.addWidget(self.bot_right_widget, 2, 2)
             self.histo_activated = True
 
 
@@ -453,7 +444,9 @@ if __name__ == '__main__':
             closeEvent redefinition. Use when the user clicks
             on the red cross to close the window
             """
-            """reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
+            pass
+            """
+            reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                          QMessageBox.StandardButton.No)
 
@@ -462,7 +455,8 @@ if __name__ == '__main__':
                     self.central_widget.camera_widget.disconnect()
                 event.accept()
             else:
-                event.ignore()"""
+                event.ignore()
+            """
 
     print("Ouverture en cours ...")
     app = QApplication(sys.argv)
