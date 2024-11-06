@@ -307,9 +307,12 @@ if __name__ == '__main__':
         arrays = [array_3d[:, :, i].astype(float) for i in range(5)]
         return arrays
 
-    data = read_mat_file("C:/Users/LEnsE/Documents/GitHub/camera-gui/applis/Zygo-labwork/_data/imgs2.mat")
+    data = read_mat_file("../_data/imgs1.mat")
     images = data['Imgs']
     images = split_3d_array(images)
+    
+    plt.figure()
+    plt.imshow(images[0])
 
     mask = np.zeros_like(images[0])
     mask[400:1200, 790:1900] = 1
@@ -322,6 +325,11 @@ if __name__ == '__main__':
         image = image[400:1200, 750:1900]
 
     images_filtrees = list(map(lambda x:gaussian_filter(x, sigma), images))
+
+    plt.figure()
+    plt.imshow(images_filtrees[0])
+    plt.show()
+
     phase = hariharan_algorithm(*images_filtrees)
 
     unwrapped_phase, _, info, both, pb = unwrap2D(phase)
