@@ -17,6 +17,12 @@ from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QMessageBox)
 from widgets.main_widget import MainWidget, load_menu
 
+from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from lensecam.ids.camera_ids import CameraIds
+from lensecam.camera_thread import CameraThread
+from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
+from widgets.camera_settings_widget import CameraSettingsWidget
+
 
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
@@ -37,12 +43,31 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         load_default_dictionary('FR')
-        # GUI structure
+        ## GUI structure
         self.central_widget = MainWidget(self)
         self.setCentralWidget(self.central_widget)
+        # Menu
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.main_signal.connect(self.main_action)
 
+
+        # Initialization of the camera
+        # ----------------------------
+        self.camera = CameraIds()
+        self.camera_connected = self.camera.find_first_camera()
+        if self.camera_connected:
+            self.camera.init_camera()
+        else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No Camera Connected")
+            dlg.setText("No IDS Camera is connected to the computer...\n\nThe application will not start "
+                        "correctly.\n\nYou will only access to a pre-established data set.")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
+            # sys.exit(-1)
 
     def main_action(self, event):
         """

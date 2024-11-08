@@ -1,0 +1,7 @@
+# Menu MAIN
+# Type; Title; Signal;
+B;Test 1;test_1;
+B;Test 2;test_2;
+S;;;
+B;Test 3;test_3;
+S;;;
