@@ -17,7 +17,10 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
+from widgets.camera import *
 
+BOT_HEIGHT, TOP_HEIGHT = 45, 50
+LEFT_WIDTH, RIGHT_WIDTH = 45, 45
 TOP_LEFT_ROW, TOP_LEFT_COL = 1, 1
 TOP_RIGHT_ROW, TOP_RIGHT_COL = 1, 2
 BOT_LEFT_ROW, BOT_LEFT_COL = 2, 1
@@ -203,11 +206,12 @@ class MainWidget(QWidget):
         :param parent: Parent window of the main widget.
         """
         super().__init__(parent=parent)
+        self.parent = parent
         # GUI Structure
         self.layout = QGridLayout()
         self.title_label = TitleWidget(self)
         self.main_menu = MenuWidget(self)
-        self.top_left_widget = QWidget()
+        self.top_left_widget = ImagesDisplayWidget(self)
         self.top_right_widget = QWidget()
         self.bot_right_widget = QWidget()
         # Submenu and option widgets in the bottom left corner of the GUI
@@ -267,6 +271,17 @@ class MainWidget(QWidget):
                 widget.deleteLater()
             else:
                 self.layout.removeItem(item)
+
+    def update_size(self, aoi: bool = False):
+        """
+        Update the size of the main widget.
+        """
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width*LEFT_WIDTH)//100
+        he = (height*TOP_HEIGHT)//100
+        self.top_left_widget.update_size(wi, he, aoi)
 
     def set_top_left_widget(self, widget):
         """
