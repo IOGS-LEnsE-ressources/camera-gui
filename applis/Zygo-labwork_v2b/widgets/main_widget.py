@@ -211,6 +211,18 @@ class MenuWidget(QWidget):
                 self.buttons_enabled[index - 1] = False
         self.update_menu_display()
 
+    def set_activated(self, index: int):
+        """
+        Set activated a button.
+        :param index:
+        """
+        self.inactive_buttons()
+        if isinstance(index, list):
+            for i in index:
+                self.buttons_list[i - 1].setStyleSheet(actived_button)
+        else:
+            self.buttons_list[index - 1].setStyleSheet(actived_button)
+
     def submenu_is_clicked(self, event):
         self.menu_clicked.emit(event)
 
@@ -451,10 +463,12 @@ class MainWidget(QWidget):
     def update_menu(self):
         """Update menu depending on the actual mode."""
         # Update menu
+        menu = self.get_list_menu('all_menu')
+        self.main_menu.set_enabled(menu, True)
         menu = []
         if self.parent.mask_created is False:
             menu += self.get_list_menu('nomask')
-        if self.parent.acquisition_done is False:
+        if self.parent.acquisition_done is False and self.parent.images_opened is False:
             menu += self.get_list_menu('nodata')
         if self.parent.camera_connected is False:
             menu += self.get_list_menu('nocam')
@@ -475,6 +489,7 @@ class MainWidget(QWidget):
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
         # Update menu
         self.update_menu()
+
         # Manage application
         if event == 'camera':   # Camera menu is clicked
             camera_setting = CameraSettingsWidget(self, self.parent.camera)
@@ -483,7 +498,7 @@ class MainWidget(QWidget):
                 self.options_widget.set_maximum_exposure_time(
                     float(self.parent.default_parameters['Max Expo Time']))  # in ms
             self.options_widget.update_parameters(auto_min_max=True)
-            html_page = HTMLWidget('./docs/camera.html', './docs/styles.css')
+            html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
             self.set_top_right_widget(html_page)
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
@@ -496,47 +511,62 @@ class MainWidget(QWidget):
                 self.options_widget.set_maximum_exposure_time(
                     float(self.parent.default_parameters['Max Expo Time']))  # in ms
             self.options_widget.update_parameters(auto_min_max=True)
-            html_page = HTMLWidget('./docs/camera.html', './docs/styles.css')
+            html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
             self.set_top_right_widget(html_page)
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
             self.parent.camera_thread.start()
 
         elif event == 'images':
-            self.parent.camera_thread.stop()
+            self.parent.stop_thread()
             if self.parent.acquisition_done is False and self.parent.images_opened is False:
-                self.submenu_widget.set_button_enabled(3, False)
-            html_page = HTMLWidget('./docs/images.html', './docs/styles.css')
+                self.submenu_widget.set_button_enabled(2, False)
+                self.submenu_widget.set_button_enabled(4, False)
+            else:
+                self.submenu_widget.set_button_enabled(2, True)
+                self.submenu_widget.set_button_enabled(4, True)
+            html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
             self.set_top_right_widget(html_page)
 
         elif event == 'open_images':
-            self.parent.camera_thread.stop()
-            self.set_options_widget(ImagesChoice(self))
-            self.parent.images, self.parent.masks = self.action_open_images()
-            try:
-                if self.parent.images is not None:
-                    self.parent.images_opened = True
-                    self.options_widget.set_images_status(True)
-                    self.submenu_widget.set_button_enabled(3, True)
-                else:
-                    self.parent.images_opened = False
-                    self.options_widget.set_images_status(False)
-                if self.parent.masks is not None:
-                    self.mask_created = True
-                    number = 0
-                    if isinstance(self.parent.masks, list):
-                        number = len(self.parent.masks)
-                    elif isinstance(self.parent.masks, np.ndarray):
-                        number = 1
-                    self.options_widget.set_masks_status(True, number)
-                else:
-                    self.parent.mask_created = False
-                    self.options_widget.set_masks_status(False)
-            except Exception as e:
-                print(e)
-            html_page = HTMLWidget('./docs/images.html', './docs/styles.css')
-            self.set_top_right_widget(html_page)
+            self.parent.stop_thread()
+            if self.parent.images_opened:
+                print('WARNING !!')
 
+            self.parent.images, self.parent.masks = self.action_open_images()
+            if self.parent.images is not None:
+                self.parent.images_opened = True
+                self.submenu_widget.set_button_enabled(2, True)
+                self.submenu_widget.set_activated(2)
+                self.submenu_widget.set_button_enabled(4, True)
+            else:
+                self.parent.images_opened = False
+            if self.parent.masks is not None:
+                self.parent.mask_created = True
+            else:
+                self.parent.mask_created = False
+            self.menu_action('display_images')
+
+        elif event == 'display_images':
+            self.parent.stop_thread()
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
+            self.set_options_widget(ImagesChoice(self))
+            if self.parent.images_opened:
+                self.options_widget.set_images_status(True)
+            else:
+                self.options_widget.set_images_status(False)
+            if self.parent.mask_created:
+                number = 0
+                if isinstance(self.parent.masks, list):
+                    number = len(self.parent.masks)
+                elif isinstance(self.parent.masks, np.ndarray):
+                    number = 1
+                self.options_widget.set_masks_status(True, number)
+            else:
+                self.options_widget.set_masks_status(False)
+            html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
+            self.set_top_right_widget(html_page)
 
     def action_open_images(self):
         """Action performed when a MAT file has to be loaded."""

@@ -155,6 +155,11 @@ class MainWindow(QMainWindow):
         # Update menu
         self.central_widget.update_menu()
 
+    def stop_thread(self):
+        """Stop the camera thread."""
+        if self.camera_connected:
+            if self.camera_thread.running:
+                self.camera_thread.stop()
 
     def main_action(self, event):
         """
@@ -210,6 +215,8 @@ class MainWindow(QMainWindow):
         :param event: Object that triggered the event.
         """
         if self.camera_thread.running:
+            self.central_widget.update_size()
+        elif self.images_opened:
             self.central_widget.update_size()
 
     def closeEvent(self, event):
