@@ -10,8 +10,8 @@ import numpy as np
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox,
-    QMessageBox
+    QLabel, QComboBox, QPushButton, QCheckBox, QTextEdit,
+    QMessageBox, QFileDialog
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -33,13 +33,11 @@ def load_menu(file_path: str, menu):
     """
     Load parameter from a CSV file.
     """
-    print(file_path)
     if os.path.exists(file_path):
         # Read the CSV file, ignoring lines starting with '//'
         data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
         # Populate the dictionary with key-value pairs from the CSV file
         for element, title, signal, _ in data:
-            print(element)
             if element == 'B':     # button
                 menu.add_button(translate(title), signal)
             elif element == 'O':   # options button
@@ -250,6 +248,56 @@ class TitleWidget(QWidget):
 
         self.setLayout(self.layout)
 
+class HTMLWidget(QWidget):
+    """
+    Widget displaying an HTML content.
+    """
+    def __init__(self, url: str='', css: str=''):
+        """Default constructor.
+        :param url: filepath or url to the HTML page. Default ''.
+        """
+        super().__init__()
+        self.url = url
+        self.css = css
+        self.html_page = QTextEdit()
+        self.html_page.setReadOnly(True)
+        self.layout = QHBoxLayout()
+        self.layout.addWidget(self.html_page)
+        self.setLayout(self.layout)
+        if url != '':
+            self.set_url(self.url, self.css)
+
+    def set_url(self, url: str, css: str = ''):
+        """
+        Set the URL of the mini browser.
+        :param url: filepath or url to the HTML page.
+        :param css: filepath to a css file. Default ''.
+        """
+        self.url = url
+        self.css = css
+
+        css_content = ''
+        with open(url, "r", encoding="utf-8") as file:
+            html_content = file.read()
+        if self.css != '':
+            with open(css, "r", encoding="utf-8") as file:
+                css_content = file.read()
+
+        full_html_content = f"""
+        <html>
+        <head>
+            <style>
+            {css_content}
+            </style>
+        </head>
+        <body>
+            {html_content}
+        </body>
+        </html>
+        """
+        self.html_page.setHtml(full_html_content)
+
+
 class MainWidget(QWidget):
     """
     Main central widget of the application.
@@ -420,7 +468,9 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         self.main_signal.emit(event)
-
+        self.clear_sublayout(OPTIONS_COL)
+        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
         # Update menu
         self.update_menu()
         # Manage application
@@ -431,7 +481,43 @@ class MainWidget(QWidget):
                 self.options_widget.set_maximum_exposure_time(
                     float(self.parent.default_parameters['Max Expo Time']))  # in ms
             self.options_widget.update_parameters(auto_min_max=True)
+            html_page = HTMLWidget('./docs/camera.html', './docs/styles.css')
+            self.set_top_right_widget(html_page)
 
+        elif event == 'zoom_camera':
+            pass
+
+        elif event == 'images':
+            html_page = HTMLWidget('./docs/images.html', './docs/styles.css')
+            self.set_top_right_widget(html_page)
+
+        elif event == 'open_images':
+            self.action_open_images()
+
+
+    def action_open_images(self):
+        """Action performed when a MAT file has to be loaded."""
+        file_dialog = QFileDialog()
+        if 'Dir Images' in self.parent.default_parameters:
+            default_path = self.parent.default_parameters['Dir Images']
+        else:
+            default_path = os.path.expanduser("~") + '/Images/'
+        file_path, _ = file_dialog.getOpenFileName(self, translate('dialog_open_image'),
+                                                   default_path, "Matlab (*.mat)")
+        if file_path != '':
+
+            pass
+        else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No File Loaded")
+            dlg.setText("No Image File was loaded...")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
+            html_page = HTMLWidget('./docs/images.html')
+            self.set_top_right_widget(html_page)
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

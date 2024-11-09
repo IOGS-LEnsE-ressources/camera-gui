@@ -472,6 +472,54 @@ class ImagesDisplayWidget(QWidget):
             print(f'set_image : {e}')
 
 
+class ZoomImagesWidget(QWidget):
+    """
+    Widget to display an image in a full screen window.
+    Exposure time can be adjusted.
+    """
+
+    slider_changed = pyqtSignal(str)
+
+    def __init__(self):
+        """
+        Default Constructor.
+        :param parent: Parent widget of this widget.
+        """
+        super().__init__(parent=None)
+        self.layout = QGridLayout()
+        self.layout.setRowStretch(0, 5)
+        self.layout.setRowStretch(1, 95)
+        self.expo_time = SliderBloc(translate('slider_expo_time'), 'ms', 0, 10)
+        self.expo_time.slider_changed.connect(lambda: self.slider_changed.emit('expo_time'))
+        self.layout.addWidget(self.expo_time, 0, 0)
+        self.zoom_window = ImagesDisplayWidget(self)
+        self.layout.addWidget(self.zoom_window, 1, 0)
+        self.setLayout(self.layout)
+
+    def set_slider_range(self, min_value: float, max_value: float):
+        """Set the minimum and maximum values for the exposure time slider.
+        :param min_value: Minimum value for the exposure time. In ms.
+        :param max_value: Maximum value for the exposure time. In ms.
+        """
+        self.expo_time.set_min_max_slider_values(min_value, max_value)
+
+    def set_slider_value(self, value: float):
+        """Set the value of the exposure time slider.
+        :param value: Value of the exposure time. In ms.
+        """
+        self.expo_time.set_value(value)
+
+    def get_exposure(self):
+        """Return the exposure time from the slider.
+        :return: Exposure time in ms.
+        """
+        return self.expo_time.get_value()
+
+    def closeEvent(self):
+        print('close')
+
+
+
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
 

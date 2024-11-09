@@ -1,6 +1,7 @@
-# Menu Test 2
+# Menu Images
 # Type; Title; Signal;
-B;Sub Test 21;sub_test_21;
+B;open_images_button;open_images;
 S;;;
-B;Sub Test 22;sub_test_22;
+B;save_images_button;save_images;
 S;;;
+E;;;

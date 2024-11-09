@@ -12,3 +12,4 @@ S;;;
 O;help_button;help;
 O;options_button;options;
 O;piezo_button;piezo;
+E;;;

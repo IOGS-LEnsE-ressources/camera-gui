@@ -93,9 +93,10 @@ class MainWindow(QMainWindow):
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.main_signal.connect(self.main_action)
 
-        # Global mode ! Maybe to change...
-        # --------------------------------
+        # Global mode
+        # -----------
         self.zoom_activated = False     # Camera is started in a large window
+        self.zoom_window = QWidget()
         self.mask_created = False       # Almost one mask is created and selected
         self.acquisition_done = False   # Almost one acquisition is done and data are acquired
         self.phase_calculated = False   # Phase from acquisition is unwrapped
@@ -153,6 +154,22 @@ class MainWindow(QMainWindow):
         :param event: Event that triggered the action.
         """
         print(f'Main {event}')
+        if event == 'camera':
+            pass
+
+        elif event == 'zoom_camera':
+            self.zoom_activated = True
+            self.zoom_window = ZoomImagesWidget()
+            self.zoom_window.slider_changed.connect(
+                lambda: self.camera.set_exposure(self.zoom_window.get_exposure()*1000))
+            min_value, max_value = self.camera.get_exposure_range()
+            if 'Max Expo Time' in self.default_parameters:
+                max_value = float(self.default_parameters['Max Expo Time'])*1000  # in us
+            self.zoom_window.set_slider_range(min_value/1000, max_value/1000)
+            expo_time = self.camera.get_exposure()/1000
+            self.zoom_window.set_slider_value(expo_time)
+            self.zoom_window.showMaximized()
+
 
     def thread_update_image(self, image_array):
         """Actions performed if a camera thread is started."""
@@ -164,7 +181,14 @@ class MainWindow(QMainWindow):
             else:
                 self.raw_image = image_array.view(np.uint8)
                 self.displayed_image = self.raw_image
-        self.central_widget.top_left_widget.set_image_from_array(self.displayed_image, aoi=True)
+
+        try:
+            if self.zoom_activated:
+                self.zoom_window.zoom_window.set_image_from_array(self.displayed_image)
+            else:
+                self.central_widget.top_left_widget.set_image_from_array(self.displayed_image)
+        except Exception as e:
+            print(f'Thread Update_image : {e}')
 
     def resizeEvent(self, event):
         """
@@ -183,6 +207,11 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
+            if self.camera_thread.running:
+                self.camera_thread.stop()
+            if self.camera_connected:
+                self.camera.stop_acquisition()
+                self.camera.disconnect()
             event.accept()
         else:
             event.ignore()
