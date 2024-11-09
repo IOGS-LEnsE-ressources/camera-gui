@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""*images_widget.py* file.
+"""*camera.py* file.
 
-This file contains graphical elements to display images in a widget.
+This file contains graphical elements to display images in a widget from a camera.
 Image is coming from a file (JPG, PNG...) or an industrial camera (IDS, Basler...).
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
@@ -515,9 +515,11 @@ class ZoomImagesWidget(QWidget):
         """
         return self.expo_time.get_value()
 
-    def closeEvent(self):
-        print('close')
-
+    def resizeEvent(self, event):
+        new_size = self.size()
+        width = new_size.width()
+        height = new_size.height()
+        self.zoom_window.update_size(width, height)
 
 
 if __name__ == '__main__':

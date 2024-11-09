@@ -8,7 +8,7 @@ Piezo voltage from Matlab;0.80,1.62,2.43,3.24,4.05
 Piezo Voltage;0.80,1.62,2.43,3.24,4.05
 Piezo Channel;1
 # Default directory
-Dir Images;D:/
+Dir Images;D:\tools\git_repo\LEnsE\ressources\camera-gui\applis\Zygo-labwork_v2b\_test
 # Default Menu
 off_menu;-1
 nocam;1,5

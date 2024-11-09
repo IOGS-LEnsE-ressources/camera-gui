@@ -99,6 +99,7 @@ class MainWindow(QMainWindow):
         self.zoom_window = QWidget()
         self.mask_created = False       # Almost one mask is created and selected
         self.acquisition_done = False   # Almost one acquisition is done and data are acquired
+        self.images_opened = False      # Almost a set of 5 images is opened or acquired
         self.phase_calculated = False   # Phase from acquisition is unwrapped
         self.coeff_calculated = False   # Zernike coefficients are calculated
 
@@ -107,6 +108,11 @@ class MainWindow(QMainWindow):
         self.raw_image = None
         self.displayed_image = None
         self.image_bits_depth = 8
+
+        # Data for process phase
+        # ----------------------------
+        self.images = None
+        self.masks = None
 
         # Initialization of the camera
         # ----------------------------
@@ -126,6 +132,8 @@ class MainWindow(QMainWindow):
                 self.camera.set_black_level(32)
             self.camera_thread.set_camera(self.camera)
             self.camera_thread.image_acquired.connect(self.thread_update_image)
+            # Display image
+            self.central_widget.set_top_left_widget(ImagesDisplayWidget(self))
             self.camera_thread.start()
         else:
             dlg = QMessageBox(self)
@@ -155,20 +163,21 @@ class MainWindow(QMainWindow):
         """
         print(f'Main {event}')
         if event == 'camera':
+
             pass
 
         elif event == 'zoom_camera':
             self.zoom_activated = True
             self.zoom_window = ZoomImagesWidget()
-            self.zoom_window.slider_changed.connect(
-                lambda: self.camera.set_exposure(self.zoom_window.get_exposure()*1000))
+            self.zoom_window.showMaximized()
+            self.zoom_window.slider_changed.connect(self.action_zoom_camera_changed)
             min_value, max_value = self.camera.get_exposure_range()
             if 'Max Expo Time' in self.default_parameters:
                 max_value = float(self.default_parameters['Max Expo Time'])*1000  # in us
             self.zoom_window.set_slider_range(min_value/1000, max_value/1000)
             expo_time = self.camera.get_exposure()/1000
             self.zoom_window.set_slider_value(expo_time)
-            self.zoom_window.showMaximized()
+            self.zoom_window.closeEvent = self.action_zoom_closed
 
 
     def thread_update_image(self, image_array):
@@ -181,21 +190,27 @@ class MainWindow(QMainWindow):
             else:
                 self.raw_image = image_array.view(np.uint8)
                 self.displayed_image = self.raw_image
+        if self.zoom_activated:
+            self.zoom_window.zoom_window.set_image_from_array(self.displayed_image)
+        else:
+            self.central_widget.top_left_widget.set_image_from_array(self.displayed_image)
 
-        try:
-            if self.zoom_activated:
-                self.zoom_window.zoom_window.set_image_from_array(self.displayed_image)
-            else:
-                self.central_widget.top_left_widget.set_image_from_array(self.displayed_image)
-        except Exception as e:
-            print(f'Thread Update_image : {e}')
+    def action_zoom_camera_changed(self):
+        self.camera.set_exposure(self.zoom_window.get_exposure() * 1000)
+
+    def action_zoom_closed(self, event):
+        self.zoom_activated = False
+        self.zoom_window.deleteLater()
+        self.central_widget.submenu_widget.set_button_enabled(2, True)
+        event.accept()
 
     def resizeEvent(self, event):
         """
         Action performed when the main window is resized.
         :param event: Object that triggered the event.
         """
-        self.central_widget.update_size()
+        if self.camera_thread.running:
+            self.central_widget.update_size()
 
     def closeEvent(self, event):
         """

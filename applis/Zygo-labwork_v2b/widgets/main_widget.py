@@ -18,6 +18,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from widgets.camera import *
+from widgets.images import *
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -316,7 +317,7 @@ class MainWidget(QWidget):
         self.layout = QGridLayout()
         self.title_label = TitleWidget(self)
         self.main_menu = MenuWidget(self)
-        self.top_left_widget = ImagesDisplayWidget(self)
+        self.top_left_widget = QWidget()
         self.top_right_widget = QWidget()
         self.bot_right_widget = QWidget()
         # Submenu and option widgets in the bottom left corner of the GUI
@@ -469,6 +470,7 @@ class MainWidget(QWidget):
         """
         self.main_signal.emit(event)
         self.clear_sublayout(OPTIONS_COL)
+        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
         self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
         # Update menu
@@ -483,16 +485,57 @@ class MainWidget(QWidget):
             self.options_widget.update_parameters(auto_min_max=True)
             html_page = HTMLWidget('./docs/camera.html', './docs/styles.css')
             self.set_top_right_widget(html_page)
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
+            self.parent.camera_thread.start()
 
         elif event == 'zoom_camera':
-            pass
+            camera_setting = CameraSettingsWidget(self, self.parent.camera)
+            self.set_options_widget(camera_setting)
+            if 'Max Expo Time' in self.parent.default_parameters:
+                self.options_widget.set_maximum_exposure_time(
+                    float(self.parent.default_parameters['Max Expo Time']))  # in ms
+            self.options_widget.update_parameters(auto_min_max=True)
+            html_page = HTMLWidget('./docs/camera.html', './docs/styles.css')
+            self.set_top_right_widget(html_page)
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
+            self.parent.camera_thread.start()
 
         elif event == 'images':
+            self.parent.camera_thread.stop()
+            if self.parent.acquisition_done is False and self.parent.images_opened is False:
+                self.submenu_widget.set_button_enabled(3, False)
             html_page = HTMLWidget('./docs/images.html', './docs/styles.css')
             self.set_top_right_widget(html_page)
 
         elif event == 'open_images':
-            self.action_open_images()
+            self.parent.camera_thread.stop()
+            self.set_options_widget(ImagesChoice(self))
+            self.parent.images, self.parent.masks = self.action_open_images()
+            try:
+                if self.parent.images is not None:
+                    self.parent.images_opened = True
+                    self.options_widget.set_images_status(True)
+                    self.submenu_widget.set_button_enabled(3, True)
+                else:
+                    self.parent.images_opened = False
+                    self.options_widget.set_images_status(False)
+                if self.parent.masks is not None:
+                    self.mask_created = True
+                    number = 0
+                    if isinstance(self.parent.masks, list):
+                        number = len(self.parent.masks)
+                    elif isinstance(self.parent.masks, np.ndarray):
+                        number = 1
+                    self.options_widget.set_masks_status(True, number)
+                else:
+                    self.parent.mask_created = False
+                    self.options_widget.set_masks_status(False)
+            except Exception as e:
+                print(e)
+            html_page = HTMLWidget('./docs/images.html', './docs/styles.css')
+            self.set_top_right_widget(html_page)
 
 
     def action_open_images(self):
@@ -505,8 +548,25 @@ class MainWidget(QWidget):
         file_path, _ = file_dialog.getOpenFileName(self, translate('dialog_open_image'),
                                                    default_path, "Matlab (*.mat)")
         if file_path != '':
-
-            pass
+            data = read_mat_file(file_path)
+            images_mat = data['Images']
+            images = split_3d_array(images_mat)
+            if 'Masks' in data:
+                mask = data['Masks']  # TO DO : add a test on the size of 'Masks'
+            else:
+                mask = None
+            if isinstance(images, list):
+                if len(images) == 5:
+                    return images, mask
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No File Loaded")
+            dlg.setText("Number of images in this file is not adapted to Hariharan algorithm.")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
+            return None, None
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No File Loaded")
@@ -518,6 +578,7 @@ class MainWidget(QWidget):
             button = dlg.exec()
             html_page = HTMLWidget('./docs/images.html')
             self.set_top_right_widget(html_page)
+            return None, None
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
