@@ -1,0 +1,196 @@
+# -*- coding: utf-8 -*-
+"""*zygo_lab_app.py* file.
+
+*zygo_lab_app* file that contains :class::ZygoLabApp
+
+This file is attached to a 1st year of engineer training labwork in photonics.
+Subject : http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
+
+More about the development of this interface :
+https://iogs-lense-ressources.github.io/camera-gui/
+
+.. note:: LEnsE - Institut d'Optique - version 1.0
+
+.. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+"""
+from lensepy import load_dictionary, translate, dictionary
+import sys
+from PyQt6.QtWidgets import (
+    QWidget, QPushButton,
+    QMainWindow, QApplication, QMessageBox)
+from widgets.main_widget import MainWidget, load_menu
+
+## Example for IDS Camera
+from lensecam.ids.camera_ids_widget import CameraIdsWidget
+from lensecam.ids.camera_ids import CameraIds
+
+## Image display and thread
+from lensecam.camera_thread import CameraThread
+from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
+## Camera settings Widget for IDS
+from widgets.camera import *
+from drivers.nidaq_piezo import *
+
+
+def load_default_dictionary(language: str) -> bool:
+    """Initialize default dictionary from default_config.txt file"""
+    file_name_dict = f'./lang/dict_{language}.txt'
+    load_dictionary(file_name_dict)
+
+
+def load_default_parameters(file_path: str) -> dict:
+    """
+    Load parameter from a CSV file.
+
+    :return: Dict containing 'key_1': 'language_word_1'.
+
+    Notes
+    -----
+    This function reads a CSV file that contains key-value pairs separated by semicolons (';')
+    and stores them in a global dictionary variable. The CSV file may contain comments
+    prefixed by '#', which will be ignored.
+
+    The file should have the following format:
+        # comment
+        # comment
+        key_1 ; language_word_1
+        key_2 ; language_word_2
+    """
+    dictionary_loaded = {}
+    if os.path.exists(file_path):
+        # Read the CSV file, ignoring lines starting with '//'
+        data = np.genfromtxt(file_path, delimiter=';',
+                             dtype=str, comments='#', encoding='UTF-8')
+        # Populate the dictionary with key-value pairs from the CSV file
+        for key, value in data:
+            dictionary_loaded[key.strip()] = value.strip()
+        return dictionary_loaded
+    else:
+        print('File error')
+        return {}
+
+class MainWindow(QMainWindow):
+    """
+    Our main window.
+
+    Args:
+        QMainWindow (class): QMainWindow can contain several widgets.
+    """
+
+    def __init__(self):
+        """
+        Initialisation of the main Window.
+        """
+        super().__init__()
+        load_default_dictionary('FR')
+        # Read default parameters
+        self.default_parameters = load_default_parameters('./config.txt')
+        ## GUI structure
+        self.central_widget = MainWidget(self)
+        self.setCentralWidget(self.central_widget)
+        # Menu
+        load_menu('./config/menu.txt', self.central_widget.main_menu)
+        self.central_widget.main_signal.connect(self.main_action)
+
+        # Global mode ! Maybe to change...
+        # --------------------------------
+        self.zoom_activated = False     # Camera is started in a large window
+        self.mask_created = False       # Almost one mask is created and selected
+        self.acquisition_done = False   # Almost one acquisition is done and data are acquired
+        self.phase_calculated = False   # Phase from acquisition is unwrapped
+        self.coeff_calculated = False   # Zernike coefficients are calculated
+
+        # Data from camera
+        # ----------------------------
+        self.raw_image = None
+        self.displayed_image = None
+        self.image_bits_depth = 8
+
+        # Initialization of the camera
+        # ----------------------------
+        self.camera = CameraIds()
+        self.camera_thread = CameraThread()
+        self.camera_connected = self.camera.find_first_camera()
+        if self.camera_connected:
+            self.camera.init_camera()
+            self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
+            if 'Exposure Time' in self.default_parameters:
+                self.camera.set_exposure(float(self.default_parameters['Exposure Time'])*1000)  # in us
+            else:
+                self.camera.set_exposure(10000) # in us
+            if 'Black Level' in self.default_parameters:
+                self.camera.set_black_level(float(self.default_parameters['Black Level']))
+            else:
+                self.camera.set_black_level(32)
+            self.camera_thread.set_camera(self.camera)
+            self.camera_thread.image_acquired.connect(self.thread_update_image)
+            self.camera_thread.start()
+        else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No Camera Connected")
+            dlg.setText("No IDS Camera is connected to the computer...\n\nThe application will not start "
+                        "correctly.\n\nYou will only access to a pre-established data set.")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
+            # sys.exit(-1)
+
+        # Initialization of the piezo
+        # ---------------------------
+        # self.piezo = NIDaqPiezo()
+        self.piezo_connected = False
+
+        # Update menu
+        self.central_widget.update_menu()
+
+
+    def main_action(self, event):
+        """
+        Action performed by an event in the main widget.
+        :param event: Event that triggered the action.
+        """
+        print(f'Main {event}')
+
+    def thread_update_image(self, image_array):
+        """Actions performed if a camera thread is started."""
+        if image_array is not None:
+            if self.image_bits_depth > 8:
+                self.raw_image = image_array.view(np.uint16)
+                self.displayed_image = self.raw_image >> (self.image_bits_depth-8)
+                self.displayed_image = self.displayed_image.astype(np.uint8)
+            else:
+                self.raw_image = image_array.view(np.uint8)
+                self.displayed_image = self.raw_image
+        self.central_widget.top_left_widget.set_image_from_array(self.displayed_image, aoi=True)
+
+    def resizeEvent(self, event):
+        """
+        Action performed when the main window is resized.
+        :param event: Object that triggered the event.
+        """
+        self.central_widget.update_size()
+
+    def closeEvent(self, event):
+        """
+        closeEvent redefinition. Use when the user clicks
+        on the red cross to close the window
+        """
+        reply = QMessageBox.question(self, 'Quit', 'Do you really want to close ?',
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    window = MainWindow()
+    window.showMaximized()
+
+    sys.exit(app.exec())

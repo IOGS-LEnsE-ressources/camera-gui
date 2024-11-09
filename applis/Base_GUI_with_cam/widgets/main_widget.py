@@ -41,6 +41,10 @@ def load_menu(file_path: str, menu):
         for element, title, signal, _ in data:
             if element == 'B':     # button
                 menu.add_button(translate(title), signal)
+            elif element == 'O':   # options button
+                menu.add_button(translate(title), signal, option=True)
+            elif element == 'L':   # label title
+                menu.add_label_title(translate(title))
             elif element == 'S':   # blank space
                 menu.add_space()
         menu.display_layout()
@@ -87,16 +91,20 @@ class MenuWidget(QWidget):
             else:
                 self.layout.addStretch()
 
-    def add_button(self, title: str, signal: str=None):
+    def add_button(self, title: str, signal: str=None, option: bool=False):
         """
         Add a button into the interface.
-        :param title:
-        :param signal:
+        :param title: Title of the button.
+        :param signal: Signal triggered by the button.
+        :param option: True if the button is an option button (smaller height).
         :return:
         """
         button = QPushButton(translate(title))
         button.setStyleSheet(unactived_button)
-        button.setFixedHeight(BUTTON_HEIGHT)
+        if option:
+            button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        else:
+            button.setFixedHeight(BUTTON_HEIGHT)
         button.clicked.connect(self.menu_is_clicked)
         self.buttons_list.append(button)
         self.buttons_signal.append(signal)
