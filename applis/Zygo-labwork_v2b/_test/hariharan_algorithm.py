@@ -11,7 +11,8 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 
 import numpy as np
 
-def hariharan_algorithm(intensity: list[np.ndarray]) -> np.ndarray:
+def hariharan_algorithm(intensity: list[np.ndarray], mask: np.ndarray = None)\
+        -> np.ndarray:
     """
     Apply the Hariharan phase demodulation algorithm to a set of intensity measurements.
 
@@ -23,6 +24,8 @@ def hariharan_algorithm(intensity: list[np.ndarray]) -> np.ndarray:
         Third intensity measurement, I_3 = I_0 * (1 + C * cos(phi + π)).
         Fourth intensity measurement, I_4 = I_0 * (1 + C * cos(phi + 3π/2)).
         Fifth intensity measurement, I_5 = I_0 * (1 + C * cos(phi + 2π)).
+    mask : np.ndarray
+        Mask to apply on each image.
 
     Returns
     -------

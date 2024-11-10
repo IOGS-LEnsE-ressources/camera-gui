@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""*xyz_chart_widget.py* file.
+
+This file contains graphical elements to display a XYZ chart in a widget.
+
+.. note:: LEnsE - Institut d'Optique - version 1.0
+
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+Creation : nov/2024
+"""
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QVector3D
@@ -5,16 +15,18 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 
-import pyqtgraph.opengl as gl  # Import pyqtgraph for 3D OpenGL integration
-import pyqtgraph as pg
-
 from lensepy.css import *  # Import CSS styles if needed
 
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
-class Surface3DWidget(QWidget):
-    def __init__(self, grid_color='black', subdivisions=10) -> None:
-        super().__init__()
+class Surface3DWidget2(QWidget):
+    def __init__(self, parent=None, grid_color='black', subdivisions=10) -> None:
+        super().__init__(parent=parent)
+        self.parent = parent
         self.grid_color = grid_color
         self.subdivisions = subdivisions
 
@@ -198,6 +210,63 @@ class Surface3DWidget(QWidget):
         self.layout.addWidget(self.plot_chart_widget)
 
 
+class MplCanvas(FigureCanvas):
+    def __init__(self, parent=None):
+        fig = Figure()
+        self.axes = fig.add_subplot(111, projection='3d')
+        super().__init__(fig)
+        # Activate mouse interaction with mouse
+        self.mpl_connect('scroll_event', self._zoom)
+        self.fig = fig
+
+    def _zoom(self, event):
+        """ Fonction de zoom avec correction du sens de la molette et maintien de la figure centrée """
+        pass
+        '''
+        scale_factor = 0.9 if event.button == 'up' else 1.1
+        xlim, ylim, zlim = self.axes.get_xlim3d(), self.axes.get_ylim3d(), self.axes.get_zlim3d()
+        x_center, y_center, z_center = np.mean(xlim), np.mean(ylim), np.mean(zlim)
+        new_xlim = [x_center + (x - x_center) * scale_factor for x in xlim]
+        new_ylim = [y_center + (y - y_center) * scale_factor for y in ylim]
+        new_zlim = [z_center + (z - z_center) * scale_factor for z in zlim]
+        self.axes.set_xlim3d(new_xlim)
+        self.axes.set_ylim3d(new_ylim)
+        self.axes.set_zlim3d(new_zlim)
+        self.draw()
+        '''
+
+class Surface3DWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.canvas = MplCanvas(self)
+
+        # Ajout du widget dans le layout
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+
+    def set_data(self, Z: np.ndarray, mask: np.ndarray = None, fast_mode: bool = True):
+        x = np.arange(Z.shape[1])
+        y = np.arange(Z.shape[0])
+        X, Y = np.meshgrid(x, y)
+
+        #self.canvas.fig.colorbar(Z) #, ax=self.canvas.axes, shrink=0.5, aspect=10)
+        # Mask for transparency
+        if mask is not None:
+            print(Z.dtype)
+            colors = cm.magma(Z)
+            colors[..., -1] = np.where(mask == 0, 0, 1)
+            #self.canvas.axes.plot_surface(X, Y, Z, cmap='viridis')
+            if fast_mode:
+                surface = self.canvas.axes.plot_surface(X, Y, Z, facecolors=colors)
+            else:
+                surface = self.canvas.axes.plot_surface(X, Y, Z, facecolors=colors,
+                                              rstride=1, cstride=1)
+        else:
+            surface = self.canvas.axes.plot_surface(X, Y, Z, cmap='viridis')
+        self.canvas.fig.colorbar(surface, ax=self.canvas.axes, shrink=0.5, aspect=10)
+        self.canvas.draw()
+
 
 class MyWindow(QMainWindow):
     def __init__(self) -> None:
@@ -210,22 +279,17 @@ class MyWindow(QMainWindow):
         self.layout: QVBoxLayout = QVBoxLayout()
 
         self.chart_widget: Surface3DWidget = Surface3DWidget()
-        self.chart_widget.set_title('')
-        self.chart_widget.set_information('')
         self.layout.addWidget(self.chart_widget)
 
-        x: np.ndarray = np.linspace(-10, 10, 100)
-        y: np.ndarray = np.linspace(-10, 10, 100)
+        x: np.ndarray = np.linspace(-1, 2, 1000)
+        y: np.ndarray = np.linspace(-1, 1, 2000)
         x, y = np.meshgrid(x, y)
         z: np.ndarray = np.sin(np.sqrt(x**2 + y**2))
-        # z = x + y
 
         z *= (x.max() - x.min()) * .75 / (z.max() - z.min())
-
-        self.chart_widget.set_background('lightgray')
-
-        self.chart_widget.set_data(x, y, z)
-        self.chart_widget.refresh_chart()
+        mask = np.ones_like(z).astype(np.uint8)
+        mask[100:200, 200:500] = 0
+        self.chart_widget.set_data(z, mask)
 
         self.centralWid.setLayout(self.layout)
         self.setCentralWidget(self.centralWid)

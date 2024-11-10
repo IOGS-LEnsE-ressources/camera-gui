@@ -62,7 +62,8 @@ def display_wrapped_phase(wrapped_phase: np.ndarray):
     # Display of the surface
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    surface = ax.plot_surface(X[400:1200, 750:1900], Y[400:1200, 750:1900], wrapped_phase[400:1200, 750:1900],
+    # [400:1200, 750:1900]
+    surface = ax.plot_surface(X, Y, wrapped_phase,
                               cmap='magma')
     ax.set_title('Unwrapped surface')
     cbar = fig.colorbar(surface, ax=ax, shrink=0.5, aspect=10)

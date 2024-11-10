@@ -18,8 +18,10 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
+from lensepy.images.conversion import *
 from widgets.camera import *
 from widgets.images import *
+from widgets.xyz_chart_widget import *
 from process.hariharan_algorithm import *
 from skimage.restoration import unwrap_phase
 
@@ -313,47 +315,6 @@ class HTMLWidget(QWidget):
         """
         self.html_page.setHtml(full_html_content)
 
-import pyqtgraph as pg
-import pyqtgraph.opengl as gl
-class Surface3DWidget(QWidget):
-    def __init__(self, wrapped_phase, parent=None):
-        super(Surface3DWidget, self).__init__(parent)
-
-        # Configuration de la disposition
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        # Création du widget GLViewWidget pour l'affichage 3D
-        self.view = gl.GLViewWidget()
-        layout.addWidget(self.view)
-        self.view.setCameraPosition(distance=300)
-        self.view.setWindowTitle('Unwrapped surface')
-
-        # Préparation des données pour l'affichage
-        self.display_surface(wrapped_phase)
-
-    def display_surface(self, wrapped_phase):
-        # Limites de la région à afficher
-        Z = wrapped_phase[400:1200, 750:1900]
-
-        # Création des axes X et Y pour les données
-        x = np.linspace(0, Z.shape[1], Z.shape[1])
-        y = np.linspace(0, Z.shape[0], Z.shape[0])
-        X, Y = np.meshgrid(x, y)
-        Z = Z  # La profondeur (Z) est la valeur de `wrapped_phase`
-
-        # Conversion des données en un format compatible avec pyqtgraph
-        X = X.flatten()
-        Y = Y.flatten()
-        Z = Z.flatten()
-
-        # Création de l'élément surface
-        surface = gl.GLSurfacePlotItem(x=X, y=Y, z=Z, shader='heightColor', computeNormals=False, smooth=True)
-        surface.scale(1, 1, 0.1)  # Ajuster l'échelle en profondeur
-        surface.setColor((1, 0.5, 0, 1))  # Définir la couleur de la surface
-
-        # Ajout de la surface au widget GLViewWidget
-        self.view.addItem(surface)
 
 class MainWidget(QWidget):
     """
@@ -581,14 +542,26 @@ class MainWidget(QWidget):
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
-            self.set_top_right_widget(Surface3DWidget(self.parent.wrapped_phase, self))
-
+            '''
+            self.set_top_right_widget(Surface3DWidget(self))
+            wrapped_phase, _ = downsample_and_upscale(self.parent.wrapped_phase, 10)
+            mask, _ = downsample_and_upscale(self.parent.masks, 10)
+            self.top_right_widget.set_data(wrapped_phase,
+                                           mask)
+            '''
             display_wrapped_phase(self.parent.wrapped_phase)
 
         elif event == 'unwrapped_phase':
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
+            '''
+            self.set_top_right_widget(Surface3DWidget(self))
+            unwrapped_phase, _ = downsample_and_upscale(self.parent.unwrapped_phase, 10)
+            mask, _ = downsample_and_upscale(self.parent.masks, 10)
+            self.top_right_widget.set_data(unwrapped_phase,
+                                           mask)
+            '''
             display_wrapped_phase(self.parent.unwrapped_phase)
 
     def action_camera(self):
@@ -716,7 +689,11 @@ class MainWidget(QWidget):
         # TO DO : select the good set of images if multiple acquisition
         k = 0
         images = self.parent.images[0+k:5+k]
-        self.parent.wrapped_phase = hariharan_algorithm(images)
+        if isinstance(self.parent.masks, np.ndarray):
+            masks = self.parent.masks
+        else:
+            masks = self.parent.masks[0]
+        self.parent.wrapped_phase = hariharan_algorithm(images*masks)
         self.parent.wrapped_phase_done = True
         if self.parent.main_mode == 'simple_analysis':
             self.submenu_widget.set_button_enabled(1, True)
