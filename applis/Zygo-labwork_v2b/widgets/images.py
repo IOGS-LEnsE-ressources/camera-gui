@@ -98,6 +98,10 @@ class ImagesChoice(QWidget):
         self.label_images_choice_title.setStyleSheet(styleH1)
         self.label_images_choice_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self.label_set_of_images = QLabel()
+        self.label_set_of_images.setStyleSheet(styleH2)
+        self.label_set_of_images.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         self.label_status_images = QLabel(translate("label_status_images"))
         self.label_status_images.setStyleSheet(styleH2)
         self.label_status_images.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -105,6 +109,13 @@ class ImagesChoice(QWidget):
         self.label_status_masks = QLabel(translate("label_status_masks"))
         self.label_status_masks.setStyleSheet(styleH2)
         self.label_status_masks.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Widget set of images
+        self.sets_of_images_number = 0
+        self.sets_of_images_widget = QWidget()
+        self.layout_set = QHBoxLayout()
+        self.sets_of_images_widget.setLayout(self.layout_set)
+        self.sets_button_list = []
 
         # Widget images selection
         self.images_select_widget = QWidget()
@@ -131,18 +142,37 @@ class ImagesChoice(QWidget):
 
         # Add graphical elements in the layout
         self.layout.addWidget(self.label_images_choice_title)
+        self.layout.addWidget(self.label_set_of_images)
+        self.layout.addWidget(self.images_select_widget)
         self.layout.addWidget(self.label_status_images)
         self.layout.addWidget(self.images_select_widget)
         self.layout.addWidget(self.label_status_masks)
         self.layout.addWidget(self.masks_select_widget)
 
 
-    def set_images_status(self, value: bool):
-        """Update images status."""
+    def set_images_status(self, value: bool, index: int = 0):
+        """Update images status.
+        :param value: True if images are opened.
+        :param index: Index of the image selected for display.
+        """
         if value:
+            self.sets_of_images_number = len(self.parent.parent.images)%5
+            if self.sets_of_images_number > 1:
+                self.label_set_of_images.setText(f'{self.sets_of_images_number} set(s) of images')
+                for i in range(self.sets_of_images_number):
+                    button = QPushButton(f'S{i + 1}')
+                    button.setFixedWidth(40)
+                    if i == 0:
+                        button.setStyleSheet(actived_button)
+                    else:
+                        button.setStyleSheet(unactived_button)
+                    button.clicked.connect(self.display_mask)
+                    self.sets_button_list.append(button)
+                    self.layout_set.addWidget(self.sets_button_list[i])
             self.label_status_images.setText('Display image ?')
             for i in range(6):
                 self.layout_images.addWidget(self.images_button_select[i])
+            self.images_button_select[index-1].setStyleSheet(actived_button)
         else:
             self.label_status_images.setText('No Image')
 

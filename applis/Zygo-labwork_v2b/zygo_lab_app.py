@@ -95,12 +95,14 @@ class MainWindow(QMainWindow):
 
         # Global mode
         # -----------
+        self.main_mode = None
         self.zoom_activated = False     # Camera is started in a large window
         self.zoom_window = QWidget()
         self.mask_created = False       # Almost one mask is created and selected
         self.acquisition_done = False   # Almost one acquisition is done and data are acquired
         self.images_opened = False      # Almost a set of 5 images is opened or acquired
-        self.phase_calculated = False   # Phase from acquisition is unwrapped
+        self.wrapped_phase_done = False      # Phase from acquisition is wrapped
+        self.unwrapped_phase_done = False    # Phase from acquisition is unwrapped
         self.coeff_calculated = False   # Zernike coefficients are calculated
 
         # Data from camera
@@ -113,6 +115,7 @@ class MainWindow(QMainWindow):
         # ----------------------------
         self.images = None
         self.masks = None
+        self.wrapped_phase = None
 
         # Initialization of the camera
         # ----------------------------
@@ -166,7 +169,8 @@ class MainWindow(QMainWindow):
         Action performed by an event in the main widget.
         :param event: Event that triggered the action.
         """
-        print(f'Main {event}')
+        self.main_mode = event
+        print(f'Main {self.main_mode}')
         if event == 'camera':
 
             pass

@@ -117,6 +117,7 @@ for i, img in enumerate(images_filtered):
 ## Calculation of the phase by Hariharan algorithm
 print('Calculating Phase by Hariharan Algo...')
 wrapped_phase = hariharan_algorithm(images_filtered)
+
 # Array for displaying data on 3D projection
 x = np.arange(wrapped_phase.shape[1])
 y = np.arange(wrapped_phase.shape[0])

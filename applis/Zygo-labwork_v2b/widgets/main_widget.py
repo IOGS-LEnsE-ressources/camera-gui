@@ -6,6 +6,7 @@
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 """
 import sys, os
+import threading, time
 import numpy as np
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
@@ -19,6 +20,8 @@ from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from widgets.camera import *
 from widgets.images import *
+from process.hariharan_algorithm import *
+from skimage.restoration import unwrap_phase
 
 BOT_HEIGHT, TOP_HEIGHT = 45, 50
 LEFT_WIDTH, RIGHT_WIDTH = 45, 45
@@ -310,6 +313,47 @@ class HTMLWidget(QWidget):
         """
         self.html_page.setHtml(full_html_content)
 
+import pyqtgraph as pg
+import pyqtgraph.opengl as gl
+class Surface3DWidget(QWidget):
+    def __init__(self, wrapped_phase, parent=None):
+        super(Surface3DWidget, self).__init__(parent)
+
+        # Configuration de la disposition
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Création du widget GLViewWidget pour l'affichage 3D
+        self.view = gl.GLViewWidget()
+        layout.addWidget(self.view)
+        self.view.setCameraPosition(distance=300)
+        self.view.setWindowTitle('Unwrapped surface')
+
+        # Préparation des données pour l'affichage
+        self.display_surface(wrapped_phase)
+
+    def display_surface(self, wrapped_phase):
+        # Limites de la région à afficher
+        Z = wrapped_phase[400:1200, 750:1900]
+
+        # Création des axes X et Y pour les données
+        x = np.linspace(0, Z.shape[1], Z.shape[1])
+        y = np.linspace(0, Z.shape[0], Z.shape[0])
+        X, Y = np.meshgrid(x, y)
+        Z = Z  # La profondeur (Z) est la valeur de `wrapped_phase`
+
+        # Conversion des données en un format compatible avec pyqtgraph
+        X = X.flatten()
+        Y = Y.flatten()
+        Z = Z.flatten()
+
+        # Création de l'élément surface
+        surface = gl.GLSurfacePlotItem(x=X, y=Y, z=Z, shader='heightColor', computeNormals=False, smooth=True)
+        surface.scale(1, 1, 0.1)  # Ajuster l'échelle en profondeur
+        surface.setColor((1, 0.5, 0, 1))  # Définir la couleur de la surface
+
+        # Ajout de la surface au widget GLViewWidget
+        self.view.addItem(surface)
 
 class MainWidget(QWidget):
     """
@@ -492,30 +536,10 @@ class MainWidget(QWidget):
 
         # Manage application
         if event == 'camera':   # Camera menu is clicked
-            camera_setting = CameraSettingsWidget(self, self.parent.camera)
-            self.set_options_widget(camera_setting)
-            if 'Max Expo Time' in self.parent.default_parameters:
-                self.options_widget.set_maximum_exposure_time(
-                    float(self.parent.default_parameters['Max Expo Time']))  # in ms
-            self.options_widget.update_parameters(auto_min_max=True)
-            html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
-            self.set_top_right_widget(html_page)
-            self.set_top_left_widget(ImagesDisplayWidget(self))
-            self.update_size()
-            self.parent.camera_thread.start()
+            self.action_camera()
 
         elif event == 'zoom_camera':
-            camera_setting = CameraSettingsWidget(self, self.parent.camera)
-            self.set_options_widget(camera_setting)
-            if 'Max Expo Time' in self.parent.default_parameters:
-                self.options_widget.set_maximum_exposure_time(
-                    float(self.parent.default_parameters['Max Expo Time']))  # in ms
-            self.options_widget.update_parameters(auto_min_max=True)
-            html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
-            self.set_top_right_widget(html_page)
-            self.set_top_left_widget(ImagesDisplayWidget(self))
-            self.update_size()
-            self.parent.camera_thread.start()
+            self.action_zoom_camera()
 
         elif event == 'images':
             self.parent.stop_thread()
@@ -533,7 +557,7 @@ class MainWidget(QWidget):
             if self.parent.images_opened:
                 print('WARNING !!')
 
-            self.parent.images, self.parent.masks = self.action_open_images()
+            self.parent.images, self.parent.masks = self.action_menu_open_images()
             if self.parent.images is not None:
                 self.parent.images_opened = True
                 self.submenu_widget.set_button_enabled(2, True)
@@ -548,27 +572,53 @@ class MainWidget(QWidget):
             self.menu_action('display_images')
 
         elif event == 'display_images':
+            self.action_menu_display_images()
+
+        elif event == 'simple_analysis':
+            self.action_simple_analysis()
+
+        elif event == 'wrapped_phase':
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
-            self.set_options_widget(ImagesChoice(self))
-            if self.parent.images_opened:
-                self.options_widget.set_images_status(True)
-            else:
-                self.options_widget.set_images_status(False)
-            if self.parent.mask_created:
-                number = 0
-                if isinstance(self.parent.masks, list):
-                    number = len(self.parent.masks)
-                elif isinstance(self.parent.masks, np.ndarray):
-                    number = 1
-                self.options_widget.set_masks_status(True, number)
-            else:
-                self.options_widget.set_masks_status(False)
-            html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
-            self.set_top_right_widget(html_page)
+            self.set_top_right_widget(Surface3DWidget(self.parent.wrapped_phase, self))
 
-    def action_open_images(self):
+            display_wrapped_phase(self.parent.wrapped_phase)
+
+        elif event == 'unwrapped_phase':
+            self.parent.stop_thread()
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
+            display_wrapped_phase(self.parent.unwrapped_phase)
+
+    def action_camera(self):
+        camera_setting = CameraSettingsWidget(self, self.parent.camera)
+        self.set_options_widget(camera_setting)
+        if 'Max Expo Time' in self.parent.default_parameters:
+            self.options_widget.set_maximum_exposure_time(
+                float(self.parent.default_parameters['Max Expo Time']))  # in ms
+        self.options_widget.update_parameters(auto_min_max=True)
+        html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
+        self.set_top_right_widget(html_page)
+        self.set_top_left_widget(ImagesDisplayWidget(self))
+        self.update_size()
+        self.parent.camera_thread.start()
+
+    def action_zoom_camera(self):
+        camera_setting = CameraSettingsWidget(self, self.parent.camera)
+        self.set_options_widget(camera_setting)
+        if 'Max Expo Time' in self.parent.default_parameters:
+            self.options_widget.set_maximum_exposure_time(
+                float(self.parent.default_parameters['Max Expo Time']))  # in ms
+        self.options_widget.update_parameters(auto_min_max=True)
+        html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
+        self.set_top_right_widget(html_page)
+        self.set_top_left_widget(ImagesDisplayWidget(self))
+        self.update_size()
+        self.parent.camera_thread.start()
+
+
+    def action_menu_open_images(self):
         """Action performed when a MAT file has to be loaded."""
         file_dialog = QFileDialog()
         if 'Dir Images' in self.parent.default_parameters:
@@ -586,7 +636,9 @@ class MainWidget(QWidget):
             else:
                 mask = None
             if isinstance(images, list):
-                if len(images) == 5:
+                if len(images)%5 == 0 and len(images) > 1:
+                    self.parent.wrapped_phase_done = False
+                    self.parent.unwrapped_phase_done = False
                     return images, mask
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No File Loaded")
@@ -609,6 +661,73 @@ class MainWidget(QWidget):
             html_page = HTMLWidget('./docs/images.html')
             self.set_top_right_widget(html_page)
             return None, None
+
+    def action_menu_display_images(self):
+        """Action performed when images are displayed."""
+        self.parent.stop_thread()
+        self.set_top_left_widget(ImagesDisplayWidget(self))
+        self.update_size()
+        self.set_options_widget(ImagesChoice(self))
+        if self.parent.images_opened:
+            self.options_widget.set_images_status(True, index=1)
+            self.top_left_widget.set_image_from_array(self.parent.images[0])
+        else:
+            self.options_widget.set_images_status(False)
+        if self.parent.mask_created:
+            number = 0
+            if isinstance(self.parent.masks, list):
+                number = len(self.parent.masks)
+            elif isinstance(self.parent.masks, np.ndarray):
+                number = 1
+            self.options_widget.set_masks_status(True, number)
+        else:
+            self.options_widget.set_masks_status(False)
+        html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
+        self.set_top_right_widget(html_page)
+
+    def action_simple_analysis(self):
+        """Action performed when a simple analysis is required.
+        Wrapped, then unwrapped phase processes are started in a thread.
+        """
+        self.parent.stop_thread()
+        try:
+            if self.parent.wrapped_phase_done is False:
+                self.submenu_widget.set_button_enabled(1, False)
+                self.submenu_widget.set_button_enabled(2, False)
+                thread = threading.Thread(target=self.thread_wrapped_phase_calculation)
+                thread.start()
+            else:
+                if self.parent.unwrapped_phase_done is False:
+                    self.submenu_widget.set_button_enabled(2, False)
+                    thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
+                    thread.start()
+
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
+            if self.parent.images_opened:
+                self.top_left_widget.set_image_from_array(self.parent.images[0])
+            html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
+            self.set_top_right_widget(html_page)
+        except Exception as e:
+            print(f'Simple Analysis - {e}')
+
+    def thread_wrapped_phase_calculation(self):
+        """"""
+        # TO DO : select the good set of images if multiple acquisition
+        k = 0
+        images = self.parent.images[0+k:5+k]
+        self.parent.wrapped_phase = hariharan_algorithm(images)
+        self.parent.wrapped_phase_done = True
+        if self.parent.main_mode == 'simple_analysis':
+            self.submenu_widget.set_button_enabled(1, True)
+        thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
+        thread.start()
+
+    def thread_unwrapped_phase_calculation(self):
+        """"""
+        self.parent.unwrapped_phase = unwrap_phase(self.parent.wrapped_phase) / (2 * np.pi)
+        if self.parent.main_mode == 'simple_analysis' or self.parent.main_mode == 'wrapped_phase':
+            self.submenu_widget.set_button_enabled(2, True)
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
