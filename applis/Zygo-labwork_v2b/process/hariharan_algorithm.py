@@ -11,6 +11,7 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib import cm
 
 def hariharan_algorithm(intensity: list[np.ndarray]) -> np.ndarray:
     """
@@ -52,20 +53,26 @@ def hariharan_algorithm(intensity: list[np.ndarray]) -> np.ndarray:
     return np.arctan2(num, denum)
 
 
-def display_wrapped_phase(wrapped_phase: np.ndarray):
+def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, title: str = ''):
     """Display a 3D surface."""
     # Array for displaying data on 3D projection
-    x = np.arange(wrapped_phase.shape[1])
-    y = np.arange(wrapped_phase.shape[0])
+    x = np.arange(Z.shape[1])
+    y = np.arange(Z.shape[0])
     X, Y = np.meshgrid(x, y)
 
     # Display of the surface
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     # [400:1200, 750:1900]
-    surface = ax.plot_surface(X, Y, wrapped_phase,
-                              cmap='magma')
-    ax.set_title('Unwrapped surface')
+    if mask is not None:
+        colors = cm.magma(Z)
+        colors[..., -1] = np.where(mask == 0, 0, 1)
+        surface = ax.plot_surface(X, Y, Z, facecolors=colors, shade=False,
+                                  rstride=25, cstride=25)
+    else:
+        surface = ax.plot_surface(X, Y, Z, cmap='magma', shade=False,
+                                  rstride=25, cstride=25)
+    ax.set_title(title)
     cbar = fig.colorbar(surface, ax=ax, shrink=0.5, aspect=10)
     cbar.set_label(r'Default magnitude ($\lambda$)')
     plt.show()

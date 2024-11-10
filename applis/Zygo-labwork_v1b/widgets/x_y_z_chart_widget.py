@@ -214,8 +214,8 @@ class MyWindow(QMainWindow):
         self.chart_widget.set_information('')
         self.layout.addWidget(self.chart_widget)
 
-        x: np.ndarray = np.linspace(-10, 10, 100)
-        y: np.ndarray = np.linspace(-10, 10, 100)
+        x: np.ndarray = np.linspace(-10, 10, 2500)
+        y: np.ndarray = np.linspace(-10, 10, 2100)
         x, y = np.meshgrid(x, y)
         z: np.ndarray = np.sin(np.sqrt(x**2 + y**2))
         # z = x + y

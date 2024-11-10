@@ -18,6 +18,7 @@ from skimage.restoration import unwrap_phase
 from hariharan_algorithm import *
 from zernike_coefficents import *
 from polar_cartesian_transformations import *
+from matplotlib import cm
 
 PI = np.pi
 
@@ -96,6 +97,7 @@ images_mat = data2['Images']
 images = split_3d_array(images_mat)
 mask = data2['Masks']   # TO DO : add a test on the size of 'Masks'
 
+mask = mask < 0.5
 '''
 plt.imshow(images[0]*mask, cmap='magma')
 plt.show()
@@ -107,12 +109,12 @@ plt.show()
 print('Opening Images...')
 sigma = 10
 images_filtered = list(map(lambda x:gaussian_filter(x, sigma), images))
-
+# [400:1200, 750:1900]
 for i, img in enumerate(images_filtered):
     plt.subplot(1,5,i+1)
-    plt.imshow(img[400:1200, 750:1900], cmap='gray')
+    plt.imshow(img, cmap='gray')
     plt.axis('off')
-#plt.show()
+plt.show()
 
 ## Calculation of the phase by Hariharan algorithm
 print('Calculating Phase by Hariharan Algo...')
@@ -123,30 +125,33 @@ x = np.arange(wrapped_phase.shape[1])
 y = np.arange(wrapped_phase.shape[0])
 X, Y = np.meshgrid(x, y)
 
+wrapped_phase_2 = np.ma.masked_where(mask, wrapped_phase)
+
 # Display of the surface
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-surface = ax.plot_surface(X[400:1200, 750:1900], Y[400:1200, 750:1900], wrapped_phase[400:1200, 750:1900], cmap='magma')
-ax.set_title('Unwrapped surface')
+surface = ax.plot_surface(X, Y, wrapped_phase_2, cmap='magma', edgecolor='none', rstride=10, cstride=10)
+ax.set_title('Wrapped surface')
 cbar = fig.colorbar(surface, ax=ax, shrink=0.5, aspect=10)
 cbar.set_label(r'Default magnitude ($\lambda$)')
-#plt.show()
+plt.show()
 
 ## Unwrap phase
 print('Unwrapping Phase...')
 unwrapped_phase = unwrap_phase(wrapped_phase)/(2*np.pi)
+unwrapped_phase_2 = np.ma.masked_where(mask, unwrapped_phase)
 
 # Display of the surface
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-surface = ax.plot_surface(X[400:1200, 750:1900], Y[400:1200, 750:1900], unwrapped_phase[400:1200, 750:1900], cmap='magma')
+surface = ax.plot_surface(X, Y, unwrapped_phase_2, cmap='magma')
 ax.set_title('Unwrapped surface')
 cbar = fig.colorbar(surface, ax=ax, shrink=0.5, aspect=10)
 cbar.set_label(r'Default magnitude ($\lambda$)')
 #plt.show()
 
 ## Statistics
-PV, RMS = surface_statistics(unwrapped_phase[400:1200, 750:1900])
+PV, RMS = surface_statistics(unwrapped_phase) # [400:1200, 750:1900]
 print(f"PV: {PV:.2f} λ | RMS: {RMS:.2f} λ")
 
 
@@ -155,10 +160,11 @@ print('Calculating Zernike coefficients...')
 max_order = 3
 coeffs = get_zernike_coefficient(unwrapped_phase, max_order=max_order)
 
+'''
 plt.figure()
 plt.plot(coeffs)
 plt.title('Zernike Coefficients')
-
+'''
 # Remove specified aberration
 aberrations_considered = np.ones(max_order, dtype=int)
 print(aberrations_considered)

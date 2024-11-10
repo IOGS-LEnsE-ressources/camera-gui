@@ -442,6 +442,16 @@ class MainWidget(QWidget):
         self.bot_right_widget = widget
         self.layout.addWidget(self.bot_right_widget, BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
+    def set_right_widget(self, widget):
+        """
+        Modify the bottom right widget.
+        :param widget: Widget to include inside the application.
+        """
+        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.top_right_widget = widget
+        self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL, 2, 1)
+
     def set_sub_menu_widget(self, widget):
         """
         Modify the sub menu widget.
@@ -542,27 +552,27 @@ class MainWidget(QWidget):
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
+            if self.parent.images_opened:
+                self.top_left_widget.set_image_from_array(self.parent.images[0]*self.parent.masks)
+            #html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
+            #self.set_top_right_widget(html_page)
             '''
-            self.set_top_right_widget(Surface3DWidget(self))
-            wrapped_phase, _ = downsample_and_upscale(self.parent.wrapped_phase, 10)
-            mask, _ = downsample_and_upscale(self.parent.masks, 10)
-            self.top_right_widget.set_data(wrapped_phase,
-                                           mask)
+            self.set_right_widget(Surface3DWidget(self))
+            self.top_right_widget.set_data(self.parent.wrapped_phase, self.parent.masks)
             '''
-            display_wrapped_phase(self.parent.wrapped_phase)
+            display_3D_surface(self.parent.wrapped_phase, self.parent.masks)
 
         elif event == 'unwrapped_phase':
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
+            if self.parent.images_opened:
+                self.top_left_widget.set_image_from_array(self.parent.images[0]*self.parent.masks)
             '''
-            self.set_top_right_widget(Surface3DWidget(self))
-            unwrapped_phase, _ = downsample_and_upscale(self.parent.unwrapped_phase, 10)
-            mask, _ = downsample_and_upscale(self.parent.masks, 10)
-            self.top_right_widget.set_data(unwrapped_phase,
-                                           mask)
+            self.set_right_widget(Surface3DWidget(self))
+            self.top_right_widget.set_data(self.parent.unwrapped_phase, self.parent.masks)
             '''
-            display_wrapped_phase(self.parent.unwrapped_phase)
+            display_3D_surface(self.parent.unwrapped_phase, self.parent.masks)
 
     def action_camera(self):
         camera_setting = CameraSettingsWidget(self, self.parent.camera)
@@ -589,7 +599,6 @@ class MainWidget(QWidget):
         self.set_top_left_widget(ImagesDisplayWidget(self))
         self.update_size()
         self.parent.camera_thread.start()
-
 
     def action_menu_open_images(self):
         """Action performed when a MAT file has to be loaded."""
