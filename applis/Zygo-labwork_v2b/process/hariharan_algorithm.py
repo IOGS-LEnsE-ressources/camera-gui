@@ -12,8 +12,9 @@ This file is attached to a 1st year of engineer training labwork in photonics.
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import cm
+from matplotlib import colors
 
-def hariharan_algorithm(intensity: list[np.ndarray]) -> np.ndarray:
+def hariharan_algorithm(intensity: list[np.ndarray], mask: np.ndarray = None) -> np.ndarray:
     """
     Apply the Hariharan phase demodulation algorithm to a set of intensity measurements.
 
@@ -50,10 +51,12 @@ def hariharan_algorithm(intensity: list[np.ndarray]) -> np.ndarray:
     """
     num = 2 * (intensity[3] - intensity[1])
     denum = 2 * intensity[2] - intensity[4] - intensity[0]
-    return np.arctan2(num, denum)
+    if mask is not None:
+        return np.arctan2(num, denum) * mask
+    else:
+        return np.arctan2(num, denum)
 
-
-def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, title: str = ''):
+def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, size: int = 25, title: str = ''):
     """Display a 3D surface."""
     # Array for displaying data on 3D projection
     x = np.arange(Z.shape[1])
@@ -65,16 +68,41 @@ def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, title: str = ''):
     ax = fig.add_subplot(111, projection='3d')
     # [400:1200, 750:1900]
     if mask is not None:
-        colors = cm.magma(Z)
-        colors[..., -1] = np.where(mask == 0, 0, 1)
-        surface = ax.plot_surface(X, Y, Z, facecolors=colors, shade=False,
-                                  rstride=25, cstride=25)
+        ZZ = np.ma.masked_array(Z, mask=~mask)
+        max_ZZ = ZZ.max()
+        min_ZZ = ZZ.min()
+        norm = colors.Normalize(vmin=min_ZZ, vmax=max_ZZ)
+        color_map = cm.magma(norm(Z))
+        color_map[..., -1] = np.where(mask == 0, 0, 1)
+        surface = ax.plot_surface(X, Y, Z, facecolors=color_map, shade=False,
+                                  rstride=size, cstride=size)
+        ax.set_zlim(min_ZZ, max_ZZ)
+        mappable = cm.ScalarMappable(norm=norm, cmap='magma')
+        mappable.set_array(Z)
+        cbar = fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
     else:
         surface = ax.plot_surface(X, Y, Z, cmap='magma', shade=False,
-                                  rstride=25, cstride=25)
+                                  rstride=size, cstride=size)
+        cbar = fig.colorbar(surface, ax=ax, shrink=0.5, aspect=10)
     ax.set_title(title)
-    cbar = fig.colorbar(surface, ax=ax, shrink=0.5, aspect=10)
+
     cbar.set_label(r'Default magnitude ($\lambda$)')
     plt.show()
 
 
+if __name__ == '__main__':
+
+    X = np.linspace(-3, 3, 100)
+    Y = np.linspace(-4, 5, 200)
+    X, Y = np.meshgrid(X, Y)
+    Z = np.sqrt(X ** 2 + Y ** 2)
+
+    mask = np.zeros_like(Z)
+    mask[80:120, 20:50] = 1
+    mask = mask < 0.5
+
+    plt.figure()
+    plt.imshow(mask)
+    plt.colorbar()
+
+    display_3D_surface(Z, mask, size=10)

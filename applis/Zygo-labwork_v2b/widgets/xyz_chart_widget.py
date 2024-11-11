@@ -21,7 +21,7 @@ import matplotlib
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 matplotlib.use('QtAgg')
 from matplotlib.figure import Figure
-from matplotlib import cm
+from matplotlib import cm, colors
 
 class Surface3DWidget2(QtWidgets.QWidget):
     def __init__(self, parent=None, grid_color='black', subdivisions=10) -> None:
@@ -245,29 +245,51 @@ class Surface3DWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
 
-    def set_data(self, Z: np.ndarray, mask: np.ndarray = None, fast_mode: bool = True):
+    def set_data(self, Z: np.ndarray, mask: np.ndarray = None, bar_title : str = '',
+                 size: int = 25, fast_mode: bool = True):
+        """Set data to display in a 3D projection chart.
+        :param Z: Data to display.
+        :param mask: Mask to apply. Optional.
+        :param bar_title: Title of the color bar. Optional.
+        :param size: Size of the downscaling. Default 25.
+        :param fast_mode: True to accelerate the process but downscaling the image.
+        """
         x = np.arange(Z.shape[1])
         y = np.arange(Z.shape[0])
         X, Y = np.meshgrid(x, y)
 
         # Mask for transparency
         if mask is not None:
-            colors = cm.magma(Z)
-            colors[..., -1] = np.where(mask == 0, 0, 1)
+            ZZ = np.ma.masked_array(Z, mask=~mask)
+            max_ZZ = ZZ.max()
+            min_ZZ = ZZ.min()
+
+            Z_shifted = Z - min_ZZ
+            max_ZZ_shifted = max_ZZ - min_ZZ
+
+            norm = colors.Normalize(vmin=0, vmax=max_ZZ_shifted)
+            color_map = cm.magma(norm(Z_shifted))
+            color_map[..., -1] = np.where(mask == 0, 0, 1)
             if fast_mode:
-                surface = self.canvas.axes.plot_surface(X, Y, Z, facecolors=colors, shade=False,
-                                                        rstride=25, cstride=25)
+                surface = self.canvas.axes.plot_surface(X, Y, Z_shifted, facecolors=color_map, shade=False,
+                                                        rstride=size, cstride=size)
             else:
-                surface = self.canvas.axes.plot_surface(X, Y, Z, facecolors=colors, shade=False,
+                surface = self.canvas.axes.plot_surface(X, Y, Z_shifted, facecolors=color_map, shade=False,
                                                         rstride=10, cstride=10)
+            self.canvas.axes.set_zlim(0, max_ZZ_shifted)
+            mappable = cm.ScalarMappable(norm=norm, cmap='magma')
+            mappable.set_array(Z)
+            cbar = self.canvas.fig.colorbar(mappable, ax=self.canvas.axes, shrink=0.5, aspect=10)
         else:
             if fast_mode:
                 surface = self.canvas.axes.plot_surface(X, Y, Z, cmap='magma', shade=False,
-                                                        rstride=25, cstride=25)
+                                                        rstride=size, cstride=size)
             else:
                 surface = self.canvas.axes.plot_surface(X, Y, Z, cmap='magma', shade=False,
                                                         rstride=10, cstride=10)
-        self.canvas.fig.colorbar(surface, ax=self.canvas.axes) #, shrink=0.5, aspect=10)
+            cbar = self.canvas.fig.colorbar(surface, ax=self.canvas.axes) #, shrink=0.5, aspect=10)
+
+        cbar.set_label(bar_title)
         self.canvas.draw()
 
     def set_data_wire(self, Z: np.ndarray, mask: np.ndarray = None):

@@ -30,6 +30,7 @@ from lensecam.camera_thread import CameraThread
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 ## Camera settings Widget for IDS
 from widgets.camera import *
+from widgets.masks import *
 from drivers.nidaq_piezo import *
 
 
@@ -96,6 +97,7 @@ class MainWindow(QMainWindow):
         # Global mode
         # -----------
         self.main_mode = None
+        self.main_submode = None
         self.zoom_activated = False     # Camera is started in a large window
         self.zoom_window = QWidget()
         self.mask_created = False       # Almost one mask is created and selected
@@ -114,7 +116,7 @@ class MainWindow(QMainWindow):
         # Data for process phase
         # ----------------------------
         self.images = None
-        self.masks = None
+        self.masks = Masks()
         self.wrapped_phase = None
 
         # Initialization of the camera
@@ -170,7 +172,7 @@ class MainWindow(QMainWindow):
         :param event: Event that triggered the action.
         """
         self.main_mode = event
-        print(f'Main {self.main_mode}')
+        #print(f'Main {self.main_mode}')
         if event == 'camera':
 
             pass

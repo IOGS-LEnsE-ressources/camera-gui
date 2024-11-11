@@ -54,18 +54,19 @@ def write_mat_file(file_path, images: np.ndarray, masks: np.ndarray = None):
     scipy.io.savemat(file_path, data)
 
 
-def split_3d_array(array_3d):
+def split_3d_array(array_3d, size: int = 5):
     # Ensure the array has the expected shape
-    if array_3d.shape[2] != 5:
-        raise ValueError("The loaded array does not have the expected third dimension size of 5.")
+    if array_3d.shape[2] != size:
+        raise ValueError(f"The loaded array does not have the expected third dimension size of {size}.")
 
     # Extract the 2D arrays
-    arrays = [array_3d[:, :, i].astype(np.float32) for i in range(5)]
+    arrays = [array_3d[:, :, i].astype(np.float32) for i in range(size)]
     return arrays
 
 
 def generate_images_grid(images: list[np.ndarray]):
     """Generate a grid with 5 images.
+    The 6th image is the mean of the 4 first images.
     :param images: List of 5 images.
     """
     img_height, img_width = images[0].shape
@@ -81,23 +82,98 @@ def generate_images_grid(images: list[np.ndarray]):
     result[0:img_height, 2 * img_width + 2 * separator_size:] = images[2]
     result[img_height + separator_size:, 0:img_width] = images[3]
     result[img_height + separator_size:, img_width + separator_size:2 * img_width + separator_size] = images[4]
+    sum_image = (images[0] + images[1] + images[2] + images[3])/4
+    sum_image = sum_image.astype(np.uint8)
+    result[img_height + separator_size:, 2 * img_width + 2 * separator_size:] = sum_image
     return result
+
+class Images:
+    """Class containing images data and parameters.
+    Images are stored in sets of N images.
+    """
+    def __init__(self, set_size: int=5):
+        """Default constructor.
+        :param set_size: Size of a set of images.
+        """
+        self.set_size = set_size
+        self.images_list = []
+        self.images_sets_number = 0
+
+    def add_set_images(self, images: list):
+        """Add a new set of images."""
+        if isinstance(images, list):
+            if len(images) == self.set_size:
+                self.images_list.append(images)
+                self.images_sets_number += 1
+
+    def reset_all_images(self):
+        """Reset all images."""
+        self.images_list.clear()
+        self.images_sets_number = 0
+
+    def get_number_of_sets(self) -> int:
+        """Return the number of stored sets of images.
+        :return: Number of stored sets of images.
+        """
+        return self.images_sets_number
+
+    def get_images_set(self, index: int) -> list[np.ndarray]:
+        """Return a set of N images.
+        :param index: Index of the set to return.
+        :return: List of images from the specified set.
+        """
+        if index <= self.images_sets_number:
+            return self.images_list[index-1]
+        return None
+
+    def get_image_from_set(self, index: int, set_index: int = 1):
+        """Return an image from its index in a specific set.
+        :param index: Index of the image to return.
+        :param set_index: Index of the set of the image. Default 1.
+        """
+        return self.images_list[set_index-1][index-1]
+
+    def get_images_as_list(self):
+        """Return all the stored images in a single list."""
+        list = []
+        for i in range(self.images_sets_number):
+            set = self.get_images_set(i+1)
+            list += set
+        return list
+
+
+if __name__ == '__main__':
+    image1 = np.zeros((100,220))
+    image2 = np.zeros((100,220))
+    image3 = np.zeros((100,220))
+    image4 = np.zeros((100,220))
+
+    store = Images(3)
+    store.add_set_images([image1, image2, image3])
+    store.add_set_images([image2, image4, image3])
+
+    print(store.get_number_of_sets())
+
+    set1 = store.get_images_set(1)
+    set2 = store.get_images_set(2)
+
 
 class ImagesChoice(QWidget):
     """Images Choice."""
 
     def __init__(self, parent=None) -> None:
         """Default constructor of the class.
+        :param parent: Parent widget or window of this widget.
         """
         super().__init__(parent=None)
         self.parent = parent
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-
+        ## Title of the widget
         self.label_images_choice_title = QLabel(translate("label_images_choice_title"))
         self.label_images_choice_title.setStyleSheet(styleH1)
         self.label_images_choice_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
+        ## Other graphical elements of the widget
         self.label_set_of_images = QLabel()
         self.label_set_of_images.setStyleSheet(styleH2)
         self.label_set_of_images.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -116,6 +192,7 @@ class ImagesChoice(QWidget):
         self.layout_set = QHBoxLayout()
         self.sets_of_images_widget.setLayout(self.layout_set)
         self.sets_button_list = []
+        self.selected_set = 0
 
         # Widget images selection
         self.images_select_widget = QWidget()
@@ -134,7 +211,6 @@ class ImagesChoice(QWidget):
         button.setStyleSheet(unactived_button)
         self.images_button_select.append(button)
         # Widget masks selection
-        self.masks_number = 0
         self.masks_select_widget = QWidget()
         self.layout_masks = QHBoxLayout()
         self.masks_select_widget.setLayout(self.layout_masks)
@@ -150,13 +226,13 @@ class ImagesChoice(QWidget):
         self.layout.addWidget(self.masks_select_widget)
 
 
-    def set_images_status(self, value: bool, index: int = 0):
+    def set_images_status(self, value: bool, index: int = 1):
         """Update images status.
         :param value: True if images are opened.
-        :param index: Index of the image selected for display.
+        :param index: Index of the image selected for display. Default 1.
         """
         if value:
-            self.sets_of_images_number = len(self.parent.parent.images)%5
+            self.sets_of_images_number = self.parent.parent.images.get_number_of_sets()
             if self.sets_of_images_number > 1:
                 self.label_set_of_images.setText(f'{self.sets_of_images_number} set(s) of images')
                 for i in range(self.sets_of_images_number):
@@ -166,7 +242,7 @@ class ImagesChoice(QWidget):
                         button.setStyleSheet(actived_button)
                     else:
                         button.setStyleSheet(unactived_button)
-                    button.clicked.connect(self.display_mask)
+                    button.clicked.connect(self.select_set)
                     self.sets_button_list.append(button)
                     self.layout_set.addWidget(self.sets_button_list[i])
             self.label_status_images.setText('Display image ?')
@@ -177,10 +253,13 @@ class ImagesChoice(QWidget):
             self.label_status_images.setText('No Image')
 
     def set_masks_status(self, value: bool, number: int=0):
-        """Update images status."""
+        """Update masks status.
+        :param value: True if there is only one mask.
+        :param number: Number of potential masks.
+        """
         if value:
             self.label_status_masks.setText(f'{number} Mask(s) / Display ?')
-            self.masks_number = number
+            self.selected_set = 1
             for i in range(number):
                 button = QPushButton(str(i + 1))
                 button.setFixedWidth(40)
@@ -190,41 +269,54 @@ class ImagesChoice(QWidget):
                 self.layout_masks.addWidget(self.masks_button_select[i])
         else:
             self.label_status_masks.setText('No Mask')
-            self.masks_number = 0
 
     def unactivate_buttons(self):
         """Set unactivated all the buttons."""
         for i in range(6):
             self.images_button_select[i].setStyleSheet(unactived_button)
-        for i in range(self.masks_number):
+        mask_number = self.parent.parent.masks.get_masks_number()
+        for i in range(mask_number):
             self.masks_button_select[i].setStyleSheet(unactived_button)
+
+    def select_set(self, event):
+        sender = self.sender()
+        sender.setStyleSheet(actived_button)
+        for i in range(self.sets_of_images_number):
+            if sender == self.sets_button_list[i]:
+                self.selected_set = i+1
 
     def display_image(self, event):
         """Action performed when an image is selected to be displayed."""
         self.unactivate_buttons()
         sender = self.sender()
         sender.setStyleSheet(actived_button)
-        for i in range(6):
-            if sender == self.images_button_select[i]:
-                if i != 5:
-                    self.parent.top_left_widget.set_image_from_array(self.parent.parent.images[i])
-                else:
-                    image = generate_images_grid(self.parent.parent.images)
-                    self.parent.top_left_widget.set_image_from_array(image)
+        try:
+            for i in range(6):
+                if sender == self.images_button_select[i]:
+                    if i != 5:
+                        image = self.parent.parent.images.get_image_from_set(i+1, self.selected_set)
+                        self.parent.top_left_widget.set_image_from_array(image)
+                    else:
+                        set_of_images = self.parent.parent.images.get_images_set(self.selected_set)
+                        image = generate_images_grid(set_of_images)
+                        self.parent.top_left_widget.set_image_from_array(image)
+        except Exception as e:
+            print(f'display : {e}')
 
     def display_mask(self, event):
         """Action performed when an image is selected to be displayed."""
         self.unactivate_buttons()
         sender = self.sender()
         sender.setStyleSheet(actived_button)
-        for i in range(self.masks_number):
-            if sender == self.masks_button_select[i]:
-                image = self.parent.parent.images[0]
-                if self.masks_number == 1:
-                    self.parent.top_left_widget.set_image_from_array(self.parent.parent.masks*image)
-                else:
-                    self.parent.top_left_widget.set_image_from_array(self.parent.parent.masks[i]*image)
-
+        try:
+            mask_number = self.parent.parent.masks.get_masks_number()
+            for i in range(mask_number):
+                if sender == self.masks_button_select[i]:
+                    image = self.parent.parent.images.get_image_from_set(1, self.selected_set)
+                    mask, _ = self.parent.parent.masks.get_mask(i+1)
+                    self.parent.top_left_widget.set_image_from_array(mask*image)
+        except Exception as e:
+            print(f'display_masks : {e}')
 
     def clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.

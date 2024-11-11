@@ -21,6 +21,7 @@ from lensepy.css import *
 from lensepy.images.conversion import *
 from widgets.camera import *
 from widgets.images import *
+from widgets.masks import *
 from widgets.xyz_chart_widget import *
 from process.hariharan_algorithm import *
 from skimage.restoration import unwrap_phase
@@ -498,6 +499,16 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         self.main_signal.emit(event)
+        mode = event
+        submode = ''
+        if "_" in event:
+            modes = event.split('_')
+            mode = modes[1]
+            submode = modes[0]
+        self.parent.main_mode = mode
+        self.parent.main_submode = submode
+
+        # Clear layouts
         self.clear_sublayout(OPTIONS_COL)
         self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
         self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
@@ -506,25 +517,52 @@ class MainWidget(QWidget):
         self.update_menu()
 
         # Manage application
-        if event == 'camera':   # Camera menu is clicked
+        self.main_mode_action()
+        self.main_submode_action()
+
+
+    def main_mode_action(self):
+        """Display information depending on the main mode."""
+        print(f'\tMode = {self.parent.main_mode}')
+        if self.parent.main_mode == 'camera':   # Camera menu is clicked
             self.action_camera()
 
-        elif event == 'zoom_camera':
+        elif self.parent.main_mode == 'masks':
+            print('MASKS')
+            self.action_masks_visualization()
+
+        elif self.parent.main_mode == 'images':
+            try:
+                self.parent.stop_thread()
+                self.set_top_left_widget(ImagesDisplayWidget(self))
+                self.update_size()
+                if self.parent.images_opened:
+                    image = self.parent.images.get_image_from_set(1)
+                    self.top_left_widget.set_image_from_array(image)
+
+                if self.parent.acquisition_done is False and self.parent.images_opened is False:
+                    self.submenu_widget.set_button_enabled(2, False)
+                    self.submenu_widget.set_button_enabled(4, False)
+                else:
+                    self.submenu_widget.set_button_enabled(2, True)
+                    self.submenu_widget.set_button_enabled(4, True)
+                html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
+                self.set_top_right_widget(html_page)
+            except Exception as e:
+                print(f'Mode IMAGES : {e}')
+
+        elif self.parent.main_mode == 'simpleanalysis':
+            print('SIMPLE')
+            self.action_simple_analysis()
+            if self.parent.main_submode == '':
+                print('No SubMode')
+
+    def main_submode_action(self):
+        print(f'\t\tSubmode = {self.parent.main_submode}')
+        if self.parent.main_submode == 'zoom':
             self.action_zoom_camera()
 
-        elif event == 'images':
-            self.parent.stop_thread()
-            if self.parent.acquisition_done is False and self.parent.images_opened is False:
-                self.submenu_widget.set_button_enabled(2, False)
-                self.submenu_widget.set_button_enabled(4, False)
-            else:
-                self.submenu_widget.set_button_enabled(2, True)
-                self.submenu_widget.set_button_enabled(4, True)
-            html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
-            self.set_top_right_widget(html_page)
-
-        elif event == 'open_images':
-            self.parent.stop_thread()
+        elif self.parent.main_submode == 'open':
             if self.parent.images_opened:
                 print('WARNING !!')
 
@@ -540,39 +578,49 @@ class MainWidget(QWidget):
                 self.parent.mask_created = True
             else:
                 self.parent.mask_created = False
+            self.menu_action('images')
             self.menu_action('display_images')
 
-        elif event == 'display_images':
+        elif self.parent.main_submode == 'display':
             self.action_menu_display_images()
 
-        elif event == 'simple_analysis':
-            self.action_simple_analysis()
+        elif self.parent.main_submode == 'save':
+            self.action_menu_save_images()
+            self.menu_action('images')
+            self.menu_action('display_images')
 
-        elif event == 'wrapped_phase':
+        elif self.parent.main_submode == 'circular':
+            self.action_masks_visualization()
+
+        elif self.parent.main_submode == 'wrappedphase':
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
             if self.parent.images_opened:
-                self.top_left_widget.set_image_from_array(self.parent.images[0]*self.parent.masks)
-            #html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
-            #self.set_top_right_widget(html_page)
-            '''
+                image = self.parent.images.get_image_from_set(1)
+                mask = self.parent.masks.get_global_mask()
+                self.top_left_widget.set_image_from_array(image * mask)
+            html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
+            self.set_top_right_widget(html_page)
             self.set_right_widget(Surface3DWidget(self))
-            self.top_right_widget.set_data(self.parent.wrapped_phase, self.parent.masks)
-            '''
-            display_3D_surface(self.parent.wrapped_phase, self.parent.masks)
+            self.top_right_widget.set_data(self.parent.wrapped_phase,
+                                           self.parent.masks.get_global_mask(),
+                                           bar_title=r"Phase (rad)", size=50)
+            # display_3D_surface(self.parent.wrapped_phase, self.parent.masks.get_global_mask(), size=50)
 
-        elif event == 'unwrapped_phase':
+        elif self.parent.main_submode == 'unwrappedphase':
             self.parent.stop_thread()
             self.set_top_left_widget(ImagesDisplayWidget(self))
             self.update_size()
             if self.parent.images_opened:
-                self.top_left_widget.set_image_from_array(self.parent.images[0]*self.parent.masks)
-            '''
+                image = self.parent.images.get_image_from_set(2)
+                mask = self.parent.masks.get_global_mask()
+                self.top_left_widget.set_image_from_array(image * mask)
             self.set_right_widget(Surface3DWidget(self))
-            self.top_right_widget.set_data(self.parent.unwrapped_phase, self.parent.masks)
-            '''
-            display_3D_surface(self.parent.unwrapped_phase, self.parent.masks)
+            self.top_right_widget.set_data(self.parent.unwrapped_phase,
+                                           self.parent.masks.get_global_mask(),
+                                           bar_title=r"Default magnitude ('$\lambda$')", size=50)
+            # display_3D_surface(self.parent.unwrapped_phase, self.parent.masks.get_global_mask(), size=50)
 
     def action_camera(self):
         camera_setting = CameraSettingsWidget(self, self.parent.camera)
@@ -609,19 +657,33 @@ class MainWidget(QWidget):
             default_path = os.path.expanduser("~") + '/Images/'
         file_path, _ = file_dialog.getOpenFileName(self, translate('dialog_open_image'),
                                                    default_path, "Matlab (*.mat)")
+
         if file_path != '':
             data = read_mat_file(file_path)
             images_mat = data['Images']
-            images = split_3d_array(images_mat)
-            if 'Masks' in data:
-                mask = data['Masks']  # TO DO : add a test on the size of 'Masks'
-            else:
-                mask = None
-            if isinstance(images, list):
-                if len(images)%5 == 0 and len(images) > 1:
-                    self.parent.wrapped_phase_done = False
-                    self.parent.unwrapped_phase_done = False
-                    return images, mask
+            print(images_mat.shape)
+            images_d = split_3d_array(images_mat)
+            masks = Masks()
+            images = Images()
+            try:
+                if 'Masks' in data:
+                    mask_mat = data['Masks']
+                    print(type(mask_mat))
+                    print(mask_mat.shape)
+                    mask_d = split_3d_array(mask_mat, size=1)
+                    print(type(mask_d))
+                    if isinstance(mask_d, list):
+                        for i, maskk in enumerate(mask_d):
+                            masks.add_mask(maskk)
+                if isinstance(images_d, list):
+                    if len(images_d) % 5 == 0 and len(images_d) > 1:
+                        self.parent.wrapped_phase_done = False
+                        self.parent.unwrapped_phase_done = False
+                        for i in range(int(len(images_d) / 5)):
+                            images.add_set_images(images_d[i:i + 5])
+                        return images, masks
+            except Exception as e:
+                print(f'Read data : {e}')
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No File Loaded")
             dlg.setText("Number of images in this file is not adapted to Hariharan algorithm.")
@@ -640,79 +702,114 @@ class MainWidget(QWidget):
             )
             dlg.setIcon(QMessageBox.Icon.Warning)
             button = dlg.exec()
-            html_page = HTMLWidget('./docs/images.html')
-            self.set_top_right_widget(html_page)
             return None, None
+
+    def action_menu_save_images(self):
+        """Action performed when a MAT file has to be loaded."""
+        self.submenu_widget.set_activated(4)
+        file_dialog = QFileDialog()
+        if 'Dir Images' in self.parent.default_parameters:
+            default_path = self.parent.default_parameters['Dir Images']
+        else:
+            default_path = os.path.expanduser("~") + '/Images/'
+        file_path, _ = file_dialog.getSaveFileName(self, translate('dialog_save_image'),
+                                                   default_path, "Matlab (*.mat)")
+        if file_path != '':
+            images = self.parent.images.get_images_as_list()
+            new_data = np.stack((images), axis=2).astype(np.uint8)
+            if self.parent.masks.get_masks_number() != 0:
+                masks = self.parent.masks.get_mask_list()
+                new_mask = np.stack((masks), axis=2).astype(np.uint8)
+                write_mat_file(file_path, new_data, new_mask)
+            else:
+                write_mat_file(file_path, new_data)
+                pass
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Data Saved")
+            dlg.setText("Data are saved in a MAT file.")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
+        else:
+            self.submenu_widget.set_button_enabled(4, True)
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No File Loaded")
+            dlg.setText("No Image File was loaded...")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
 
     def action_menu_display_images(self):
         """Action performed when images are displayed."""
-        self.parent.stop_thread()
-        self.set_top_left_widget(ImagesDisplayWidget(self))
-        self.update_size()
         self.set_options_widget(ImagesChoice(self))
+        self.submenu_widget.set_button_enabled(2, True)
+        self.submenu_widget.set_activated(2)
+        self.submenu_widget.set_button_enabled(4, True)
         if self.parent.images_opened:
             self.options_widget.set_images_status(True, index=1)
-            self.top_left_widget.set_image_from_array(self.parent.images[0])
         else:
             self.options_widget.set_images_status(False)
         if self.parent.mask_created:
-            number = 0
-            if isinstance(self.parent.masks, list):
-                number = len(self.parent.masks)
-            elif isinstance(self.parent.masks, np.ndarray):
-                number = 1
+            number = self.parent.masks.get_masks_number()
             self.options_widget.set_masks_status(True, number)
         else:
             self.options_widget.set_masks_status(False)
-        html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
-        self.set_top_right_widget(html_page)
+
+    def action_masks_visualization(self, event=None):
+        """Action performed when masks are displayed."""
+        self.parent.stop_thread()
+        self.set_top_left_widget(ImagesDisplayWidget(self))
+        self.update_size()
+        if self.parent.images_opened:
+            image = self.parent.images.get_image_from_set(1)
+            self.top_left_widget.set_image_from_array(image)
+        self.set_options_widget(MasksOptionsWidget(self))
 
     def action_simple_analysis(self):
         """Action performed when a simple analysis is required.
         Wrapped, then unwrapped phase processes are started in a thread.
         """
         self.parent.stop_thread()
-        try:
-            if self.parent.wrapped_phase_done is False:
-                self.submenu_widget.set_button_enabled(1, False)
+        if self.parent.wrapped_phase_done is False:
+            self.submenu_widget.set_button_enabled(1, False)
+            self.submenu_widget.set_button_enabled(2, False)
+            thread = threading.Thread(target=self.thread_wrapped_phase_calculation)
+            thread.start()
+        else:
+            if self.parent.unwrapped_phase_done is False:
                 self.submenu_widget.set_button_enabled(2, False)
-                thread = threading.Thread(target=self.thread_wrapped_phase_calculation)
+                thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
                 thread.start()
-            else:
-                if self.parent.unwrapped_phase_done is False:
-                    self.submenu_widget.set_button_enabled(2, False)
-                    thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
-                    thread.start()
 
-            self.set_top_left_widget(ImagesDisplayWidget(self))
-            self.update_size()
-            if self.parent.images_opened:
-                self.top_left_widget.set_image_from_array(self.parent.images[0])
-            html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
-            self.set_top_right_widget(html_page)
-        except Exception as e:
-            print(f'Simple Analysis - {e}')
+        self.set_top_left_widget(ImagesDisplayWidget(self))
+        self.update_size()
+        if self.parent.images_opened:
+            image = self.parent.images.get_image_from_set(1)
+            self.top_left_widget.set_image_from_array(image)
+        html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
+        self.set_top_right_widget(html_page)
 
     def thread_wrapped_phase_calculation(self):
-        """"""
+        """Thread to calculate wrapped phase from 5 images."""
         # TO DO : select the good set of images if multiple acquisition
         k = 0
-        images = self.parent.images[0+k:5+k]
-        if isinstance(self.parent.masks, np.ndarray):
-            masks = self.parent.masks
-        else:
-            masks = self.parent.masks[0]
-        self.parent.wrapped_phase = hariharan_algorithm(images*masks)
+        images = self.parent.images.get_images_set(k)
+        mask = self.parent.masks.get_global_mask()
+        self.parent.wrapped_phase = hariharan_algorithm(images, mask)
         self.parent.wrapped_phase_done = True
-        if self.parent.main_mode == 'simple_analysis':
+        if self.parent.main_mode == 'simpleanalysis':
             self.submenu_widget.set_button_enabled(1, True)
         thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
         thread.start()
 
     def thread_unwrapped_phase_calculation(self):
         """"""
-        self.parent.unwrapped_phase = unwrap_phase(self.parent.wrapped_phase) / (2 * np.pi)
-        if self.parent.main_mode == 'simple_analysis' or self.parent.main_mode == 'wrapped_phase':
+        self.parent.unwrapped_phase = unwrap_phase(self.parent.wrapped_phase)/(2*np.pi)
+        if self.parent.main_mode == 'simpleanalysis' or self.parent.main_submode == 'wrappedphase':
             self.submenu_widget.set_button_enabled(2, True)
 
 if __name__ == '__main__':

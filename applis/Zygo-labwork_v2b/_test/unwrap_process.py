@@ -91,13 +91,18 @@ mask[200:400, 950:1600] = 1
 mask[300:400, 880:1800] = 1
 mask[1200:1400, 1350:1750] = 1
 
-write_mat_file('test.mat', new_data, mask.astype(np.uint8))
+
+write_mat_file('test.mat', new_data, mask)
 data2 = read_mat_file('test.mat')
 images_mat = data2['Images']
 images = split_3d_array(images_mat)
 mask = data2['Masks']   # TO DO : add a test on the size of 'Masks'
 
 mask = mask < 0.5
+
+print(f'Mask Type = {mask.dtype}')
+
+#mask = mask < 0.5
 '''
 plt.imshow(images[0]*mask, cmap='magma')
 plt.show()
