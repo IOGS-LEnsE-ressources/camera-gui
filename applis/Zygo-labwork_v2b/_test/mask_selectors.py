@@ -1,319 +1,35 @@
 # -*- coding: utf-8 -*-
-"""*masks.py* file.
+"""
+File: zygo_lab_app.py
 
-This file contains graphical elements to display and manage masks in a widget.
+This file contains the definition of the ZygoLabApp class, which serves as the main interface 
+for a photonics laboratory in both first-year and second-year engineering courses.
+
+First-year subject: http://lense.institutoptique.fr/ressources/Annee1/TP_Photonique/S5-2324-PolyCI.pdf
+Second-year subject: https://lense.institutoptique.fr/s8-aberrations/
+
+Development details for this interface:
+https://iogs-lense-ressources.github.io/camera-gui/
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
-Creation : nov/2024
 """
-import sys, os
 
-import matplotlib.pyplot as plt
+import sys
+from PyQt6.QtWidgets import QVBoxLayout, QDialog, QLabel, QVBoxLayout, QApplication
+from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor, QKeyEvent, QMouseEvent
 import numpy as np
 import cv2
-import scipy
-
-
-from PyQt6.QtWidgets import (
-    QWidget, QGridLayout, QVBoxLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QTableView, QTableWidgetItem, QTableWidget,
-    QCheckBox, QMessageBox,
-    QMainWindow, QDialog, QApplication
-)
-from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QPen, QColor, QKeyEvent, QMouseEvent
-from lensepy import load_dictionary, translate
-from lensepy.css import *
-from lensepy.images.conversion import *
-
-
-class Masks:
-    """Class containing masks data and parameters.
-    """
-    def __init__(self):
-        """Default constructor.
-        """
-        self.masks_list = []
-        self.masks_number = 0
-        self.mask_type = []
-        self.mask_selected = []
-        self.mask_inverted = []
-        self.global_inverted = False
-
-    def get_mask(self, index: int) -> np.ndarray:
-        """Return the selected mask.
-        :param index: Index of the mask to return.
-        """
-        if index <= self.masks_number:
-            return self.masks_list[index-1], self.mask_type[index-1]
-        return None
-
-    def get_mask_list(self) -> list[np.ndarray]:
-        """Return all the masks in a list."""
-        return self.masks_list
-
-    def add_mask(self, mask: np.ndarray, type: str = ''):
-        """Add a new mask to the list.
-        :param mask: Mask to add to the list.
-        :param type: Type of mask (Circular, Rectangular, Polygon).
-        """
-        self.masks_list.append(mask)
-        self.mask_type.append(type)
-        self.mask_selected.append(True)
-        self.mask_inverted.append(False)
-        self.masks_number += 1
-
-    def reset_masks(self):
-        """Reset all the masks."""
-        self.masks_list.clear()
-        self.mask_type.clear()
-        self.mask_selected.clear()
-        self.mask_inverted.clear()
-        self.masks_number = 0
-
-    def del_mask(self, index: int):
-        """Remove the specified mask.
-        :param index: Index of the mask to remove.
-        """
-        self.masks_list.pop(index-1)
-        self.masks_number -= 1
-
-    def select_mask(self, index: int, value: bool = True):
-        """Select or unselect a mask.
-        :param index: Index of the mask to select.
-        :param value: False to unselect. Default True to select.
-        """
-        self.mask_selected[index-1] = value
-
-    def invert_mask(self, index: int, value: bool = True):
-        """Invert or not a mask.
-        :param index: Index of the mask to invert.
-        :param value: False to uninvert. Default True to invert.
-        """
-        self.mask_inverted[index-1] = True
-
-    def invert_global_mask(self, value: bool = True):
-        """Invert the global mask.
-        :param value: False to uninvert. Default True to invert.
-        """
-        self.global_inverted = True
-
-    def get_global_mask(self):
-        """Return the resulting mask."""
-        global_mask = np.zeros_like(self.masks_list[0]).astype(bool)
-        if self.masks_number > 0:
-            for i, simple_mask in enumerate(self.masks_list):
-                if self.mask_selected[i]:
-                    simple_mask = simple_mask > 0.5
-                    if self.mask_inverted[i]:
-                        simple_mask = np.logical_not(simple_mask)
-                    global_mask = np.logical_or(global_mask, simple_mask)
-            if self.global_inverted:
-                return np.logical_not(global_mask)
-            else:
-                return global_mask
-        else:
-            return global_mask
-
-    def get_masks_number(self):
-        """Return the number of stored masks."""
-        return self.masks_number
-
-    def is_mask_selected(self, index: int):
-        """Return the status of the selection of a mask.
-         :param index: Index of the mask.
-         :return: True if the mask is selected.
-         """
-        return self.mask_selected[index-1]
-
-    def is_mask_inverted(self, index: int):
-        """Return the status of the inversion of a mask.
-         :param index: Index of the mask.
-         :return: True if the mask is inverted.
-         """
-        return self.mask_inverted[index-1]
-
-class MasksTableWidget(QTableWidget):
-
-    def __init__(self):
-        """Default constructor.
-        """
-        super().__init__()
-        self.masks_list = Masks()
-        self.apply_checkbox_list = []
-        self.inverse_checkbox_list = []
-        self.delete_button_list = []
-        self.setColumnCount(3)  # 3 columns
-        self.setHorizontalHeaderLabels(["Colonne 1", "Colonne 2", "Colonne 3"])
-
-    def set_masks(self, masks: Masks):
-        """Add a set of masks (type Masks).
-        :param masks: Set of masks.
-        """
-        self.masks_list = masks
-        number_of_rows = self.masks_list.get_masks_number()
-        for row in range(number_of_rows):
-            self.insertRow(self.rowCount())
-        self.update_display()
-
-    def add_mask(self, mask: np.ndarray):
-        self.insertRow(self.rowCount())
-        self.masks_list.add_mask(mask)
-        self.update_display()
-
-    def del_mask(self, index: int):
-        self.masks_list.del_mask(index)
-        self.removeRow(index-1)
-
-    def update_display(self):
-        number_of_rows = self.masks_list.get_masks_number()
-        for row in range(number_of_rows):
-            # Create checkbox for mask selection (first column)
-            checkbox_item = QCheckBox()
-            checkbox_item.setChecked(self.masks_list.is_mask_selected(row+1))
-            checkbox_item.stateChanged.connect(self.checkbox_apply_mask_changed)
-            self.apply_checkbox_list.append(checkbox_item)
-            self.setCellWidget(row, 0, checkbox_item)
-            # Create checkbox for mask inversion (second column)
-            checkbox_item = QCheckBox()
-            checkbox_item.setChecked(self.masks_list.is_mask_inverted(row+1))
-            checkbox_item.stateChanged.connect(self.checkbox_inverse_mask_changed)
-            self.inverse_checkbox_list.append(checkbox_item)
-            self.setCellWidget(row, 1, checkbox_item)
-            # Create checkbox for mask deletion (third column)
-            button = QPushButton(f'{translate("del_mask")} {row+1}')
-            button.clicked.connect(self.button_erase_mask_clicked)
-            self.delete_button_list.append(button)
-            self.setCellWidget(row, 2, button)
-
-        # Resize columns to fit content
-        self.resizeColumnsToContents()
-
-    def checkbox_apply_mask_changed(self):
-        """Action performed when an invert checkbox changed."""
-        checkbox = self.sender()
-        index = -1
-        for i in range(len(self.apply_checkbox_list)):
-            if checkbox == self.apply_checkbox_list[i]:
-                index = i
-                self.masks_list.select_mask(index+1, checkbox.isChecked())
-
-    def checkbox_inverse_mask_changed(self):
-        """Action performed when an invert checkbox changed."""
-        checkbox = self.sender()
-        index = -1
-        for i in range(len(self.inverse_checkbox_list)):
-            if checkbox == self.inverse_checkbox_list[i]:
-                index = i
-                self.masks_list.invert_mask(index+1, checkbox.isChecked())
-
-    def button_erase_mask_clicked(self):
-        """Action performed when a mask deletion is required."""
-        reply = QMessageBox.question(self, translate('delete_mask_box'),
-                                     translate('delete_mask_box_message'),
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                     QMessageBox.StandardButton.No)
-
-        if reply == QMessageBox.StandardButton.Yes:
-            button = self.sender()
-            index = -1
-            for i in range(len(self.delete_button_list)):
-                if button == self.delete_button_list[i]:
-                    index = i
-                    self.masks_list.del_mask(index+1)
-            self.update_display()
-            if self.masks_list.get_masks_number() == 0:
-                self.parent.parent.mask_created = False
-
-
-class MasksOptionsWidget(QWidget):
-    """
-    Masks Options widget of the application.
-    """
-
-    def __init__(self, parent=None):
-        """
-        Default Constructor.
-        :param parent: Parent window of the main widget.
-        """
-        super().__init__(parent=parent)
-        self.parent = parent
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-
-        # Title
-        self.label_masks_option_title = QLabel(translate("label_masks_option_title"))
-        self.label_masks_option_title.setStyleSheet(styleH1)
-        self.label_masks_option_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # Table for displaying masks
-        self.table_widget = MasksTableWidget()
-        self.table_widget.set_masks(self.parent.parent.masks)
-
-        # Add graphical elements in the layout
-        self.layout.addWidget(self.label_masks_option_title)
-        self.layout.addStretch()
-        self.layout.addWidget(self.table_widget)
-        self.layout.addStretch()
-
-        self.update_display()
-
-    def update_display(self):
-        """Update the masks list."""
-        number_of_masks = self.parent.parent.masks.get_masks_number()
-        for i in range(number_of_masks):
-            label = QLabel(str(i))
-            #self.table_layout.addWidget(label)
-
-
-if __name__ == '__main__':
-
-    print('Mask test')
-    masks = Masks()
-
-    mask1 = np.zeros((100, 200))
-    mask1[20:50, 60:150] = 1
-    mask2 = np.zeros_like(mask1)
-    mask2[40:90, 10:80] = 1
-
-    masks.add_mask(mask1)
-    masks.invert_mask(1)
-    masks.add_mask(mask2)
-    masks.invert_global_mask()
-
-    global_mask = masks.get_global_mask()
-
-    plt.figure()
-    plt.imshow(global_mask)
-    plt.colorbar()
-
-    class MyWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-
-            self.setWindowTitle(translate("window_title_main_menu_widget"))
-            self.setGeometry(100, 200, 800, 600)
-
-            self.masks = masks
-
-            self.central_widget = MasksOptionsWidget(self)
-            self.setCentralWidget(self.central_widget)
-
-    app = QApplication(sys.argv)
-    main = MyWindow()
-    main.show()
-    sys.exit(app.exec())
-
 
 
 class CircularMaskSelection(QDialog):
     """
     A dialog for selecting a circular mask on an image.
 
-    This dialog allows the user to define a circular region on an image. Points are selected
+    This dialog allows the user to define a circular region on an image. Points are selected 
     by clicking on the image, and a circular mask is generated based on these points.
 
     Attributes
@@ -352,13 +68,12 @@ class CircularMaskSelection(QDialog):
 
     Examples
     --------
-    image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
-    dialog = CircularMaskSelection(image)
-    dialog.exec()
+    >>> image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
+    >>> dialog = CircularMaskSelection(image)
+    >>> dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray,
-                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
+    def __init__(self, image: np.ndarray) -> None:
         """
         Initializes the CircularMaskSelection dialog.
 
@@ -366,13 +81,11 @@ class CircularMaskSelection(QDialog):
         ----------
         image : np.ndarray
             The image on which the mask will be drawn.
-        help_text : str
-            Text displayed to help the user.
         """
         super().__init__()
 
         # Initialize layout and image attributes
-        self.layout = QGridLayout()
+        self.layout = QVBoxLayout()
         self.image = image
 
         # Convert image to QImage and QPixmap for display
@@ -384,19 +97,13 @@ class CircularMaskSelection(QDialog):
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
 
-        # Create a QLabel to display help
-        self.help = QLabel(help_text)
-
         # Create a QLabel to display the image
         self.label = QLabel()
         self.label.setPixmap(self.pixmap)
 
         # Add the label to the layout
-        self.layout.addWidget(self.help)
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
-        self.layout.setRowStretch(0, 5)
-        self.layout.setRowStretch(1, 95)
 
         # Initialize points list and mask array
         self.points = []
@@ -451,7 +158,7 @@ class CircularMaskSelection(QDialog):
         # Draw a point on the point layer pixmap
         painter = QPainter(self.point_layer)
         point_size = 10
-        pen = QPen(Qt.GlobalColor.yellow, point_size)
+        pen = QPen(Qt.GlobalColor.red, point_size)
         painter.setPen(pen)
         painter.drawPoint(QPoint(x, y))
         painter.end()
@@ -538,7 +245,7 @@ class CircularMaskSelection(QDialog):
             # Draw the circle on the pixmap
             painter = QPainter(self.pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            pen = QPen(Qt.GlobalColor.yellow,2)
+            pen = QPen(QColor(255, 0, 0), 2)
             painter.setPen(pen)
             painter.drawEllipse(QPoint(x_center, y_center), radius, radius)
             painter.end()
@@ -634,13 +341,12 @@ class RectangularMaskSelection(QDialog):
 
     Examples
     --------
-    image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
-    dialog = RectangularMaskSelection(image)
-    dialog.exec()
+    >>> image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
+    >>> dialog = RectangularMaskSelection(image)
+    >>> dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray,
-                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
+    def __init__(self, image: np.ndarray) -> None:
         """
         Initializes the RectangularMaskSelection dialog.
 
@@ -835,13 +541,12 @@ class PolygonalMaskSelection(QDialog):
 
     Examples
     --------
-    image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
-    dialog = PolygonalMaskSelection(image)
-    dialog.exec()
+    >>> image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
+    >>> dialog = PolygonalMaskSelection(image)
+    >>> dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray,
-                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
+    def __init__(self, image: np.ndarray) -> None:
         """
         Initializes the PolygonalMaskSelection dialog.
 
@@ -1025,5 +730,3 @@ if __name__ == '__main__':
     main = CircularMaskSelection(image)
     main.show()
     sys.exit(app.exec())
-
-

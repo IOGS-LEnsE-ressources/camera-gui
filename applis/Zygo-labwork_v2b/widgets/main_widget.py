@@ -528,8 +528,10 @@ class MainWidget(QWidget):
             self.action_camera()
 
         elif self.parent.main_mode == 'masks':
-            print('MASKS')
-            self.action_masks_visualization()
+            try:
+                self.action_masks_visualization()
+            except Exception as e:
+                print(f'mode Masks : {e}')
 
         elif self.parent.main_mode == 'images':
             try:
@@ -552,7 +554,6 @@ class MainWidget(QWidget):
                 print(f'Mode IMAGES : {e}')
 
         elif self.parent.main_mode == 'simpleanalysis':
-            print('SIMPLE')
             self.action_simple_analysis()
             if self.parent.main_submode == '':
                 print('No SubMode')
