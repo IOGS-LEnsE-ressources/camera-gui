@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
         # Menu
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.main_signal.connect(self.main_action)
+        self.central_widget.set_top_left_widget(ImagesDisplayWidget(self))
+        self.central_widget.update_size()
 
         # Global mode
         # -----------
@@ -138,7 +140,6 @@ class MainWindow(QMainWindow):
             self.camera_thread.set_camera(self.camera)
             self.camera_thread.image_acquired.connect(self.thread_update_image)
             # Display image
-            self.central_widget.set_top_left_widget(ImagesDisplayWidget(self))
             self.camera_thread.start()
         else:
             dlg = QMessageBox(self)

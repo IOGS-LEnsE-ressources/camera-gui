@@ -426,7 +426,7 @@ class ImagesDisplayWidget(QWidget):
         # Objects
         self.image = None
         # GUI Elements
-        self.image_display = QLabel('Image to display')
+        self.image_display = QLabel('No Image to display')
         self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_display.setScaledContents(False)
         self.layout.addWidget(self.image_display)
@@ -458,18 +458,23 @@ class ImagesDisplayWidget(QWidget):
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
             image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
         qimage = array_to_qimage(image_to_display)
+        if aoi:
+            painter = QPainter(qimage)
+            painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
+            painter.setFont(QFont("Arial", 15))  # Police et taille
+            painter.drawText(20, 20, 'AOI')
+            painter.end()
+        pmap = QPixmap.fromImage(qimage)
+        self.image_display.setPixmap(pmap)
 
-        try:
-            if aoi:
-                painter = QPainter(qimage)
-                painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
-                painter.setFont(QFont("Arial", 15))  # Police et taille
-                painter.drawText(20, 20, 'AOI')
-                painter.end()
-            pmap = QPixmap.fromImage(qimage)
-            self.image_display.setPixmap(pmap)
-        except Exception as e:
-            print(f'set_image : {e}')
+    def reset_image(self):
+        """Display No image to display."""
+        self.image_display.deleteLater()
+        self.image_display = QLabel('No Image to display')
+        self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_display.setScaledContents(False)
+        self.layout.addWidget(self.image_display)
+        #self.repaint()
 
 
 class ZoomImagesWidget(QWidget):

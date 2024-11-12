@@ -510,7 +510,6 @@ class MainWidget(QWidget):
 
         # Clear layouts
         self.clear_sublayout(OPTIONS_COL)
-        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
         self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
         self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
         # Update menu
@@ -525,19 +524,19 @@ class MainWidget(QWidget):
         """Display information depending on the main mode."""
         print(f'\tMode = {self.parent.main_mode}')
         if self.parent.main_mode == 'camera':   # Camera menu is clicked
+            self.activate_display()
             self.action_camera()
 
         elif self.parent.main_mode == 'masks':
+            self.activate_display()
             try:
                 self.action_masks_visualization()
             except Exception as e:
                 print(f'mode Masks : {e}')
 
         elif self.parent.main_mode == 'images':
+            self.activate_display()
             try:
-                self.parent.stop_thread()
-                self.set_top_left_widget(ImagesDisplayWidget(self))
-                self.update_size()
                 if self.parent.images_opened:
                     image = self.parent.images.get_image_from_set(1)
                     self.top_left_widget.set_image_from_array(image)
@@ -554,9 +553,12 @@ class MainWidget(QWidget):
                 print(f'Mode IMAGES : {e}')
 
         elif self.parent.main_mode == 'simpleanalysis':
-            self.action_simple_analysis()
-            if self.parent.main_submode == '':
-                print('No SubMode')
+            self.activate_display()
+            try:
+                self.action_simple_analysis()
+            except Exception as e:
+                print(f'mode Masks : {e}')
+
 
     def main_submode_action(self):
         print(f'\t\tSubmode = {self.parent.main_submode}')
@@ -566,7 +568,6 @@ class MainWidget(QWidget):
         elif self.parent.main_submode == 'open':
             if self.parent.images_opened:
                 print('WARNING !!')
-
             self.parent.images, self.parent.masks = self.action_menu_open_images()
             if self.parent.images is not None:
                 self.parent.images_opened = True
@@ -575,11 +576,11 @@ class MainWidget(QWidget):
                 self.submenu_widget.set_button_enabled(4, True)
             else:
                 self.parent.images_opened = False
+                self.top_left_widget.reset_image()
             if self.parent.masks is not None:
                 self.parent.mask_created = True
             else:
                 self.parent.mask_created = False
-            self.menu_action('images')
             self.menu_action('display_images')
 
         elif self.parent.main_submode == 'display':
@@ -594,9 +595,6 @@ class MainWidget(QWidget):
             self.action_masks_visualization()
 
         elif self.parent.main_submode == 'wrappedphase':
-            self.parent.stop_thread()
-            self.set_top_left_widget(ImagesDisplayWidget(self))
-            self.update_size()
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
                 mask = self.parent.masks.get_global_mask()
@@ -610,9 +608,6 @@ class MainWidget(QWidget):
             # display_3D_surface(self.parent.wrapped_phase, self.parent.masks.get_global_mask(), size=50)
 
         elif self.parent.main_submode == 'unwrappedphase':
-            self.parent.stop_thread()
-            self.set_top_left_widget(ImagesDisplayWidget(self))
-            self.update_size()
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(2)
                 mask = self.parent.masks.get_global_mask()
@@ -623,6 +618,10 @@ class MainWidget(QWidget):
                                            bar_title=r"Default magnitude ('$\lambda$')", size=50)
             # display_3D_surface(self.parent.unwrapped_phase, self.parent.masks.get_global_mask(), size=50)
 
+    def activate_display(self):
+        self.parent.stop_thread()
+        self.update_size()
+
     def action_camera(self):
         camera_setting = CameraSettingsWidget(self, self.parent.camera)
         self.set_options_widget(camera_setting)
@@ -632,8 +631,6 @@ class MainWidget(QWidget):
         self.options_widget.update_parameters(auto_min_max=True)
         html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
         self.set_top_right_widget(html_page)
-        self.set_top_left_widget(ImagesDisplayWidget(self))
-        self.update_size()
         self.parent.camera_thread.start()
 
     def action_zoom_camera(self):
@@ -645,8 +642,6 @@ class MainWidget(QWidget):
         self.options_widget.update_parameters(auto_min_max=True)
         html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
         self.set_top_right_widget(html_page)
-        self.set_top_left_widget(ImagesDisplayWidget(self))
-        self.update_size()
         self.parent.camera_thread.start()
 
     def action_menu_open_images(self):
@@ -762,9 +757,6 @@ class MainWidget(QWidget):
 
     def action_masks_visualization(self, event=None):
         """Action performed when masks are displayed."""
-        self.parent.stop_thread()
-        self.set_top_left_widget(ImagesDisplayWidget(self))
-        self.update_size()
         if self.parent.images_opened:
             image = self.parent.images.get_image_from_set(1)
             self.top_left_widget.set_image_from_array(image)
@@ -774,7 +766,6 @@ class MainWidget(QWidget):
         """Action performed when a simple analysis is required.
         Wrapped, then unwrapped phase processes are started in a thread.
         """
-        self.parent.stop_thread()
         if self.parent.wrapped_phase_done is False:
             self.submenu_widget.set_button_enabled(1, False)
             self.submenu_widget.set_button_enabled(2, False)
@@ -785,9 +776,6 @@ class MainWidget(QWidget):
                 self.submenu_widget.set_button_enabled(2, False)
                 thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
                 thread.start()
-
-        self.set_top_left_widget(ImagesDisplayWidget(self))
-        self.update_size()
         if self.parent.images_opened:
             image = self.parent.images.get_image_from_set(1)
             self.top_left_widget.set_image_from_array(image)
