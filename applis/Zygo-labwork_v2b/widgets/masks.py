@@ -30,6 +30,14 @@ from lensepy.css import *
 from lensepy.images.conversion import *
 
 
+def qobject_to_widget(obj) -> QWidget:
+    container = QWidget()
+    layout = QHBoxLayout(container)
+    layout.addWidget(obj)
+    layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    layout.setContentsMargins(0, 0, 0, 0)
+    return container
+
 class Masks:
     """Class containing masks data and parameters.
     """
@@ -48,7 +56,20 @@ class Masks:
         :param index: Index of the mask to return.
         """
         if index <= self.masks_number:
-            return self.masks_list[index-1], self.mask_type[index-1]
+            if self.mask_inverted[index-1] is True:
+                mask = np.logical_not(self.masks_list[index-1])
+            else:
+                mask = self.masks_list[index-1]
+            return mask, self.mask_type[index-1]
+        return None
+
+    def get_type(self, index: int) -> str:
+        """Return the type of the selected mask.
+        :param index: Index of the mask to get the type.
+        :return: Type of the mask.
+        """
+        if index <= self.masks_number:
+            return self.mask_type[index-1]
         return None
 
     def get_mask_list(self) -> list[np.ndarray]:
@@ -93,7 +114,7 @@ class Masks:
         :param index: Index of the mask to invert.
         :param value: False to uninvert. Default True to invert.
         """
-        self.mask_inverted[index-1] = True
+        self.mask_inverted[index-1] = value
 
     def invert_global_mask(self, value: bool = True):
         """Invert the global mask.
@@ -103,20 +124,23 @@ class Masks:
 
     def get_global_mask(self):
         """Return the resulting mask."""
-        global_mask = np.zeros_like(self.masks_list[0]).astype(bool)
-        if self.masks_number > 0:
-            for i, simple_mask in enumerate(self.masks_list):
-                if self.mask_selected[i]:
-                    simple_mask = simple_mask > 0.5
-                    if self.mask_inverted[i]:
-                        simple_mask = np.logical_not(simple_mask)
-                    global_mask = np.logical_or(global_mask, simple_mask)
-            if self.global_inverted:
-                return np.logical_not(global_mask)
+        try:
+            if self.masks_number > 0:
+                global_mask = np.zeros_like(self.masks_list[0]).astype(bool)
+                for i, simple_mask in enumerate(self.masks_list):
+                    if self.mask_selected[i]:
+                        simple_mask = simple_mask > 0.5
+                        if self.mask_inverted[i]:
+                            simple_mask = np.logical_not(simple_mask)
+                        global_mask = np.logical_or(global_mask, simple_mask)
+                if self.global_inverted:
+                    return np.logical_not(global_mask)
+                else:
+                    return global_mask
             else:
-                return global_mask
-        else:
-            return global_mask
+                return None
+        except Exception as e:
+            print(f'get_global_mask {e}')
 
     def get_masks_number(self):
         """Return the number of stored masks."""
@@ -138,16 +162,48 @@ class Masks:
 
 class MasksTableWidget(QTableWidget):
 
-    def __init__(self):
+    def __init__(self, parent=None):
         """Default constructor.
         """
-        super().__init__()
+        super().__init__(parent=parent)
+        self.parent = parent
         self.masks_list = Masks()
         self.apply_checkbox_list = []
         self.inverse_checkbox_list = []
         self.delete_button_list = []
-        self.setColumnCount(3)  # 3 columns
-        self.setHorizontalHeaderLabels(["Colonne 1", "Colonne 2", "Colonne 3"])
+        self.show_button_list = []
+        self.setColumnCount(5)  # 5 columns
+        self.setHorizontalHeaderLabels(["Select", "Invert", "Type", "Delete", "Show"])
+        self.verticalHeader().setVisible(False)
+        ## Global parameters
+        self.insertRow(self.rowCount())
+        # Global unselect
+        self.button_unselect = QPushButton(f'ALL')
+        self.button_unselect.setStyleSheet(styleCheckbox)
+        self.button_unselect.clicked.connect(self.global_changed)
+        button_widget = qobject_to_widget(self.button_unselect)
+        self.setCellWidget(0, 0, button_widget)
+        # Global invert
+        self.checkbox_invert = QCheckBox()
+        self.checkbox_invert.stateChanged.connect(self.global_changed)
+        self.setCellWidget(0, 1, self.checkbox_invert)
+        # Global label
+        label = QLabel('GLOBAL')
+        label.setStyleSheet(styleH3)
+        label_widget = qobject_to_widget(label)
+        self.setCellWidget(0,2, label_widget)
+        # Global delete
+        self.button_delete_all = QPushButton(translate('delete_all'))
+        self.button_delete_all.setStyleSheet('background:red; color:white;')
+        self.button_delete_all.clicked.connect(self.global_changed)
+        delete_all = qobject_to_widget(self.button_delete_all)
+        self.setCellWidget(0, 3, delete_all)
+        # Global show
+        self.button_show_all = QPushButton(translate('show_all'))
+        self.button_show_all.setStyleSheet(styleCheckbox)
+        self.button_show_all.clicked.connect(self.global_changed)
+        show_all = qobject_to_widget(self.button_show_all)
+        self.setCellWidget(0, 4, show_all)
 
     def set_masks(self, masks: Masks):
         """Add a set of masks (type Masks).
@@ -166,31 +222,65 @@ class MasksTableWidget(QTableWidget):
 
     def del_mask(self, index: int):
         self.masks_list.del_mask(index)
-        self.removeRow(index-1)
+        self.removeRow(index-1+1)
 
     def update_display(self):
+        # All / Global : unselect / invert / __ / del / show
+        self.checkbox_invert.setChecked(self.masks_list.global_inverted)
+
         number_of_rows = self.masks_list.get_masks_number()
+        # For each mask : select / invert / type / del / show
         for row in range(number_of_rows):
             # Create checkbox for mask selection (first column)
             checkbox_item = QCheckBox()
             checkbox_item.setChecked(self.masks_list.is_mask_selected(row+1))
             checkbox_item.stateChanged.connect(self.checkbox_apply_mask_changed)
+            check_widget = qobject_to_widget(checkbox_item)
             self.apply_checkbox_list.append(checkbox_item)
-            self.setCellWidget(row, 0, checkbox_item)
+            self.setCellWidget(row+1, 0, check_widget)
             # Create checkbox for mask inversion (second column)
             checkbox_item = QCheckBox()
             checkbox_item.setChecked(self.masks_list.is_mask_inverted(row+1))
             checkbox_item.stateChanged.connect(self.checkbox_inverse_mask_changed)
+            check_widget = qobject_to_widget(checkbox_item)
             self.inverse_checkbox_list.append(checkbox_item)
-            self.setCellWidget(row, 1, checkbox_item)
-            # Create checkbox for mask deletion (third column)
+            self.setCellWidget(row+1, 1, check_widget)
+            # Create label for mask type (third column)
+            label = QLabel(f'{self.masks_list.get_type(row+1)}')
+            label_widget = qobject_to_widget(label)
+            self.setCellWidget(row+1, 2, label_widget)
+            # Create button for mask deletion (fourth column)
             button = QPushButton(f'{translate("del_mask")} {row+1}')
+            button.setStyleSheet(styleCheckbox)
             button.clicked.connect(self.button_erase_mask_clicked)
+            button_widget = qobject_to_widget(button)
             self.delete_button_list.append(button)
-            self.setCellWidget(row, 2, button)
+            self.setCellWidget(row+1, 3, button_widget)
+            # Create button for mask showing (fifth column)
+            button = QPushButton(f'{translate("show_mask")} {row+1}')
+            button.setStyleSheet(styleCheckbox)
+            button.clicked.connect(self.button_show_mask_clicked)
+            button_widget = qobject_to_widget(button)
+            self.show_button_list.append(button)
+            self.setCellWidget(row+1, 4, button_widget)
 
         # Resize columns to fit content
         self.resizeColumnsToContents()
+
+    def global_changed(self):
+        """Action performed when a global button changed."""
+        sender = self.sender()
+        if sender == self.button_unselect:
+            pass
+
+        elif sender == self.checkbox_invert:
+            pass
+
+        elif sender == self.button_delete_all:
+            pass
+
+        elif sender == self.button_show_all:
+            self.parent.parent.action_masks_visualization()
 
     def checkbox_apply_mask_changed(self):
         """Action performed when an invert checkbox changed."""
@@ -200,15 +290,26 @@ class MasksTableWidget(QTableWidget):
             if checkbox == self.apply_checkbox_list[i]:
                 index = i
                 self.masks_list.select_mask(index+1, checkbox.isChecked())
+                self.parent.parent.action_masks_visualization()
 
     def checkbox_inverse_mask_changed(self):
         """Action performed when an invert checkbox changed."""
         checkbox = self.sender()
-        index = -1
         for i in range(len(self.inverse_checkbox_list)):
             if checkbox == self.inverse_checkbox_list[i]:
                 index = i
                 self.masks_list.invert_mask(index+1, checkbox.isChecked())
+                self.parent.parent.action_masks_visualization()
+
+    def button_show_mask_clicked(self):
+        """Action performed when a show button is clicked.."""
+        button = self.sender()
+        index = -1
+        for i in range(len(self.show_button_list)):
+            if button == self.show_button_list[i]:
+                index = i
+                # Show the ith mask on the image
+                self.parent.parent.action_masks_visualization(str(index))
 
     def button_erase_mask_clicked(self):
         """Action performed when a mask deletion is required."""
@@ -223,10 +324,13 @@ class MasksTableWidget(QTableWidget):
             for i in range(len(self.delete_button_list)):
                 if button == self.delete_button_list[i]:
                     index = i
-                    self.masks_list.del_mask(index+1)
-            self.update_display()
-            if self.masks_list.get_masks_number() == 0:
-                self.parent.parent.mask_created = False
+                    self.del_mask(index+1)
+                    print(f'Delete {i}')
+                    self.update_display()
+                    if self.masks_list.get_masks_number() == 0:
+                        self.parent.parent.parent.mask_created = False
+                        self.parent.parent.update_menu()
+                    self.parent.parent.action_masks_visualization()
 
 
 class MasksOptionsWidget(QWidget):
@@ -250,7 +354,7 @@ class MasksOptionsWidget(QWidget):
         self.label_masks_option_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Table for displaying masks
-        self.table_widget = MasksTableWidget()
+        self.table_widget = MasksTableWidget(self)
         self.table_widget.set_masks(self.parent.parent.masks)
 
         # Add graphical elements in the layout
@@ -263,10 +367,13 @@ class MasksOptionsWidget(QWidget):
 
     def update_display(self):
         """Update the masks list."""
-        number_of_masks = self.parent.parent.masks.get_masks_number()
-        for i in range(number_of_masks):
-            label = QLabel(str(i))
-            #self.table_layout.addWidget(label)
+        try:
+            number_of_masks = self.parent.parent.masks.get_masks_number()
+            for i in range(number_of_masks):
+                label = QLabel(str(i))
+                #self.table_layout.addWidget(label)
+        except Exception as e:
+            print(f'update_display / Masks {e}')
 
 
 if __name__ == '__main__':

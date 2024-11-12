@@ -152,8 +152,6 @@ if __name__ == '__main__':
     store.add_set_images([image1, image2, image3])
     store.add_set_images([image2, image4, image3])
 
-    print(store.get_number_of_sets())
-
     set1 = store.get_images_set(1)
     set2 = store.get_images_set(2)
 
@@ -287,10 +285,10 @@ class ImagesChoice(QWidget):
 
     def display_image(self, event):
         """Action performed when an image is selected to be displayed."""
-        self.unactivate_buttons()
-        sender = self.sender()
-        sender.setStyleSheet(actived_button)
         try:
+            self.unactivate_buttons()
+            sender = self.sender()
+            sender.setStyleSheet(actived_button)
             for i in range(6):
                 if sender == self.images_button_select[i]:
                     if i != 5:

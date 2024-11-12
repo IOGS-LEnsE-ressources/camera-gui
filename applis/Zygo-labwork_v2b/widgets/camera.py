@@ -474,7 +474,6 @@ class ImagesDisplayWidget(QWidget):
         self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_display.setScaledContents(False)
         self.layout.addWidget(self.image_display)
-        #self.repaint()
 
 
 class ZoomImagesWidget(QWidget):
