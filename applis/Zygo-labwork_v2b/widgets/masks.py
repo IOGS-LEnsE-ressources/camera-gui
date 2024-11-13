@@ -51,6 +51,14 @@ class Masks:
         self.mask_inverted = []
         self.global_inverted = False
 
+    def __str__(self):
+        """Print function."""
+        out_str = 'Masks List\n'
+        for i in range(self.masks_number):
+            out_str += f'\tMask {i+1} : {self.mask_type[i]}\n'
+        return out_str
+
+
     def get_mask(self, index: int) -> np.ndarray:
         """Return the selected mask.
         :param index: Index of the mask to return.
@@ -76,13 +84,13 @@ class Masks:
         """Return all the masks in a list."""
         return self.masks_list
 
-    def add_mask(self, mask: np.ndarray, type: str = ''):
+    def add_mask(self, mask: np.ndarray, type_m: str = ''):
         """Add a new mask to the list.
         :param mask: Mask to add to the list.
-        :param type: Type of mask (Circular, Rectangular, Polygon).
+        :param type_m: Type of mask (Circular, Rectangular, Polygon).
         """
         self.masks_list.append(mask)
-        self.mask_type.append(type)
+        self.mask_type.append(type_m)
         self.mask_selected.append(True)
         self.mask_inverted.append(False)
         self.masks_number += 1
@@ -100,6 +108,9 @@ class Masks:
         :param index: Index of the mask to remove.
         """
         self.masks_list.pop(index-1)
+        self.mask_type.pop(index-1)
+        self.mask_selected.pop(index-1)
+        self.mask_inverted.pop(index-1)
         self.masks_number -= 1
 
     def select_mask(self, index: int, value: bool = True):
@@ -120,7 +131,7 @@ class Masks:
         """Invert the global mask.
         :param value: False to uninvert. Default True to invert.
         """
-        self.global_inverted = True
+        self.global_inverted = value
 
     def get_global_mask(self):
         """Return the resulting mask."""
@@ -186,7 +197,8 @@ class MasksTableWidget(QTableWidget):
         # Global invert
         self.checkbox_invert = QCheckBox()
         self.checkbox_invert.stateChanged.connect(self.global_changed)
-        self.setCellWidget(0, 1, self.checkbox_invert)
+        check_widget = qobject_to_widget(self.checkbox_invert)
+        self.setCellWidget(0, 1, check_widget)
         # Global label
         label = QLabel('GLOBAL')
         label.setStyleSheet(styleH3)
@@ -205,29 +217,50 @@ class MasksTableWidget(QTableWidget):
         show_all = qobject_to_widget(self.button_show_all)
         self.setCellWidget(0, 4, show_all)
 
+    def erase_all(self):
+        """Delete all the rows and reconstruct the first line (header)."""
+        self.apply_checkbox_list = []
+        self.inverse_checkbox_list = []
+        self.delete_button_list = []
+        self.show_button_list = []
+
+        self.clearContents()
+        self.setRowCount(0)
+        ## Global line - header
+        self.insertRow(self.rowCount())
+        button_widget = qobject_to_widget(self.button_unselect)
+        self.setCellWidget(0, 0, button_widget)
+        check_widget = qobject_to_widget(self.checkbox_invert)
+        self.setCellWidget(0, 1, check_widget)
+        label = QLabel('GLOBAL')
+        label.setStyleSheet(styleH3)
+        label_widget = qobject_to_widget(label)
+        self.setCellWidget(0,2, label_widget)
+        delete_all = qobject_to_widget(self.button_delete_all)
+        self.setCellWidget(0, 3, delete_all)
+        show_all = qobject_to_widget(self.button_show_all)
+        self.setCellWidget(0, 4, show_all)
+
     def set_masks(self, masks: Masks):
         """Add a set of masks (type Masks).
         :param masks: Set of masks.
         """
+        # Erase previous data
+        self.erase_all()
+        # Create a new set of masks
         self.masks_list = masks
         number_of_rows = self.masks_list.get_masks_number()
         for row in range(number_of_rows):
             self.insertRow(self.rowCount())
+        self.create_elements()
         self.update_display()
 
-    def add_mask(self, mask: np.ndarray):
-        self.insertRow(self.rowCount())
-        self.masks_list.add_mask(mask)
-        self.update_display()
+    def print_list(self):
+        """Print the list of masks."""
+        print(self.masks_list)
 
-    def del_mask(self, index: int):
-        self.masks_list.del_mask(index)
-        self.removeRow(index-1+1)
-
-    def update_display(self):
-        # All / Global : unselect / invert / __ / del / show
-        self.checkbox_invert.setChecked(self.masks_list.global_inverted)
-
+    def create_elements(self):
+        """Create the Masks options display."""
         number_of_rows = self.masks_list.get_masks_number()
         # For each mask : select / invert / type / del / show
         for row in range(number_of_rows):
@@ -267,17 +300,48 @@ class MasksTableWidget(QTableWidget):
         # Resize columns to fit content
         self.resizeColumnsToContents()
 
+    def update_display(self):
+        """Update Masks options widget display."""
+        # All / Global : unselect / invert / __ / del / show
+        self.checkbox_invert.setChecked(self.masks_list.global_inverted)
+
+        number_of_rows = self.masks_list.get_masks_number()
+        # For each mask : select / invert / type / del / show
+        for row in range(number_of_rows):
+            # Update checkbox for mask selection (first column)
+            self.apply_checkbox_list[row].setChecked(self.masks_list.is_mask_selected(row+1))
+            # Update checkbox for mask inversion (second column)
+            self.inverse_checkbox_list[row].setChecked(self.masks_list.is_mask_inverted(row+1))
+            # Create label for mask type (third column)
+            label = QLabel(f'{self.masks_list.get_type(row+1)}')
+            label_widget = qobject_to_widget(label)
+            self.setCellWidget(row+1, 2, label_widget)
+
+        # Resize columns to fit content
+        self.resizeColumnsToContents()
+
     def global_changed(self):
         """Action performed when a global button changed."""
         sender = self.sender()
         if sender == self.button_unselect:
-            pass
+            value = not self.masks_list.is_mask_selected(1)
+            for i in range(self.masks_list.get_masks_number()):
+                self.masks_list.select_mask(i+1, value)
+            self.update_display()
 
         elif sender == self.checkbox_invert:
-            pass
+            value = self.checkbox_invert.isChecked()
+            self.parent.parent.parent.masks.invert_global_mask(value)
 
         elif sender == self.button_delete_all:
-            pass
+            reply = QMessageBox.question(self, 'Delete all masks',
+                                         'Do you really want to delete all the masks ?',
+                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                         QMessageBox.StandardButton.No)
+
+            if reply == QMessageBox.StandardButton.Yes:
+                self.parent.parent.parent.masks.reset_masks()
+                self.update_display()
 
         elif sender == self.button_show_all:
             self.parent.parent.action_masks_visualization()
@@ -306,10 +370,12 @@ class MasksTableWidget(QTableWidget):
         button = self.sender()
         index = -1
         for i in range(len(self.show_button_list)):
+            print(f'show mask = {i}')
             if button == self.show_button_list[i]:
                 index = i
+                print(f'Display {index+1}')
                 # Show the ith mask on the image
-                self.parent.parent.action_masks_visualization(str(index))
+                self.parent.parent.action_masks_visualization(str(index+1))
 
     def button_erase_mask_clicked(self):
         """Action performed when a mask deletion is required."""
@@ -324,8 +390,7 @@ class MasksTableWidget(QTableWidget):
             for i in range(len(self.delete_button_list)):
                 if button == self.delete_button_list[i]:
                     index = i
-                    self.del_mask(index+1)
-                    print(f'Delete {i}')
+                    self.parent.parent.parent.masks.del_mask(index+1)
                     self.update_display()
                     if self.masks_list.get_masks_number() == 0:
                         self.parent.parent.parent.mask_created = False
@@ -363,17 +428,18 @@ class MasksOptionsWidget(QWidget):
         self.layout.addWidget(self.table_widget)
         self.layout.addStretch()
 
-        self.update_display()
-
     def update_display(self):
         """Update the masks list."""
         try:
-            number_of_masks = self.parent.parent.masks.get_masks_number()
-            for i in range(number_of_masks):
-                label = QLabel(str(i))
-                #self.table_layout.addWidget(label)
+            print('Update Display - Masks Options')
+            self.table_widget.update_display()
         except Exception as e:
             print(f'update_display / Masks {e}')
+
+    def set_masks(self, masks: Masks):
+        """Set a sets of masks from a Masks object."""
+        print(masks)
+        self.table_widget.set_masks(masks)
 
 
 class CircularMaskSelection(QDialog):
@@ -424,37 +490,36 @@ class CircularMaskSelection(QDialog):
     dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray,
-                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
+    def __init__(self, pixel: np.ndarray,
+                 help_text: str = 'Select 3 different points and then Click Enter') -> None:
         """
         Initializes the CircularMaskSelection dialog.
 
         Parameters
         ----------
-        image : np.ndarray
+        pixel : np.ndarray
             The image on which the mask will be drawn.
         help_text : str
             Text displayed to help the user.
         """
         super().__init__()
+        screen_geometry = QApplication.primaryScreen().geometry()
+        self.width = screen_geometry.width() - 50
+        self.height = screen_geometry.height() - 150
+        self.setFixedSize(self.width, self.height)
 
         # Initialize layout and image attributes
         self.layout = QGridLayout()
-        self.image = np.array(image, dtype='uint8')
-        # Convert image to QImage and QPixmap for display
-        self.image = np.squeeze(self.image)
-        print(self.image.shape)
-        '''
+        self.image = np.array(pixel.copy(), dtype='uint8')
+        # Convert image to QImage and QPixmap for display and adjust to maximum size of the screen
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-            image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
-        '''
-        image = np.random.randint(0, 255, (700, 500))
-        print(f'Image Type : {type(image)}')
+            image_to_display = resize_image_ratio(self.image, self.height-50, self.width)
 
-        self.qimage = array_to_qimage(image)
-        #self.qimage = QImage(self.image.data, self.image.shape[1], self.image.shape[0], QImage.Format.Format_Grayscale8)
-        #self.pixmap = QPixmap.fromImage(self.qimage)
-        '''
+        self.qimage = array_to_qimage(image_to_display)
+        self.pixmap = QPixmap.fromImage(self.qimage)
+
+        self.ratio = self.image.shape[1] / image_to_display.shape[1]
+
         # Create a pixmap layer for drawing points
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
@@ -479,7 +544,6 @@ class CircularMaskSelection(QDialog):
 
         # Assign mousePressEvent to capture points
         self.label.mousePressEvent = self.get_points_circle
-        '''
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """
@@ -492,7 +556,7 @@ class CircularMaskSelection(QDialog):
         """
         # Close dialog on Enter or Return key press
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.close_window()
+            self.accept()
 
     def get_points_circle(self, event: QMouseEvent) -> None:
         """
@@ -629,7 +693,8 @@ class CircularMaskSelection(QDialog):
             self.label.setPixmap(combined_pixmap)
 
             # Update mask
-            self.mask = self.create_circular_mask(x_center, y_center, radius)
+            self.mask = self.create_circular_mask(x_center*self.ratio, y_center*self.ratio, radius*self.ratio)
+
         except Exception as e:
             print(f'Exception - circle_mask_draw {e}')
 
@@ -649,7 +714,7 @@ class CircularMaskSelection(QDialog):
         Returns
         -------
         np.ndarray
-            The binary mask with the circular region set to 1.
+            The binary mask with the circular region set to True.
         """
         # Create an empty mask
         mask = np.zeros_like(self.image, dtype=np.uint8)
@@ -662,14 +727,8 @@ class CircularMaskSelection(QDialog):
 
         # Set mask values inside the circle to 1
         mask[dist_from_center <= radius] = 1
-
+        mask = mask > 0.5
         return mask
-
-    def close_window(self) -> None:
-        """
-        Closes the dialog window.
-        """
-        self.close()
 
 
 class RectangularMaskSelection(QDialog):
@@ -715,38 +774,53 @@ class RectangularMaskSelection(QDialog):
     dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray,
-                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
+    def __init__(self, pixel: np.ndarray,
+                 help_text: str = 'Select 2 different points and then Click Enter') -> None:
         """
         Initializes the RectangularMaskSelection dialog.
 
         Parameters
         ----------
-        image : np.ndarray
+        pixel : np.ndarray
             The image on which the mask will be drawn.
+        help_text : str
+            Text displayed to help the user.
         """
         super().__init__()
+        screen_geometry = QApplication.primaryScreen().geometry()
+        self.width = screen_geometry.width() - 50
+        self.height = screen_geometry.height() - 150
+        self.setFixedSize(self.width, self.height)
 
         # Initialize layout and image attributes
-        self.layout = QVBoxLayout()
-        self.image = image
+        self.layout = QGridLayout()
+        self.image = np.array(pixel.copy(), dtype='uint8')
+        # Convert image to QImage and QPixmap for display and adjust to maximum size of the screen
+        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+            image_to_display = resize_image_ratio(self.image, self.height - 50, self.width)
 
-        # Convert image to QImage and QPixmap for display
-        self.qimage = QImage(
-            self.image.data, self.image.shape[1], self.image.shape[0], self.image.strides[0], QImage.Format.Format_Grayscale8)
+        self.qimage = array_to_qimage(image_to_display)
         self.pixmap = QPixmap.fromImage(self.qimage)
+
+        self.ratio = self.image.shape[1] / image_to_display.shape[1]
 
         # Create a pixmap layer for drawing points
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
+
+        # Create a QLabel to display help
+        self.help = QLabel(help_text)
 
         # Create a QLabel to display the image
         self.label = QLabel()
         self.label.setPixmap(self.pixmap)
 
         # Add the label to the layout
+        self.layout.addWidget(self.help)
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
+        self.layout.setRowStretch(0, 5)
+        self.layout.setRowStretch(1, 95)
 
         # Initialize points list and mask array
         self.points = []
@@ -766,7 +840,7 @@ class RectangularMaskSelection(QDialog):
         """
         # Close dialog on Enter or Return key press
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.close_window()
+            self.accept()
 
     def get_points_rectangle(self, event: QMouseEvent) -> None:
         """
@@ -856,21 +930,19 @@ class RectangularMaskSelection(QDialog):
         Returns
         -------
         np.ndarray
-            The binary mask with the rectangular region set to 1.
+            The binary mask with the rectangular region set to True.
         """
         # Create an empty mask
         mask = np.zeros_like(self.image, dtype=np.uint8)
-
+        # Invert y1,y2 or/and x1,x2 if not in ascending order
+        if y2 < y1:
+            y1, y2 = y2, y1
+        if x2 < x1:
+            x1, x2 = x2, x1
         # Set mask values inside the rectangle to 1
-        mask[y1:y2, x1:x2] = 1
-
+        mask[int(y1*self.ratio):int(y2*self.ratio), int(x1*self.ratio):int(x2*self.ratio)] = 1
+        mask = mask > 0.5
         return mask
-
-    def close_window(self) -> None:
-        """
-        Closes the dialog window.
-        """
-        self.close()
 
 
 class PolygonalMaskSelection(QDialog):
@@ -916,38 +988,54 @@ class PolygonalMaskSelection(QDialog):
     dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray,
-                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
+    def __init__(self, pixel: np.ndarray,
+                 help_text: str = 'Select N different points, the last one must be at the'
+                                  ' same place as the first one and then Click Enter') -> None:
         """
         Initializes the PolygonalMaskSelection dialog.
 
         Parameters
         ----------
-        image : np.ndarray
+        pixel : np.ndarray
             The image on which the mask will be drawn.
+        help_text : str
+            Text displayed to help the user.
         """
         super().__init__()
+        screen_geometry = QApplication.primaryScreen().geometry()
+        self.width = screen_geometry.width() - 50
+        self.height = screen_geometry.height() - 150
+        self.setFixedSize(self.width, self.height)
 
         # Initialize layout and image attributes
-        self.layout = QVBoxLayout()
-        self.image = image
+        self.layout = QGridLayout()
+        self.image = np.array(pixel.copy(), dtype='uint8')
+        # Convert image to QImage and QPixmap for display and adjust to maximum size of the screen
+        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+            image_to_display = resize_image_ratio(self.image, self.height - 50, self.width)
 
-        # Convert image to QImage and QPixmap for display
-        self.qimage = QImage(
-            self.image.data, self.image.shape[1], self.image.shape[0], self.image.strides[0], QImage.Format.Format_Grayscale8)
+        self.qimage = array_to_qimage(image_to_display)
         self.pixmap = QPixmap.fromImage(self.qimage)
+
+        self.ratio = self.image.shape[1] / image_to_display.shape[1]
 
         # Create a pixmap layer for drawing points
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
+
+        # Create a QLabel to display help
+        self.help = QLabel(help_text)
 
         # Create a QLabel to display the image
         self.label = QLabel()
         self.label.setPixmap(self.pixmap)
 
         # Add the label to the layout
+        self.layout.addWidget(self.help)
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
+        self.layout.setRowStretch(0, 5)
+        self.layout.setRowStretch(1, 95)
 
         # Initialize points list and mask array
         self.points = []
@@ -967,7 +1055,7 @@ class PolygonalMaskSelection(QDialog):
         """
         # Close dialog on Enter or Return key press
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.close_window()
+            self.accept()
 
     def get_points_polygon(self, event: QMouseEvent) -> None:
         """
@@ -980,7 +1068,7 @@ class PolygonalMaskSelection(QDialog):
         """
         # Enable drawing points
         self.can_draw = True
-        limit = 10  # px
+        limit = 10 * self.ratio  # px
 
         # Get the position of the mouse click
         pos = event.pos()
@@ -992,7 +1080,8 @@ class PolygonalMaskSelection(QDialog):
         self.draw_point(pos.x(), pos.y())
 
         # Draw the polygon if the user has selected more than one point and the last point is close to the first point
-        if len(self.points) > 1 and (self.points[-1][0] - self.points[0][0])**2+(self.points[-1][1] - self.points[0][1])**2 < limit**2:
+        dist = (self.points[-1][0] - self.points[0][0])**2+(self.points[-1][1] - self.points[0][1])**2
+        if len(self.points) > 1 and dist < limit**2:
             self.draw_polygon()
             self.can_draw = False
 
@@ -1068,7 +1157,7 @@ class PolygonalMaskSelection(QDialog):
         Returns
         -------
         np.ndarray
-            The binary mask with the polygonal region set to 1.
+            The binary mask with the polygonal region set to True.
         """
         # Create an empty mask
         mask = np.zeros_like(self.image, dtype=np.uint8)
@@ -1077,29 +1166,25 @@ class PolygonalMaskSelection(QDialog):
         vertices = []
         for point in self.points:
             # Swap x and y for numpy indexing
-            vertices.append((point[1], point[0]))
+            vertices.append((int(point[0]*self.ratio), int(point[1]*self.ratio)))
 
         # Convert the list of vertices to numpy array format
         vertices = np.array([vertices], dtype=np.int32)
 
         # Fill the polygon region in the mask with 1
         cv2.fillPoly(mask, vertices, 1)
-
+        mask = mask > 0.5
         return mask
-
-    def close_window(self) -> None:
-        """
-        Closes the dialog window.
-        """
-        self.close()
 
 
 # %% Example
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    image = np.random.randint(0, 255, (700, 500))
-    main = CircularMaskSelection(image)
+    image = np.random.randint(0, 255, (4000, 6000))
+    try:
+        main = PolygonalMaskSelection(image)
+    except Exception as e:
+        print(e)
     main.show()
     sys.exit(app.exec())
-
 

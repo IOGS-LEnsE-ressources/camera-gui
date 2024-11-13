@@ -56,11 +56,10 @@ def write_mat_file(file_path, images: np.ndarray, masks: np.ndarray = None):
 
 def split_3d_array(array_3d, size: int = 5):
     # Ensure the array has the expected shape
-    if array_3d.shape[2] != size:
+    if array_3d.shape[2]%size != 0:
         raise ValueError(f"The loaded array does not have the expected third dimension size of {size}.")
-
     # Extract the 2D arrays
-    arrays = [array_3d[:, :, i].astype(np.float32) for i in range(size)]
+    arrays = [array_3d[:, :, i].astype(np.float32) for i in range(array_3d.shape[2])]
     return arrays
 
 
@@ -332,6 +331,76 @@ class ImagesChoice(QWidget):
                 widget.deleteLater()
             else:
                 self.layout.removeItem(item)
+
+
+class ImagesDisplayWidget(QWidget):
+    """
+    Widget to display an image.
+    """
+
+    def __init__(self, parent=None):
+        """
+        Default Constructor.
+        :param parent: Parent widget of this widget.
+        """
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.width = 0
+        self.height = 0
+        # GUI Structure
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        # Objects
+        self.image = None
+        # GUI Elements
+        self.image_display = QLabel('No Image to display')
+        self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_display.setScaledContents(False)
+        self.layout.addWidget(self.image_display)
+
+    def update_size(self, width, height, aoi: bool = False):
+        """
+        Update the size of this widget.
+        """
+        self.width = width
+        self.height = height
+        if self.image is not None:
+            image_to_display = self.image
+            if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+                image_to_display = resize_image_ratio(self.image, self.height-50, self.width-20)
+            qimage = array_to_qimage(image_to_display)
+            pmap = QPixmap.fromImage(qimage)
+            self.image_display.setPixmap(pmap)
+
+    def set_image_from_array(self, pixels: np.ndarray, aoi: bool = False) -> None:
+        """
+        Display a new image from an array (Numpy)
+        :param pixels: Array of pixels to display.
+        :param aoi: If True, print 'AOI' on the image.
+        """
+        self.image = np.array(pixels, dtype='uint8')
+        image_to_display = self.image.copy()
+        image_to_display = np.squeeze(image_to_display)
+
+        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+            image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
+        qimage = array_to_qimage(image_to_display)
+        if aoi:
+            painter = QPainter(qimage)
+            painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
+            painter.setFont(QFont("Arial", 15))  # Police et taille
+            painter.drawText(20, 20, 'AOI')
+            painter.end()
+        pmap = QPixmap.fromImage(qimage)
+        self.image_display.setPixmap(pmap)
+
+    def reset_image(self):
+        """Display No image to display."""
+        self.image_display.deleteLater()
+        self.image_display = QLabel('No Image to display')
+        self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_display.setScaledContents(False)
+        self.layout.addWidget(self.image_display)
 
 
 if __name__ == '__main__':

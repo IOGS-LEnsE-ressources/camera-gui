@@ -29,6 +29,7 @@ from lensecam.ids.camera_ids import CameraIds, get_bits_per_pixel
 from lensecam.ids.camera_list import CameraList as CameraIdsList
 from lensecam.basler.camera_list import CameraList as CameraBaslerList
 from matplotlib import pyplot as plt
+from widgets.images import *
 
 cam_list_brands = {
     'Basler': CameraBaslerList,
@@ -406,78 +407,6 @@ class CameraInfosWidget(QWidget):
             self.label_value_camera_id.setText('No Camera')
 
 
-class ImagesDisplayWidget(QWidget):
-    """
-    Widget to display an image.
-    """
-
-    def __init__(self, parent=None):
-        """
-        Default Constructor.
-        :param parent: Parent widget of this widget.
-        """
-        super().__init__(parent=parent)
-        self.parent = parent
-        self.width = 0
-        self.height = 0
-        # GUI Structure
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-        # Objects
-        self.image = None
-        # GUI Elements
-        self.image_display = QLabel('No Image to display')
-        self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_display.setScaledContents(False)
-        self.layout.addWidget(self.image_display)
-
-    def update_size(self, width, height, aoi: bool = False):
-        """
-        Update the size of this widget.
-        """
-        self.width = width
-        self.height = height
-        if self.image is not None:
-            image_to_display = self.image
-            if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-                image_to_display = resize_image_ratio(self.image, self.height-30, self.width-20)
-            qimage = array_to_qimage(image_to_display)
-            pmap = QPixmap.fromImage(qimage)
-            self.image_display.setPixmap(pmap)
-
-    def set_image_from_array(self, pixels: np.ndarray, aoi: bool = False) -> None:
-        """
-        Display a new image from an array (Numpy)
-        :param pixels: Array of pixels to display.
-        :param aoi: If True, print 'AOI' on the image.
-        """
-        self.image = np.array(pixels, dtype='uint8')
-        print(f'display:{self.image.shape}')
-        image_to_display = self.image.copy()
-        image_to_display = np.squeeze(image_to_display)
-        print(image_to_display.shape)
-
-        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-            image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
-        qimage = array_to_qimage(image_to_display)
-        if aoi:
-            painter = QPainter(qimage)
-            painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
-            painter.setFont(QFont("Arial", 15))  # Police et taille
-            painter.drawText(20, 20, 'AOI')
-            painter.end()
-        pmap = QPixmap.fromImage(qimage)
-        self.image_display.setPixmap(pmap)
-
-    def reset_image(self):
-        """Display No image to display."""
-        self.image_display.deleteLater()
-        self.image_display = QLabel('No Image to display')
-        self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_display.setScaledContents(False)
-        self.layout.addWidget(self.image_display)
-
-
 class ZoomImagesWidget(QWidget):
     """
     Widget to display an image in a full screen window.
@@ -486,12 +415,13 @@ class ZoomImagesWidget(QWidget):
 
     slider_changed = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, zygo_lab):
         """
         Default Constructor.
         :param parent: Parent widget of this widget.
         """
         super().__init__(parent=None)
+        self.zygo_lab = zygo_lab
         self.layout = QGridLayout()
         self.layout.setRowStretch(0, 5)
         self.layout.setRowStretch(1, 95)

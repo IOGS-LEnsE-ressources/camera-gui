@@ -30,6 +30,7 @@ from lensecam.camera_thread import CameraThread
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 ## Camera settings Widget for IDS
 from widgets.camera import *
+from widgets.images import *
 from widgets.masks import *
 from drivers.nidaq_piezo import *
 
@@ -179,18 +180,20 @@ class MainWindow(QMainWindow):
             pass
 
         elif event == 'zoom_camera':
-            self.zoom_activated = True
-            self.zoom_window = ZoomImagesWidget()
-            self.zoom_window.showMaximized()
-            self.zoom_window.slider_changed.connect(self.action_zoom_camera_changed)
-            min_value, max_value = self.camera.get_exposure_range()
-            if 'Max Expo Time' in self.default_parameters:
-                max_value = float(self.default_parameters['Max Expo Time'])*1000  # in us
-            self.zoom_window.set_slider_range(min_value/1000, max_value/1000)
-            expo_time = self.camera.get_exposure()/1000
-            self.zoom_window.set_slider_value(expo_time)
-            self.zoom_window.closeEvent = self.action_zoom_closed
-
+            try:
+                self.zoom_activated = True
+                self.zoom_window = ZoomImagesWidget(self)
+                self.zoom_window.showMaximized()
+                self.zoom_window.slider_changed.connect(self.action_zoom_camera_changed)
+                min_value, max_value = self.camera.get_exposure_range()
+                if 'Max Expo Time' in self.default_parameters:
+                    max_value = float(self.default_parameters['Max Expo Time'])*1000  # in us
+                self.zoom_window.set_slider_range(min_value/1000, max_value/1000)
+                expo_time = self.camera.get_exposure()/1000
+                self.zoom_window.set_slider_value(expo_time)
+                self.zoom_window.closeEvent = self.action_zoom_closed
+            except Exception as e:
+                print(e)
 
     def thread_update_image(self, image_array):
         """Actions performed if a camera thread is started."""
@@ -209,6 +212,7 @@ class MainWindow(QMainWindow):
 
     def action_zoom_camera_changed(self):
         self.camera.set_exposure(self.zoom_window.get_exposure() * 1000)
+        self.central_widget.options_widget.update_parameters(auto_min_max=True)
 
     def action_zoom_closed(self, event):
         self.zoom_activated = False
@@ -250,5 +254,4 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.showMaximized()
-
     sys.exit(app.exec())

@@ -7,12 +7,14 @@
 """
 import sys, os
 import threading, time
+
+import matplotlib.pyplot as plt
 import numpy as np
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
     QVBoxLayout, QGridLayout, QHBoxLayout,
     QLabel, QComboBox, QPushButton, QCheckBox, QTextEdit,
-    QMessageBox, QFileDialog
+    QMessageBox, QFileDialog, QDialog
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -22,6 +24,8 @@ from lensepy.images.conversion import *
 from widgets.camera import *
 from widgets.images import *
 from widgets.masks import *
+from widgets.piezo import *
+from widgets.acquisition import *
 from widgets.xyz_chart_widget import *
 from process.hariharan_algorithm import *
 from skimage.restoration import unwrap_phase
@@ -367,6 +371,237 @@ class MainWidget(QWidget):
         self.layout.setRowStretch(2, BOT_HEIGHT)
         self.setLayout(self.layout)
 
+    def update_menu(self):
+        """Update menu depending on the actual mode."""
+        # Update menu
+        menu = self.get_list_menu('all_menu')
+        self.main_menu.set_enabled(menu, True)
+        menu = []
+        if self.parent.mask_created is False:
+            menu += self.get_list_menu('nomask')
+        if self.parent.acquisition_done is False and self.parent.images_opened is False:
+            menu += self.get_list_menu('nodata')
+        if self.parent.camera_connected is False:
+            menu += self.get_list_menu('nocam')
+        '''
+        if self.parent.piezo_connected is False:
+            menu += self.get_list_menu('nopiezo')
+        '''
+        self.main_menu.set_enabled(menu, False)
+
+    def menu_action(self, event):
+        """
+        Action performed when a button of the main menu is clicked.
+        Only GUI actions are performed in this section.
+        :param event: Event that triggered the action.
+        """
+        self.main_signal.emit(event)
+        mode = event
+        submode = ''
+        if "_" in event:
+            modes = event.split('_')
+            mode = modes[1]
+            submode = modes[0]
+        self.parent.main_mode = mode
+        self.parent.main_submode = submode
+
+        # Clear layouts
+        self.clear_sublayout(OPTIONS_COL)
+        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+
+        # Manage application
+        self.main_mode_action()
+        self.main_submode_action()
+
+        # Update menu
+        self.update_menu()
+
+    def main_mode_action(self):
+        """Display information depending on the main mode."""
+        if self.parent.main_mode == 'camera':
+            '''Camera Mode'''
+            self.action_camera()
+            # open html
+            html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
+            self.set_bot_right_widget(html_page)
+
+        elif self.parent.main_mode == 'images':
+            '''Images Mode'''
+            # Stop camera thread
+            self.parent.stop_thread()
+            # display first image if present
+            self.display_first_image()
+            # activate item in the submenu
+            if self.parent.acquisition_done is False and self.parent.images_opened is False:
+                self.submenu_widget.set_button_enabled(2, False)
+                self.submenu_widget.set_button_enabled(4, False)
+                self.submenu_widget.set_button_enabled(6, False)
+            else:
+                self.submenu_widget.set_button_enabled(2, True)
+                self.submenu_widget.set_button_enabled(4, True)
+                self.submenu_widget.set_button_enabled(6, True)
+            # open html
+            html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
+            self.set_bot_right_widget(html_page)
+
+        elif self.parent.main_mode == 'masks':
+            # Stop camera thread
+            self.parent.stop_thread()
+            try:
+                self.action_masks_visualization()
+            except Exception as e:
+                print(f'mode Masks : {e}')
+
+        elif self.parent.main_mode == 'piezo':
+            # Display options widget with Masks Options
+            self.set_options_widget(PiezoOptionsWidget(self))
+
+        elif self.parent.main_mode == 'acquisition':
+            # Display options widget with Masks Options
+            self.set_options_widget(AcquisitionOptionsWidget(self))
+            pass
+
+        elif self.parent.main_mode == 'simpleanalysis':
+            self.activate_display()
+            try:
+                self.action_simple_analysis()
+            except Exception as e:
+                print(f'mode Simple : {e}')
+
+    def main_submode_action(self):
+        print(f'\t\tSubmode = {self.parent.main_submode}')
+        ## Camera
+        if self.parent.main_submode == 'zoom':
+            self.action_zoom_camera()
+
+        ## Images
+        elif self.parent.main_submode == 'open':
+            '''Images Mode / Open SubMode'''
+            self.action_menu_open_images()
+
+        elif self.parent.main_submode == 'display':
+            self.action_menu_display_images()
+
+        elif self.parent.main_submode == 'save':
+            self.action_menu_save_images()
+            # self.menu_action('images')
+            self.menu_action('display_images')
+
+        elif self.parent.main_submode == 'delete':
+            reply = QMessageBox.question(self, 'Delete images', 'Do you really want to delete images ?',
+                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                         QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.Yes:
+                self.parent.images = Images()
+                self.parent.masks = Masks()
+                self.parent.images_opened = False
+                self.menu_action('images')
+
+        ## Piezo
+        elif self.parent.main_submode == 'move':
+            # Display options widget with Masks Options
+            self.clear_sublayout(OPTIONS_COL)
+            self.set_options_widget(PiezoMoveOptionsWidget(self))
+            self.options_widget.voltage_changed.connect(self.action_piezo_move)
+
+        ## Acquisition
+        elif self.parent.main_submode == 'simple':
+            pass
+
+        ## Masks
+        elif self.parent.main_submode == 'circular':
+            self.action_masks_visualization()
+            try:
+                if self.parent.images_opened:
+                    image = self.parent.images.get_image_from_set(1)
+                elif self.parent.camera_connected:
+                    image = self.parent.displayed_image.copy()
+                print(type(image))
+                print(image.shape)
+
+                dialog = CircularMaskSelection(image)
+                result = dialog.exec()
+                if result == QDialog.DialogCode.Rejected:
+                    print('NO MASK ADDED !')
+                else:
+                    mask = dialog.mask
+                    # Add mask to the existing list
+                    self.parent.masks.add_mask(mask, 'Circ')
+                    self.options_widget.set_masks(self.parent.masks)
+                    self.options_widget.update_display()
+                self.submenu_widget.set_button_enabled(1, True)
+
+            except Exception as e:
+                print(f'Circ Mask : {e}')
+
+        elif self.parent.main_submode == 'rectangular':
+            self.action_masks_visualization()
+            image = self.parent.images.get_image_from_set(1)
+            dialog = RectangularMaskSelection(image)
+            result = dialog.exec()
+            if result == QDialog.DialogCode.Rejected:
+                print('NO MASK ADDED !')
+            else:
+                mask = dialog.mask
+                # Add mask to the existing list
+                self.parent.masks.add_mask(mask, 'Rect')
+                self.options_widget.set_masks(self.parent.masks)
+                self.options_widget.update_display()
+            self.submenu_widget.set_button_enabled(2, True)
+
+        elif self.parent.main_submode == 'polygon':
+            self.action_masks_visualization()
+            image = self.parent.images.get_image_from_set(1)
+            dialog = PolygonalMaskSelection(image)
+            result = dialog.exec()
+            if result == QDialog.DialogCode.Rejected:
+                print('NO MASK ADDED !')
+            else:
+                mask = dialog.mask
+                # Add mask to the existing list
+                self.parent.masks.add_mask(mask, 'Poly')
+                self.options_widget.set_masks(self.parent.masks)
+                self.options_widget.update_display()
+            self.submenu_widget.set_button_enabled(3, True)
+
+        ## Simple Analysis
+        elif self.parent.main_submode == 'wrappedphase':
+            if self.parent.images_opened:
+                image = self.parent.images.get_image_from_set(1)
+                mask = self.parent.masks.get_global_mask()
+                if mask is not None:
+                    self.top_left_widget.set_image_from_array(image * mask)
+                else:
+                    self.top_left_widget.set_image_from_array(image)
+            html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
+            self.set_bot_right_widget(html_page)
+            self.set_right_widget(Surface3DWidget(self))
+            mask = self.parent.masks.get_global_mask()
+            if mask is not None:
+                self.top_right_widget.set_data(self.parent.wrapped_phase,
+                                               mask, bar_title=r"Phase (rad)", size=50)
+            else:
+                print('No mask !')
+            # display_3D_surface(self.parent.wrapped_phase, self.parent.masks.get_global_mask(), size=50)
+
+        elif self.parent.main_submode == 'unwrappedphase':
+            if self.parent.images_opened:
+                image = self.parent.images.get_image_from_set(2)
+                mask = self.parent.masks.get_global_mask()
+                if mask is not None:
+                    self.top_left_widget.set_image_from_array(image * mask)
+                else:
+                    self.top_left_widget.set_image_from_array(image)
+            self.set_right_widget(Surface3DWidget(self))
+            mask = self.parent.masks.get_global_mask()
+            if mask is not None:
+                self.top_right_widget.set_data(self.parent.unwrapped_phase, mask,
+                                               bar_title=r"Default magnitude ('$\lambda$')", size=50)
+            else:
+                print('No mask !')
+            # display_3D_surface(self.parent.unwrapped_phase, self.parent.masks.get_global_mask(), size=50)
+
     def clear_layout(self, row: int, column: int) -> None:
         """
         Remove widgets from a specific position in the layout.
@@ -476,50 +711,6 @@ class MainWidget(QWidget):
         if menu in self.parent.default_parameters:
             return [int(x) for x in self.parent.default_parameters[menu].split(',')]
 
-    def update_menu(self):
-        """Update menu depending on the actual mode."""
-        # Update menu
-        menu = self.get_list_menu('all_menu')
-        self.main_menu.set_enabled(menu, True)
-        menu = []
-        if self.parent.mask_created is False:
-            menu += self.get_list_menu('nomask')
-        if self.parent.acquisition_done is False and self.parent.images_opened is False:
-            menu += self.get_list_menu('nodata')
-        if self.parent.camera_connected is False:
-            menu += self.get_list_menu('nocam')
-        if self.parent.piezo_connected is False:
-            menu += self.get_list_menu('nopiezo')
-        self.main_menu.set_enabled(menu, False)
-
-    def menu_action(self, event):
-        """
-        Action performed when a button of the main menu is clicked.
-        Only GUI actions are performed in this section.
-        :param event: Event that triggered the action.
-        """
-        self.main_signal.emit(event)
-        mode = event
-        submode = ''
-        if "_" in event:
-            modes = event.split('_')
-            mode = modes[1]
-            submode = modes[0]
-        self.parent.main_mode = mode
-        self.parent.main_submode = submode
-
-        # Clear layouts
-        self.clear_sublayout(OPTIONS_COL)
-        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
-        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
-
-        # Manage application
-        self.main_mode_action()
-        self.main_submode_action()
-
-        # Update menu
-        self.update_menu()
-
     def display_first_image(self):
         """Display the first image in the top left widget."""
         if self.parent.images_opened:
@@ -527,110 +718,8 @@ class MainWidget(QWidget):
             self.top_left_widget.set_image_from_array(image)
             self.update_size()
 
-    def main_mode_action(self):
-        """Display information depending on the main mode."""
-        if self.parent.main_mode == 'camera':
-            '''Camera Mode'''
-            self.action_camera()
-            # open html
-            html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
-            self.set_bot_right_widget(html_page)
-
-        elif self.parent.main_mode == 'images':
-            '''Images Mode'''
-            # Stop camera thread
-            self.parent.stop_thread()
-            # display first image if present
-            self.display_first_image()
-            # activate item in the submenu
-            if self.parent.acquisition_done is False and self.parent.images_opened is False:
-                self.submenu_widget.set_button_enabled(2, False)
-                self.submenu_widget.set_button_enabled(4, False)
-            else:
-                self.submenu_widget.set_button_enabled(2, True)
-                self.submenu_widget.set_button_enabled(4, True)
-            # open html
-            html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
-            self.set_bot_right_widget(html_page)
-
-        elif self.parent.main_mode == 'masks':
-            # Stop camera thread
-            self.parent.stop_thread()
-            try:
-                self.action_masks_visualization()
-            except Exception as e:
-                print(f'mode Masks : {e}')
-
-        elif self.parent.main_mode == 'simpleanalysis':
-            self.activate_display()
-            try:
-                self.action_simple_analysis()
-            except Exception as e:
-                print(f'mode Simple : {e}')
-
-
-    def main_submode_action(self):
-        print(f'\t\tSubmode = {self.parent.main_submode}')
-        if self.parent.main_submode == 'zoom':
-            self.action_zoom_camera()
-
-        elif self.parent.main_submode == 'open':
-            '''Images Mode / Open SubMode'''
-            self.action_menu_open_images()
-
-        elif self.parent.main_submode == 'display':
-            self.action_menu_display_images()
-
-        elif self.parent.main_submode == 'save':
-            self.action_menu_save_images()
-            self.menu_action('images')
-            self.menu_action('display_images')
-
-        elif self.parent.main_submode == 'circular':
-            self.action_masks_visualization()
-            try:
-                image = self.parent.images.get_image_from_set(1)
-                dialog = CircularMaskSelection(image)
-            except Exception as e:
-                print(f'circular menu : {e}')
-
-        elif self.parent.main_submode == 'wrappedphase':
-            if self.parent.images_opened:
-                image = self.parent.images.get_image_from_set(1)
-                mask = self.parent.masks.get_global_mask()
-                if mask is not None:
-                    self.top_left_widget.set_image_from_array(image * mask)
-                else:
-                    self.top_left_widget.set_image_from_array(image)
-            html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
-            self.set_bot_right_widget(html_page)
-            self.set_right_widget(Surface3DWidget(self))
-            mask = self.parent.masks.get_global_mask()
-            if mask is not None:
-                self.top_right_widget.set_data(self.parent.wrapped_phase,
-                                               mask, bar_title=r"Phase (rad)", size=50)
-            else:
-                print('No mask !')
-            # display_3D_surface(self.parent.wrapped_phase, self.parent.masks.get_global_mask(), size=50)
-
-        elif self.parent.main_submode == 'unwrappedphase':
-            if self.parent.images_opened:
-                image = self.parent.images.get_image_from_set(2)
-                mask = self.parent.masks.get_global_mask()
-                if mask is not None:
-                    self.top_left_widget.set_image_from_array(image * mask)
-                else:
-                    self.top_left_widget.set_image_from_array(image)
-            self.set_right_widget(Surface3DWidget(self))
-            mask = self.parent.masks.get_global_mask()
-            if mask is not None:
-                self.top_right_widget.set_data(self.parent.unwrapped_phase, mask,
-                                               bar_title=r"Default magnitude ('$\lambda$')", size=50)
-            else:
-                print('No mask !')
-            # display_3D_surface(self.parent.unwrapped_phase, self.parent.masks.get_global_mask(), size=50)
-
     def action_camera(self):
+        """Action performed when Camera is clicked in the menu."""
         camera_setting = CameraSettingsWidget(self, self.parent.camera)
         self.set_options_widget(camera_setting)
         if 'Max Expo Time' in self.parent.default_parameters:
@@ -640,40 +729,38 @@ class MainWidget(QWidget):
         self.parent.camera_thread.start()
 
     def action_zoom_camera(self):
-        camera_setting = CameraSettingsWidget(self, self.parent.camera)
-        self.set_options_widget(camera_setting)
-        if 'Max Expo Time' in self.parent.default_parameters:
-            self.options_widget.set_maximum_exposure_time(
-                float(self.parent.default_parameters['Max Expo Time']))  # in ms
-        self.options_widget.update_parameters(auto_min_max=True)
-        html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
-        self.set_top_right_widget(html_page)
         self.parent.camera_thread.start()
 
     def action_menu_open_images(self):
         """Action performed when the open submode of images is called."""
-        # Display a warning message if data are still opened
-        if self.parent.images_opened:
-            print('WARNING !!')
-        # Display a dialog box to open a MAT file
-        self.parent.images, self.parent.masks = self.open_images()
-        # Update the submenu and the display - /!\ masks BEFORE images
-        if self.parent.masks is not None:
-            self.parent.mask_created = True
-        else:
-            self.parent.mask_created = False
-        if self.parent.images is not None:
-            self.parent.images_opened = True
-            self.submenu_widget.set_button_enabled(2, True)
-            self.submenu_widget.set_activated(2)
-            self.submenu_widget.set_button_enabled(4, True)
-            self.action_menu_display_images()
-        else:
-            self.parent.images_opened = False
-            self.submenu_widget.set_button_enabled(1, True)
-            self.submenu_widget.set_button_enabled(2, False)
-            self.submenu_widget.set_button_enabled(4, False)
-            self.top_left_widget.reset_image()
+        try:
+            # Display a warning message if data are still opened
+            if self.parent.images_opened:
+                print('WARNING !!')
+            # Display a dialog box to open a MAT file
+            self.parent.images, self.parent.masks = self.open_images()
+            print(f'Im Ma : {type(self.parent.images)} / {type(self.parent.masks)}')
+            # Update the submenu and the display - /!\ masks BEFORE images
+            if self.parent.masks is not None:
+                self.parent.mask_created = True
+            else:
+                self.parent.mask_created = False
+            if self.parent.images is not None:
+                self.parent.images_opened = True
+                self.submenu_widget.set_button_enabled(2, True)
+                self.submenu_widget.set_activated(2)
+                self.submenu_widget.set_button_enabled(4, True)
+                self.submenu_widget.set_button_enabled(6, True)
+                self.action_menu_display_images()
+            else:
+                self.parent.images_opened = False
+                self.submenu_widget.set_button_enabled(1, True)
+                self.submenu_widget.set_button_enabled(2, False)
+                self.submenu_widget.set_button_enabled(4, False)
+                self.submenu_widget.set_button_enabled(6, True)
+                self.top_left_widget.reset_image()
+        except Exception as e:
+            print(f'Open Images : {e}')
 
     def open_images(self):
         """Action performed when a MAT file has to be loaded."""
@@ -686,11 +773,11 @@ class MainWidget(QWidget):
                                                    default_path, "Matlab (*.mat)")
 
         if file_path != '':
+            masks = Masks()
+            images = Images()
             data = read_mat_file(file_path)
             images_mat = data['Images']
             images_d = split_3d_array(images_mat)
-            masks = Masks()
-            images = Images()
             if 'Masks' in data:
                 mask_mat = data['Masks']
                 mask_d = split_3d_array(mask_mat, size=1)
@@ -772,6 +859,7 @@ class MainWidget(QWidget):
         self.submenu_widget.set_button_enabled(2, True)
         self.submenu_widget.set_activated(2)
         self.submenu_widget.set_button_enabled(4, True)
+        self.submenu_widget.set_button_enabled(6, True)
         if self.parent.images_opened:
             self.options_widget.set_images_status(True, index=1)
         else:
@@ -796,18 +884,28 @@ class MainWidget(QWidget):
         wi = (width*RIGHT_WIDTH)//100
         he = (height*TOP_HEIGHT)//100
         self.top_right_widget.update_size(wi, he)
-        image = self.parent.images.get_image_from_set(1)
-        if event is None:
-            mask = self.parent.masks.get_global_mask()
-            if mask is not None:
+        if self.parent.images_opened:
+            image = self.parent.images.get_image_from_set(1)
+            if event is None:
+                mask = self.parent.masks.get_global_mask()
+                if mask is not None:
+                    self.top_right_widget.set_image_from_array(image * mask)
+                else:
+                    print('No Mask !')
+            elif event.isdigit():
+                print(f'Event !! {event}')
+                mask,_ = self.parent.masks.get_mask(int(event))
                 self.top_right_widget.set_image_from_array(image * mask)
-            else:
-                print('No Mask !')
-        elif event.isdigit():
-            mask,_ = self.parent.masks.get_mask(int(event))
-            self.top_right_widget.set_image_from_array(image * mask)
+        elif self.parent.camera_connected:
+            print('Connected !')
         # D
 
+    def action_piezo_move(self):
+        """Action performed when the voltage slider of the piezo changed."""
+        if self.parent.piezo_connected:
+            voltage = self.options_widget.get_voltage()
+            self.piezo.write_dac(voltage)
+        print('MOVE')
 
     def action_simple_analysis(self):
         """Action performed when a simple analysis is required.
