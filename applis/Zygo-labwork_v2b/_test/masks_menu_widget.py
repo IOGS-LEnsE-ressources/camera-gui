@@ -37,13 +37,6 @@ if __name__ == '__main__':
 else:
     from widgets.combobox_bloc import ComboBoxBloc
 
-styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight: normal;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-
-# %% Params
-BUTTON_HEIGHT = 30 #px
-
-
 # %% Widget
 class MasksMenuWidget(QWidget):
     def __init__(self, parent=None):

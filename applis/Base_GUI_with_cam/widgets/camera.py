@@ -445,6 +445,8 @@ class ImagesDisplayWidget(QWidget):
         image_to_display = self.image.copy()
         image_to_display = np.squeeze(image_to_display)
 
+        print(image_to_display.shape)
+
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
             image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
         qimage = array_to_qimage(image_to_display)

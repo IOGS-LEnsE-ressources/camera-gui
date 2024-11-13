@@ -588,6 +588,11 @@ class MainWidget(QWidget):
 
         elif self.parent.main_submode == 'circular':
             self.action_masks_visualization()
+            try:
+                image = self.parent.images.get_image_from_set(1)
+                dialog = CircularMaskSelection(image)
+            except Exception as e:
+                print(f'circular menu : {e}')
 
         elif self.parent.main_submode == 'wrappedphase':
             if self.parent.images_opened:

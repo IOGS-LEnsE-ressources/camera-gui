@@ -376,46 +376,6 @@ class MasksOptionsWidget(QWidget):
             print(f'update_display / Masks {e}')
 
 
-if __name__ == '__main__':
-
-    print('Mask test')
-    masks = Masks()
-
-    mask1 = np.zeros((100, 200))
-    mask1[20:50, 60:150] = 1
-    mask2 = np.zeros_like(mask1)
-    mask2[40:90, 10:80] = 1
-
-    masks.add_mask(mask1)
-    masks.invert_mask(1)
-    masks.add_mask(mask2)
-    masks.invert_global_mask()
-
-    global_mask = masks.get_global_mask()
-
-    plt.figure()
-    plt.imshow(global_mask)
-    plt.colorbar()
-
-    class MyWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-
-            self.setWindowTitle(translate("window_title_main_menu_widget"))
-            self.setGeometry(100, 200, 800, 600)
-
-            self.masks = masks
-
-            self.central_widget = MasksOptionsWidget(self)
-            self.setCentralWidget(self.central_widget)
-
-    app = QApplication(sys.argv)
-    main = MyWindow()
-    main.show()
-    sys.exit(app.exec())
-
-
-
 class CircularMaskSelection(QDialog):
     """
     A dialog for selecting a circular mask on an image.
@@ -480,13 +440,21 @@ class CircularMaskSelection(QDialog):
 
         # Initialize layout and image attributes
         self.layout = QGridLayout()
-        self.image = image
-
+        self.image = np.array(image, dtype='uint8')
         # Convert image to QImage and QPixmap for display
-        self.qimage = QImage(
-            self.image.data, self.image.shape[1], self.image.shape[0], self.image.strides[0], QImage.Format.Format_Grayscale8)
-        self.pixmap = QPixmap.fromImage(self.qimage)
+        self.image = np.squeeze(self.image)
+        print(self.image.shape)
+        '''
+        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
+            image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
+        '''
+        image = np.random.randint(0, 255, (700, 500))
+        print(f'Image Type : {type(image)}')
 
+        self.qimage = array_to_qimage(image)
+        #self.qimage = QImage(self.image.data, self.image.shape[1], self.image.shape[0], QImage.Format.Format_Grayscale8)
+        #self.pixmap = QPixmap.fromImage(self.qimage)
+        '''
         # Create a pixmap layer for drawing points
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
@@ -511,6 +479,7 @@ class CircularMaskSelection(QDialog):
 
         # Assign mousePressEvent to capture points
         self.label.mousePressEvent = self.get_points_circle
+        '''
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """
@@ -1128,7 +1097,7 @@ class PolygonalMaskSelection(QDialog):
 # %% Example
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    image = np.random.randint(0, 255, (700, 700))
+    image = np.random.randint(0, 255, (700, 500))
     main = CircularMaskSelection(image)
     main.show()
     sys.exit(app.exec())
