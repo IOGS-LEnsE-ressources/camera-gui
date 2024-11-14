@@ -15,7 +15,6 @@ import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 from scipy.interpolate import griddata
 from skimage.restoration import unwrap_phase
-import h5py
 
 PI = np.pi
 
