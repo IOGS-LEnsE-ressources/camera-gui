@@ -27,6 +27,7 @@ from lensecam.ids.camera_ids import CameraIds
 
 ## Image display and thread
 from lensecam.camera_thread import CameraThread
+from lensepy.pyqt6 import *
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 ## Camera settings Widget for IDS
 from widgets.camera import *
@@ -156,29 +157,33 @@ class MainWindow(QMainWindow):
 
         # Initialization of the piezo
         # ---------------------------
-        self.piezo = NIDaqPiezo()
         self.piezo_connected = False
-        self.piezo_connected = self.piezo.get_piezo() is not None
-
+        if 'Piezo Active' in self.default_parameters:
+            if self.default_parameters['Piezo Active'] == '1':
+                self.piezo = NIDaqPiezo()
+                self.piezo_connected = self.piezo.get_piezo() is not None
+                if 'Piezo Channel' in self.default_parameters:
+                    self.piezo.set_channel(int(self.default_parameters['Piezo Channel']))
         # Update menu
         self.central_widget.update_menu()
 
     def stop_thread(self):
         """Stop the camera thread."""
+        pass
+        '''
         try:
             if self.camera_connected:
                 if self.camera_thread.running:
                     self.camera_thread.stop()
         except Exception as e:
             print(f'Stop Thread : {e}')
+        '''
 
     def main_action(self, event):
         """
         Action performed by an event in the main widget.
         :param event: Event that triggered the action.
         """
-        self.main_mode = event
-        #print(f'Main {self.main_mode}')
         if event == 'camera':
 
             pass
@@ -187,7 +192,7 @@ class MainWindow(QMainWindow):
             try:
                 self.zoom_activated = True
                 self.zoom_window = ZoomImagesWidget(self)
-                self.zoom_window.showMaximized()
+                self.zoom_window.show()
                 self.zoom_window.slider_changed.connect(self.action_zoom_camera_changed)
                 min_value, max_value = self.camera.get_exposure_range()
                 if 'Max Expo Time' in self.default_parameters:
@@ -201,18 +206,19 @@ class MainWindow(QMainWindow):
 
     def thread_update_image(self, image_array):
         """Actions performed if a camera thread is started."""
-        if image_array is not None:
-            if self.image_bits_depth > 8:
-                self.raw_image = image_array.view(np.uint16)
-                self.displayed_image = self.raw_image >> (self.image_bits_depth-8)
-                self.displayed_image = self.displayed_image.astype(np.uint8)
+        if self.main_mode is None or self.main_mode == 'camera' or self.main_mode == 'piezo':
+            if image_array is not None:
+                if self.image_bits_depth > 8:
+                    self.raw_image = image_array.view(np.uint16)
+                    self.displayed_image = self.raw_image >> (self.image_bits_depth-8)
+                    self.displayed_image = self.displayed_image.astype(np.uint8)
+                else:
+                    self.raw_image = image_array.view(np.uint8)
+                    self.displayed_image = self.raw_image
+            if self.zoom_activated:
+                self.zoom_window.zoom_window.set_image_from_array(self.displayed_image)
             else:
-                self.raw_image = image_array.view(np.uint8)
-                self.displayed_image = self.raw_image
-        if self.zoom_activated:
-            self.zoom_window.zoom_window.set_image_from_array(self.displayed_image)
-        else:
-            self.central_widget.top_left_widget.set_image_from_array(self.displayed_image)
+                self.central_widget.top_left_widget.set_image_from_array(self.displayed_image)
 
     def action_zoom_camera_changed(self):
         self.camera.set_exposure(self.zoom_window.get_exposure() * 1000)

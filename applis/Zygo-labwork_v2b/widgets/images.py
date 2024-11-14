@@ -372,11 +372,12 @@ class ImagesDisplayWidget(QWidget):
             pmap = QPixmap.fromImage(qimage)
             self.image_display.setPixmap(pmap)
 
-    def set_image_from_array(self, pixels: np.ndarray, aoi: bool = False) -> None:
+    def set_image_from_array(self, pixels: np.ndarray, aoi: bool = False, text: str = '') -> None:
         """
         Display a new image from an array (Numpy)
         :param pixels: Array of pixels to display.
         :param aoi: If True, print 'AOI' on the image.
+        :param text: Text to display in the top of the image.
         """
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image.copy()
@@ -390,6 +391,12 @@ class ImagesDisplayWidget(QWidget):
             painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
             painter.setFont(QFont("Arial", 15))  # Police et taille
             painter.drawText(20, 20, 'AOI')
+            painter.end()
+        if text != '':
+            painter = QPainter(qimage)
+            painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
+            painter.setFont(QFont("Arial", 15))  # Police et taille
+            painter.drawText(20, 20, text)
             painter.end()
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)

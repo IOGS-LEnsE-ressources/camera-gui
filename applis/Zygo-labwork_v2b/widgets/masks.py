@@ -16,10 +16,9 @@ import numpy as np
 import cv2
 import scipy
 
-
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QTableView, QTableWidgetItem, QTableWidget,
+    QLabel, QComboBox, QPushButton, QTableWidget,
     QCheckBox, QMessageBox,
     QMainWindow, QDialog, QApplication
 )
@@ -28,15 +27,8 @@ from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QPen, QColor, QKeyEven
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensepy.images.conversion import *
+from lensepy.pyqt6 import *
 
-
-def qobject_to_widget(obj) -> QWidget:
-    container = QWidget()
-    layout = QHBoxLayout(container)
-    layout.addWidget(obj)
-    layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    layout.setContentsMargins(0, 0, 0, 0)
-    return container
 
 class Masks:
     """Class containing masks data and parameters.
@@ -430,15 +422,10 @@ class MasksOptionsWidget(QWidget):
 
     def update_display(self):
         """Update the masks list."""
-        try:
-            print('Update Display - Masks Options')
-            self.table_widget.update_display()
-        except Exception as e:
-            print(f'update_display / Masks {e}')
+        self.table_widget.update_display()
 
     def set_masks(self, masks: Masks):
         """Set a sets of masks from a Masks object."""
-        print(masks)
         self.table_widget.set_masks(masks)
 
 

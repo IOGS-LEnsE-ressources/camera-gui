@@ -450,8 +450,6 @@ class MainWidget(QWidget):
 
         elif self.parent.main_mode == 'masks':
             try:
-                # Stop camera thread
-                self.parent.stop_thread()
                 self.action_masks_visualization()
             except Exception as e:
                 print(f'mode Masks : {e}')
@@ -461,9 +459,7 @@ class MainWidget(QWidget):
             self.set_options_widget(PiezoOptionsWidget(self))
 
         elif self.parent.main_mode == 'acquisition':
-            # Display options widget with Masks Options
-            self.set_options_widget(AcquisitionOptionsWidget(self))
-            pass
+            self.action_acquisition()
 
         elif self.parent.main_mode == 'simpleanalysis':
             self.activate_display()
@@ -499,6 +495,7 @@ class MainWidget(QWidget):
                 self.parent.images = Images()
                 self.parent.masks = Masks()
                 self.parent.images_opened = False
+                self.parent.mask_created = False
                 self.menu_action('images')
 
         ## Piezo
@@ -510,37 +507,34 @@ class MainWidget(QWidget):
 
         ## Acquisition
         elif self.parent.main_submode == 'simple':
-            pass
+            self.action_simple_acquisition()
 
         ## Masks
         elif self.parent.main_submode == 'circular':
             self.action_masks_visualization()
-            try:
-                if self.parent.images_opened:
-                    image = self.parent.images.get_image_from_set(1)
-                elif self.parent.camera_connected:
-                    image = self.parent.displayed_image.copy()
-                print(type(image))
-                print(image.shape)
-
-                dialog = CircularMaskSelection(image)
-                result = dialog.exec()
-                if result == QDialog.DialogCode.Rejected:
-                    print('NO MASK ADDED !')
-                else:
-                    mask = dialog.mask
-                    # Add mask to the existing list
-                    self.parent.masks.add_mask(mask, 'Circ')
-                    self.options_widget.set_masks(self.parent.masks)
-                    self.options_widget.update_display()
-                self.submenu_widget.set_button_enabled(1, True)
-
-            except Exception as e:
-                print(f'Circ Mask : {e}')
+            if self.parent.images_opened:
+                image = self.parent.images.get_image_from_set(1)
+            elif self.parent.camera_connected:
+                image = self.parent.displayed_image.copy()
+            dialog = CircularMaskSelection(image)
+            result = dialog.exec()
+            if result == QDialog.DialogCode.Rejected:
+                print('NO MASK ADDED !')
+            else:
+                mask = dialog.mask
+                # Add mask to the existing list
+                self.parent.masks.add_mask(mask, 'Circ')
+                self.parent.mask_created = True
+                self.options_widget.set_masks(self.parent.masks)
+                self.options_widget.update_display()
+            self.submenu_widget.set_button_enabled(1, True)
 
         elif self.parent.main_submode == 'rectangular':
             self.action_masks_visualization()
-            image = self.parent.images.get_image_from_set(1)
+            if self.parent.images_opened:
+                image = self.parent.images.get_image_from_set(1)
+            elif self.parent.camera_connected:
+                image = self.parent.displayed_image.copy()
             dialog = RectangularMaskSelection(image)
             result = dialog.exec()
             if result == QDialog.DialogCode.Rejected:
@@ -549,13 +543,17 @@ class MainWidget(QWidget):
                 mask = dialog.mask
                 # Add mask to the existing list
                 self.parent.masks.add_mask(mask, 'Rect')
+                self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
             self.submenu_widget.set_button_enabled(2, True)
 
         elif self.parent.main_submode == 'polygon':
             self.action_masks_visualization()
-            image = self.parent.images.get_image_from_set(1)
+            if self.parent.images_opened:
+                image = self.parent.images.get_image_from_set(1)
+            elif self.parent.camera_connected:
+                image = self.parent.displayed_image.copy()
             dialog = PolygonalMaskSelection(image)
             result = dialog.exec()
             if result == QDialog.DialogCode.Rejected:
@@ -564,6 +562,7 @@ class MainWidget(QWidget):
                 mask = dialog.mask
                 # Add mask to the existing list
                 self.parent.masks.add_mask(mask, 'Poly')
+                self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
             self.submenu_widget.set_button_enabled(3, True)
@@ -718,8 +717,23 @@ class MainWidget(QWidget):
         """Display the first image in the top left widget."""
         if self.parent.images_opened:
             image = self.parent.images.get_image_from_set(1)
+        elif self.parent.camera_connected:
+            image = self.parent.displayed_image.copy()
+        self.top_left_widget.set_image_from_array(image)
+        self.update_size()
+
+    def display_masked_image(self):
+        """Display the first image in the top left widget."""
+        if self.parent.images_opened:
+            image = self.parent.images.get_image_from_set(1)
+        elif self.parent.camera_connected:
+            image = self.parent.displayed_image.copy()
+        if self.parent.mask_created:
+            mask = self.parent.masks.get_global_mask()
+            self.top_left_widget.set_image_from_array(image*mask)
+        else:
             self.top_left_widget.set_image_from_array(image)
-            self.update_size()
+        self.update_size()
 
     def action_camera(self):
         """Action performed when Camera is clicked in the menu."""
@@ -890,28 +904,74 @@ class MainWidget(QWidget):
             self.top_right_widget.update_size(wi, he)
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
-                if event is None:
-                    mask = self.parent.masks.get_global_mask()
-                    if mask is not None:
-                        self.top_right_widget.set_image_from_array(image * mask)
-                    else:
-                        print('No Mask !')
-                elif event.isdigit():
-                    print(f'Event !! {event}')
-                    mask,_ = self.parent.masks.get_mask(int(event))
-                    self.top_right_widget.set_image_from_array(image * mask)
             elif self.parent.camera_connected:
-                print('Connected !')
+                image = self.parent.displayed_image.copy()
+            if event is None:
+                mask = self.parent.masks.get_global_mask()
+                if mask is not None:
+                    self.top_right_widget.set_image_from_array(image * mask)
+                else:
+                    print('No Mask !')
+            elif event.isdigit():
+                print(f'Event !! {event}')
+                mask,_ = self.parent.masks.get_mask(int(event))
+                self.top_right_widget.set_image_from_array(image * mask)
         except Exception as e:
             print(f'Mask Visu : {e}')
         # D
 
     def action_piezo_move(self):
         """Action performed when the voltage slider of the piezo changed."""
-        if self.parent.piezo_connected:
-            voltage = self.options_widget.get_voltage()
-            self.piezo.write_dac(voltage)
-        print('MOVE')
+        try:
+            if self.parent.piezo_connected:
+                voltage = self.options_widget.get_voltage()
+                self.parent.piezo.write_dac(voltage)
+            print('MOVE')
+        except Exception as e:
+            print(f'Piezo Move : {e}')
+
+    def action_simple_acquisition(self):
+        """Action performed when a simple acquisition is required."""
+        # Start thread for acquiring images
+        if self.parent.piezo_connected and self.parent.camera_connected:
+            thread = threading.Thread(target=self.thread_simple_acquisition)
+            thread.start()
+
+    def action_acquisition(self):
+        # display masked image if present
+        self.display_masked_image()
+        # Display options widget with Masks Options
+        self.set_options_widget(AcquisitionOptionsWidget(self))
+        # Display acquiring Image in the top right widget
+        self.set_top_right_widget(ImagesDisplayWidget(self))
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width * RIGHT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
+        self.top_right_widget.update_size(wi, he)
+
+    def thread_simple_acquisition(self):
+        """Thread to acquire 5 images."""
+        print('Start Acquiring...')
+        for i in range(5):
+            print(f'Acquiring image {i+1}')
+            # Move piezo
+            voltage = 0.5
+            # Wait end of movement
+            # Acquire image
+            image = self.parent.displayed_image.copy()
+            self.options_widget.add_image(image, voltage)
+            self.top_right_widget.set_image_from_array(image, text=f'Image {i+1}')
+
+
+            time.sleep(1)
+
+        if self.parent.main_mode == 'acquisition':
+            self.submenu_widget.set_button_enabled(2, True)
+
+
+
 
     def action_simple_analysis(self):
         """Action performed when a simple analysis is required.

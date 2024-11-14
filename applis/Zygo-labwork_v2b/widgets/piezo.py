@@ -65,7 +65,7 @@ class PiezoMoveOptionsWidget(QWidget):
         self.voltage_slider.set_value(1)
         self.voltage_slider.set_enabled(self.parent.parent.piezo_connected)
         if self.parent.parent.piezo_connected:
-            self.piezo.write_dac(1)
+            self.parent.parent.piezo.write_dac(1)
         self.voltage_slider.slider_changed.connect(self.action_voltage_changed)
 
         # Add graphical elements to the layout

@@ -431,19 +431,23 @@ class ZoomImagesWidget(QWidget):
         self.zoom_window = ImagesDisplayWidget(self)
         self.layout.addWidget(self.zoom_window, 1, 0)
         self.setLayout(self.layout)
+        screen_geometry = self.screen().geometry()
+        self.width = screen_geometry.width() - 20
+        self.height = screen_geometry.height() - 30
+        self.setFixedSize(self.width, self.height)
 
     def set_slider_range(self, min_value: float, max_value: float):
         """Set the minimum and maximum values for the exposure time slider.
         :param min_value: Minimum value for the exposure time. In ms.
         :param max_value: Maximum value for the exposure time. In ms.
         """
-        self.expo_time.set_min_max_slider_values(min_value, max_value)
+        self.expo_time.set_min_max_slider_values(round(min_value, 3), round(max_value, 1))
 
     def set_slider_value(self, value: float):
         """Set the value of the exposure time slider.
         :param value: Value of the exposure time. In ms.
         """
-        self.expo_time.set_value(value)
+        self.expo_time.set_value(round(value, 2))
 
     def get_exposure(self):
         """Return the exposure time from the slider.
@@ -453,11 +457,7 @@ class ZoomImagesWidget(QWidget):
 
     def resizeEvent(self, event):
         try:
-            screen_geometry = QApplication.primaryScreen().geometry()
-            width = screen_geometry.width() - 50
-            height = screen_geometry.height() - 150
-            self.setFixedSize(self.width, self.height)
-            self.zoom_window.update_size(width-30, height-50)
+            self.zoom_window.update_size(self.width-20, self.height-40)
         except Exception as e:
             print(f'Image Display - resize : {e}')
 
