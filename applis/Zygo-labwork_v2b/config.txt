@@ -3,7 +3,7 @@
 Language;FR
 Exposure Time;0.999891
 Max Expo Time;20
-Black Level;80
+Black Level;20
 Piezo voltage from Matlab;0.80,1.62,2.43,3.24,4.05
 Piezo Voltage;0.80,1.62,2.43,3.24,4.05
 Piezo Channel;1

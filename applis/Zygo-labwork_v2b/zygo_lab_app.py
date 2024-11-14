@@ -156,17 +156,21 @@ class MainWindow(QMainWindow):
 
         # Initialization of the piezo
         # ---------------------------
-        # self.piezo = NIDaqPiezo()
+        self.piezo = NIDaqPiezo()
         self.piezo_connected = False
+        self.piezo_connected = self.piezo.get_piezo() is not None
 
         # Update menu
         self.central_widget.update_menu()
 
     def stop_thread(self):
         """Stop the camera thread."""
-        if self.camera_connected:
-            if self.camera_thread.running:
-                self.camera_thread.stop()
+        try:
+            if self.camera_connected:
+                if self.camera_thread.running:
+                    self.camera_thread.stop()
+        except Exception as e:
+            print(f'Stop Thread : {e}')
 
     def main_action(self, event):
         """

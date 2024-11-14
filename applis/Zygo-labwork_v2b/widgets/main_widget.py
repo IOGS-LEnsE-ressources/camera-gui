@@ -383,10 +383,8 @@ class MainWidget(QWidget):
             menu += self.get_list_menu('nodata')
         if self.parent.camera_connected is False:
             menu += self.get_list_menu('nocam')
-        '''
         if self.parent.piezo_connected is False:
             menu += self.get_list_menu('nopiezo')
-        '''
         self.main_menu.set_enabled(menu, False)
 
     def menu_action(self, event):
@@ -396,26 +394,31 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         self.main_signal.emit(event)
-        mode = event
-        submode = ''
-        if "_" in event:
-            modes = event.split('_')
-            mode = modes[1]
-            submode = modes[0]
-        self.parent.main_mode = mode
-        self.parent.main_submode = submode
 
-        # Clear layouts
-        self.clear_sublayout(OPTIONS_COL)
-        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
-        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        try:
+            mode = event
+            submode = ''
+            if "_" in event:
+                modes = event.split('_')
+                mode = modes[1]
+                submode = modes[0]
+            self.parent.main_mode = mode
+            self.parent.main_submode = submode
 
-        # Manage application
-        self.main_mode_action()
-        self.main_submode_action()
+            # Clear layouts
+            self.clear_sublayout(OPTIONS_COL)
+            self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+            self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
-        # Update menu
-        self.update_menu()
+            # Manage application
+            self.main_mode_action()
+            self.main_submode_action()
+
+            # Update menu
+            self.update_menu()
+
+        except Exception as e:
+            print(f'Menu Action : {e}')
 
     def main_mode_action(self):
         """Display information depending on the main mode."""
@@ -446,9 +449,9 @@ class MainWidget(QWidget):
             self.set_bot_right_widget(html_page)
 
         elif self.parent.main_mode == 'masks':
-            # Stop camera thread
-            self.parent.stop_thread()
             try:
+                # Stop camera thread
+                self.parent.stop_thread()
                 self.action_masks_visualization()
             except Exception as e:
                 print(f'mode Masks : {e}')
@@ -757,7 +760,7 @@ class MainWidget(QWidget):
                 self.submenu_widget.set_button_enabled(1, True)
                 self.submenu_widget.set_button_enabled(2, False)
                 self.submenu_widget.set_button_enabled(4, False)
-                self.submenu_widget.set_button_enabled(6, True)
+                self.submenu_widget.set_button_enabled(6, False)
                 self.top_left_widget.reset_image()
         except Exception as e:
             print(f'Open Images : {e}')
@@ -871,33 +874,36 @@ class MainWidget(QWidget):
             self.options_widget.set_masks_status(False)
 
     def action_masks_visualization(self, event=None):
-        """Action performed when masks are displayed."""
-        # display first image if present
-        self.display_first_image()
-        # Display options widget with Masks Options
-        self.set_options_widget(MasksOptionsWidget(self))
-        # Display image with mask in the top right widget
-        self.set_top_right_widget(ImagesDisplayWidget(self))
-        new_size = self.parent.size()
-        width = new_size.width()
-        height = new_size.height()
-        wi = (width*RIGHT_WIDTH)//100
-        he = (height*TOP_HEIGHT)//100
-        self.top_right_widget.update_size(wi, he)
-        if self.parent.images_opened:
-            image = self.parent.images.get_image_from_set(1)
-            if event is None:
-                mask = self.parent.masks.get_global_mask()
-                if mask is not None:
+        try:
+            """Action performed when masks are displayed."""
+            # display first image if present
+            self.display_first_image()
+            # Display options widget with Masks Options
+            self.set_options_widget(MasksOptionsWidget(self))
+            # Display image with mask in the top right widget
+            self.set_top_right_widget(ImagesDisplayWidget(self))
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width*RIGHT_WIDTH)//100
+            he = (height*TOP_HEIGHT)//100
+            self.top_right_widget.update_size(wi, he)
+            if self.parent.images_opened:
+                image = self.parent.images.get_image_from_set(1)
+                if event is None:
+                    mask = self.parent.masks.get_global_mask()
+                    if mask is not None:
+                        self.top_right_widget.set_image_from_array(image * mask)
+                    else:
+                        print('No Mask !')
+                elif event.isdigit():
+                    print(f'Event !! {event}')
+                    mask,_ = self.parent.masks.get_mask(int(event))
                     self.top_right_widget.set_image_from_array(image * mask)
-                else:
-                    print('No Mask !')
-            elif event.isdigit():
-                print(f'Event !! {event}')
-                mask,_ = self.parent.masks.get_mask(int(event))
-                self.top_right_widget.set_image_from_array(image * mask)
-        elif self.parent.camera_connected:
-            print('Connected !')
+            elif self.parent.camera_connected:
+                print('Connected !')
+        except Exception as e:
+            print(f'Mask Visu : {e}')
         # D
 
     def action_piezo_move(self):

@@ -452,10 +452,14 @@ class ZoomImagesWidget(QWidget):
         return self.expo_time.get_value()
 
     def resizeEvent(self, event):
-        new_size = self.size()
-        width = new_size.width()
-        height = new_size.height()
-        self.zoom_window.update_size(width, height)
+        try:
+            screen_geometry = QApplication.primaryScreen().geometry()
+            width = screen_geometry.width() - 50
+            height = screen_geometry.height() - 150
+            self.setFixedSize(self.width, self.height)
+            self.zoom_window.update_size(width-30, height-50)
+        except Exception as e:
+            print(f'Image Display - resize : {e}')
 
 
 if __name__ == '__main__':
