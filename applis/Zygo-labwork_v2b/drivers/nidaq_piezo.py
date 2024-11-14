@@ -41,11 +41,9 @@ class NIDaqPiezo:
     def write_dac(self, value: float):
         """Write a value on the output."""
         str_chan = f'{self.name}/ao{self.channel}'
-        print(str_chan)
         with nidaqmx.Task() as task:
             task.ao_channels.add_ao_voltage_chan(str_chan)
             number_of_samples_written = task.write(value)
-            print(f"Generated {number_of_samples_written} voltage sample.")
 
     def read_adc(self, chan: str = "Dev1/ai0"):
         result = None

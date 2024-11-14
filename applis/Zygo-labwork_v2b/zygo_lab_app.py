@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
 
         # Data for process phase
         # ----------------------------
-        self.images = None
+        self.images = Images()
         self.masks = Masks()
         self.wrapped_phase = None
 
@@ -212,9 +212,10 @@ class MainWindow(QMainWindow):
                     self.raw_image = image_array.view(np.uint16)
                     self.displayed_image = self.raw_image >> (self.image_bits_depth-8)
                     self.displayed_image = self.displayed_image.astype(np.uint8)
+                    self.displayed_image = self.displayed_image.squeeze()
                 else:
                     self.raw_image = image_array.view(np.uint8)
-                    self.displayed_image = self.raw_image
+                    self.displayed_image = self.raw_image.squeeze()
             if self.zoom_activated:
                 self.zoom_window.zoom_window.set_image_from_array(self.displayed_image)
             else:

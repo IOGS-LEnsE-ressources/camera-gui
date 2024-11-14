@@ -462,7 +462,6 @@ class MainWidget(QWidget):
             self.action_acquisition()
 
         elif self.parent.main_mode == 'simpleanalysis':
-            self.activate_display()
             try:
                 self.action_simple_analysis()
             except Exception as e:
@@ -496,6 +495,9 @@ class MainWidget(QWidget):
                 self.parent.masks = Masks()
                 self.parent.images_opened = False
                 self.parent.mask_created = False
+                self.parent.wrapped_phase_done = False
+                self.parent.unwrapped_phase_done = False
+                self.parent.acquisition_done = False
                 self.menu_action('images')
 
         ## Piezo
@@ -523,7 +525,7 @@ class MainWidget(QWidget):
             else:
                 mask = dialog.mask
                 # Add mask to the existing list
-                self.parent.masks.add_mask(mask, 'Circ')
+                self.parent.masks.add_mask(mask.squeeze(), 'Circ')
                 self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
@@ -542,7 +544,7 @@ class MainWidget(QWidget):
             else:
                 mask = dialog.mask
                 # Add mask to the existing list
-                self.parent.masks.add_mask(mask, 'Rect')
+                self.parent.masks.add_mask(mask.squeeze(), 'Rect')
                 self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
@@ -561,7 +563,7 @@ class MainWidget(QWidget):
             else:
                 mask = dialog.mask
                 # Add mask to the existing list
-                self.parent.masks.add_mask(mask, 'Poly')
+                self.parent.masks.add_mask(mask.squeeze(), 'Poly')
                 self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
@@ -576,8 +578,7 @@ class MainWidget(QWidget):
                     self.top_left_widget.set_image_from_array(image * mask)
                 else:
                     self.top_left_widget.set_image_from_array(image)
-            html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
-            self.set_bot_right_widget(html_page)
+            '''
             self.set_right_widget(Surface3DWidget(self))
             mask = self.parent.masks.get_global_mask()
             if mask is not None:
@@ -585,7 +586,8 @@ class MainWidget(QWidget):
                                                mask, bar_title=r"Phase (rad)", size=50)
             else:
                 print('No mask !')
-            # display_3D_surface(self.parent.wrapped_phase, self.parent.masks.get_global_mask(), size=50)
+            '''
+            display_3D_surface(self.parent.wrapped_phase, self.parent.masks.get_global_mask(), size=20)
 
         elif self.parent.main_submode == 'unwrappedphase':
             if self.parent.images_opened:
@@ -595,6 +597,7 @@ class MainWidget(QWidget):
                     self.top_left_widget.set_image_from_array(image * mask)
                 else:
                     self.top_left_widget.set_image_from_array(image)
+            '''
             self.set_right_widget(Surface3DWidget(self))
             mask = self.parent.masks.get_global_mask()
             if mask is not None:
@@ -602,7 +605,8 @@ class MainWidget(QWidget):
                                                bar_title=r"Default magnitude ('$\lambda$')", size=50)
             else:
                 print('No mask !')
-            # display_3D_surface(self.parent.unwrapped_phase, self.parent.masks.get_global_mask(), size=50)
+            '''
+            display_3D_surface(self.parent.unwrapped_phase, self.parent.masks.get_global_mask(), size=20)
 
     def clear_layout(self, row: int, column: int) -> None:
         """
@@ -800,7 +804,7 @@ class MainWidget(QWidget):
                 mask_d = split_3d_array(mask_mat, size=1)
                 if isinstance(mask_d, list):
                     for i, maskk in enumerate(mask_d):
-                        masks.add_mask(maskk)
+                        masks.add_mask(maskk.squeeze())
             if isinstance(images_d, list):
                 if len(images_d) % 5 == 0 and len(images_d) > 1:
                     self.parent.wrapped_phase_done = False
@@ -877,7 +881,7 @@ class MainWidget(QWidget):
         self.submenu_widget.set_activated(2)
         self.submenu_widget.set_button_enabled(4, True)
         self.submenu_widget.set_button_enabled(6, True)
-        if self.parent.images_opened:
+        if self.parent.images_opened or self.parent.acquisition_done:
             self.options_widget.set_images_status(True, index=1)
         else:
             self.options_widget.set_images_status(False)
@@ -914,7 +918,7 @@ class MainWidget(QWidget):
                     print('No Mask !')
             elif event.isdigit():
                 print(f'Event !! {event}')
-                mask,_ = self.parent.masks.get_mask(int(event))
+                mask, _ = self.parent.masks.get_mask(int(event))
                 self.top_right_widget.set_image_from_array(image * mask)
         except Exception as e:
             print(f'Mask Visu : {e}')
@@ -954,18 +958,30 @@ class MainWidget(QWidget):
     def thread_simple_acquisition(self):
         """Thread to acquire 5 images."""
         print('Start Acquiring...')
+        if 'Piezo Voltage' in self.parent.default_parameters:
+            voltage_list = self.parent.default_parameters['Piezo Voltage'].split(',')
+            voltage_list = [float(i) for i in voltage_list]
+            print(f'Voltage List : {len(voltage_list)}')
+        else:
+            voltage_list = [0.80, 1.62, 2.43, 3.24, 4.05]
         for i in range(5):
-            print(f'Acquiring image {i+1}')
             # Move piezo
-            voltage = 0.5
+            self.parent.piezo.write_dac(voltage_list[i])
             # Wait end of movement
+            time.sleep(0.6)
             # Acquire image
-            image = self.parent.displayed_image.copy()
-            self.options_widget.add_image(image, voltage)
+            image = self.parent.displayed_image.copy().squeeze()
+            self.options_widget.add_image(image, voltage_list[i])
             self.top_right_widget.set_image_from_array(image, text=f'Image {i+1}')
+            time.sleep(0.2)
 
+        self.parent.images.add_set_images(self.options_widget.images_table.images_list)
+        self.parent.acquisition_done = True
+        self.main_menu.set_enabled(7, True)
+        self.main_menu.set_enabled(8, True)
+        image = generate_images_grid(self.options_widget.images_table.images_list)
+        self.top_right_widget.set_image_from_array(image, text=f'ALL')
 
-            time.sleep(1)
 
         if self.parent.main_mode == 'acquisition':
             self.submenu_widget.set_button_enabled(2, True)
@@ -999,17 +1015,19 @@ class MainWidget(QWidget):
         k = 0
         images = self.parent.images.get_images_set(k)
         mask = self.parent.masks.get_global_mask()
+        print(f'Wrapped Image shape : {images[0].shape}')
         if mask is not None:
             self.parent.wrapped_phase = hariharan_algorithm(images, mask)
             self.parent.wrapped_phase_done = True
             if self.parent.main_mode == 'simpleanalysis':
                 self.submenu_widget.set_button_enabled(1, True)
             thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
-            thread.start()
+            # thread.start()
 
     def thread_unwrapped_phase_calculation(self):
         """"""
         self.parent.unwrapped_phase = unwrap_phase(self.parent.wrapped_phase)/(2*np.pi)
+        self.parent.unwrapped_phase_done = True
         if self.parent.main_mode == 'simpleanalysis' or self.parent.main_submode == 'wrappedphase':
             self.submenu_widget.set_button_enabled(2, True)
 
