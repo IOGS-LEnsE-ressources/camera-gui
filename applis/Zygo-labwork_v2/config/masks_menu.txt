@@ -1,0 +1,7 @@
+# Menu Masks
+# Type; Title; Signal;
+B;circular_mask_button;circular_mask;
+B;rectangular_mask_button;rectangular_mask;
+B;polygon_mask_button;polygon_mask;
+S;;;
+E;;;
