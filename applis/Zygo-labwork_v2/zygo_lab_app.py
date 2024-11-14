@@ -279,7 +279,7 @@ class ZygoLabApp(QWidget):
         if event == translate("button_camera_settings_main_menu"):
             self.top_left_widget = CameraSettingsWidget(self.camera)
             self.top_left_widget.update_parameters()
-            self.layout.addWidget(self.self.top_left_widget, 2, 1)
+            self.layout.addWidget(self.top_left_widget, 2, 1)
             self.top_left_widget.zoom_activated.connect(self.zoom_action)
             self.bot_right_widget = ImageHistogramWidget()
             self.bot_right_widget.set_background('white')

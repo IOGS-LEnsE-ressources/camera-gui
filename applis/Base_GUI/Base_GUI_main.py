@@ -18,6 +18,11 @@ from PyQt6.QtWidgets import (
 from widgets.main_widget import MainWidget, load_menu
 
 
+def load_default_dictionary(language: str) -> bool:
+    """Initialize default dictionary from default_config.txt file"""
+    file_name_dict = f'./lang/dict_{language}.txt'
+    load_dictionary(file_name_dict)
+
 class MainWindow(QMainWindow):
     """
     Our main window.
@@ -31,6 +36,7 @@ class MainWindow(QMainWindow):
         Initialisation of the main Window.
         """
         super().__init__()
+        load_default_dictionary('FR')
         # GUI structure
         self.central_widget = MainWidget(self)
         self.setCentralWidget(self.central_widget)

@@ -18,7 +18,7 @@ https://iogs-lense-ressources.github.io/camera-gui/
 """
 
 import sys
-from PyQt6.QtWidgets import QVBoxLayout, QDialog, QLabel, QVBoxLayout, QApplication
+from PyQt6.QtWidgets import QGridLayout, QDialog, QLabel, QVBoxLayout, QApplication
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor, QKeyEvent, QMouseEvent
 import numpy as np
@@ -68,12 +68,13 @@ class CircularMaskSelection(QDialog):
 
     Examples
     --------
-    >>> image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
-    >>> dialog = CircularMaskSelection(image)
-    >>> dialog.exec()
+    image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
+    dialog = CircularMaskSelection(image)
+    dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray) -> None:
+    def __init__(self, image: np.ndarray,
+                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
         """
         Initializes the CircularMaskSelection dialog.
 
@@ -81,11 +82,13 @@ class CircularMaskSelection(QDialog):
         ----------
         image : np.ndarray
             The image on which the mask will be drawn.
+        help_text : str
+            Text displayed to help the user.
         """
         super().__init__()
 
         # Initialize layout and image attributes
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
         self.image = image
 
         # Convert image to QImage and QPixmap for display
@@ -97,13 +100,19 @@ class CircularMaskSelection(QDialog):
         self.point_layer = QPixmap(self.pixmap.size())
         self.point_layer.fill(Qt.GlobalColor.transparent)
 
+        # Create a QLabel to display help
+        self.help = QLabel(help_text)
+
         # Create a QLabel to display the image
         self.label = QLabel()
         self.label.setPixmap(self.pixmap)
 
         # Add the label to the layout
+        self.layout.addWidget(self.help)
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
+        self.layout.setRowStretch(0, 5)
+        self.layout.setRowStretch(1, 95)
 
         # Initialize points list and mask array
         self.points = []
@@ -158,7 +167,7 @@ class CircularMaskSelection(QDialog):
         # Draw a point on the point layer pixmap
         painter = QPainter(self.point_layer)
         point_size = 10
-        pen = QPen(Qt.GlobalColor.red, point_size)
+        pen = QPen(Qt.GlobalColor.yellow, point_size)
         painter.setPen(pen)
         painter.drawPoint(QPoint(x, y))
         painter.end()
@@ -245,7 +254,7 @@ class CircularMaskSelection(QDialog):
             # Draw the circle on the pixmap
             painter = QPainter(self.pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            pen = QPen(QColor(255, 0, 0), 2)
+            pen = QPen(Qt.GlobalColor.yellow,2)
             painter.setPen(pen)
             painter.drawEllipse(QPoint(x_center, y_center), radius, radius)
             painter.end()
@@ -341,12 +350,13 @@ class RectangularMaskSelection(QDialog):
 
     Examples
     --------
-    >>> image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
-    >>> dialog = RectangularMaskSelection(image)
-    >>> dialog.exec()
+    image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
+    dialog = RectangularMaskSelection(image)
+    dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray) -> None:
+    def __init__(self, image: np.ndarray,
+                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
         """
         Initializes the RectangularMaskSelection dialog.
 
@@ -541,12 +551,13 @@ class PolygonalMaskSelection(QDialog):
 
     Examples
     --------
-    >>> image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
-    >>> dialog = PolygonalMaskSelection(image)
-    >>> dialog.exec()
+    image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
+    dialog = PolygonalMaskSelection(image)
+    dialog.exec()
     """
 
-    def __init__(self, image: np.ndarray) -> None:
+    def __init__(self, image: np.ndarray,
+                 help_text: str = 'Select 3 differents points and then Click Enter') -> None:
         """
         Initializes the PolygonalMaskSelection dialog.
 
