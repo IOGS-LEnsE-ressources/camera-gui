@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 from matplotlib import colors
 
+
 def hariharan_algorithm(intensity: list[np.ndarray], mask: np.ndarray = None) -> np.ndarray:
     """
     Apply the Hariharan phase demodulation algorithm to a set of intensity measurements.
@@ -56,6 +57,7 @@ def hariharan_algorithm(intensity: list[np.ndarray], mask: np.ndarray = None) ->
     else:
         return np.arctan2(num, denum)
 
+
 def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, size: int = 25, title: str = ''):
     """Display a 3D surface."""
     # Array for displaying data on 3D projection
@@ -90,8 +92,14 @@ def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, size: int = 25, t
     plt.show()
 
 
-if __name__ == '__main__':
+def surface_statistics(surface):
+    # Calcul de PV (Peak-to-Valley)
+    PV = np.nanmax(surface) - np.nanmin(surface)
+    RMS = np.nanstd(surface)
+    return PV, RMS
 
+
+if __name__ == '__main__':
     X = np.linspace(-3, 3, 100)
     Y = np.linspace(-4, 5, 200)
     X, Y = np.meshgrid(X, Y)

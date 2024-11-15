@@ -106,6 +106,7 @@ class MainWindow(QMainWindow):
         self.zoom_window = QWidget()
         self.mask_created = False       # Almost one mask is created and selected
         self.acquisition_done = False   # Almost one acquisition is done and data are acquired
+        self.acquisition_number = 0
         self.images_opened = False      # Almost a set of 5 images is opened or acquired
         self.wrapped_phase_done = False      # Phase from acquisition is wrapped
         self.unwrapped_phase_done = False    # Phase from acquisition is unwrapped
@@ -124,6 +125,12 @@ class MainWindow(QMainWindow):
         self.wrapped_phase = None
         self.unwrapped_phase = None
         self.cropped_mask_phase = None
+        if 'Wedge Factor' in self.default_parameters:
+            self.wedge_factor = float(self.default_parameters['Wedge Factor'])
+        else:
+            self.wedge_factor = -1
+        self.pv_stats = []
+        self.rms_stats = []
 
         # Initialization of the camera
         # ----------------------------

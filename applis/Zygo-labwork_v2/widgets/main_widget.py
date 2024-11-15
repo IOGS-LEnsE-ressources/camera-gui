@@ -24,6 +24,7 @@ from lensepy.images.conversion import *
 from widgets.camera import *
 from widgets.images import *
 from widgets.masks import *
+from widgets.analysis import *
 from widgets.piezo import *
 from widgets.acquisition import *
 from widgets.xyz_chart_widget import *
@@ -458,9 +459,13 @@ class MainWidget(QWidget):
         elif self.parent.main_mode == 'piezo':
             # Display options widget with Masks Options
             self.set_options_widget(PiezoOptionsWidget(self))
+            html_page = HTMLWidget('./docs/html/piezo.html', './docs/html/styles.css')
+            self.set_bot_right_widget(html_page)
 
         elif self.parent.main_mode == 'acquisition':
             self.action_acquisition()
+            html_page = HTMLWidget('./docs/html/acquisition.html', './docs/html/styles.css')
+            self.set_bot_right_widget(html_page)
 
         elif self.parent.main_mode == 'simpleanalysis':
             try:
@@ -579,39 +584,7 @@ class MainWidget(QWidget):
                     self.top_left_widget.set_image_from_array(image * mask)
                 else:
                     self.top_left_widget.set_image_from_array(image)
-            # Display image with mask in the top right widget
-            self.set_top_right_widget(ImagesDisplayWidget(self))
-            new_size = self.parent.size()
-            width = new_size.width()
-            height = new_size.height()
-            wi = (width*RIGHT_WIDTH)//100
-            he = (height*TOP_HEIGHT)//100
-            self.top_right_widget.update_size(wi, he)
-
-            images = self.parent.images.get_images_set(0)
-            mask = self.parent.masks.get_global_mask()
-            if mask is not None:
-                # Crop images around the mask
-                top_left, bottom_right = find_mask_limits(mask)
-                height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
-                pos_x, pos_y = top_left[1], top_left[0]
-                self.parent.cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
-                images_c = crop_images(images, (height, width), (pos_x, pos_y))
-            else:
-                images_c = images
-
-            self.top_right_widget.set_image_from_array(images_c[0])
-
-            self.set_right_widget(Surface3DWidget(self))
-            mask = self.parent.cropped_mask_phase
-            if mask is not None:
-                size_display = int(mask.shape[1] / 100) #
-                print(f'S = {int(mask.shape[1] / 100)}')
-                self.top_right_widget.set_data(self.parent.wrapped_phase,
-                                               mask, bar_title=r"Phase (rad)", size=size_display)
-            else:
-                print('No mask !')
-            #display_3D_surface(self.parent.wrapped_phase, mask, size=20)
+            self.display_3D_wrapped_phase()
 
         elif self.parent.main_submode == 'unwrappedphase':
             if self.parent.images_opened:
@@ -621,14 +594,30 @@ class MainWidget(QWidget):
                     self.top_left_widget.set_image_from_array(image * mask)
                 else:
                     self.top_left_widget.set_image_from_array(image)
-            self.set_right_widget(Surface3DWidget(self))
-            mask = self.parent.cropped_mask_phase
-            if mask is not None:
-                self.top_right_widget.set_data(self.parent.unwrapped_phase, mask,
-                                               bar_title=r"Default magnitude ('$\lambda$')", size=20)
-            else:
-                print('No mask !')
-            #display_3D_surface(self.parent.unwrapped_phase, mask, size=20)
+            self.display_3D_unwrapped_phase()
+
+    def display_right(self):
+        # Display image with mask in the top right widget
+        self.set_top_right_widget(ImagesDisplayWidget(self))
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width * RIGHT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
+        self.top_right_widget.update_size(wi, he)
+
+        images = self.parent.images.get_images_set(0)
+        mask = self.parent.masks.get_global_mask()
+        if mask is not None:
+            # Crop images around the mask
+            top_left, bottom_right = find_mask_limits(mask)
+            height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
+            pos_x, pos_y = top_left[1], top_left[0]
+            self.parent.cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
+            images_c = crop_images(images, (height, width), (pos_x, pos_y))
+        else:
+            images_c = images
+        self.top_right_widget.set_image_from_array(images_c[0])
 
     def clear_layout(self, row: int, column: int) -> None:
         """
@@ -762,6 +751,28 @@ class MainWidget(QWidget):
         else:
             self.top_left_widget.set_image_from_array(image)
         self.update_size()
+
+    def display_3D_wrapped_phase(self):
+        """Display a 3D surface in the right part of the interface."""
+        self.set_right_widget(Surface3DWidget(self))
+        mask = self.parent.cropped_mask_phase
+        displayed_surface = self.parent.wrapped_phase * self.parent.wedge_factor
+        if mask is not None:
+            self.top_right_widget.set_data(displayed_surface, mask,
+                                           bar_title=r"Default magnitude ('$\lambda$')", size=20)
+        else:
+            print('No mask !')
+
+    def display_3D_unwrapped_phase(self):
+        """Display a 3D surface in the right part of the interface."""
+        self.set_right_widget(Surface3DWidget(self))
+        mask = self.parent.cropped_mask_phase
+        displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
+        if mask is not None:
+            self.top_right_widget.set_data(displayed_surface, mask,
+                                           bar_title=r"Default magnitude ('$\lambda$')", size=20)
+        else:
+            print('No mask !')
 
     def action_camera(self):
         """Action performed when Camera is clicked in the menu."""
@@ -915,8 +926,10 @@ class MainWidget(QWidget):
             self.options_widget.set_masks_status(False)
 
     def action_masks_visualization(self, event=None):
+        """Action performed when masks are displayed."""
         try:
-            """Action performed when masks are displayed."""
+            if self.parent.mask_created is False:
+                self.parent.masks = Masks()
             # display first image if present
             self.display_first_image()
             # Display options widget with Masks Options
@@ -957,10 +970,32 @@ class MainWidget(QWidget):
 
     def action_simple_acquisition(self):
         """Action performed when a simple acquisition is required."""
-        # Start thread for acquiring images
+        # If piezo and camera are connected
         if self.parent.piezo_connected and self.parent.camera_connected:
+            # Delete old data
+            self.parent.images = Images()
+            self.parent.acquisition_done = False
+            self.parent.images_opened = False
+            self.parent.wrapped_phase_done = False
+            self.parent.unwrapped_phase_done = False
+            # Start thread for acquiring images
             thread = threading.Thread(target=self.thread_simple_acquisition)
             thread.start()
+        else:
+            if self.parent.piezo_connected is False and self.parent.camera_connected is False:
+                text = "Piezo and camera are not connected."
+            elif self.parent.camera_connected is False:
+                text = "Piezo is not connected."
+            else:
+                text = "Camera is not connected."
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No Piezo or Camera Connected")
+            dlg.setText(text)
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
 
     def action_acquisition(self):
         # display masked image if present
@@ -991,7 +1026,7 @@ class MainWidget(QWidget):
             # Wait end of movement
             time.sleep(0.6)
             # Acquire image
-            image = self.parent.displayed_image.copy().squeeze()
+            image = self.parent.displayed_image.copy().squeeze().astype(np.float32)
 
             self.options_widget.add_image(image, voltage_list[i])
             self.top_right_widget.set_image_from_array(image, text=f'Image {i+1}')
@@ -1012,6 +1047,9 @@ class MainWidget(QWidget):
         """Action performed when a simple analysis is required.
         Wrapped, then unwrapped phase processes are started in a thread.
         """
+        self.set_options_widget(SimpleAnalysisOptionsWidget())
+        self.options_widget.set_wedge_factor(self.parent.wedge_factor)
+        self.options_widget.wedge_changed.connect(self.action_wedge_changed)
         if self.parent.wrapped_phase_done is False:
             self.submenu_widget.set_button_enabled(1, False)
             self.submenu_widget.set_button_enabled(2, False)
@@ -1027,6 +1065,17 @@ class MainWidget(QWidget):
             self.top_left_widget.set_image_from_array(image)
         html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
         self.set_bot_right_widget(html_page)
+        self.parent.acquisition_number = 1
+
+    def action_wedge_changed(self):
+        """Action performed when the wedge factor changed."""
+        # Change the wedge factor
+        self.parent.wedge_factor = self.options_widget.get_wedge_factor()
+        # Update 3D surface display
+        if self.parent.main_submode == 'wrappedphase':
+            self.display_3D_wrapped_phase()
+        elif self.parent.main_submode == 'unwrappedphase':
+            self.display_3D_unwrapped_phase()
 
     def thread_wrapped_phase_calculation(self):
         """Thread to calculate wrapped phase from 5 images."""
@@ -1037,24 +1086,31 @@ class MainWidget(QWidget):
         if mask is not None:
             # Crop images around the mask
             top_left, bottom_right = find_mask_limits(mask)
+            print(f"Mask Limits : {top_left} / {bottom_right}")
             height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
             pos_x, pos_y = top_left[1], top_left[0]
             self.parent.cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
             # Filtering images to avoid noise
-            images_f = list(map(lambda x: gaussian_filter(x, 5), images_c))
+            images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
 
             # Process Phase
-            self.parent.wrapped_phase = hariharan_algorithm(images_f, self.parent.cropped_mask_phase)
+            wrapped_phase = hariharan_algorithm(images_f, self.parent.cropped_mask_phase)
 
-            self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase),
-                                                           self.parent.wrapped_phase)
+
+            print(f'Image = {images[0].shape} / {images[0].dtype}')
+            print(f'Image C = {images_c[0].shape} / {images_c[0].dtype}')
+            print(f'Image F = {images_f[0].shape} / {images_f[0].dtype}')
+            print(f'Cropped Mask Type = {type(self.parent.cropped_mask_phase)} / {self.parent.cropped_mask_phase.dtype}')
+            print(f'Phase Type = {type(wrapped_phase)} / {wrapped_phase.dtype}')
+            self.parent.wrapped_phase = wrapped_phase
+            # self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase), wrapped_phase)
             # End of process
             self.parent.wrapped_phase_done = True
             if self.parent.main_mode == 'simpleanalysis':
                 self.submenu_widget.set_button_enabled(1, True)
             thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
-            # thread.start()
+            thread.start()
 
     def thread_unwrapped_phase_calculation(self):
         """"""
@@ -1067,6 +1123,25 @@ class MainWidget(QWidget):
         self.parent.unwrapped_phase_done = True
         if self.parent.main_mode == 'simpleanalysis' or self.parent.main_submode == 'wrappedphase':
             self.submenu_widget.set_button_enabled(2, True)
+
+        thread = threading.Thread(target=self.thread_statistics_calculation)
+        thread.start()
+
+    def thread_statistics_calculation(self):
+        """Process PeakValley and RMS statistics on Unwrapped phase."""
+        try:
+            self.parent.pv = []
+            self.parent.rms = []
+            if self.parent.unwrapped_phase_done:
+                for i in range(self.parent.acquisition_number):
+                    pv, rms = surface_statistics(self.parent.unwrapped_phase)
+                    self.parent.pv_stats.append(np.round(pv, 2))
+                    self.parent.rms_stats.append(np.round(rms, 2))
+                if self.parent.main_mode == 'simpleanalysis':
+                    #self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
+                    print(self.parent.pv_stats)
+        except Exception as e:
+            print(f'Thread PV : {e}')
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
