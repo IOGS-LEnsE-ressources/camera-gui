@@ -578,7 +578,7 @@ class CircularMaskSelection(QDialog):
         # Draw a point on the point layer pixmap
         painter = QPainter(self.point_layer)
         point_size = 10
-        pen = QPen(Qt.GlobalColor.yellow, point_size)
+        pen = QPen(Qt.GlobalColor.blue, point_size)
         painter.setPen(pen)
         painter.drawPoint(QPoint(x, y))
         painter.end()
@@ -665,7 +665,7 @@ class CircularMaskSelection(QDialog):
             # Draw the circle on the pixmap
             painter = QPainter(self.pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            pen = QPen(Qt.GlobalColor.yellow,2)
+            pen = QPen(Qt.GlobalColor.blue,2)
             painter.setPen(pen)
             painter.drawEllipse(QPoint(x_center, y_center), radius, radius)
             painter.end()
@@ -862,7 +862,7 @@ class RectangularMaskSelection(QDialog):
         # Draw a point on the point layer pixmap
         painter = QPainter(self.point_layer)
         point_size = 10
-        pen = QPen(Qt.GlobalColor.red, point_size)
+        pen = QPen(Qt.GlobalColor.blue, point_size)
         painter.setPen(pen)
         painter.drawPoint(QPoint(x, y))
         painter.end()
@@ -886,7 +886,7 @@ class RectangularMaskSelection(QDialog):
 
         # Draw the rectangle on the pixmap
         painter = QPainter(self.pixmap)
-        pen = QPen(QColor(255, 0, 0), 2)
+        pen = QPen(QColor(0, 0, 255), 2)
         painter.setPen(pen)
         painter.drawRect(x1, y1, (x2-x1), (y2-y1))
         painter.end()
@@ -1086,7 +1086,7 @@ class PolygonalMaskSelection(QDialog):
         # Draw a point on the point layer pixmap
         painter = QPainter(self.point_layer)
         point_size = 10
-        pen = QPen(Qt.GlobalColor.red, point_size)
+        pen = QPen(Qt.GlobalColor.blue, point_size)
         painter.setPen(pen)
         painter.drawPoint(QPoint(x, y))
         painter.end()
@@ -1120,7 +1120,7 @@ class PolygonalMaskSelection(QDialog):
 
         # Draw polygon on the main pixmap
         painter = QPainter(self.pixmap)
-        pen = QPen(QColor(255, 0, 0), 2)
+        pen = QPen(QColor(0, 0, 255), 2)
         painter.setPen(pen)
         painter.drawPolygon(points)
         painter.end()
