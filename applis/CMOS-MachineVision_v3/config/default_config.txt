@@ -9,7 +9,7 @@ clock_freq;15
 exposure;40000
 blacklevel;0
 framerate;10
-colormode;Mono12
+colormode;BayerRG8
 
 # AOI
 aoi_x;0
