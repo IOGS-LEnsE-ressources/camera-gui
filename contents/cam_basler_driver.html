@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Basler / Driver &mdash; Camera GUI 0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-toolbox-code.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -99,7 +99,7 @@
 <section id="import-the-camerabasler-class">
 <h2>Import the CameraBasler class<a class="headerlink" href="#import-the-camerabasler-class" title="Link to this heading"></a></h2>
 <p>To access <code class="xref py py-class docutils literal notranslate"><span class="pre">CameraBasler</span></code> class and its functions, import the class in your Python code like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">camera_basler</span> <span class="kn">import</span> <span class="n">CameraBasler</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">camera_basler</span><span class="w"> </span><span class="kn">import</span> <span class="n">CameraBasler</span>
 </pre></div>
 </div>
 </section>
@@ -108,7 +108,7 @@
 <section id="device-object">
 <h3>Device object<a class="headerlink" href="#device-object" title="Link to this heading"></a></h3>
 <p>First of all, you need to create a device from the <code class="samp docutils literal notranslate"><span class="pre">pypylon</span></code> module like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pypylon</span> <span class="kn">import</span> <span class="n">pylon</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pypylon</span><span class="w"> </span><span class="kn">import</span> <span class="n">pylon</span>
 <span class="n">my_cam_dev</span> <span class="o">=</span> <span class="n">pylon</span><span class="o">.</span><span class="n">InstantCamera</span><span class="p">(</span><span class="n">pylon</span><span class="o">.</span><span class="n">TlFactory</span><span class="o">.</span><span class="n">GetInstance</span><span class="p">()</span><span class="o">.</span><span class="n">CreateFirstDevice</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -350,7 +350,7 @@
 </tbody>
 </table>
 <p>The simplest way to display images in Python is to use <strong>Matplotlib</strong> library, as it shows in the next exemple.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -379,7 +379,7 @@
 </section>
 <section id="complete-example">
 <h3>Complete example<a class="headerlink" href="#complete-example" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
     <span class="n">my_cam_dev</span> <span class="o">=</span> <span class="n">pylon</span><span class="o">.</span><span class="n">InstantCamera</span><span class="p">(</span><span class="n">pylon</span><span class="o">.</span><span class="n">TlFactory</span><span class="o">.</span><span class="n">GetInstance</span><span class="p">()</span><span class="o">.</span><span class="n">CreateFirstDevice</span><span class="p">())</span>
 
