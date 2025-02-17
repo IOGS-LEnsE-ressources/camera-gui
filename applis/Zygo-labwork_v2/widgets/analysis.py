@@ -172,6 +172,7 @@ class StatisticsTableWidget(QTableWidget):
         self.show_button_list = []
         self.setColumnCount(3)  # 3 columns
         self.setHorizontalHeaderLabels(["Set", "PV", "RMS"])
+        self.setColumnWidth(0, 15)
         self.setStyleSheet("""
             QHeaderView::section {
                 background-color: lightblue;

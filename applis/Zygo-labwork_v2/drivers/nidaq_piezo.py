@@ -23,12 +23,14 @@ class NIDaqPiezo:
 
     def __init__(self) -> None:
         """Initialize the NI Daq with the firts device."""
-        local_system = nidaqmx.system.System.local()
+        # local_system = nidaqmx.system.System.local()
         self.name = None
         self.channel = 0
+        '''
         if len(local_system.devices) != 0:
             device_first = local_system.devices[0]
             self.name = device_first.name
+        '''
 
     def get_piezo(self):
         """Return the name of the piezo."""

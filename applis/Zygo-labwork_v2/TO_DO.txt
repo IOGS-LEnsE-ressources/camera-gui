@@ -1,6 +1,8 @@
 ## ZYGO v2 APP
 ==============
 
+/!\ MODIFICATION OF NI_DAQ CLASS !
+
 ### Bugs to delete
 ------------------
 -->   Delete wrapped and unwrapped calculations if mask changed
@@ -10,7 +12,7 @@
 
 ### Functions to add
 --------------------
--->   Process PV and RMS calculations in Wrapped and Unwrapped mode (simple analysis)
+
 -->   Process Zernike coefficients 1, 2 and 3 for tilt correction
 -->   Add Tilt correction button in simple analysis mode (Unwrapped)
 -->   Multiple acquisition : Mean on a set of images + display !!

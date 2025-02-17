@@ -40,6 +40,7 @@ BOT_LEFT_ROW, BOT_LEFT_COL = 2, 1
 BOT_RIGHT_ROW, BOT_RIGHT_COL = 2, 2
 SUBMENU_ROW, SUBMENU_COL = 0, 0
 OPTIONS_ROW, OPTIONS_COL = 0, 1
+SUBOPTIONS_ROW, SUBOPTIONS_COL = 0, 2
 
 
 # Other functions
@@ -362,11 +363,14 @@ class MainWidget(QWidget):
         self.bot_left_widget.setLayout(self.bot_left_layout)
         self.bot_left_layout.setColumnStretch(0, 50)
         self.bot_left_layout.setColumnStretch(1, 50)
+        self.bot_left_layout.setColumnStretch(2, 50)
         self.submenu_widget = QWidget()
         self.options_widget = QWidget()
+        self.suboptions_widget = QWidget()
         self.layout.addWidget(self.title_label, 0, 0, 1, 3)
         self.bot_left_layout.addWidget(self.submenu_widget, SUBMENU_ROW, SUBMENU_COL)
         self.bot_left_layout.addWidget(self.options_widget, OPTIONS_ROW, OPTIONS_COL)
+        self.bot_left_layout.addWidget(self.suboptions_widget, SUBOPTIONS_ROW, SUBOPTIONS_COL)
         self.layout.addWidget(self.bot_left_widget, BOT_LEFT_ROW, BOT_LEFT_COL)
         # Add elements to the main layout
         self.layout.addWidget(self.top_left_widget, TOP_LEFT_ROW, TOP_LEFT_COL)
@@ -606,6 +610,7 @@ class MainWidget(QWidget):
                     self.top_left_widget.set_image_from_array(image * mask)
                 else:
                     self.top_left_widget.set_image_from_array(image)
+                self.set_suboptions_widget(AcquisitionSubOptionsWidget(self))
             self.display_3D_unwrapped_phase()
 
     def display_right(self):
@@ -734,6 +739,15 @@ class MainWidget(QWidget):
         self.clear_sublayout(OPTIONS_COL)
         self.options_widget = widget
         self.bot_left_layout.addWidget(self.options_widget, OPTIONS_ROW, OPTIONS_COL)
+
+    def set_suboptions_widget(self, widget):
+        """
+        Modify the options widget.
+        :param widget: Widget of the options.
+        """
+        self.clear_sublayout(SUBOPTIONS_COL)
+        self.options_widget = widget
+        self.bot_left_layout.addWidget(self.options_widget, SUBOPTIONS_ROW, SUBOPTIONS_COL)
 
     def get_list_menu(self, menu):
         """ """

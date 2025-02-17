@@ -12,7 +12,7 @@ import sys, os
 import numpy as np
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout, QTableWidget,
-    QLabel, QComboBox, QPushButton,
+    QLabel, QComboBox, QPushButton, QCheckBox,
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -43,10 +43,10 @@ class AcquisitionOptionsWidget(QWidget):
         # Table of images
         self.images_table = AcquisitionTableWidget(self)
 
-
         # Add graphical elements to the layout
         self.layout.addWidget(self.label_acquisition_title, 0, 0)
         self.layout.addWidget(self.images_table, 1, 0)
+        self.layout.addStretch()
 
     def add_image(self, new_image: np.ndarray, voltage: float = 0.0):
         """Add a new image in the list."""
@@ -111,6 +111,29 @@ class AcquisitionTableWidget(QTableWidget):
                 print(f'Display {index+1}')
                 # Show the ith mask on the image
                 self.parent.parent.action_masks_visualization(str(index+1))
+
+
+class AcquisitionSubOptionsWidget(QWidget):
+    """Acquisition SubOptions."""
+
+    def __init__(self, parent=None) -> None:
+        """Default constructor of the class.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        # Title
+        self.label_acquisition_title = QLabel(translate("label_sub_acquisition_title"))
+        self.label_acquisition_title.setStyleSheet(styleH1)
+        self.label_acquisition_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.check_tilt = QCheckBox(translate("check_tilt"))
+
+        # Add graphical elements to the layout
+        self.layout.addWidget(self.label_acquisition_title)
+        self.layout.addWidget(self.check_tilt)
+        self.layout.addStretch()
 
 
 if __name__ == '__main__':
