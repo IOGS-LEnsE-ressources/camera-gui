@@ -110,7 +110,9 @@ class MainWindow(QMainWindow):
         self.images_opened = False      # Almost a set of 5 images is opened or acquired
         self.wrapped_phase_done = False      # Phase from acquisition is wrapped
         self.unwrapped_phase_done = False    # Phase from acquisition is unwrapped
+        self.masks_changed = False    # Check if masks changed
         self.coeff_calculated = False   # Zernike coefficients are calculated
+        self.coeff_list = []
 
         # Data from camera
         # ----------------------------
@@ -131,6 +133,7 @@ class MainWindow(QMainWindow):
             self.wedge_factor = -1
         self.pv_stats = []
         self.rms_stats = []
+        self.analysis_completed = False
 
         # Initialization of the camera
         # ----------------------------
@@ -179,14 +182,6 @@ class MainWindow(QMainWindow):
     def stop_thread(self):
         """Stop the camera thread."""
         pass
-        '''
-        try:
-            if self.camera_connected:
-                if self.camera_thread.running:
-                    self.camera_thread.stop()
-        except Exception as e:
-            print(f'Stop Thread : {e}')
-        '''
 
     def main_action(self, event):
         """

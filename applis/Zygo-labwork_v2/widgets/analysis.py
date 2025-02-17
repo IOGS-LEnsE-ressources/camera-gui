@@ -11,12 +11,12 @@ Creation : nov/2024
 import sys, os
 import numpy as np
 from PyQt6.QtWidgets import (
-    QWidget, QGridLayout, QVBoxLayout, QTableWidget,
+    QWidget, QGridLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
     QLabel, QComboBox, QPushButton,
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont
+from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QBrush
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensepy.pyqt6.widget_slider import *
@@ -172,42 +172,55 @@ class StatisticsTableWidget(QTableWidget):
         self.show_button_list = []
         self.setColumnCount(3)  # 3 columns
         self.setHorizontalHeaderLabels(["Set", "PV", "RMS"])
+        self.setStyleSheet("""
+            QHeaderView::section {
+                background-color: lightblue;
+                color: black;
+                font-weight: bold;
+            }
+        """)
         self.verticalHeader().setVisible(False)
+
+    def _set_line(self, row, cell1, cell2, cell3, bg:str='white'):
+        item = QTableWidgetItem(cell1)
+        item.setBackground(QBrush(QColor(bg)))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)  # change the alignment
+        self.setItem(row, 0, item)
+        item = QTableWidgetItem(cell2)
+        item.setBackground(QBrush(QColor(bg)))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)  # change the alignment
+        self.setItem(row, 1, item)
+        item = QTableWidgetItem(cell3)
+        item.setBackground(QBrush(QColor(bg)))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)  # change the alignment
+        self.setItem(row, 2, item)
 
     def set_values(self, pv: list[float], rms: list[float]):
         """Add new values.
 
         """
-        if len(pv) == len(rms):
-            index_min = 0
-            # If more than 1 data, add mean of PV and RMS values
-            if len(pv) > 1:
-                self.insertRow(0)
-                label = QLabel(f'ALL')
-                widget = qobject_to_widget(label)
-                widget.setStyleSheet("background-color: #0A3250; color: white;")
-                self.setCellWidget(0, 0, widget) # Name of the set
-                label = QLabel(f'{np.round(np.mean(pv), 2)}')
-                widget = qobject_to_widget(label)
-                widget.setStyleSheet("background-color: #0A3250; color: white;")
-                self.setCellWidget(0, 1, widget) # PV value of the set
-                label = QLabel(f'{np.round(np.mean(rms))}')
-                widget = qobject_to_widget(label)
-                widget.setStyleSheet("background-color: #0A3250; color: white;")
-                self.setCellWidget(0, 2, widget) # RMS value of the set
-                index_min = 1
+        try:
+            if len(pv) == len(rms):
+                if len(pv) > 1:
+                    self.setRowCount(len(pv)+2)
+                    # Process global PV and RMS
+                    std_pv = np.std(pv)
+                    mean_pv = np.mean(pv)
+                    std_rms = np.std(rms)
+                    mean_rms = np.mean(rms)
+                    # Display global PV and RMS
+                    self._set_line(0, 'Mean', str(mean_pv),
+                                   str(mean_rms), bg='lightblue')
+                    self._set_line(0, 'STDev', str(std_pv),
+                                   str(std_rms), bg='lightblue')
+                    for row in range(len(pv)):
+                        self._set_line(row+2, str(row+1), str(pv[row]), str(rms[row]))
+                else:
+                    self.setRowCount(len(pv))
+                    self._set_line(0, str(1), str(pv[0]), str(rms[0]))
 
-            for i in range(len(pv)):
-                self.insertRow(i+index_min)
-                label = QLabel(f'Set {i+1}')
-                widget = qobject_to_widget(label)
-                self.setCellWidget(i+index_min, 0, widget) # Name of the set
-                label = QLabel(f'{pv[i]}')
-                widget = qobject_to_widget(label)
-                self.setCellWidget(i+index_min, 1, widget) # PV value of the set
-                label = QLabel(f'{rms[i]}')
-                widget = qobject_to_widget(label)
-                self.setCellWidget(i+index_min, 2, widget) # RMS value of the set
+        except Exception as e:
+            print(f'Stat Table {e}')
 
     def erase_all(self):
         """Delete all the rows and reconstruct the first line (header)."""

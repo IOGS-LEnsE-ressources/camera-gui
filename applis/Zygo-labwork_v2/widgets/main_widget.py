@@ -41,6 +41,7 @@ BOT_RIGHT_ROW, BOT_RIGHT_COL = 2, 2
 SUBMENU_ROW, SUBMENU_COL = 0, 0
 OPTIONS_ROW, OPTIONS_COL = 0, 1
 
+
 # Other functions
 def load_menu(file_path: str, menu):
     """
@@ -51,17 +52,25 @@ def load_menu(file_path: str, menu):
         data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
         # Populate the dictionary with key-value pairs from the CSV file
         for element, title, signal, _ in data:
-            if element == 'B':     # button
+            if element == 'B':  # button
                 menu.add_button(translate(title), signal)
-            elif element == 'O':   # options button
+            elif element == 'O':  # options button
                 menu.add_button(translate(title), signal, option=True)
-            elif element == 'L':   # label title
+            elif element == 'L':  # label title
                 menu.add_label_title(translate(title))
-            elif element == 'S':   # blank space
+            elif element == 'S':  # blank space
                 menu.add_space()
         menu.display_layout()
     else:
         print('MENU File error')
+
+
+def statistics_surface(surface):
+    # Process (Peak-to-Valley)
+    PV = np.nanmax(surface) - np.nanmin(surface)
+    RMS = np.nanstd(surface)
+    return PV, RMS
+
 
 # %% Widgets
 class MenuWidget(QWidget):
@@ -71,7 +80,7 @@ class MenuWidget(QWidget):
 
     menu_clicked = pyqtSignal(str)
 
-    def __init__(self, parent=None, title: str='label_title_main_menu', sub: bool=False):
+    def __init__(self, parent=None, title: str = 'label_title_main_menu', sub: bool = False):
         """
         Default Constructor.
         :param parent:
@@ -104,7 +113,7 @@ class MenuWidget(QWidget):
             else:
                 self.layout.addStretch()
 
-    def add_button(self, title: str, signal: str=None, option: bool=False):
+    def add_button(self, title: str, signal: str = None, option: bool = False):
         """
         Add a button into the interface.
         :param title: Title of the button.
@@ -141,19 +150,18 @@ class MenuWidget(QWidget):
                 if self.buttons_enabled[i]:
                     element.setStyleSheet(unactived_button)
 
-
     def set_button_enabled(self, button_index: int, value: bool):
         """
         Set a button enabled.
         :param button_index: Index of the button to update.
         :param value: True if the button must be enabled.
         """
-        self.buttons_enabled[button_index-1] = value
-        self.buttons_list[button_index-1].setEnabled(value)
+        self.buttons_enabled[button_index - 1] = value
+        self.buttons_list[button_index - 1].setEnabled(value)
         if value:
-            self.buttons_list[button_index-1].setStyleSheet(unactived_button)
+            self.buttons_list[button_index - 1].setStyleSheet(unactived_button)
         else:
-            self.buttons_list[button_index-1].setStyleSheet(disabled_button)
+            self.buttons_list[button_index - 1].setStyleSheet(disabled_button)
 
     def add_space(self):
         """
@@ -174,7 +182,7 @@ class MenuWidget(QWidget):
         for i, element in enumerate(self.buttons_list):
             if sender == element:
                 if self.submenu is False:
-                # Update Sub Menu
+                    # Update Sub Menu
                     self.parent.submenu_widget = MenuWidget(self.parent,
                                                             title=f'sub_menu_{self.buttons_signal[i]}',
                                                             sub=True)
@@ -203,7 +211,7 @@ class MenuWidget(QWidget):
                     element.setStyleSheet(disabled_button)
                     element.setEnabled(False)
 
-    def set_enabled(self, index: int, value:bool=True):
+    def set_enabled(self, index: int, value: bool = True):
         """
         Set enabled a button.
         :param index:
@@ -238,10 +246,12 @@ class MenuWidget(QWidget):
     def submenu_is_clicked(self, event):
         self.menu_clicked.emit(event)
 
+
 class TitleWidget(QWidget):
     """
     Widget containing the title of the application and the LEnsE logo.
     """
+
     def __init__(self, parent=None):
         """
         Default Constructor.
@@ -273,11 +283,13 @@ class TitleWidget(QWidget):
 
         self.setLayout(self.layout)
 
+
 class HTMLWidget(QWidget):
     """
     Widget displaying an HTML content.
     """
-    def __init__(self, url: str='', css: str=''):
+
+    def __init__(self, url: str = '', css: str = ''):
         """Default constructor.
         :param url: filepath or url to the HTML page. Default ''.
         """
@@ -655,8 +667,8 @@ class MainWidget(QWidget):
         new_size = self.parent.size()
         width = new_size.width()
         height = new_size.height()
-        wi = (width*LEFT_WIDTH)//100
-        he = (height*TOP_HEIGHT)//100
+        wi = (width * LEFT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
         self.top_left_widget.update_size(wi, he, aoi)
 
     def set_top_left_widget(self, widget):
@@ -747,7 +759,7 @@ class MainWidget(QWidget):
             image = self.parent.displayed_image.copy()
         if self.parent.mask_created:
             mask = self.parent.masks.get_global_mask()
-            self.top_left_widget.set_image_from_array(image*mask)
+            self.top_left_widget.set_image_from_array(image * mask)
         else:
             self.top_left_widget.set_image_from_array(image)
         self.update_size()
@@ -939,8 +951,8 @@ class MainWidget(QWidget):
             new_size = self.parent.size()
             width = new_size.width()
             height = new_size.height()
-            wi = (width*RIGHT_WIDTH)//100
-            he = (height*TOP_HEIGHT)//100
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
             self.top_right_widget.update_size(wi, he)
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
@@ -1029,7 +1041,7 @@ class MainWidget(QWidget):
             image = self.parent.displayed_image.copy().squeeze().astype(np.float32)
 
             self.options_widget.add_image(image, voltage_list[i])
-            self.top_right_widget.set_image_from_array(image, text=f'Image {i+1}')
+            self.top_right_widget.set_image_from_array(image, text=f'Image {i + 1}')
             time.sleep(0.2)
 
         self.parent.images.add_set_images(self.options_widget.images_table.images_list)
@@ -1038,7 +1050,6 @@ class MainWidget(QWidget):
         self.main_menu.set_enabled(8, True)
         image = generate_images_grid(self.options_widget.images_table.images_list)
         self.top_right_widget.set_image_from_array(image, text=f'ALL')
-
 
         if self.parent.main_mode == 'acquisition':
             self.submenu_widget.set_button_enabled(2, True)
@@ -1066,6 +1077,9 @@ class MainWidget(QWidget):
         html_page = HTMLWidget('./docs/html/simple_analysis.html', './docs/html/styles.css')
         self.set_bot_right_widget(html_page)
         self.parent.acquisition_number = 1
+
+        if self.parent.main_mode == 'simpleanalysis' and self.parent.analysis_completed:
+            self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
 
     def action_wedge_changed(self):
         """Action performed when the wedge factor changed."""
@@ -1097,11 +1111,11 @@ class MainWidget(QWidget):
             # Process Phase
             wrapped_phase = hariharan_algorithm(images_f, self.parent.cropped_mask_phase)
 
-
             print(f'Image = {images[0].shape} / {images[0].dtype}')
             print(f'Image C = {images_c[0].shape} / {images_c[0].dtype}')
             print(f'Image F = {images_f[0].shape} / {images_f[0].dtype}')
-            print(f'Cropped Mask Type = {type(self.parent.cropped_mask_phase)} / {self.parent.cropped_mask_phase.dtype}')
+            print(
+                f'Cropped Mask Type = {type(self.parent.cropped_mask_phase)} / {self.parent.cropped_mask_phase.dtype}')
             print(f'Phase Type = {type(wrapped_phase)} / {wrapped_phase.dtype}')
             self.parent.wrapped_phase = wrapped_phase
             # self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase), wrapped_phase)
@@ -1115,7 +1129,7 @@ class MainWidget(QWidget):
     def thread_unwrapped_phase_calculation(self):
         """"""
         # Process unwrapping phase
-        self.parent.unwrapped_phase = unwrap_phase(self.parent.wrapped_phase)/(2*np.pi)
+        self.parent.unwrapped_phase = unwrap_phase(self.parent.wrapped_phase) / (2 * np.pi)
 
         self.parent.unwrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase),
                                                          self.parent.unwrapped_phase)
@@ -1129,22 +1143,21 @@ class MainWidget(QWidget):
 
     def thread_statistics_calculation(self):
         """Process PeakValley and RMS statistics on Unwrapped phase."""
-        try:
-            self.parent.pv = []
-            self.parent.rms = []
-            if self.parent.unwrapped_phase_done:
-                for i in range(self.parent.acquisition_number):
-                    pv, rms = surface_statistics(self.parent.unwrapped_phase)
-                    self.parent.pv_stats.append(np.round(pv, 2))
-                    self.parent.rms_stats.append(np.round(rms, 2))
-                if self.parent.main_mode == 'simpleanalysis':
-                    #self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
-                    print(self.parent.pv_stats)
-        except Exception as e:
-            print(f'Thread PV : {e}')
+        self.parent.pv = []
+        self.parent.rms = []
+        if self.parent.unwrapped_phase_done:
+            for i in range(self.parent.acquisition_number):
+                pv, rms = statistics_surface(self.parent.unwrapped_phase)
+                self.parent.pv_stats.append(np.round(pv, 2))
+                self.parent.rms_stats.append(np.round(rms, 2))
+            self.parent.analysis_completed = True
+            if self.parent.main_mode == 'simpleanalysis':
+                self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
+
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
+
 
     class MyWindow(QMainWindow):
         def __init__(self):
