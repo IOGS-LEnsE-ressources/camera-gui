@@ -1,0 +1,14 @@
+## ZYGO v2 APP
+==============
+
+### Bugs to delete
+------------------
+-->   Delete wrapped and unwrapped calculations if mask changed
+-->   Masks upgrade and display
+
+
+### Functions to add
+--------------------
+-->   Process PV and RMS calculations in Wrapped and Unwrapped mode (simple analysis)
+-->   Process Zernike coefficients 1, 2 and 3 for tilt correction
+-->   Add Tilt correction button in simple analysis mode (Unwrapped)
