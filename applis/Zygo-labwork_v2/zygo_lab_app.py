@@ -112,6 +112,7 @@ class MainWindow(QMainWindow):
         self.unwrapped_phase_done = False    # Phase from acquisition is unwrapped
         self.masks_changed = False    # Check if masks changed
         self.coeff_calculated = False   # Zernike coefficients are calculated
+        self.coeff_counter = 0
         self.coeff_list = []
 
         # Data from camera

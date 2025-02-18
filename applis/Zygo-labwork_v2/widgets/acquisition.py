@@ -129,11 +129,18 @@ class AcquisitionSubOptionsWidget(QWidget):
         self.label_acquisition_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.check_tilt = QCheckBox(translate("check_tilt"))
+        self.check_tilt.setEnabled(False)
 
         # Add graphical elements to the layout
         self.layout.addWidget(self.label_acquisition_title)
         self.layout.addWidget(self.check_tilt)
         self.layout.addStretch()
+
+    def set_tilt_enabled(self, val:bool = True):
+        """Update tilt checkbox.
+        :param val: True or False.
+        """
+        self.check_tilt.setEnabled(val)
 
 
 if __name__ == '__main__':

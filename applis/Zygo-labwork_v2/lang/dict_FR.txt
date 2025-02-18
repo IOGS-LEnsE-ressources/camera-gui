@@ -11,3 +11,10 @@ label_subtitle;Interface développée par le LEnsE
 # --------------
 window_title_main_menu_widget; Menu Principal
 label_title_main_menu; Menu
+# --------------
+# Acquisition
+# --------------
+label_simple_analysis_title; Analyse simple
+wedge_factor_label; Wedge Factor
+label_sub_acquisition_title; Correction
+check_tilt; Correction du tilt

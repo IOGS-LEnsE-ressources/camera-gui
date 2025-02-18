@@ -746,8 +746,8 @@ class MainWidget(QWidget):
         :param widget: Widget of the options.
         """
         self.clear_sublayout(SUBOPTIONS_COL)
-        self.options_widget = widget
-        self.bot_left_layout.addWidget(self.options_widget, SUBOPTIONS_ROW, SUBOPTIONS_COL)
+        self.suboptions_widget = widget
+        self.bot_left_layout.addWidget(self.suboptions_widget, SUBOPTIONS_ROW, SUBOPTIONS_COL)
 
     def get_list_menu(self, menu):
         """ """
@@ -1094,6 +1094,12 @@ class MainWidget(QWidget):
 
         if self.parent.main_mode == 'simpleanalysis' and self.parent.analysis_completed:
             self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
+        if self.parent.main_submode == 'unwrappedphase':
+            if self.parent.coeff_counter > 3: # Tilt
+                self.parent.suboptions_widget.set_tilt_enabled()
+            else:
+                self.parent.central_widget.suboptions_widget.set_tilt_enabled(False)
+
 
     def action_wedge_changed(self):
         """Action performed when the wedge factor changed."""
@@ -1114,7 +1120,6 @@ class MainWidget(QWidget):
         if mask is not None:
             # Crop images around the mask
             top_left, bottom_right = find_mask_limits(mask)
-            print(f"Mask Limits : {top_left} / {bottom_right}")
             height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
             pos_x, pos_y = top_left[1], top_left[0]
             self.parent.cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
@@ -1124,13 +1129,6 @@ class MainWidget(QWidget):
 
             # Process Phase
             wrapped_phase = hariharan_algorithm(images_f, self.parent.cropped_mask_phase)
-
-            print(f'Image = {images[0].shape} / {images[0].dtype}')
-            print(f'Image C = {images_c[0].shape} / {images_c[0].dtype}')
-            print(f'Image F = {images_f[0].shape} / {images_f[0].dtype}')
-            print(
-                f'Cropped Mask Type = {type(self.parent.cropped_mask_phase)} / {self.parent.cropped_mask_phase.dtype}')
-            print(f'Phase Type = {type(wrapped_phase)} / {wrapped_phase.dtype}')
             self.parent.wrapped_phase = wrapped_phase
             # self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase), wrapped_phase)
             # End of process
@@ -1168,6 +1166,15 @@ class MainWidget(QWidget):
             if self.parent.main_mode == 'simpleanalysis':
                 self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
 
+            thread = threading.Thread(target=self.thread_tilt_calculation)
+            thread.start()
+
+    def thread_tilt_calculation(self):
+        """Process Zernike coefficients for tilt correction."""
+        print('TILT !!')
+        self.parent.coeff_counter = 4
+        if self.parent.main_submode == 'unwrappedphase':
+            self.parent.central_widget.suboptions_widget.set_tilt_enabled()
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
