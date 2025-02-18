@@ -1166,15 +1166,18 @@ class MainWidget(QWidget):
             if self.parent.main_mode == 'simpleanalysis':
                 self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
 
-            thread = threading.Thread(target=self.thread_tilt_calculation)
+            thread = threading.Thread(target=self.thread_zernike_calculation)
             thread.start()
 
-    def thread_tilt_calculation(self):
+    def thread_zernike_calculation(self):
         """Process Zernike coefficients for tilt correction."""
-        print('TILT !!')
-        self.parent.coeff_counter = 4
-        if self.parent.main_submode == 'unwrappedphase':
-            self.parent.central_widget.suboptions_widget.set_tilt_enabled()
+        print(f'Zernike [{self.parent.coeff_counter}]')
+
+        self.parent.coeff_counter += 1
+        if self.parent.coeff_counter < 37:
+            thread = threading.Thread(target=self.thread_zernike_calculation)
+            thread.start()
+
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
