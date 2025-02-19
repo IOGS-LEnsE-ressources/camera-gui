@@ -116,6 +116,8 @@ class AcquisitionTableWidget(QTableWidget):
 class AcquisitionSubOptionsWidget(QWidget):
     """Acquisition SubOptions."""
 
+    aberrations_selected = pyqtSignal(list)
+
     def __init__(self, parent=None) -> None:
         """Default constructor of the class.
         """
@@ -130,6 +132,7 @@ class AcquisitionSubOptionsWidget(QWidget):
 
         self.check_tilt = QCheckBox(translate("check_tilt"))
         self.check_tilt.setEnabled(False)
+        self.check_tilt.stateChanged.connect(self.action_state_changed)
 
         # Add graphical elements to the layout
         self.layout.addWidget(self.label_acquisition_title)
@@ -142,6 +145,11 @@ class AcquisitionSubOptionsWidget(QWidget):
         """
         self.check_tilt.setEnabled(val)
 
+    def action_state_changed(self):
+        list_ab = []
+        if self.check_tilt.isChecked():
+            list_ab.append('tilt')
+        self.aberrations_selected.emit(list_ab)
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

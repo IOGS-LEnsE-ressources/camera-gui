@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QWidget, QPushButton,
     QMainWindow, QApplication, QMessageBox)
 from widgets.main_widget import MainWidget, load_menu
+from process.zernike_coefficients import Zernike
 
 ## Example for IDS Camera
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
@@ -111,9 +112,6 @@ class MainWindow(QMainWindow):
         self.wrapped_phase_done = False      # Phase from acquisition is wrapped
         self.unwrapped_phase_done = False    # Phase from acquisition is unwrapped
         self.masks_changed = False    # Check if masks changed
-        self.coeff_calculated = False   # Zernike coefficients are calculated
-        self.coeff_counter = 0
-        self.coeff_list = []
 
         # Data from camera
         # ----------------------------
@@ -135,6 +133,14 @@ class MainWindow(QMainWindow):
         self.pv_stats = []
         self.rms_stats = []
         self.analysis_completed = False
+
+        # Data for default correction
+        # ---------------------------
+        self.corrected_phase = None
+        self.coeff_counter = 1
+        self.coeff_zernike_max = 3
+        self.zernike = Zernike(self.coeff_zernike_max)
+
 
         # Initialization of the camera
         # ----------------------------

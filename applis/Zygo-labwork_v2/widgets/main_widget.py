@@ -29,6 +29,7 @@ from widgets.piezo import *
 from widgets.acquisition import *
 from widgets.xyz_chart_widget import *
 from process.hariharan_algorithm import *
+from process.zernike_coefficients import *
 from skimage.restoration import unwrap_phase
 from scipy.ndimage import gaussian_filter
 
@@ -611,7 +612,18 @@ class MainWidget(QWidget):
                 else:
                     self.top_left_widget.set_image_from_array(image)
                 self.set_suboptions_widget(AcquisitionSubOptionsWidget(self))
+                self.suboptions_widget.aberrations_selected.connect(
+                    self.aberrations_correction_selected)
+                if self.parent.coeff_counter > 3: # Tilt
+                   self.suboptions_widget.set_tilt_enabled()
+                else:
+                    self.suboptions_widget.set_tilt_enabled(False)
             self.display_3D_unwrapped_phase()
+
+    def aberrations_correction_selected(self, event):
+        print(event)
+        self.parent.zernike.process_surface_correction(event)
+
 
     def display_right(self):
         # Display image with mask in the top right widget
@@ -983,7 +995,6 @@ class MainWidget(QWidget):
                 self.top_right_widget.set_image_from_array(image * mask)
         except Exception as e:
             print(f'Mask Visu : {e}')
-        # D
 
     def action_piezo_move(self):
         """Action performed when the voltage slider of the piezo changed."""
@@ -1094,12 +1105,6 @@ class MainWidget(QWidget):
 
         if self.parent.main_mode == 'simpleanalysis' and self.parent.analysis_completed:
             self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
-        if self.parent.main_submode == 'unwrappedphase':
-            if self.parent.coeff_counter > 3: # Tilt
-                self.parent.suboptions_widget.set_tilt_enabled()
-            else:
-                self.parent.central_widget.suboptions_widget.set_tilt_enabled(False)
-
 
     def action_wedge_changed(self):
         """Action performed when the wedge factor changed."""
@@ -1149,7 +1154,7 @@ class MainWidget(QWidget):
         self.parent.unwrapped_phase_done = True
         if self.parent.main_mode == 'simpleanalysis' or self.parent.main_submode == 'wrappedphase':
             self.submenu_widget.set_button_enabled(2, True)
-
+        self.parent.zernike.set_surface(self.parent.unwrapped_phase)
         thread = threading.Thread(target=self.thread_statistics_calculation)
         thread.start()
 
@@ -1172,9 +1177,10 @@ class MainWidget(QWidget):
     def thread_zernike_calculation(self):
         """Process Zernike coefficients for tilt correction."""
         print(f'Zernike [{self.parent.coeff_counter}]')
+        self.parent.zernike.process_zernike_coefficient(self.parent.coeff_counter)
 
         self.parent.coeff_counter += 1
-        if self.parent.coeff_counter < 37:
+        if self.parent.coeff_counter <= self.parent.coeff_zernike_max:
             thread = threading.Thread(target=self.thread_zernike_calculation)
             thread.start()
 
