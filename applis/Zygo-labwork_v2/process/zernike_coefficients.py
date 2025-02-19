@@ -63,9 +63,9 @@ class Zernike:
         if noll_index == 1:     # Piston
             return np.ones_like(self.X)
         elif noll_index == 2:   # x-Tilt
-            return 2 * self.X
+            return 2*self.X
         elif noll_index == 3:   # y-Tilt
-            return 2 * self.Y
+            return 2*self.Y
 
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
@@ -88,7 +88,9 @@ class Zernike:
                 self.corrected_phase += self.coeff_list[c] * self.process_cartesian_polynomials(c)
         # Correction de la surface
         new_surface = self.surface - self.corrected_phase
+        return self.corrected_phase, new_surface
 
+        '''
         # Affichage des résultats
         fig, axs = plt.subplots(1, 3, figsize=(12, 4))
         im1 = axs[0].imshow(self.surface, cmap='jet')
@@ -104,7 +106,43 @@ class Zernike:
         fig.colorbar(im3, ax=axs[2])
 
         plt.show()
+        '''
 
 
-        print(f"{coeffs}")
+if __name__ == "__main__":
+    zer = Zernike(3)
+
+    # Définition de la grille
+    N, M = 256, 128  # Taille de la grille
+    x = np.linspace(-1, 1, N)
+    y = np.linspace(-1, 1, M)
+    X, Y = np.meshgrid(x, y)
+    # Création d'une surface avec un tilt (pente)
+    tilt_x = -0.2  # Amplitude du tilt en x
+    tilt_y = 0.05  # Amplitude du tilt en y
+    surface = (tilt_x * X + tilt_y * Y)  # Surface avec tilt
+
+    zer.set_surface(surface)
+    ab_list = ['tilt']
+
+    correction, new_image = zer.process_surface_correction(ab_list)
+
+    # Affichage des résultats
+    fig, axs = plt.subplots(1, 3, figsize=(12, 4))
+    im1 = axs[0].imshow(surface, cmap='jet')
+    axs[0].set_title("Surface initiale")
+    fig.colorbar(im1, ax=axs[0])
+
+    im2 = axs[1].imshow(correction, cmap='jet')
+    axs[1].set_title("Correction appliquée")
+    fig.colorbar(im2, ax=axs[1])
+
+    im3 = axs[2].imshow(new_image, cmap='jet')
+    axs[2].set_title("Surface corrigée")
+    fig.colorbar(im3, ax=axs[2])
+
+    plt.show()
+
+
+
 

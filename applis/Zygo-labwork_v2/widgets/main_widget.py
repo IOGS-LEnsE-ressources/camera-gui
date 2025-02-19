@@ -621,8 +621,8 @@ class MainWidget(QWidget):
             self.display_3D_unwrapped_phase()
 
     def aberrations_correction_selected(self, event):
-        print(event)
-        self.parent.zernike.process_surface_correction(event)
+        _, new_surface = self.parent.zernike.process_surface_correction(event)
+        self.display_3D_unwrapped_phase(new_surface)
 
 
     def display_right(self):
@@ -801,11 +801,14 @@ class MainWidget(QWidget):
         else:
             print('No mask !')
 
-    def display_3D_unwrapped_phase(self):
+    def display_3D_unwrapped_phase(self, image = None):
         """Display a 3D surface in the right part of the interface."""
         self.set_right_widget(Surface3DWidget(self))
         mask = self.parent.cropped_mask_phase
-        displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
+        if image is None:
+            displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
+        else:
+            displayed_surface = image * self.parent.wedge_factor
         if mask is not None:
             self.top_right_widget.set_data(displayed_surface, mask,
                                            bar_title=r"Default magnitude ('$\lambda$')", size=20)

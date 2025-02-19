@@ -50,8 +50,8 @@ plt.show()
 
 
 # Création d'une surface avec un tilt (pente)
-tilt_x = -4  # Amplitude du tilt en x
-tilt_y = 12  # Amplitude du tilt en y
+tilt_x = -0.2  # Amplitude du tilt en x
+tilt_y = 0.05  # Amplitude du tilt en y
 surface = (tilt_x * X + tilt_y * Y) * mask  # Surface avec tilt
 
 # Définition des polynômes de Zernike pour le tilt

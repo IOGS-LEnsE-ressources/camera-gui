@@ -13,7 +13,6 @@
 ### Functions to add
 --------------------
 
--->   Process Zernike coefficients 1, 2 and 3 for tilt correction
 -->   Add Tilt correction button in simple analysis mode (Unwrapped)
 -->   Multiple acquisition : Mean on a set of images + display !!
         - display PV and RMS for each set of data
