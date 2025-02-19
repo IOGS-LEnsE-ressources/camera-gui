@@ -75,6 +75,7 @@ class Masks:
     def get_mask_list(self) -> list[np.ndarray]:
         """Return all the masks in a list."""
         return self.masks_list
+# to comment selection: ctrl + /
 
     def add_mask(self, mask: np.ndarray, type_m: str = ''):
         """Add a new mask to the list.
@@ -94,6 +95,7 @@ class Masks:
         self.mask_selected.clear()
         self.mask_inverted.clear()
         self.masks_number = 0
+
 
     def del_mask(self, index: int):
         """Remove the specified mask.
@@ -203,11 +205,11 @@ class MasksTableWidget(QTableWidget):
         delete_all = qobject_to_widget(self.button_delete_all)
         self.setCellWidget(0, 3, delete_all)
         # Global show
-        self.button_show_all = QPushButton(translate('show_all'))
-        self.button_show_all.setStyleSheet(styleCheckbox)
-        self.button_show_all.clicked.connect(self.global_changed)
-        show_all = qobject_to_widget(self.button_show_all)
-        self.setCellWidget(0, 4, show_all)
+        self.button_show_selection = QPushButton(translate('show_selection'))
+        self.button_show_selection.setStyleSheet(styleCheckbox)
+        self.button_show_selection.clicked.connect(self.global_changed)
+        show_selection = qobject_to_widget(self.button_show_selection)
+        self.setCellWidget(0, 4, show_selection)
 
     def erase_all(self):
         """Delete all the rows and reconstruct the first line (header)."""
@@ -218,6 +220,7 @@ class MasksTableWidget(QTableWidget):
 
         self.clearContents()
         self.setRowCount(0)
+        
         ## Global line - header
         self.insertRow(self.rowCount())
         button_widget = qobject_to_widget(self.button_unselect)
@@ -230,8 +233,9 @@ class MasksTableWidget(QTableWidget):
         self.setCellWidget(0,2, label_widget)
         delete_all = qobject_to_widget(self.button_delete_all)
         self.setCellWidget(0, 3, delete_all)
-        show_all = qobject_to_widget(self.button_show_all)
-        self.setCellWidget(0, 4, show_all)
+        show_selection = qobject_to_widget(self.button_show_selection)
+        self.setCellWidget(0, 4, show_selection)
+        
 
     def set_masks(self, masks: Masks):
         """Add a set of masks (type Masks).
@@ -246,6 +250,7 @@ class MasksTableWidget(QTableWidget):
             self.insertRow(self.rowCount())
         self.create_elements()
         self.update_display()
+
 
     def print_list(self):
         """Print the list of masks."""
@@ -334,8 +339,9 @@ class MasksTableWidget(QTableWidget):
             if reply == QMessageBox.StandardButton.Yes:
                 self.parent.parent.parent.masks.reset_masks()
                 self.update_display()
+                self.parent.parent.action_masks_visualization()
 
-        elif sender == self.button_show_all:
+        elif sender == self.button_show_selection:
             self.parent.parent.action_masks_visualization()
 
     def checkbox_apply_mask_changed(self):
