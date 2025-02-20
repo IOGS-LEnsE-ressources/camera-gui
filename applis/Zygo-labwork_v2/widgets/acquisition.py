@@ -23,6 +23,7 @@ from lensepy.pyqt6.widget_slider import *
 from lensepy.images.conversion import *
 from lensepy.pyqt6 import *
 from matplotlib import pyplot as plt
+from widgets.analysis import *
 
 
 class AcquisitionOptionsWidget(QWidget):
@@ -134,9 +135,12 @@ class AcquisitionSubOptionsWidget(QWidget):
         self.check_tilt.setEnabled(False)
         self.check_tilt.stateChanged.connect(self.action_state_changed)
 
+        self.corrected_stats = StatisticsTableWidget(self)
+
         # Add graphical elements to the layout
         self.layout.addWidget(self.label_acquisition_title)
         self.layout.addWidget(self.check_tilt)
+        self.layout.addWidget(self.corrected_stats)
         self.layout.addStretch()
 
     def set_tilt_enabled(self, val:bool = True):

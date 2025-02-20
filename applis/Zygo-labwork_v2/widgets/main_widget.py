@@ -1178,7 +1178,7 @@ class MainWidget(QWidget):
             thread.start()
 
     def thread_zernike_calculation(self):
-        """Process Zernike coefficients for tilt correction."""
+        """Process Zernike coefficients for correction."""
         print(f'Zernike [{self.parent.coeff_counter}]')
         self.parent.zernike.process_zernike_coefficient(self.parent.coeff_counter)
 

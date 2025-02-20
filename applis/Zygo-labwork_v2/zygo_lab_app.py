@@ -37,6 +37,8 @@ from widgets.masks import *
 from drivers.nidaq_piezo import *
 
 
+ZERNIKE_MAX = 21
+
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
     file_name_dict = f'./lang/dict_{language}.txt'
@@ -138,7 +140,7 @@ class MainWindow(QMainWindow):
         # ---------------------------
         self.corrected_phase = None
         self.coeff_counter = 1
-        self.coeff_zernike_max = 3
+        self.coeff_zernike_max = ZERNIKE_MAX
         self.zernike = Zernike(self.coeff_zernike_max)
 
 
