@@ -1117,6 +1117,7 @@ class MainWidget(QWidget):
         if self.parent.main_submode == 'wrappedphase':
             self.display_3D_wrapped_phase()
         elif self.parent.main_submode == 'unwrappedphase':
+            self.suboptions_widget.uncheck_tilt()
             self.display_3D_unwrapped_phase()
 
     def thread_wrapped_phase_calculation(self):
@@ -1138,7 +1139,7 @@ class MainWidget(QWidget):
             # Process Phase
             wrapped_phase = hariharan_algorithm(images_f, self.parent.cropped_mask_phase)
             self.parent.wrapped_phase = wrapped_phase
-            # self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase), wrapped_phase)
+            self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase), wrapped_phase)
             # End of process
             self.parent.wrapped_phase_done = True
             if self.parent.main_mode == 'simpleanalysis':
@@ -1153,11 +1154,12 @@ class MainWidget(QWidget):
 
         self.parent.unwrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase),
                                                          self.parent.unwrapped_phase)
-
+        self.parent.unwrapped_phase_to_correct = self.parent.unwrapped_phase.copy()
+        self.parent.unwrapped_phase_to_correct[~self.parent.cropped_mask_phase] = np.nan
         self.parent.unwrapped_phase_done = True
         if self.parent.main_mode == 'simpleanalysis' or self.parent.main_submode == 'wrappedphase':
             self.submenu_widget.set_button_enabled(2, True)
-        self.parent.zernike.set_surface(self.parent.unwrapped_phase)
+        self.parent.zernike.set_surface(self.parent.unwrapped_phase_to_correct)
         thread = threading.Thread(target=self.thread_statistics_calculation)
         thread.start()
 
@@ -1167,7 +1169,7 @@ class MainWidget(QWidget):
         self.parent.rms = []
         if self.parent.unwrapped_phase_done:
             for i in range(self.parent.acquisition_number):
-                pv, rms = statistics_surface(self.parent.unwrapped_phase)
+                pv, rms = statistics_surface(self.parent.unwrapped_phase_to_correct)
                 self.parent.pv_stats.append(np.round(pv, 2))
                 self.parent.rms_stats.append(np.round(rms, 2))
             self.parent.analysis_completed = True

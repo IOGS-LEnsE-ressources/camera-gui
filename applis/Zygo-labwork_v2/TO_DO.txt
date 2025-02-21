@@ -5,9 +5,11 @@
 
 ### Bugs to delete
 ------------------
+-->   DELETE ALL DATA when a new acquisition is done OR image is opened
 -->   Delete wrapped and unwrapped calculations if mask changed
 -->   Masks upgrade and display
 -->   Remove access to mask mode if no pictures
+-->   Saving images (histo or AOI) : stop camera acquisition !
 
 
 ### Functions to add

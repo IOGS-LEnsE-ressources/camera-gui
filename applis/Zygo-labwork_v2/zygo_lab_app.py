@@ -127,6 +127,7 @@ class MainWindow(QMainWindow):
         self.masks = Masks()
         self.wrapped_phase = None
         self.unwrapped_phase = None
+        self.unwrapped_phase_to_correct = None
         self.cropped_mask_phase = None
         if 'Wedge Factor' in self.default_parameters:
             self.wedge_factor = float(self.default_parameters['Wedge Factor'])

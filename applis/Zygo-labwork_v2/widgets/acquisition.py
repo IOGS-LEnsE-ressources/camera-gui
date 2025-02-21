@@ -149,6 +149,10 @@ class AcquisitionSubOptionsWidget(QWidget):
         """
         self.check_tilt.setEnabled(val)
 
+    def uncheck_tilt(self):
+        """Uncheck the tilt options."""
+        self.check_tilt.setChecked(False)
+
     def action_state_changed(self):
         list_ab = []
         if self.check_tilt.isChecked():

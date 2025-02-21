@@ -68,6 +68,7 @@ class Zernike:
         self.pow2 = (self.X**2 + self.Y**2)
 
         self.corrected_phase = np.zeros_like(self.surface)
+        print(self.surface)
 
     def process_cartesian_polynomials(self, noll_index: int) -> np.ndarray:
         if noll_index == 1:     # Piston
@@ -127,7 +128,6 @@ class Zernike:
         elif noll_index == 28:   # Secondary Spherical Aber.
             return np.sqrt(14)*(32*self.X**6 - 48*self.X**4*self.pow2 + 18*self.X**2*self.pow2**2 - self.pow2**3)
 
-
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
             if self.coeff_list[order] is None:
@@ -136,6 +136,7 @@ class Zernike:
                 valid_mask = ~np.isnan(self.surface)
                 surface_filtered = self.surface[valid_mask]
                 Z_nm_filtered = Z_nm[valid_mask]
+                print(surface_filtered.shape)
 
                 self.coeff_list[order] = np.sum(surface_filtered * Z_nm_filtered) / np.sum(Z_nm_filtered ** 2)
                 print(f'Z[{order}] = {self.coeff_list[order]}')
@@ -157,15 +158,15 @@ class Zernike:
 def display_3_figures(init, zer, corr):
     """Displaying results."""
     fig, axs = plt.subplots(1, 3, figsize=(12, 4))
-    im1 = axs[0].imshow(init, cmap='jet')
+    im1 = axs[0].imshow(init, extent=(-1, 1, -1, 1), cmap='jet')
     axs[0].set_title("Initial Surface")
     fig.colorbar(im1, ax=axs[0])
 
-    im2 = axs[1].imshow(zer, cmap='jet')
+    im2 = axs[1].imshow(zer, extent=(-1, 1, -1, 1), cmap='jet')
     axs[1].set_title("Correction")
     fig.colorbar(im2, ax=axs[1])
 
-    im3 = axs[2].imshow(corr, cmap='jet')
+    im3 = axs[2].imshow(corr, extent=(-1, 1, -1, 1), cmap='jet')
     axs[2].set_title("Corrected surface")
     fig.colorbar(im3, ax=axs[2])
 
@@ -184,6 +185,7 @@ def zernike_radial(n, m, r):
         R += c * r**(n - 2*k)
     return R
 
+
 def zernike(n, m, rho, theta):
     """ Calcule un polynôme de Zernike. """
     if m >= 0:
@@ -191,6 +193,20 @@ def zernike(n, m, rho, theta):
     else:
         return zernike_radial(n, -m, rho) * np.sin(-m * theta)
 
+
+def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
+    """Create elliptic mask on an image.
+    :param image: initial image to mask
+    :param cx: X-axis center
+    :param cy: Y-axis center
+    :param a: X-axis dimension
+    :param b: Y-axis dimension
+    """
+    height, width = image.shape
+    x = np.linspace(-1, 1, width)
+    y = np.linspace(-1, 1, height)
+    X, Y = np.meshgrid(x, y)
+    return ((X - cx) ** 2) / a ** 2 + ((Y - cy) ** 2) / b ** 2 <= 1
 
 
 if __name__ == "__main__":
@@ -206,21 +222,24 @@ if __name__ == "__main__":
     theta = np.arctan2(Y, X)
     mask = R <= 1
 
+
     # Surface creation
     tilt_x = -0.27
     tilt_y = 0.35
     surface = tilt_x * X + tilt_y * Y #+ np.exp(-3 * R ** 2) + 0.48 * (2 * R ** 2 - 1)
 
+
+    mask = elliptic_mask(surface, 0.2, 0, a=0.5)
+
     # Coma horizontale (Z3^1) et verticale (Z3^-1)
     coma_horizontal = zernike(3, 1, R, theta)  # Z3^1
     coma_vertical = zernike(3, -1, R, theta)  # Z3^-1
-    surface += coma_vertical+coma_vertical
+    #surface += coma_vertical+coma_vertical
 
-    surface = surface * mask
-    surface[R > 1] = np.nan
+    surface[~mask] = np.nan
 
     zer.set_surface(surface)
-    ab_list = ['tilt','defocus','coma1','sphere1','coma2','sphere2']
+    ab_list = ['tilt'] #,'defocus','coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
 

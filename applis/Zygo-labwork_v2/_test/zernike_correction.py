@@ -39,7 +39,7 @@ surface_corrigée = surface - surface_aberration
 # Affichage des résultats
 fig, axs = plt.subplots(1, 3, figsize=(12, 4))
 im1 = axs[0].imshow(surface * mask, extent=(-1, 1, -1, 1), cmap='jet')
-axs[0].set_title("Surface avec tilt")
+axs[0].set_title("Surface aberrations")
 fig.colorbar(im1, ax=axs[0])
 
 im2 = axs[1].imshow(surface_aberration, extent=(-1, 1, -1, 1), cmap='jet')

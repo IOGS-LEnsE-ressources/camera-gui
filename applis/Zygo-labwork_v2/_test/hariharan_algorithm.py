@@ -51,4 +51,6 @@ def hariharan_algorithm(intensity: list[np.ndarray], mask: np.ndarray = None)\
     """
     num = 2 * (intensity[3] - intensity[1])
     denum = 2 * intensity[2] - intensity[4] - intensity[0]
-    return np.arctan2(num, denum)
+    result = np.arctan2(num, denum)
+    result[~mask] = np.nan
+    return result

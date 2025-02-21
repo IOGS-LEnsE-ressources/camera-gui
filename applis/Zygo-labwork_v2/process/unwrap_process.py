@@ -9,13 +9,6 @@ This file contains functions to unwrap the phase.
 
 """
 
-PI = np.pi
-
-def surface_statistics(surface):
-    # Calcul de PV (Peak-to-Valley)
-    PV = np.nanmax(surface) - np.nanmin(surface)
-    RMS = np.nanstd(surface)
-    return PV, RMS
 
 '''
 unwrapped_phase = unwrap_phase(wrapped_phase)/(2*np.pi)
