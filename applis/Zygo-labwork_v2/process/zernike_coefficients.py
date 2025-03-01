@@ -25,13 +25,28 @@ else:
     from process.polar_cartesian_transformations import *
 
 aberrations_type = {
-    "piston": [1],
-    "tilt": [2, 3],
-    "defocus": [4, 5, 6],
-    "coma1": [7, 8, 9, 10],
-    "sphere1": [11, 12, 13, 14, 15],
-    "coma2": [16, 17, 18, 19, 20, 21],
-    "sphere2": [22, 23, 24, 25, 26, 27, 28]
+    "piston": [0],
+    "tilt": [1, 2],
+    "defocus": [3],
+    "astig3" : [4, 5],
+    "coma3" : [6, 7],
+    "sphere3" : [8],
+    "trefoil5" : [9, 10],
+    "astig5" : [11, 12],
+    "coma5" : [13, 14],
+    "sphere5" : [15],
+    "quadra7" : [16, 17],
+    "trefoil7" : [18, 19],
+    "astig7" : [20, 21],
+    "coma7" : [22, 23],
+    "sphere7" : [24],
+    "penta9" : [25, 26],
+    "quadra9" : [27, 28],
+    "trefoil9" : [29, 30],
+    "astig9" : [31, 32],
+    "coma9" : [33, 34],
+    "sphere9" : [35],
+    "sphere11" : [36]
 }
 
 class Zernike:
@@ -71,62 +86,70 @@ class Zernike:
         print(self.surface)
 
     def process_cartesian_polynomials(self, noll_index: int) -> np.ndarray:
-        if noll_index == 1:     # Piston
+        if noll_index == 0:     # Piston
             return np.ones_like(self.X)
-        elif noll_index == 2:   # x-Tilt
+        elif noll_index == 1:   # x-Tilt
             return 2*self.X
-        elif noll_index == 3:   # y-Tilt
+        elif noll_index == 2:   # y-Tilt
             return 2*self.Y
-        elif noll_index == 4:   # defocus
-            return np.sqrt(3)*(2*(self.X**2 + self.Y**2) - 1)
-        elif noll_index == 5:   # defocus / 45d primary astig
+        elif noll_index == 3:   # defocus
+            return np.sqrt(3)*(2*self.pow2 - 1)
+        ## ORDER 3
+        elif noll_index == 4:   # defocus / 45d primary astig
             return 2*np.sqrt(6)*(self.X * self.Y)
-        elif noll_index == 6:   # defocus / 0d primary astig
-            return np.sqrt(6)*(self.X**2 - self.Y**2)
+        elif noll_index == 5:   # defocus / 0d primary astig
+            return np.sqrt(6)*self.pow1
+        elif noll_index == 6:   # Primary coma
+            return np.sqrt(8)*self.Y*(3*self.pow2-2)
         elif noll_index == 7:   # Primary coma
-            return np.sqrt(8)*self.Y*(3*(self.X**2 - self.Y**2)-2)
+            return np.sqrt(8)*self.X*(3*self.pow2-2)
         elif noll_index == 8:   # Primary coma
-            return np.sqrt(8)*self.X*(3*(self.X**2 - self.Y**2)-2)
-        elif noll_index == 9:   # Primary coma
             return np.sqrt(8)*self.Y*(3*self.X**2 - self.Y**2)
-        elif noll_index == 10:   # Primary coma
+        ## ORDER 5
+        elif noll_index == 9:   # Primary coma
             return np.sqrt(8)*self.X*(self.X**2 - 3*self.Y**2)
-        elif noll_index == 11:   # Primary Spherical Aber.
+        elif noll_index == 10:   # Primary Spherical Aber.
             return np.sqrt(5)*(6*self.pow2**2 - 6*self.pow2 + 1)
-        elif noll_index == 12:   # Primary Spherical Aber.
+        elif noll_index == 11:   # Primary Spherical Aber.
             return np.sqrt(10)*self.pow1*(4*self.pow2 - 3)
-        elif noll_index == 13:   # Primary Spherical Aber.
+        elif noll_index == 12:   # Primary Spherical Aber.
             return 2*np.sqrt(10)*self.X*self.Y*(4*self.pow2 - 3)
-        elif noll_index == 14:   # Primary Spherical Aber.
+        elif noll_index == 13:   # Primary Spherical Aber.
             return np.sqrt(10)*(self.pow2**2 - 8*self.X**2*self.Y**2)
-        elif noll_index == 15:   # Primary Spherical Aber.
+        elif noll_index == 14:   # Primary Spherical Aber.
             return 4*np.sqrt(10)*self.X*self.Y*self.pow1
-        elif noll_index == 16:   # Secondary coma
+        elif noll_index == 15:   # Secondary coma
             return np.sqrt(12)*self.X*(10*(self.pow2)**2 - 12*(self.pow2) + 3)
-        elif noll_index == 17:   # Secondary coma
+        ## ORDER 7
+        elif noll_index == 16:   # Secondary coma
             return np.sqrt(12)*self.Y*(10*(self.pow2)**2 - 12*(self.pow2) + 3)
-        elif noll_index == 18:   # Secondary coma
+        elif noll_index == 17:   # Secondary coma
             return np.sqrt(12)*self.X*(self.X**2 - 3*self.Y**2)*(5*self.pow2 - 4)
-        elif noll_index == 19:   # Secondary coma
+        elif noll_index == 18:   # Secondary coma
             return np.sqrt(12)*self.Y*(3 * self.X**2 - self.Y**2)*(5*self.pow2 - 4)
-        elif noll_index == 20:   # Secondary coma
+        elif noll_index == 19:   # Secondary coma
             return np.sqrt(12)*self.X*(16*self.X**4 - 20*self.X**2*self.pow2 + 5*self.pow2**2)
-        elif noll_index == 21:   # Secondary coma
+        elif noll_index == 20:   # Secondary coma
             return np.sqrt(12)*self.Y*(16*self.Y**4 - 20*self.Y**2*self.pow2 + 5*self.pow2**2)
-        elif noll_index == 22:   # Secondary Spherical Aber.
+        elif noll_index == 21:   # Secondary Spherical Aber.
             return np.sqrt(7)*(20*self.pow2**3 - 30*self.pow2**2 + 12*self.pow2 - 1)
-        elif noll_index == 23:   # Secondary Spherical Aber.
+        elif noll_index == 22:   # Secondary Spherical Aber.
             return 2*np.sqrt(14)*self.X*self.Y*(15*self.pow2**2 - 20*self.pow2 + 6)
-        elif noll_index == 24:   # Secondary Spherical Aber.
+        elif noll_index == 23:   # Secondary Spherical Aber.
             return np.sqrt(14)*self.pow1*(15*self.pow2**2 - 20*self.pow2 + 6)
-        elif noll_index == 25:   # Secondary Spherical Aber.
+        elif noll_index == 24:   # Secondary Spherical Aber.
             return 4*np.sqrt(14)*self.X*self.Y*self.pow1*(6*self.pow2 - 5)
-        elif noll_index == 26:   # Secondary Spherical Aber.
+        ## ORDER 9
+        elif noll_index == 25:   # Secondary Spherical Aber.
             return np.sqrt(14)*(self.pow2**2 - 8*self.X**2*self.Y*2)*(6*self.pow2 - 5)
-        elif noll_index == 27:   # Secondary Spherical Aber.
+        elif noll_index == 26:   # Secondary Spherical Aber.
             return np.sqrt(14)*self.X*self.Y*(32*self.X**4 - 32*self.X**2*self.pow2 + 6*self.pow2**2)
-        elif noll_index == 28:   # Secondary Spherical Aber.
+        elif noll_index == 27:   # Secondary Spherical Aber.
             return np.sqrt(14)*(32*self.X**6 - 48*self.X**4*self.pow2 + 18*self.X**2*self.pow2**2 - self.pow2**3)
+
+        ## ORDER 11
+        elif noll_index == 36: # Spherical Aber.
+            pass
 
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
@@ -157,18 +180,26 @@ class Zernike:
 
 def display_3_figures(init, zer, corr):
     """Displaying results."""
+    vmin = np.nanmin([init.min(), corr.min()])
+    vmax = np.nanmax([init.max(), corr.max()])
+
+    init = np.ma.array(init, mask=np.isnan(init))
     fig, axs = plt.subplots(1, 3, figsize=(12, 4))
-    im1 = axs[0].imshow(init, extent=(-1, 1, -1, 1), cmap='jet')
+    im1 = axs[0].imshow(init, extent=(-1, 1, -1, 1), vmin=vmin, vmax=vmax, cmap='jet')
     axs[0].set_title("Initial Surface")
     fig.colorbar(im1, ax=axs[0])
 
-    im2 = axs[1].imshow(zer, extent=(-1, 1, -1, 1), cmap='jet')
+    im2 = axs[1].imshow(zer, extent=(-1, 1, -1, 1), vmin=vmin, vmax=vmax, cmap='jet')
     axs[1].set_title("Correction")
     fig.colorbar(im2, ax=axs[1])
 
-    im3 = axs[2].imshow(corr, extent=(-1, 1, -1, 1), cmap='jet')
+    corr = np.ma.array(corr, mask=np.isnan(corr))
+    im3 = axs[2].imshow(corr, extent=(-1, 1, -1, 1), vmin=vmin, vmax=vmax, cmap='jet')
     axs[2].set_title("Corrected surface")
     fig.colorbar(im3, ax=axs[2])
+
+    print(f'INIT = max = {np.max(init)} / min = {np.min(init)} / Mean = {np.mean(init)}')
+    print(f'CORR = max = {np.max(corr)} / min = {np.min(corr)} / Mean = {np.mean(corr)}')
 
     plt.show()
 
@@ -206,7 +237,7 @@ def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
     x = np.linspace(-1, 1, width)
     y = np.linspace(-1, 1, height)
     X, Y = np.meshgrid(x, y)
-    return ((X - cx) ** 2) / a ** 2 + ((Y - cy) ** 2) / b ** 2 <= 1
+    return ((X - cx) ** 2) / a ** 2 + ((Y - cy) ** 2) / b ** 2 < 1
 
 
 if __name__ == "__main__":
@@ -220,7 +251,7 @@ if __name__ == "__main__":
     # Circular mask
     R = np.sqrt(X ** 2 + Y ** 2)
     theta = np.arctan2(Y, X)
-    mask = R <= 1
+    mask = R < 1
 
 
     # Surface creation
@@ -229,17 +260,17 @@ if __name__ == "__main__":
     surface = tilt_x * X + tilt_y * Y #+ np.exp(-3 * R ** 2) + 0.48 * (2 * R ** 2 - 1)
 
 
-    mask = elliptic_mask(surface, 0.2, 0, a=0.5)
+    mask = elliptic_mask(surface, 0.2, 0, a=0.4)
 
     # Coma horizontale (Z3^1) et verticale (Z3^-1)
     coma_horizontal = zernike(3, 1, R, theta)  # Z3^1
     coma_vertical = zernike(3, -1, R, theta)  # Z3^-1
-    #surface += coma_vertical+coma_vertical
+    surface += coma_vertical #+coma_vertical
 
     surface[~mask] = np.nan
 
     zer.set_surface(surface)
-    ab_list = ['tilt'] #,'defocus','coma1','sphere1','coma2','sphere2']
+    ab_list = ['tilt', 'defocus', 'astig3']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
 
