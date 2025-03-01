@@ -12,7 +12,7 @@ import sys, os
 import numpy as np
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    QLabel, QComboBox, QPushButton,
+    QLabel, QComboBox, QPushButton, QCheckBox,
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -158,6 +158,59 @@ class SimpleAnalysisOptionsWidget(QWidget):
     def action_update_wedge(self):
         """Action performed when the Wedge factor is updated."""
         self.wedge_changed.emit('wedge')
+
+
+
+class SimpleAnalysisSubOptionsWidget(QWidget):
+    """Simple Analysis SubOptions."""
+
+    aberrations_selected = pyqtSignal(list)
+
+    def __init__(self, parent=None) -> None:
+        """Default constructor of the class.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        # Title
+        self.label_acquisition_title = QLabel(translate("label_sub_acquisition_title"))
+        self.label_acquisition_title.setStyleSheet(styleH1)
+        self.label_acquisition_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.check_tilt = QCheckBox(translate("check_tilt"))
+        self.check_tilt.setEnabled(False)
+        self.check_tilt.stateChanged.connect(self.action_state_changed)
+
+        self.corrected_stats = StatisticsTableWidget(self)
+
+        # Add graphical elements to the layout
+        self.layout.addWidget(self.label_acquisition_title)
+        self.layout.addWidget(self.check_tilt)
+        self.layout.addWidget(self.corrected_stats)
+        self.layout.addStretch()
+
+    def set_tilt_enabled(self, val:bool = True):
+        """Update tilt checkbox.
+        :param val: True or False.
+        """
+        self.check_tilt.setEnabled(val)
+
+    def uncheck_tilt(self):
+        """Uncheck the tilt options."""
+        self.check_tilt.setChecked(False)
+
+    def action_state_changed(self):
+        list_ab = []
+        if self.check_tilt.isChecked():
+            list_ab.append('tilt')
+        self.aberrations_selected.emit(list_ab)
+
+    def set_values(self, pv: list[float], rms: list[float]):
+        """Add new values.
+
+        """
+        self.corrected_stats.set_values(pv, rms)
 
 
 class StatisticsTableWidget(QTableWidget):

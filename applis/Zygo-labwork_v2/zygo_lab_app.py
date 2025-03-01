@@ -189,6 +189,23 @@ class MainWindow(QMainWindow):
         # Update menu
         self.central_widget.update_menu()
 
+    def reset_data(self):
+        """Reset all the data when a new acquisition is done or new set of images is opened."""
+        self.wrapped_phase = None
+        self.wrapped_phase_done = False
+        self.unwrapped_phase = None
+        self.unwrapped_phase_to_correct = None
+        self.unwrapped_phase_done = False
+        self.cropped_mask_phase = None
+
+        self.pv_stats = []
+        self.rms_stats = []
+        self.analysis_completed = False
+
+        self.corrected_phase = None
+        self.coeff_counter = 1
+        self.zernike = Zernike(self.coeff_zernike_max)
+
     def stop_thread(self):
         """Stop the camera thread."""
         pass

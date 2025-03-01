@@ -69,8 +69,8 @@ def load_menu(file_path: str, menu):
 
 def statistics_surface(surface):
     # Process (Peak-to-Valley)
-    PV = np.nanmax(surface) - np.nanmin(surface)
-    RMS = np.nanstd(surface)
+    PV = np.round(np.nanmax(surface) - np.nanmin(surface), 3)
+    RMS = np.round(np.nanstd(surface), 3)
     return PV, RMS
 
 
@@ -426,6 +426,7 @@ class MainWidget(QWidget):
 
             # Clear layouts
             self.clear_sublayout(OPTIONS_COL)
+            self.clear_sublayout(SUBOPTIONS_COL)
             self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
             self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
@@ -611,7 +612,7 @@ class MainWidget(QWidget):
                     self.top_left_widget.set_image_from_array(image * mask)
                 else:
                     self.top_left_widget.set_image_from_array(image)
-                self.set_suboptions_widget(AcquisitionSubOptionsWidget(self))
+                self.set_suboptions_widget(SimpleAnalysisSubOptionsWidget(self))
                 self.suboptions_widget.aberrations_selected.connect(
                     self.aberrations_correction_selected)
                 if self.parent.coeff_counter > 3: # Tilt
@@ -622,6 +623,8 @@ class MainWidget(QWidget):
 
     def aberrations_correction_selected(self, event):
         _, new_surface = self.parent.zernike.process_surface_correction(event)
+        PV, RMS = statistics_surface(new_surface)
+        self.suboptions_widget.set_values([PV], [RMS])
         self.display_3D_unwrapped_phase(new_surface)
 
 
@@ -847,6 +850,7 @@ class MainWidget(QWidget):
                 self.submenu_widget.set_activated(2)
                 self.submenu_widget.set_button_enabled(4, True)
                 self.submenu_widget.set_button_enabled(6, True)
+                self.parent.reset_data()
                 self.action_menu_display_images()
             else:
                 self.parent.images_opened = False
@@ -1170,8 +1174,8 @@ class MainWidget(QWidget):
         if self.parent.unwrapped_phase_done:
             for i in range(self.parent.acquisition_number):
                 pv, rms = statistics_surface(self.parent.unwrapped_phase_to_correct)
-                self.parent.pv_stats.append(np.round(pv, 2))
-                self.parent.rms_stats.append(np.round(rms, 2))
+                self.parent.pv_stats.append(pv)
+                self.parent.rms_stats.append(rms)
             self.parent.analysis_completed = True
             if self.parent.main_mode == 'simpleanalysis':
                 self.options_widget.set_values(self.parent.pv_stats, self.parent.rms_stats)
