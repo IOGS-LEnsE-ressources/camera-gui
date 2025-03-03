@@ -1,0 +1,21 @@
+## ZYGO v2 APP
+==============
+
+/!\ MODIFICATION OF NI_DAQ CLASS !
+
+### Bugs to delete
+------------------
+-->   Delete wrapped and unwrapped calculations if mask changed
+-->   Masks upgrade and display
+-->   Saving images (histo or AOI) : stop camera acquisition !
+
+
+### Functions to add
+--------------------
+
+-->   Multiple acquisition : Mean on a set of images + display !!
+        - display PV and RMS for each set of data
+        - display global PV and RMS and mean / std for sets
+        - display an unwrapped figure for each acquisition
+
+-->   Display of PV and RMS in simple analysis (without Stats Table !)

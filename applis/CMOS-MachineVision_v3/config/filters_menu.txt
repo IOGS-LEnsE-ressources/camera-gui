@@ -1,9 +1,0 @@
-# Filters Menu
-# Type; Title; Signal;
-B;button_filter_smooth;filter_smooth;
-S;;;
-B;button_filter_edge;filter_edge;
-B;button_filter_renf_edge;filter_renf_edge;
-S;;;
-B;button_filter_misc;filter_misc;
-S;;;

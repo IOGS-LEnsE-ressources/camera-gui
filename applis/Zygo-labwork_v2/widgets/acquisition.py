@@ -12,7 +12,7 @@ import sys, os
 import numpy as np
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout, QTableWidget,
-    QLabel, QComboBox, QPushButton,
+    QLabel, QComboBox, QPushButton, QCheckBox,
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -23,6 +23,7 @@ from lensepy.pyqt6.widget_slider import *
 from lensepy.images.conversion import *
 from lensepy.pyqt6 import *
 from matplotlib import pyplot as plt
+from widgets.analysis import *
 
 
 class AcquisitionOptionsWidget(QWidget):
@@ -43,10 +44,10 @@ class AcquisitionOptionsWidget(QWidget):
         # Table of images
         self.images_table = AcquisitionTableWidget(self)
 
-
         # Add graphical elements to the layout
         self.layout.addWidget(self.label_acquisition_title, 0, 0)
         self.layout.addWidget(self.images_table, 1, 0)
+        self.layout.addStretch()
 
     def add_image(self, new_image: np.ndarray, voltage: float = 0.0):
         """Add a new image in the list."""

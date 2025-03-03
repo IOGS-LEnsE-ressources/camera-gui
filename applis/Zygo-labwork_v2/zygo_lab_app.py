@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QWidget, QPushButton,
     QMainWindow, QApplication, QMessageBox)
 from widgets.main_widget import MainWidget, load_menu
+from process.zernike_coefficients import Zernike
 
 ## Example for IDS Camera
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
@@ -35,6 +36,8 @@ from widgets.images import *
 from widgets.masks import *
 from drivers.nidaq_piezo import *
 
+
+ZERNIKE_MAX = 21
 
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
@@ -110,7 +113,7 @@ class MainWindow(QMainWindow):
         self.images_opened = False      # Almost a set of 5 images is opened or acquired
         self.wrapped_phase_done = False      # Phase from acquisition is wrapped
         self.unwrapped_phase_done = False    # Phase from acquisition is unwrapped
-        self.coeff_calculated = False   # Zernike coefficients are calculated
+        self.masks_changed = False    # Check if masks changed
 
         # Data from camera
         # ----------------------------
@@ -124,6 +127,7 @@ class MainWindow(QMainWindow):
         self.masks = Masks()
         self.wrapped_phase = None
         self.unwrapped_phase = None
+        self.unwrapped_phase_to_correct = None
         self.cropped_mask_phase = None
         if 'Wedge Factor' in self.default_parameters:
             self.wedge_factor = float(self.default_parameters['Wedge Factor'])
@@ -131,6 +135,15 @@ class MainWindow(QMainWindow):
             self.wedge_factor = -1
         self.pv_stats = []
         self.rms_stats = []
+        self.analysis_completed = False
+
+        # Data for default correction
+        # ---------------------------
+        self.corrected_phase = None
+        self.coeff_counter = 1
+        self.coeff_zernike_max = ZERNIKE_MAX
+        self.zernike = Zernike(self.coeff_zernike_max)
+
 
         # Initialization of the camera
         # ----------------------------
@@ -176,17 +189,26 @@ class MainWindow(QMainWindow):
         # Update menu
         self.central_widget.update_menu()
 
+    def reset_data(self):
+        """Reset all the data when a new acquisition is done or new set of images is opened."""
+        self.wrapped_phase = None
+        self.wrapped_phase_done = False
+        self.unwrapped_phase = None
+        self.unwrapped_phase_to_correct = None
+        self.unwrapped_phase_done = False
+        self.cropped_mask_phase = None
+
+        self.pv_stats = []
+        self.rms_stats = []
+        self.analysis_completed = False
+
+        self.corrected_phase = None
+        self.coeff_counter = 1
+        self.zernike = Zernike(self.coeff_zernike_max)
+
     def stop_thread(self):
         """Stop the camera thread."""
         pass
-        '''
-        try:
-            if self.camera_connected:
-                if self.camera_thread.running:
-                    self.camera_thread.stop()
-        except Exception as e:
-            print(f'Stop Thread : {e}')
-        '''
 
     def main_action(self, event):
         """

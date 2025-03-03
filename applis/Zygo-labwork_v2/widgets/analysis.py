@@ -11,12 +11,12 @@ Creation : nov/2024
 import sys, os
 import numpy as np
 from PyQt6.QtWidgets import (
-    QWidget, QGridLayout, QVBoxLayout, QTableWidget,
-    QLabel, QComboBox, QPushButton,
+    QWidget, QGridLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
+    QLabel, QComboBox, QPushButton, QCheckBox,
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont
+from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QBrush
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensepy.pyqt6.widget_slider import *
@@ -160,6 +160,59 @@ class SimpleAnalysisOptionsWidget(QWidget):
         self.wedge_changed.emit('wedge')
 
 
+
+class SimpleAnalysisSubOptionsWidget(QWidget):
+    """Simple Analysis SubOptions."""
+
+    aberrations_selected = pyqtSignal(list)
+
+    def __init__(self, parent=None) -> None:
+        """Default constructor of the class.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        # Title
+        self.label_acquisition_title = QLabel(translate("label_sub_acquisition_title"))
+        self.label_acquisition_title.setStyleSheet(styleH1)
+        self.label_acquisition_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.check_tilt = QCheckBox(translate("check_tilt"))
+        self.check_tilt.setEnabled(False)
+        self.check_tilt.stateChanged.connect(self.action_state_changed)
+
+        self.corrected_stats = StatisticsTableWidget(self)
+
+        # Add graphical elements to the layout
+        self.layout.addWidget(self.label_acquisition_title)
+        self.layout.addWidget(self.check_tilt)
+        self.layout.addWidget(self.corrected_stats)
+        self.layout.addStretch()
+
+    def set_tilt_enabled(self, val:bool = True):
+        """Update tilt checkbox.
+        :param val: True or False.
+        """
+        self.check_tilt.setEnabled(val)
+
+    def uncheck_tilt(self):
+        """Uncheck the tilt options."""
+        self.check_tilt.setChecked(False)
+
+    def action_state_changed(self):
+        list_ab = []
+        if self.check_tilt.isChecked():
+            list_ab.append('tilt')
+        self.aberrations_selected.emit(list_ab)
+
+    def set_values(self, pv: list[float], rms: list[float]):
+        """Add new values.
+
+        """
+        self.corrected_stats.set_values(pv, rms)
+
+
 class StatisticsTableWidget(QTableWidget):
 
     def __init__(self, parent=None):
@@ -172,42 +225,56 @@ class StatisticsTableWidget(QTableWidget):
         self.show_button_list = []
         self.setColumnCount(3)  # 3 columns
         self.setHorizontalHeaderLabels(["Set", "PV", "RMS"])
+        self.setColumnWidth(0, 15)
+        self.setStyleSheet("""
+            QHeaderView::section {
+                background-color: lightblue;
+                color: black;
+                font-weight: bold;
+            }
+        """)
         self.verticalHeader().setVisible(False)
+
+    def _set_line(self, row, cell1, cell2, cell3, bg:str='white'):
+        item = QTableWidgetItem(cell1)
+        item.setBackground(QBrush(QColor(bg)))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)  # change the alignment
+        self.setItem(row, 0, item)
+        item = QTableWidgetItem(cell2)
+        item.setBackground(QBrush(QColor(bg)))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)  # change the alignment
+        self.setItem(row, 1, item)
+        item = QTableWidgetItem(cell3)
+        item.setBackground(QBrush(QColor(bg)))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)  # change the alignment
+        self.setItem(row, 2, item)
 
     def set_values(self, pv: list[float], rms: list[float]):
         """Add new values.
 
         """
-        if len(pv) == len(rms):
-            index_min = 0
-            # If more than 1 data, add mean of PV and RMS values
-            if len(pv) > 1:
-                self.insertRow(0)
-                label = QLabel(f'ALL')
-                widget = qobject_to_widget(label)
-                widget.setStyleSheet("background-color: #0A3250; color: white;")
-                self.setCellWidget(0, 0, widget) # Name of the set
-                label = QLabel(f'{np.round(np.mean(pv), 2)}')
-                widget = qobject_to_widget(label)
-                widget.setStyleSheet("background-color: #0A3250; color: white;")
-                self.setCellWidget(0, 1, widget) # PV value of the set
-                label = QLabel(f'{np.round(np.mean(rms))}')
-                widget = qobject_to_widget(label)
-                widget.setStyleSheet("background-color: #0A3250; color: white;")
-                self.setCellWidget(0, 2, widget) # RMS value of the set
-                index_min = 1
+        try:
+            if len(pv) == len(rms):
+                if len(pv) > 1:
+                    self.setRowCount(len(pv)+2)
+                    # Process global PV and RMS
+                    std_pv = np.std(pv)
+                    mean_pv = np.mean(pv)
+                    std_rms = np.std(rms)
+                    mean_rms = np.mean(rms)
+                    # Display global PV and RMS
+                    self._set_line(0, 'Mean', str(mean_pv),
+                                   str(mean_rms), bg='lightblue')
+                    self._set_line(0, 'STDev', str(std_pv),
+                                   str(std_rms), bg='lightblue')
+                    for row in range(len(pv)):
+                        self._set_line(row+2, str(row+1), str(pv[row]), str(rms[row]))
+                else:
+                    self.setRowCount(len(pv))
+                    self._set_line(0, str(1), str(pv[0]), str(rms[0]))
 
-            for i in range(len(pv)):
-                self.insertRow(i+index_min)
-                label = QLabel(f'Set {i+1}')
-                widget = qobject_to_widget(label)
-                self.setCellWidget(i+index_min, 0, widget) # Name of the set
-                label = QLabel(f'{pv[i]}')
-                widget = qobject_to_widget(label)
-                self.setCellWidget(i+index_min, 1, widget) # PV value of the set
-                label = QLabel(f'{rms[i]}')
-                widget = qobject_to_widget(label)
-                self.setCellWidget(i+index_min, 2, widget) # RMS value of the set
+        except Exception as e:
+            print(f'Stat Table {e}')
 
     def erase_all(self):
         """Delete all the rows and reconstruct the first line (header)."""

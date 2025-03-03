@@ -1,0 +1,8 @@
+# -*- coding: utf-8 -*-
+# Dictionnaire Français
+#
+# --------------------
+# TitleWidget
+# --------------------
+label_title;OCT - Image Acquisition
+test;Test

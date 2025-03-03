@@ -1,7 +1,0 @@
-# Images Menu
-# Type; Title; Signal;
-B;button_open_image;open_image;
-B;button_open_camera;open_camera;
-S;;;
-B;button_create_image;create_image;
-S;;;
