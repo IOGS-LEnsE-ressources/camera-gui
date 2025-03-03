@@ -361,6 +361,7 @@ class MasksTableWidget(QTableWidget):
             if checkbox == self.inverse_checkbox_list[i]:
                 index = i
                 self.masks_list.invert_mask(index+1, checkbox.isChecked())
+                self.update_display()
                 self.parent.parent.action_masks_visualization()
 
     def button_show_mask_clicked(self):
