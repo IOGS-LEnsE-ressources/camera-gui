@@ -329,6 +329,7 @@ class MasksTableWidget(QTableWidget):
         elif sender == self.checkbox_invert:
             value = self.checkbox_invert.isChecked()
             self.parent.parent.parent.masks.invert_global_mask(value)
+            
 
         elif sender == self.button_delete_all:
             reply = QMessageBox.question(self, 'Delete all masks',
