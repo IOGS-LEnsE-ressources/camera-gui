@@ -109,7 +109,6 @@ class AcquisitionTableWidget(QTableWidget):
         for i in range(len(self.show_button_list)):
             if button == self.show_button_list[i]:
                 index = i
-                print(f'Display {index+1}')
                 # Show the ith mask on the image
                 self.parent.parent.action_masks_visualization(str(index+1))
 

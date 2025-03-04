@@ -325,10 +325,12 @@ class MasksTableWidget(QTableWidget):
             for i in range(self.masks_list.get_masks_number()):
                 self.masks_list.select_mask(i+1, value)
             self.update_display()
+            self.parent.parent.masks_changed = True
 
         elif sender == self.checkbox_invert:
             value = self.checkbox_invert.isChecked()
             self.parent.parent.parent.masks.invert_global_mask(value)
+            self.parent.parent.masks_changed = True
             
 
         elif sender == self.button_delete_all:
@@ -341,9 +343,11 @@ class MasksTableWidget(QTableWidget):
                 self.parent.parent.parent.masks.reset_masks()
                 self.update_display()
                 self.parent.parent.action_masks_visualization()
+            self.parent.parent.masks_changed = True
 
         elif sender == self.button_show_selection:
             self.parent.parent.action_masks_visualization()
+            self.parent.parent.masks_changed = True
 
     def checkbox_apply_mask_changed(self):
         """Action performed when an invert checkbox changed."""

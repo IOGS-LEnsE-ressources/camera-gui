@@ -82,7 +82,6 @@ class Zernike:
         self.pow2 = (self.X**2 + self.Y**2)
 
         self.corrected_phase = np.zeros_like(self.surface)
-        print(self.surface)
 
     def process_cartesian_polynomials(self, noll_index: int) -> np.ndarray:
         if noll_index == 0:     # Piston
@@ -175,10 +174,8 @@ class Zernike:
                 valid_mask = ~np.isnan(self.surface)
                 surface_filtered = self.surface[valid_mask]
                 Z_nm_filtered = Z_nm[valid_mask]
-                print(surface_filtered.shape)
 
                 self.coeff_list[order] = np.sum(surface_filtered * Z_nm_filtered) / np.sum(Z_nm_filtered ** 2)
-                print(f'Z[{order}] = {self.coeff_list[order]}')
         else:
             return None
 

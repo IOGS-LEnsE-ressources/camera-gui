@@ -415,8 +415,12 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         self.main_signal.emit(event)
-        # Stop camera thread
-        self.parent.stop_thread()
+
+        # Test if masks changed
+        if self.parent.masks_changed:
+            self.parent.reset_data()
+            print('Masks changed')
+            self.parent.masks_changed = False
 
         try:
             mode = event
@@ -466,11 +470,9 @@ class MainWidget(QWidget):
             if self.parent.acquisition_done is False and self.parent.images_opened is False:
                 self.submenu_widget.set_button_enabled(2, False)
                 self.submenu_widget.set_button_enabled(4, False)
-                self.submenu_widget.set_button_enabled(6, False)
             else:
                 self.submenu_widget.set_button_enabled(2, True)
                 self.submenu_widget.set_button_enabled(4, True)
-                self.submenu_widget.set_button_enabled(6, True)
             # open html
             html_page = HTMLWidget('./docs/html/images.html', './docs/html/styles.css')
             self.set_bot_right_widget(html_page)
@@ -507,7 +509,7 @@ class MainWidget(QWidget):
                 print(f'mode Simple : {e}')
 
         elif self.parent.main_mode == 'aberrations':
-            print('Aberrations _ Menu action')
+            pass
 
     def main_submode_action(self):
         print(f'\t\tSubmode = {self.parent.main_submode}')
@@ -525,7 +527,6 @@ class MainWidget(QWidget):
 
         elif self.parent.main_submode == 'save':
             self.action_menu_save_images()
-            # self.menu_action('images')
             self.menu_action('display_images')
 
         elif self.parent.main_submode == 'delete':
@@ -571,6 +572,7 @@ class MainWidget(QWidget):
                 self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
+                self.parent.masks_changed = True
             self.submenu_widget.set_button_enabled(1, True)
 
         elif self.parent.main_submode == 'rectangular':
@@ -590,6 +592,7 @@ class MainWidget(QWidget):
                 self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
+                self.parent.masks_changed = True
             self.submenu_widget.set_button_enabled(2, True)
 
         elif self.parent.main_submode == 'polygon':
@@ -609,6 +612,7 @@ class MainWidget(QWidget):
                 self.parent.mask_created = True
                 self.options_widget.set_masks(self.parent.masks)
                 self.options_widget.update_display()
+                self.parent.masks_changed = True
             self.submenu_widget.set_button_enabled(3, True)
 
         ## Simple Analysis
@@ -867,7 +871,6 @@ class MainWidget(QWidget):
                 self.submenu_widget.set_button_enabled(2, True)
                 self.submenu_widget.set_activated(2)
                 self.submenu_widget.set_button_enabled(4, True)
-                self.submenu_widget.set_button_enabled(6, True)
                 self.parent.reset_data()
                 self.action_menu_display_images()
             else:
@@ -875,7 +878,6 @@ class MainWidget(QWidget):
                 self.submenu_widget.set_button_enabled(1, True)
                 self.submenu_widget.set_button_enabled(2, False)
                 self.submenu_widget.set_button_enabled(4, False)
-                self.submenu_widget.set_button_enabled(6, False)
                 self.top_left_widget.reset_image()
         except Exception as e:
             print(f'Open Images : {e}')
@@ -977,7 +979,6 @@ class MainWidget(QWidget):
         self.submenu_widget.set_button_enabled(2, True)
         self.submenu_widget.set_activated(2)
         self.submenu_widget.set_button_enabled(4, True)
-        self.submenu_widget.set_button_enabled(6, True)
         if self.parent.images_opened or self.parent.acquisition_done:
             self.options_widget.set_images_status(True, index=1)
         else:

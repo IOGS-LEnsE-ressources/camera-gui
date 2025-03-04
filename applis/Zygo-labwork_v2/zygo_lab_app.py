@@ -204,10 +204,6 @@ class MainWindow(QMainWindow):
         self.coeff_counter = 1
         self.zernike = Zernike(self.coeff_zernike_max)
 
-    def stop_thread(self):
-        """Stop the camera thread."""
-        pass
-
     def main_action(self, event):
         """
         Action performed by an event in the main widget.

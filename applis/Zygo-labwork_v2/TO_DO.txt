@@ -9,6 +9,8 @@
 -->   Masks upgrade and display
 -->   Saving images (histo or AOI) : stop camera acquisition !
 
+-->   Images (mode) - delete "Delete image" ?
+                    - move "Save images" to Acquisition !
 
 ### Functions to add
 --------------------
