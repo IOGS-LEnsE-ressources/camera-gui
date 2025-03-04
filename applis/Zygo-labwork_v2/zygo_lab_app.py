@@ -37,7 +37,7 @@ from widgets.masks import *
 from drivers.nidaq_piezo import *
 
 
-ZERNIKE_MAX = 21
+ZERNIKE_MAX = 36
 
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
@@ -98,8 +98,6 @@ class MainWindow(QMainWindow):
         # Menu
         load_menu('./config/menu.txt', self.central_widget.main_menu)
         self.central_widget.main_signal.connect(self.main_action)
-        self.central_widget.set_top_left_widget(ImagesDisplayWidget(self))
-        self.central_widget.update_size()
 
         # Global mode
         # -----------

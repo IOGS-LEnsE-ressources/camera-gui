@@ -404,6 +404,8 @@ class MainWidget(QWidget):
             menu += self.get_list_menu('nocam')
         if self.parent.piezo_connected is False:
             menu += self.get_list_menu('nopiezo')
+        if self.parent.analysis_completed is False:
+            menu += self.get_list_menu('noanalysis')
         self.main_menu.set_enabled(menu, False)
 
     def menu_action(self, event):
@@ -413,6 +415,8 @@ class MainWidget(QWidget):
         :param event: Event that triggered the action.
         """
         self.main_signal.emit(event)
+        # Stop camera thread
+        self.parent.stop_thread()
 
         try:
             mode = event
@@ -428,6 +432,7 @@ class MainWidget(QWidget):
             self.clear_sublayout(OPTIONS_COL)
             self.clear_sublayout(SUBOPTIONS_COL)
             self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+            self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
             self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
             # Manage application
@@ -444,6 +449,8 @@ class MainWidget(QWidget):
         """Display information depending on the main mode."""
         if self.parent.main_mode == 'camera':
             '''Camera Mode'''
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
             self.action_camera()
             # open html
             html_page = HTMLWidget('./docs/html/camera.html', './docs/html/styles.css')
@@ -451,8 +458,8 @@ class MainWidget(QWidget):
 
         elif self.parent.main_mode == 'images':
             '''Images Mode'''
-            # Stop camera thread
-            self.parent.stop_thread()
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
             # display first image if present
             self.display_first_image()
             # activate item in the submenu
@@ -469,27 +476,38 @@ class MainWidget(QWidget):
             self.set_bot_right_widget(html_page)
 
         elif self.parent.main_mode == 'masks':
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
             try:
                 self.action_masks_visualization()
             except Exception as e:
                 print(f'mode Masks : {e}')
 
         elif self.parent.main_mode == 'piezo':
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
             # Display options widget with Masks Options
             self.set_options_widget(PiezoOptionsWidget(self))
             html_page = HTMLWidget('./docs/html/piezo.html', './docs/html/styles.css')
             self.set_bot_right_widget(html_page)
 
         elif self.parent.main_mode == 'acquisition':
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
             self.action_acquisition()
             html_page = HTMLWidget('./docs/html/acquisition.html', './docs/html/styles.css')
             self.set_bot_right_widget(html_page)
 
         elif self.parent.main_mode == 'simpleanalysis':
+            self.set_top_left_widget(ImagesDisplayWidget(self))
+            self.update_size()
             try:
                 self.action_simple_analysis()
             except Exception as e:
                 print(f'mode Simple : {e}')
+
+        elif self.parent.main_mode == 'aberrations':
+            print('Aberrations _ Menu action')
 
     def main_submode_action(self):
         print(f'\t\tSubmode = {self.parent.main_submode}')
@@ -1192,6 +1210,10 @@ class MainWidget(QWidget):
         if self.parent.coeff_counter <= self.parent.coeff_zernike_max:
             thread = threading.Thread(target=self.thread_zernike_calculation)
             thread.start()
+        else:
+            # At the end, analysis completed !
+            self.parent.analysis_completed = True
+            self.update_menu()
 
 
 if __name__ == '__main__':

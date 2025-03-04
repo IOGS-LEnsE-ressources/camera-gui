@@ -20,3 +20,4 @@ nocam;1,5
 nopiezo;5,12
 nodata;4,7,8
 nomask;5,7,8
+noanalysis;8
