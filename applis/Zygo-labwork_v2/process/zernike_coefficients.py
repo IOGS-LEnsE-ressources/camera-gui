@@ -21,8 +21,7 @@ import math
 
 if __name__ == '__main__':
     from polar_cartesian_transformations import *
-else:
-    from process.polar_cartesian_transformations import *
+
 
 aberrations_type = {
     "piston": [0],
@@ -147,9 +146,26 @@ class Zernike:
         elif noll_index == 27:   # Secondary Spherical Aber.
             return np.sqrt(14)*(32*self.X**6 - 48*self.X**4*self.pow2 + 18*self.X**2*self.pow2**2 - self.pow2**3)
 
+        elif noll_index == 28:   # Secondary Spherical Aber.
+            return 4*self.Y*(35*self.pow2**3-60*self.pow2**2+30*self.pow2-4)
+        elif noll_index == 29:   # Secondary Spherical Aber.
+            return 4*self.X*(35*self.pow2**3-60*self.pow2**2+30*self.pow2-4)
+        elif noll_index == 30:   # Tertiary y-Coma
+            return 4*self.Y*(3*self.X**2-self.Y**2)*(21*self.pow2**2-30*self.pow2+10)
+        elif noll_index == 31:   # Tertiary x-Coma
+            return 4*self.X*(self.X**2-3*self.Y**2)*(21*self.pow2**2-30*self.pow2+10)
+        elif noll_index == 32:   # Secondary Spherical Aber.
+            return 4*(4*self.X**2*self.Y*self.pow1+self.Y*self.pow2**2-8*self.X**2*self.Y**3)*(7*self.pow2-6)
+        elif noll_index == 33:   # Secondary Spherical Aber.
+            return 4*(self.X*self.pow2**2-8*self.X**3*self.Y**2-4*self.X*self.Y**2*self.pow1)*(7*self.pow2-6)
+        elif noll_index == 34:   # Secondary Spherical Aber.
+            return 8*self.X**2*self.Y*(3*self.pow2**2-16*self.X**2*self.Y**2)+4*self.Y*self.pow1*(self.pow2**2-16*self.X**2*self.Y**2)
+        elif noll_index == 35:   # Secondary Spherical Aber.
+            return 4*self.X*self.pow1*(self.pow2**2-16*self.X**2*self.Y**2)-8*self.X*self.Y**2*(3*self.pow2**2-16*self.X**2*self.Y**2)
+
         ## ORDER 11
-        elif noll_index == 36: # Spherical Aber.
-            pass
+        elif noll_index == 36: # Tertiary spherical
+            return 3*(70*self.pow2**4-140*self.pow2**3 +90*self.pow2**2-20*self.pow2+1)
 
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
