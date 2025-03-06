@@ -27,6 +27,7 @@ from widgets.masks import *
 from widgets.analysis import *
 from widgets.piezo import *
 from widgets.acquisition import *
+from widgets.aberrations import *
 from widgets.xyz_chart_widget import *
 from process.hariharan_algorithm import *
 from process.zernike_coefficients import *
@@ -509,7 +510,13 @@ class MainWidget(QWidget):
                 print(f'mode Simple : {e}')
 
         elif self.parent.main_mode == 'aberrations':
-            pass
+            self.set_top_left_widget(AberrationsOptionsWidget(self))
+            self.set_bot_right_widget(AberrationsOptionsWidget(self))
+
+
+            self.top_left_widget.show_graph()
+   
+            self.action_aberrations()
 
     def main_submode_action(self):
         print(f'\t\tSubmode = {self.parent.main_submode}')
@@ -642,6 +649,17 @@ class MainWidget(QWidget):
                 else:
                     self.suboptions_widget.set_tilt_enabled(False)
             self.display_3D_unwrapped_phase()
+        ## Aberrations
+        elif self.parent.main_submode == 'Zernikecoefficients':
+            self.bot_right_widget.show_Zernike_table()
+
+        elif self.parent.main_submode == 'Seidelcoefficients':
+            self.bot_right_widget.show_Seidel_table()
+
+        elif self.parent.main_submode == 'coefficientscorrection':
+            self.set_suboptions_widget(AberrationsOptionsWidget(self))
+            self.suboptions_widget.correction_box()
+            
 
     def aberrations_correction_selected(self, event):
         _, new_surface = self.parent.zernike.process_surface_correction(event)
@@ -740,6 +758,8 @@ class MainWidget(QWidget):
         self.bot_left_widget = widget
         self.layout.addWidget(self.bot_left_widget, BOT_LEFT_ROW, BOT_LEFT_COL)
 
+
+
     def set_bot_right_widget(self, widget):
         """
         Modify the bottom right widget.
@@ -829,6 +849,34 @@ class MainWidget(QWidget):
     def display_3D_unwrapped_phase(self, image = None):
         """Display a 3D surface in the right part of the interface."""
         self.set_right_widget(Surface3DWidget(self))
+        mask = self.parent.cropped_mask_phase
+        if image is None:
+            displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
+        else:
+            displayed_surface = image * self.parent.wedge_factor
+        if mask is not None:
+            self.top_right_widget.set_data(displayed_surface, mask,
+                                           bar_title=r"Default magnitude ('$\lambda$')", size=20)
+        else:
+            print('No mask !')
+            
+    def display_3D_phase(self, image = None):
+        """Display a 3D surface in the top!!! right part of the interface."""
+        self.set_top_right_widget(Surface3DWidget(self))
+        mask = self.parent.cropped_mask_phase
+        if image is None:
+            displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
+        else:
+            displayed_surface = image * self.parent.wedge_factor
+        if mask is not None:
+            self.top_right_widget.set_data(displayed_surface, mask,
+                                           bar_title=r"Default magnitude ('$\lambda$')", size=20)
+        else:
+            print('No mask !')
+
+    def display_3D_adjusted_phase(self, image=None):
+        """Display a 3D surface in the bot!!! right part of the interface."""
+        self.set_top_right_widget(Surface3DWidget(self))
         mask = self.parent.cropped_mask_phase
         if image is None:
             displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
@@ -1201,6 +1249,11 @@ class MainWidget(QWidget):
 
             thread = threading.Thread(target=self.thread_zernike_calculation)
             thread.start()
+    def action_aberrations(self):
+        self.set_options_widget(AberrationsOptionsWidget(self))
+
+        pass
+
 
     def thread_zernike_calculation(self):
         """Process Zernike coefficients for correction."""
