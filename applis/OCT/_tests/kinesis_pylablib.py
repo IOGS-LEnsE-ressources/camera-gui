@@ -39,23 +39,18 @@ def init_step_motor(id_num: str):
 if __name__ == '__main__':	
 	print(Thorlabs.list_kinesis_devices())
 
-	dev = Thorlabs.BasicKinesisDevice("40897338", is_rack_system=True)
-	time.sleep(0.1)
-	dev.send_comm(0x0443, param1=0x01, param2=0x00, source=0x01,
-				  dest=0x21)  # dest=0x22 for channel 2 and 0x23 for channel 3
-	time.sleep(0.1)
-	dev.close()
-
-	time.sleep(0.1)
-	step_motor = Thorlabs.KinesisMotor("40897338", is_rack_system=True)
-	step_motor.home(channel=1)
-
-
 	piezo_motor = Thorlabs.KinesisPiezoController("29501399")
+	step_motor = Thorlabs.KinesisMotor("40897338")
+	#step_motor = Thorlabs.BasicKinesisDevice("40897338")
 
-	# "<" means little-endian, and "Hi" means a 2-byte unsigned integer followed by a 4-byte signed integer (see struct documentation)
-	data = struct.pack("<Hi", 0, 1000)  # channel 0 and position 10000
-	#step_motor.send_comm_data(messageID=0x0443, data=data)
+	# Step Motor
+	print('Step Motor')
+	print(step_motor.get_status())
 
-	step_motor.close()
+
+	# Piezo
+	print('Piezo Motor/Controller')
+	print(piezo_motor.get_status())
+
+
 	piezo_motor.close()
