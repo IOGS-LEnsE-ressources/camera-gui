@@ -18,6 +18,11 @@ from pylablib.devices import Thorlabs
 
 id_number = 0
 
+jog_settings = {
+	"mode": 2,
+	"stepSize": 409600
+}
+
 def init_step_motor(id_num: str):
 	# https://github.com/AlexShkarin/pyLabLib/issues/6#issue-1073743642
 	step_motor = Thorlabs.BasicKinesisDevice(id_num)
@@ -46,7 +51,15 @@ if __name__ == '__main__':
 	# Step Motor
 	print('Step Motor')
 	print(step_motor.get_status())
+	step_motor.setup_jog(mode=jog_settings["mode"], step_size=jog_settings["stepSize"])
 
+	time.sleep(0.5)
+	print(step_motor.get_status())
+
+	'''
+	setup_jog(mode=None, step_size=None, min_velocity=None, acceleration=None, max_velocity=None,
+			  stop_mode=None, channel=None, scale=True)
+	'''
 
 	# Piezo
 	print('Piezo Motor/Controller')
