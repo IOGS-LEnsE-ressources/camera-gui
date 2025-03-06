@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QWidget, QPushButton,
     QMainWindow, QApplication, QMessageBox)
 from widgets.main_widget import MainWidget, load_menu
-from process.zernike_coefficients import Zernike
+from process.zernike_coefficients import Zernike 
 
 ## Example for IDS Camera
 from lensecam.ids.camera_ids_widget import CameraIdsWidget
@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
         # Data for default correction
         # ---------------------------
         self.corrected_phase = None
-        self.coeff_counter = 1
+        self.coeff_counter = 0
         self.coeff_zernike_max = ZERNIKE_MAX
         self.zernike = Zernike(self.coeff_zernike_max)
 
@@ -162,7 +162,7 @@ class MainWindow(QMainWindow):
             self.camera_thread.set_camera(self.camera)
             self.camera_thread.image_acquired.connect(self.thread_update_image)
             # Display image
-            self.camera_thread.start()
+            #self.camera_thread.start()
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No Camera Connected")
@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
         self.analysis_completed = False
 
         self.corrected_phase = None
-        self.coeff_counter = 1
+        self.coeff_counter = 0
         self.zernike = Zernike(self.coeff_zernike_max)
 
     def main_action(self, event):
@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
         """
         if self.camera_thread.running:
             self.central_widget.update_size()
-        elif self.images_opened:
+        elif self.images_opened and self.main_mode != 'aberrations':
             self.central_widget.update_size()
 
     def closeEvent(self, event):
