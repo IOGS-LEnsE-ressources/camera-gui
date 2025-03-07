@@ -50,7 +50,6 @@ class Masks:
             out_str += f'\tMask {i+1} : {self.mask_type[i]}\n'
         return out_str
 
-
     def get_mask(self, index: int) -> np.ndarray:
         """Return the selected mask.
         :param index: Index of the mask to return.
@@ -75,7 +74,6 @@ class Masks:
     def get_mask_list(self) -> list[np.ndarray]:
         """Return all the masks in a list."""
         return self.masks_list
-# to comment selection: ctrl + /
 
     def add_mask(self, mask: np.ndarray, type_m: str = ''):
         """Add a new mask to the list.
@@ -95,7 +93,6 @@ class Masks:
         self.mask_selected.clear()
         self.mask_inverted.clear()
         self.masks_number = 0
-
 
     def del_mask(self, index: int):
         """Remove the specified mask.
@@ -482,8 +479,8 @@ class CircularMaskSelection(QDialog):
     -----
     This dialog is part of a photonics labwork interface developed at LEnsE - Institut d'Optique.
 
-    Examples
-    --------
+    Example
+    -------
     image = np.random.randint(0, 255, (600, 600), dtype=np.uint8)
     dialog = CircularMaskSelection(image)
     dialog.exec()

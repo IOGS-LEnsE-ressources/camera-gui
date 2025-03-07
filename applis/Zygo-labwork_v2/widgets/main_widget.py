@@ -433,6 +433,9 @@ class MainWidget(QWidget):
             self.parent.main_mode = mode
             self.parent.main_submode = submode
 
+            print(f'Mode = {mode}')
+            print(f'SubMode = {submode}')
+
             # Clear layouts
             self.clear_sublayout(OPTIONS_COL)
             self.clear_sublayout(SUBOPTIONS_COL)
@@ -560,7 +563,7 @@ class MainWidget(QWidget):
 
         ## Masks
         elif self.parent.main_submode == 'circular':
-            self.action_masks_visualization()
+            #self.action_masks_visualization()
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
             elif self.parent.camera_connected:
@@ -578,9 +581,10 @@ class MainWidget(QWidget):
                 self.options_widget.update_display()
                 self.parent.masks_changed = True
             self.submenu_widget.set_button_enabled(1, True)
+            # Update interface
+            self.update_interface(nosub=True)
 
         elif self.parent.main_submode == 'rectangular':
-            self.action_masks_visualization()
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
             elif self.parent.camera_connected:
@@ -598,9 +602,10 @@ class MainWidget(QWidget):
                 self.options_widget.update_display()
                 self.parent.masks_changed = True
             self.submenu_widget.set_button_enabled(2, True)
+            # Update interface
+            self.update_interface(nosub=True)
 
         elif self.parent.main_submode == 'polygon':
-            self.action_masks_visualization()
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
             elif self.parent.camera_connected:
@@ -618,6 +623,8 @@ class MainWidget(QWidget):
                 self.options_widget.update_display()
                 self.parent.masks_changed = True
             self.submenu_widget.set_button_enabled(3, True)
+            # Update interface
+            self.update_interface(nosub=True)
 
         ## Simple Analysis
         elif self.parent.main_submode == 'wrappedphase':
@@ -662,14 +669,22 @@ class MainWidget(QWidget):
             self.suboptions_widget.correction_box()
             self.display_3D_phase()
             #self.display_3D_adjusted_phase()
-            
+
+    def update_interface(self, nosub=False):
+        """Update interface"""
+        mode = self.parent.main_mode
+        submode = self.parent.main_submode
+        str_menu = mode
+        if submode is not None and nosub is False:
+            str_menu = submode + '_' + mode
+        print(str_menu)
+        self.menu_action(str_menu)
 
     def aberrations_correction_selected(self, event):
         _, new_surface = self.parent.zernike.process_surface_correction(event)
         PV, RMS = statistics_surface(new_surface)
         self.suboptions_widget.set_values([PV], [RMS])
         self.display_3D_unwrapped_phase(new_surface)
-
 
     def display_right(self):
         # Display image with mask in the top right widget
@@ -723,7 +738,7 @@ class MainWidget(QWidget):
             else:
                 self.layout.removeItem(item)
 
-    def update_size(self, aoi: bool = False):
+    def update_size(self, aoi: bool = False, widget=None):
         """
         Update the size of the main widget.
         """
@@ -760,8 +775,6 @@ class MainWidget(QWidget):
         self.clear_layout(BOT_LEFT_ROW, BOT_LEFT_COL)
         self.bot_left_widget = widget
         self.layout.addWidget(self.bot_left_widget, BOT_LEFT_ROW, BOT_LEFT_COL)
-
-
 
     def set_bot_right_widget(self, widget):
         """
@@ -904,9 +917,6 @@ class MainWidget(QWidget):
     def action_menu_open_images(self):
         """Action performed when the open submode of images is called."""
         try:
-            # Display a warning message if data are still opened
-            if self.parent.images_opened:
-                print('WARNING !!')
             # Display a dialog box to open a MAT file
             self.parent.images, self.parent.masks = self.open_images()
             # Update the submenu and the display - /!\ masks BEFORE images
@@ -915,6 +925,7 @@ class MainWidget(QWidget):
             else:
                 self.parent.mask_created = False
             if self.parent.images is not None:
+                pass
                 self.parent.images_opened = True
                 self.submenu_widget.set_button_enabled(2, True)
                 self.submenu_widget.set_activated(2)
@@ -1020,8 +1031,21 @@ class MainWidget(QWidget):
 
     def action_menu_display_images(self):
         """Action performed when images are displayed."""
-        # display first image if present
+        # display first image if present on left area and all images on right area
         self.display_first_image()
+        self.set_top_right_widget(ImagesDisplayWidget(self))
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width * RIGHT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
+        self.top_right_widget.update_size(wi, he, False)
+
+        #self.update_size(self.top_right_widget)
+        if self.parent.images_opened:
+            set_of_images = self.parent.images.get_images_set(1)
+            image = generate_images_grid(set_of_images)
+            self.top_right_widget.set_image_from_array(image)
         # Update options widget
         self.set_options_widget(ImagesChoice(self))
         self.submenu_widget.set_button_enabled(2, True)

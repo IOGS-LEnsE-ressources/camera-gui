@@ -28,8 +28,7 @@ from lensepy.pyqt6 import *
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-sys.path.insert(0, 'C:\\Users\\TP 33\\Desktop\\camera-gui-main\\applis\\Zygo-labwork_v2\\process')
-from widgets.table_from_numpy import TableFromNumpy 
+#sys.path.insert(0, 'C:\\Users\\TP 33\\Desktop\\camera-gui-main\\applis\\Zygo-labwork_v2\\process')
 from process.zernike_coefficients import *
 
 

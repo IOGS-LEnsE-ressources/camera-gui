@@ -24,6 +24,8 @@ from lensepy.css import *
 from lensepy.images.conversion import *
 
 
+number_of_images = 5
+
 def read_mat_file(file_path: str) -> dict:
     """
     Load data and masks from a .mat file.
@@ -196,17 +198,19 @@ class ImagesChoice(QWidget):
         self.layout_images = QHBoxLayout()
         self.images_select_widget.setLayout(self.layout_images)
         self.images_button_select = []
-        for i in range(5):
+        for i in range(number_of_images):
             button = QPushButton(str(i+1))
             button.setFixedWidth(40)
             button.setStyleSheet(unactived_button)
             button.clicked.connect(self.display_image)
             self.images_button_select.append(button)
+        '''
         button = QPushButton('ALL')
         button.setFixedWidth(40)
         button.clicked.connect(self.display_image)
         button.setStyleSheet(unactived_button)
         self.images_button_select.append(button)
+        '''
         # Widget masks selection
         self.masks_select_widget = QWidget()
         self.layout_masks = QHBoxLayout()
@@ -243,7 +247,7 @@ class ImagesChoice(QWidget):
                     self.sets_button_list.append(button)
                     self.layout_set.addWidget(self.sets_button_list[i])
             self.label_status_images.setText('Display image ?')
-            for i in range(6):
+            for i in range(number_of_images):
                 self.layout_images.addWidget(self.images_button_select[i])
             self.images_button_select[index-1].setStyleSheet(actived_button)
         else:
@@ -269,7 +273,7 @@ class ImagesChoice(QWidget):
 
     def unactivate_buttons(self):
         """Set unactivated all the buttons."""
-        for i in range(6):
+        for i in range(number_of_images):
             self.images_button_select[i].setStyleSheet(unactived_button)
         mask_number = self.parent.parent.masks.get_masks_number()
         for i in range(mask_number):
@@ -288,15 +292,18 @@ class ImagesChoice(QWidget):
             self.unactivate_buttons()
             sender = self.sender()
             sender.setStyleSheet(actived_button)
-            for i in range(6):
+            for i in range(number_of_images):
                 if sender == self.images_button_select[i]:
+                    image = self.parent.parent.images.get_image_from_set(i+1, self.selected_set)
+                    self.parent.top_left_widget.set_image_from_array(image)
+                    '''
                     if i != 5:
-                        image = self.parent.parent.images.get_image_from_set(i+1, self.selected_set)
-                        self.parent.top_left_widget.set_image_from_array(image)
+                    
                     else:
                         set_of_images = self.parent.parent.images.get_images_set(self.selected_set)
                         image = generate_images_grid(set_of_images)
                         self.parent.top_left_widget.set_image_from_array(image)
+                    '''
         except Exception as e:
             print(f'display : {e}')
 
@@ -382,10 +389,10 @@ class ImagesDisplayWidget(QWidget):
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image.copy()
         image_to_display = np.squeeze(image_to_display)
-
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
             image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
         qimage = array_to_qimage(image_to_display)
+
         if aoi:
             painter = QPainter(qimage)
             painter.setPen(QColor(255, 255, 255))  # Couleur blanche pour le texte
