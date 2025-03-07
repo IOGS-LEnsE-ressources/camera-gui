@@ -420,38 +420,33 @@ class MainWidget(QWidget):
         # Test if masks changed
         if self.parent.masks_changed:
             self.parent.reset_data()
-            print('Masks changed')
             self.parent.masks_changed = False
 
-        try:
-            mode = event
-            submode = ''
-            if "_" in event:
-                modes = event.split('_')
-                mode = modes[1]
-                submode = modes[0]
-            self.parent.main_mode = mode
-            self.parent.main_submode = submode
+        # Clear layouts
+        self.clear_sublayout(OPTIONS_COL)
+        self.clear_sublayout(SUBOPTIONS_COL)
+        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
+        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
-            print(f'Mode = {mode}')
-            print(f'SubMode = {submode}')
+        mode = event
+        submode = ''
+        if "_" in event:
+            modes = event.split('_')
+            mode = modes[1]
+            submode = modes[0]
+        self.parent.main_mode = mode
+        self.parent.main_submode = submode
 
-            # Clear layouts
-            self.clear_sublayout(OPTIONS_COL)
-            self.clear_sublayout(SUBOPTIONS_COL)
-            self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
-            self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
-            self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        print(f'Mode = {mode}')
+        print(f'SubMode = {submode}')
 
-            # Manage application
-            self.main_mode_action()
-            self.main_submode_action()
+        # Manage application
+        self.main_mode_action()
+        self.main_submode_action()
 
-            # Update menu
-            self.update_menu()
-
-        except Exception as e:
-            print(f'Menu Action : {e}')
+        # Update menu
+        self.update_menu()
 
     def main_mode_action(self):
         """Display information depending on the main mode."""
@@ -563,7 +558,6 @@ class MainWidget(QWidget):
 
         ## Masks
         elif self.parent.main_submode == 'circular':
-            #self.action_masks_visualization()
             if self.parent.images_opened:
                 image = self.parent.images.get_image_from_set(1)
             elif self.parent.camera_connected:
@@ -653,6 +647,7 @@ class MainWidget(QWidget):
                 else:
                     self.suboptions_widget.set_tilt_enabled(False)
             self.display_3D_unwrapped_phase()
+
         ## Aberrations
         elif self.parent.main_submode == 'Zernikecoefficients':
             self.bot_right_widget.show_Zernike_table()
@@ -677,7 +672,7 @@ class MainWidget(QWidget):
         str_menu = mode
         if submode is not None and nosub is False:
             str_menu = submode + '_' + mode
-        print(str_menu)
+        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
         self.menu_action(str_menu)
 
     def aberrations_correction_selected(self, event):
@@ -738,7 +733,7 @@ class MainWidget(QWidget):
             else:
                 self.layout.removeItem(item)
 
-    def update_size(self, aoi: bool = False, widget=None):
+    def update_size(self, aoi: bool = False):
         """
         Update the size of the main widget.
         """
@@ -748,6 +743,14 @@ class MainWidget(QWidget):
         wi = (width * LEFT_WIDTH) // 100
         he = (height * TOP_HEIGHT) // 100
         self.top_left_widget.update_size(wi, he, aoi)
+
+        if isinstance(self.top_right_widget, ImagesDisplayWidget):
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
+            self.top_right_widget.update_size(wi, he, False)
 
     def set_top_left_widget(self, widget):
         """
@@ -1041,7 +1044,6 @@ class MainWidget(QWidget):
         he = (height * TOP_HEIGHT) // 100
         self.top_right_widget.update_size(wi, he, False)
 
-        #self.update_size(self.top_right_widget)
         if self.parent.images_opened:
             set_of_images = self.parent.images.get_images_set(1)
             image = generate_images_grid(set_of_images)
@@ -1067,6 +1069,8 @@ class MainWidget(QWidget):
             if self.parent.mask_created is False:
                 self.parent.masks = Masks()
             # display first image if present
+            #self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
+            #self.set_top_left_widget(ImagesDisplayWidget(self))
             self.display_first_image()
             # Display options widget with Masks Options
             self.set_options_widget(MasksOptionsWidget(self))
@@ -1273,11 +1277,10 @@ class MainWidget(QWidget):
 
             thread = threading.Thread(target=self.thread_zernike_calculation)
             thread.start()
+
     def action_aberrations(self):
         self.set_options_widget(AberrationsOptionsWidget(self))
-
         pass
-
 
     def thread_zernike_calculation(self):
         """Process Zernike coefficients for correction."""
@@ -1287,10 +1290,12 @@ class MainWidget(QWidget):
         self.parent.coeff_counter += 1
         if self.parent.coeff_counter <= self.parent.coeff_zernike_max:
             thread = threading.Thread(target=self.thread_zernike_calculation)
+            time.sleep(0.1)
             thread.start()
         else:
             # At the end, analysis completed !
             self.parent.analysis_completed = True
+            time.sleep(0.1)
             self.update_menu()
 
 

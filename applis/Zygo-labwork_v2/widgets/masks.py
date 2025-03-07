@@ -162,6 +162,7 @@ class Masks:
          """
         return self.mask_inverted[index-1]
 
+
 class MasksTableWidget(QTableWidget):
 
     def __init__(self, parent=None):

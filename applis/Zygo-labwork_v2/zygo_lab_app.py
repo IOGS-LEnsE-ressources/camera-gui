@@ -210,7 +210,6 @@ class MainWindow(QMainWindow):
         :param event: Event that triggered the action.
         """
         if event == 'camera':
-
             pass
 
         elif event == 'zoom_camera':
