@@ -31,7 +31,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 sys.path.insert(0, 'C:\\Users\\TP 33\\Desktop\\camera-gui-main\\applis\\Zygo-labwork_v2\\process')
 from widgets.table_from_numpy import TableFromNumpy 
 from process.zernike_coefficients import *
-from widgets.main_widget import aberrations_correction_selected
+
 
 
 
@@ -222,9 +222,11 @@ class CorrectionTable(QTableWidget):
         super().__init__(parent)
         self.parent = parent
 
+        # Set the corrected coeffs
+        self.corrected_coeffs=self.parent.coeffs
         # Set the window title and size
 
-        self.setGeometry(100, 100, 300, 400)
+        self.setGeometry(100, 100, 600, 400)
         self.setMinimumSize(100, 100)
 
         # Create the table widget
@@ -235,7 +237,7 @@ class CorrectionTable(QTableWidget):
         self.setColumnCount(4)  # 4 columns
 
         # Set the header labels
-        self.setHorizontalHeaderLabels(["Aberration", "","Aberration",""])
+        self.setHorizontalHeaderLabels(["Aberration", "Correction","Aberration","Correction"])
 
         # Set checkbox list
         self.checkbox_list = []
@@ -255,23 +257,32 @@ class CorrectionTable(QTableWidget):
             self.setItem(row, 2, name_item)  # Set name in the first column
 
             checkbox = QCheckBox()
-            checkbox.setChecked()
+            checkbox.setChecked(False)
             checkbox.stateChanged.connect(self.correction_checkbox_changed)
             self.checkbox_list.append(checkbox)
             self.setCellWidget(row, 3, checkbox)  # Set checkbox in the second column
         
         self.resizeColumnsToContents()
+
+
     def correction_checkbox_changed(self):
+        #self.corrected_coeffs=self.parent.coeffs
         checkbox=self.sender()
-        i=0
-        while True:
-            if checkbox == self.checkbox_list[i]:
-                aberr=self.list[i]
-                #self.parent.coeffs[self.dict[aberr]]=
-                break
-            else:
-                i+=1
-                pass
+        if checkbox.isChecked():
+            aberr=self.list[self.checkbox_list.index(checkbox)]
+            if len(self.dict[aberr]) == 1:
+                self.corrected_coeffs[self.dict[aberr].pop()]=0
+            else: #2 self.dict[aberr] elemnts 
+                self.corrected_coeffs[self.dict[aberr][0]]=0
+                self.corrected_coeffs[self.dict[aberr][1]]=0
+        else:
+            aberr=self.list[self.checkbox_list.index(checkbox)]
+            if len(self.dict[aberr]) == 1:
+                self.corrected_coeffs[self.dict[aberr].pop()]=self.parent.coeffs[self.dict[aberr].pop()]
+            else: #2 self.dict[aberr] elemnts 
+                self.corrected_coeffs[self.dict[aberr][0]]=self.parent.coeffs[self.dict[aberr][0]]
+                self.corrected_coeffs[self.dict[aberr][1]]=self.parent.coeffs[self.dict[aberr][1]]
+
 
 
 
