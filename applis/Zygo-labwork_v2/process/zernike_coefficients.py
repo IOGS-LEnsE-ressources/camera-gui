@@ -48,6 +48,31 @@ aberrations_type = {
     "sphere11" : [36]
 }
 
+aberrations_list = [
+    "tilt",
+    "defocus",
+    "astig3" ,
+    "coma3",
+    "sphere3",
+    "trefoil5",
+    "astig5",
+    "coma5",
+    "sphere5",
+    "quadra7",
+    "trefoil7",
+    "astig7",
+    "coma7",
+    "sphere7",
+    "penta9",
+    "quadra9",
+    "trefoil9",
+    "astig9",
+    "coma9",
+    "sphere9",
+    "sphere11" 
+]
+
+
 class Zernike:
     """
     Notes
@@ -190,6 +215,16 @@ class Zernike:
         # Correction de la surface
         new_surface = self.surface - self.corrected_phase
         return self.corrected_phase, new_surface
+    
+    def  phase_correction(self, corrected_coeffs: list[float]):
+        self.corrected_phase = np.zeros_like(self.surface)
+        for i,c in enumerate(corrected_coeffs):
+            self.corrected_phase += c * self.process_cartesian_polynomials(i)
+        # Correction de la surface
+        new_surface = self.surface - self.corrected_phase
+
+        return self.corrected_phase, new_surface
+    
 
 def display_3_figures(init, zer, corr):
     """Displaying results."""
