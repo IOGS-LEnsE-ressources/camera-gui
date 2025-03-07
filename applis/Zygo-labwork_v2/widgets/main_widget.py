@@ -512,10 +512,7 @@ class MainWidget(QWidget):
         elif self.parent.main_mode == 'aberrations':
             self.set_top_left_widget(AberrationsOptionsWidget(self))
             self.set_bot_right_widget(AberrationsOptionsWidget(self))
-
-
             self.top_left_widget.show_graph()
-   
             self.action_aberrations()
 
     def main_submode_action(self):
@@ -658,7 +655,13 @@ class MainWidget(QWidget):
 
         elif self.parent.main_submode == 'coefficientscorrection':
             self.set_suboptions_widget(AberrationsOptionsWidget(self))
+            
+            self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+            self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+            (self.SUBOPTIONS_ROW, self.SUBOPTIONS_COL)=(0,1)
             self.suboptions_widget.correction_box()
+            self.display_3D_phase()
+            #self.display_3D_adjusted_phase()
             
 
     def aberrations_correction_selected(self, event):
@@ -874,16 +877,13 @@ class MainWidget(QWidget):
         else:
             print('No mask !')
 
-    def display_3D_adjusted_phase(self, image=None):
+    def display_3D_adjusted_phase(self, image):
         """Display a 3D surface in the bot!!! right part of the interface."""
-        self.set_top_right_widget(Surface3DWidget(self))
+        self.set_bot_right_widget(Surface3DWidget(self))
         mask = self.parent.cropped_mask_phase
-        if image is None:
-            displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
-        else:
-            displayed_surface = image * self.parent.wedge_factor
+        displayed_surface = image * self.parent.wedge_factor
         if mask is not None:
-            self.top_right_widget.set_data(displayed_surface, mask,
+            self.bot_right_widget.set_data(displayed_surface, mask,
                                            bar_title=r"Default magnitude ('$\lambda$')", size=20)
         else:
             print('No mask !')

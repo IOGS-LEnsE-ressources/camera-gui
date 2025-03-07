@@ -165,6 +165,8 @@ class AberrationsOptionsWidget(QWidget):
         super().__init__(parent=None)
         self.parent = parent
         self.coeffs=self.parent.parent.zernike.coeff_list
+        if not isinstance(self.coeffs, np.ndarray):
+            self.coeffs = np.array(self.coeffs)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         # Title
@@ -223,7 +225,7 @@ class CorrectionTable(QTableWidget):
         self.parent = parent
 
         # Set the corrected coeffs
-        self.corrected_coeffs=self.parent.coeffs
+        self.corrected_coeffs=np.zeros_like(self.parent.coeffs)
         # Set the window title and size
 
         self.setGeometry(100, 100, 600, 400)
@@ -233,7 +235,7 @@ class CorrectionTable(QTableWidget):
         self.list=aberrations_list
         self.dict=aberrations_type
         # Set the number of rows and columns
-        self.setRowCount(len(self.list))  # 10 rows
+        self.setRowCount(len(self.list)//2+1)  # 11 rows
         self.setColumnCount(4)  # 4 columns
 
         # Set the header labels
@@ -243,8 +245,8 @@ class CorrectionTable(QTableWidget):
         self.checkbox_list = []
 
         # Populate the table with names and checkboxes
-        for row in range(len(self.list)):
-            name_item = QTableWidgetItem(self.list[row])
+        for row in range(len(self.list)//2+1):
+            name_item = QTableWidgetItem(self.list[2*row])
             self.setItem(row, 0, name_item)  # Set name in the first column
 
             checkbox = QCheckBox()
@@ -252,36 +254,40 @@ class CorrectionTable(QTableWidget):
             checkbox.stateChanged.connect(self.correction_checkbox_changed)
             self.checkbox_list.append(checkbox)
             self.setCellWidget(row, 1, checkbox)  # Set checkbox in the second column
-            
-            name_item = QTableWidgetItem(self.list[2*row+1])
-            self.setItem(row, 2, name_item)  # Set name in the first column
+            if not(row==(len(self.list)//2)):
+                name_item = QTableWidgetItem(self.list[2*row+1])
+                self.setItem(row, 2, name_item)  # Set name in the first column
 
-            checkbox = QCheckBox()
-            checkbox.setChecked(False)
-            checkbox.stateChanged.connect(self.correction_checkbox_changed)
-            self.checkbox_list.append(checkbox)
-            self.setCellWidget(row, 3, checkbox)  # Set checkbox in the second column
-        
+                checkbox = QCheckBox()
+                checkbox.setChecked(False)
+                checkbox.stateChanged.connect(self.correction_checkbox_changed)
+                self.checkbox_list.append(checkbox)
+                self.setCellWidget(row, 3, checkbox)  # Set checkbox in the second column
+
+
         self.resizeColumnsToContents()
 
 
     def correction_checkbox_changed(self):
-        #self.corrected_coeffs=self.parent.coeffs
         checkbox=self.sender()
         if checkbox.isChecked():
             aberr=self.list[self.checkbox_list.index(checkbox)]
+            print(aberr)
             if len(self.dict[aberr]) == 1:
-                self.corrected_coeffs[self.dict[aberr].pop()]=0
-            else: #2 self.dict[aberr] elemnts 
-                self.corrected_coeffs[self.dict[aberr][0]]=0
-                self.corrected_coeffs[self.dict[aberr][1]]=0
-        else:
-            aberr=self.list[self.checkbox_list.index(checkbox)]
-            if len(self.dict[aberr]) == 1:
-                self.corrected_coeffs[self.dict[aberr].pop()]=self.parent.coeffs[self.dict[aberr].pop()]
+                self.corrected_coeffs[self.dict[aberr][0]]=self.parent.coeffs[self.dict[aberr][0]]
             else: #2 self.dict[aberr] elemnts 
                 self.corrected_coeffs[self.dict[aberr][0]]=self.parent.coeffs[self.dict[aberr][0]]
                 self.corrected_coeffs[self.dict[aberr][1]]=self.parent.coeffs[self.dict[aberr][1]]
+        else:
+            aberr=self.list[self.checkbox_list.index(checkbox)]
+            print(aberr)
+            if len(self.dict[aberr]) == 1:
+                self.corrected_coeffs[self.dict[aberr][0]]=0
+            else: #2 self.dict[aberr] elemnts 
+                self.corrected_coeffs[self.dict[aberr][0]]=0
+                self.corrected_coeffs[self.dict[aberr][1]]=0
+        _, new_surface = self.parent.parent.parent.zernike.phase_correction(self.corrected_coeffs)
+        self.parent.parent.display_3D_adjusted_phase(new_surface)
 
 
 
@@ -329,7 +335,8 @@ class AberrationsTableWidget(QTableWidget):
         super().__init__(parent=None)
         self.parent=parent
         self.coeffs=self.parent.parent.parent.zernike.coeff_list
-        self.coeffs=np.array(self.coeffs)
+        if not isinstance(self.coeffs, np.ndarray):
+            self.coeffs = np.array(self.coeffs)
 
         self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout()
