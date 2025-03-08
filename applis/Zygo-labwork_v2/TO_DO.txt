@@ -3,6 +3,12 @@
 
 /!\ MODIFICATION OF NI_DAQ CLASS !
 
+
+### Things to check
+-------------------
+-->   Classe AberrationsChoiceWidget for select aberrations to compensate (to do)
+
+
 ### Bugs to delete
 ------------------
 -->   Delete wrapped and unwrapped calculations if mask changed

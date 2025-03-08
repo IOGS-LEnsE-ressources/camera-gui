@@ -28,8 +28,13 @@ from lensepy.pyqt6 import *
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-#sys.path.insert(0, 'C:\\Users\\TP 33\\Desktop\\camera-gui-main\\applis\\Zygo-labwork_v2\\process')
-from process.zernike_coefficients import *
+if __name__ == '__main__':
+    sys.path.insert(0, '../process')
+    from zernike_coefficients import *
+else:
+    from process.zernike_coefficients import *
+
+
 
 
 
@@ -38,7 +43,9 @@ COEFFICIENTS_ROUND_RANGE = 4 # decimals
 
 def convert_zernike_seidel(coeffs):
         """
-        Dans les conventions actuelles, on a:
+        Process Seidel coefficients from Zernike coefficients.
+
+        Actual convention:
 
         Aberration  | Amplitude     | Angle
         ---------------------------------------------------
@@ -155,6 +162,7 @@ def lin_XY(ax, title='', x_label='', x_unit='', y_label='', y_unit='', axis_inte
     ax.set_title(title)
     return ax
 
+
 class AberrationsOptionsWidget(QWidget):
     """Aberrations Options."""
 
@@ -163,7 +171,7 @@ class AberrationsOptionsWidget(QWidget):
         """
         super().__init__(parent=None)
         self.parent = parent
-        self.coeffs=self.parent.parent.zernike.coeff_list
+        self.coeffs = self.parent.parent.zernike.coeff_list
         if not isinstance(self.coeffs, np.ndarray):
             self.coeffs = np.array(self.coeffs)
         self.layout = QVBoxLayout()
@@ -210,14 +218,19 @@ class AberrationsOptionsWidget(QWidget):
         self.layout.addWidget(self.label_aberrations_title)
         self.layout.addWidget(self.correction_table)
         self.layout.addStretch()
-
-        
-
     
-        
-        
-    
-        
+
+class AberrationsChoiceWidget(QWidget):
+    """Aberrations Choice for selecting aberrations to compensate."""
+
+    def __init__(self, parent=None) -> None:
+        """Default constructor of the class.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+
+        # TO DO
+
 class CorrectionTable(QTableWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
@@ -289,9 +302,6 @@ class CorrectionTable(QTableWidget):
         self.parent.parent.display_3D_adjusted_phase(new_surface)
 
 
-
-
-
 class SeidelTableWidget(QTableWidget):
     def __init__(self, parent=None):
         super().__init__(parent=None)
@@ -326,7 +336,6 @@ class SeidelTableWidget(QTableWidget):
         self.master_widget.setLayout(self.layout)
         self.master_layout.addWidget(self.master_widget)
         self.setLayout(self.master_layout)
-
 
         
 class AberrationsTableWidget(QTableWidget):
@@ -383,7 +392,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_main_menu_widget"))
             self.setGeometry(100, 200, 800, 600)
 
-            self.central_widget = AberrationsOptionsWidget(self)
+            self.central_widget = AberrationsChoiceWidget(self)
             self.setCentralWidget(self.central_widget)
 
     app = QApplication(sys.argv)
