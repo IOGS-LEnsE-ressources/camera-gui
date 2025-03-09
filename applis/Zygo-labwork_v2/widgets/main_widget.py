@@ -51,9 +51,9 @@ def load_menu(file_path: str, menu):
     Load parameter from a CSV file.
     """
     if os.path.exists(file_path):
-        # Read the CSV file, ignoring lines starting with '//'
+        # Read the txt file, ignoring lines starting with '#'
         data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
-        # Populate the dictionary with key-value pairs from the CSV file
+        # Populate the dictionary with key-value pairs from the txt file
         for element, title, signal, _ in data:
             if element == 'B':  # button
                 menu.add_button(translate(title), signal)
@@ -661,9 +661,23 @@ class MainWidget(QWidget):
             self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
             self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
             (self.SUBOPTIONS_ROW, self.SUBOPTIONS_COL)=(0,1)
-            self.suboptions_widget.correction_box()
-            self.display_3D_phase()
-            #self.display_3D_adjusted_phase()
+            self.set_suboptions_widget(AberrationsChoiceWidget(self))
+            self.suboptions_widget.aberrations_choice_changed.connect(self.action_aberrations)
+            if self.parent.display_3D:
+                # TOP RIGHT - 3D surface with unwrapped phase
+                self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+                self.set_top_right_widget(Surface3DWidget(self))
+                mask = self.parent.cropped_mask_phase
+                displayed_surface = self.parent.unwrapped_phase * self.parent.wedge_factor
+                if mask is not None:
+                    self.top_right_widget.set_data(displayed_surface, mask,
+                                                   bar_title=r"Default magnitude ('$\lambda$')", size=20)
+                # BOT RIGHT - 3D surface with corrected phase - auto update when signal ...
+
+            else:
+                # TOP RIGHT - 2D surface with unwrapped phase
+                # BOT RIGHT - 2D surface with corrected phase
+                print('2D')
 
     def update_interface(self, nosub=False):
         """Update interface"""
@@ -876,8 +890,6 @@ class MainWidget(QWidget):
         if mask is not None:
             self.top_right_widget.set_data(displayed_surface, mask,
                                            bar_title=r"Default magnitude ('$\lambda$')", size=20)
-        else:
-            print('No mask !')
             
     def display_3D_phase(self, image = None):
         """Display a 3D surface in the top!!! right part of the interface."""
@@ -901,8 +913,6 @@ class MainWidget(QWidget):
         if mask is not None:
             self.bot_right_widget.set_data(displayed_surface, mask,
                                            bar_title=r"Default magnitude ('$\lambda$')", size=20)
-        else:
-            print('No mask !')
 
     def action_camera(self):
         """Action performed when Camera is clicked in the menu."""
@@ -1278,9 +1288,25 @@ class MainWidget(QWidget):
             thread = threading.Thread(target=self.thread_zernike_calculation)
             thread.start()
 
-    def action_aberrations(self):
-        self.set_options_widget(AberrationsOptionsWidget(self))
-        pass
+    def action_aberrations(self, event=None):
+        """Action to do when aberrations correction occured."""
+        if event is not None:
+            if event == 'choice_changed':
+                if self.parent.display_3D:
+                    # BOT RIGHT - 3D surface with corrected phase - auto update when signal ...
+                    self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+                    self.set_bot_right_widget(Surface3DWidget(self))
+                    ab_corr_list = self.suboptions_widget.aberrations_list
+                    print(ab_corr_list)
+                    mask = self.parent.cropped_mask_phase
+                    _, new_surface = self.parent.zernike.process_surface_correction(ab_corr_list)
+                    new_surface = new_surface * self.parent.wedge_factor
+                    if mask is not None:
+                        self.bot_right_widget.set_data(new_surface, mask,
+                                                       bar_title=r"Default magnitude ('$\lambda$')",
+                                                       size=20)
+        else:
+            self.set_options_widget(AberrationsOptionsWidget(self))
 
     def thread_zernike_calculation(self):
         """Process Zernike coefficients for correction."""

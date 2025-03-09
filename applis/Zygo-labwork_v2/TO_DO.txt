@@ -6,7 +6,6 @@
 
 ### Things to check
 -------------------
--->   Classe AberrationsChoiceWidget for select aberrations to compensate (to do)
 
 
 ### Bugs to delete

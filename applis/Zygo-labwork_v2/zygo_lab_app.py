@@ -103,6 +103,7 @@ class MainWindow(QMainWindow):
         # -----------
         self.main_mode = None
         self.main_submode = None
+        self.display_3D = True
         self.zoom_activated = False     # Camera is started in a large window
         self.zoom_window = QWidget()
         self.mask_created = False       # Almost one mask is created and selected
@@ -283,6 +284,7 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

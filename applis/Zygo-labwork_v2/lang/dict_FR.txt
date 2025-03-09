@@ -53,3 +53,13 @@ unwrapped_phase_button; Affichage Phase déroulée
 wedge_factor_label; Wedge Factor
 label_sub_acquisition_title; Correction
 check_tilt; Tilt
+# --------------
+# Aberrations
+# --------------
+ab_piston_title; Piston
+ab_tilt_title; Tilt
+ab_defocus_title; Defocus
+ab_astig_title; Astigmatisme
+ab_coma_title; Coma
+ab_trefoil_title; Trèfle
+ab_sphere_title; Ab. Sphériques
