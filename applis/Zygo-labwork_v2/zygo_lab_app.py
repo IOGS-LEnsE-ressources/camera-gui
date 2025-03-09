@@ -35,6 +35,9 @@ from widgets.camera import *
 from widgets.images import *
 from widgets.masks import *
 from drivers.nidaq_piezo import *
+## Modes
+from modes.modes import *
+from modes.camera import *
 
 
 ZERNIKE_MAX = 36
@@ -142,7 +145,6 @@ class MainWindow(QMainWindow):
         self.coeff_counter = 0
         self.coeff_zernike_max = ZERNIKE_MAX
         self.zernike = Zernike(self.coeff_zernike_max)
-
 
         # Initialization of the camera
         # ----------------------------

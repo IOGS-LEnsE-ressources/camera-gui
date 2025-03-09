@@ -10,7 +10,7 @@
 
 ### Bugs to delete
 ------------------
--->   Delete wrapped and unwrapped calculations if mask changed
+-->   Crash after last Zernike calculations (sometimes - often on first start of the app in PyCharm)
 -->   Masks upgrade and display
 -->   Saving images (histo or AOI) : stop camera acquisition !
 
@@ -20,6 +20,7 @@
 ### Functions to add
 --------------------
 
+-->   Change color of Zernike coeff corrected in Zernike Graph
 -->   Multiple acquisition : Mean on a set of images + display !!
         - display PV and RMS for each set of data
         - display global PV and RMS and mean / std for sets

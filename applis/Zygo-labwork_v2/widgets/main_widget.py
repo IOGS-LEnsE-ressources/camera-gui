@@ -422,13 +422,6 @@ class MainWidget(QWidget):
             self.parent.reset_data()
             self.parent.masks_changed = False
 
-        # Clear layouts
-        self.clear_sublayout(OPTIONS_COL)
-        self.clear_sublayout(SUBOPTIONS_COL)
-        self.clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
-        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
-        self.clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
-
         mode = event
         submode = ''
         if "_" in event:
@@ -440,6 +433,8 @@ class MainWidget(QWidget):
 
         print(f'Mode = {mode}')
         print(f'SubMode = {submode}')
+
+
 
         # Manage application
         self.main_mode_action()
@@ -679,45 +674,6 @@ class MainWidget(QWidget):
                 # BOT RIGHT - 2D surface with corrected phase
                 print('2D')
 
-    def update_interface(self, nosub=False):
-        """Update interface"""
-        mode = self.parent.main_mode
-        submode = self.parent.main_submode
-        str_menu = mode
-        if submode is not None and nosub is False:
-            str_menu = submode + '_' + mode
-        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
-        self.menu_action(str_menu)
-
-    def aberrations_correction_selected(self, event):
-        _, new_surface = self.parent.zernike.process_surface_correction(event)
-        PV, RMS = statistics_surface(new_surface)
-        self.suboptions_widget.set_values([PV], [RMS])
-        self.display_3D_unwrapped_phase(new_surface)
-
-    def display_right(self):
-        # Display image with mask in the top right widget
-        self.set_top_right_widget(ImagesDisplayWidget(self))
-        new_size = self.parent.size()
-        width = new_size.width()
-        height = new_size.height()
-        wi = (width * RIGHT_WIDTH) // 100
-        he = (height * TOP_HEIGHT) // 100
-        self.top_right_widget.update_size(wi, he)
-
-        images = self.parent.images.get_images_set(0)
-        mask = self.parent.masks.get_global_mask()
-        if mask is not None:
-            # Crop images around the mask
-            top_left, bottom_right = find_mask_limits(mask)
-            height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
-            pos_x, pos_y = top_left[1], top_left[0]
-            self.parent.cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
-            images_c = crop_images(images, (height, width), (pos_x, pos_y))
-        else:
-            images_c = images
-        self.top_right_widget.set_image_from_array(images_c[0])
-
     def clear_layout(self, row: int, column: int) -> None:
         """
         Remove widgets from a specific position in the layout.
@@ -746,25 +702,6 @@ class MainWidget(QWidget):
                 widget.deleteLater()
             else:
                 self.layout.removeItem(item)
-
-    def update_size(self, aoi: bool = False):
-        """
-        Update the size of the main widget.
-        """
-        new_size = self.parent.size()
-        width = new_size.width()
-        height = new_size.height()
-        wi = (width * LEFT_WIDTH) // 100
-        he = (height * TOP_HEIGHT) // 100
-        self.top_left_widget.update_size(wi, he, aoi)
-
-        if isinstance(self.top_right_widget, ImagesDisplayWidget):
-            new_size = self.parent.size()
-            width = new_size.width()
-            height = new_size.height()
-            wi = (width * RIGHT_WIDTH) // 100
-            he = (height * TOP_HEIGHT) // 100
-            self.top_right_widget.update_size(wi, he, False)
 
     def set_top_left_widget(self, widget):
         """
@@ -838,6 +775,64 @@ class MainWidget(QWidget):
         self.clear_sublayout(SUBOPTIONS_COL)
         self.suboptions_widget = widget
         self.bot_left_layout.addWidget(self.suboptions_widget, SUBOPTIONS_ROW, SUBOPTIONS_COL)
+
+    def update_interface(self, nosub=False):
+        """Update interface"""
+        mode = self.parent.main_mode
+        submode = self.parent.main_submode
+        str_menu = mode
+        if submode is not None and nosub is False:
+            str_menu = submode + '_' + mode
+        self.clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
+        self.menu_action(str_menu)
+
+    def aberrations_correction_selected(self, event):
+        _, new_surface = self.parent.zernike.process_surface_correction(event)
+        PV, RMS = statistics_surface(new_surface)
+        self.suboptions_widget.set_values([PV], [RMS])
+        self.display_3D_unwrapped_phase(new_surface)
+
+    def display_right(self):
+        # Display image with mask in the top right widget
+        self.set_top_right_widget(ImagesDisplayWidget(self))
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width * RIGHT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
+        self.top_right_widget.update_size(wi, he)
+
+        images = self.parent.images.get_images_set(0)
+        mask = self.parent.masks.get_global_mask()
+        if mask is not None:
+            # Crop images around the mask
+            top_left, bottom_right = find_mask_limits(mask)
+            height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
+            pos_x, pos_y = top_left[1], top_left[0]
+            self.parent.cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
+            images_c = crop_images(images, (height, width), (pos_x, pos_y))
+        else:
+            images_c = images
+        self.top_right_widget.set_image_from_array(images_c[0])
+
+    def update_size(self, aoi: bool = False):
+        """
+        Update the size of the main widget.
+        """
+        new_size = self.parent.size()
+        width = new_size.width()
+        height = new_size.height()
+        wi = (width * LEFT_WIDTH) // 100
+        he = (height * TOP_HEIGHT) // 100
+        self.top_left_widget.update_size(wi, he, aoi)
+
+        if isinstance(self.top_right_widget, ImagesDisplayWidget):
+            new_size = self.parent.size()
+            width = new_size.width()
+            height = new_size.height()
+            wi = (width * RIGHT_WIDTH) // 100
+            he = (height * TOP_HEIGHT) // 100
+            self.top_right_widget.update_size(wi, he, False)
 
     def get_list_menu(self, menu):
         """ """
