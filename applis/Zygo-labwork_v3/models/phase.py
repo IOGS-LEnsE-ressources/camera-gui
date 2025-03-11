@@ -10,6 +10,7 @@ Phase is demodulated by the Hariharan phase demodulation algorithm from a set of
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 Creation : march/2025
 """
+import cv2
 import numpy as np
 from lensepy.images.conversion import crop_images
 from models import *
@@ -25,6 +26,7 @@ class PhaseModel:
         """
         self.images_list = []
         self.mask = None
+        self.cropped_phase = None
         self.wrapped_phase = None
         self.unwrapped_phase = None
 
@@ -62,7 +64,10 @@ class PhaseModel:
         """
         print(f'L = {len(self.images_list)}')
         if len(self.images_list) != 0 and self.mask is not None:
-            self.wrapped_phase = hariharan_algorithm(self.images_list, self.mask)
+            self.cropped_phase = []
+            for image in self.images_list:
+                self.cropped_phase.append(cv2.blur(image, (15, 15)))
+            self.wrapped_phase = hariharan_algorithm(self.cropped_phase, self.mask)
             return True
         else:
             self.wrapped_phase = None
