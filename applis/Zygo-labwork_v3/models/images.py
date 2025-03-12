@@ -121,6 +121,14 @@ class ImagesModel:
                     return True
         return False
 
+    def save_images_set_to_file(self, filename: str = '') -> bool:
+        """
+        Save sets of images to a MAT file.
+        :param filename: Path of the MAT file.
+        :return: True if file is saved.
+        """
+        return False
+
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt

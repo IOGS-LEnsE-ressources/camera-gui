@@ -2,9 +2,10 @@
 
 from .images import *
 from .masks import *
-from .hariharan_algorithm import *      # Not Tested
-from .phase import *                    # Not Tested
+from .hariharan_algorithm import *
+from .phase import *
 from .zernike_coefficients import *     # Not Tested
+from .acquisition import *              # Not Tested
 
 
 '''
