@@ -28,7 +28,7 @@ def main():
     # Comment out this line for the real device
     # SimulationManager.Instance.InitializeSimulations()
     try:
-        DeviceManagerCLI.BuildDeviceList()
+        device_list = DeviceManagerCLI.BuildDeviceList()
 
         # create new device
         serial_no = "40897338"  # Replace this line with your device's serial number
@@ -55,8 +55,9 @@ def main():
         # Get Device Information and display description
         device_info = channel.GetDeviceInfo()
         print(device_info.Description)
+        print(f'Device ID : {channel.DeviceID}')
 
-        # Load any configuration settings needed by the controller/stage
+        ## Load any configuration settings needed by the controller/stage
         channel_config = channel.LoadMotorConfiguration(channel.DeviceID)
         chan_settings = channel.MotorDeviceSettings
 
@@ -68,20 +69,19 @@ def main():
 
         channel.SetSettings(chan_settings, True, False)
 
-        # Get parameters related to homing/zeroing/other
+        print(f'Position = {channel.DevicePosition}')
 
-        '''
+        ## Get parameters related to homing/zeroing/other
         # Home or Zero the device (if a motor/piezo)
         print("Homing Motor")
-        channel.Home(60000)
+        channel.Home(50000)
         print("Homing Completed")
 
         time.sleep(2)
         print("Moving...")
-        channel.MoveTo(Decimal(180), 60000)
+        channel.MoveTo(Decimal(1), 50000)
         print(f"Position = {channel.DevicePosition}")
-        time.sleep(2)
-        '''
+        time.sleep(0.5)
 
         # Stop Polling and Disconnect
         channel.StopPolling()
