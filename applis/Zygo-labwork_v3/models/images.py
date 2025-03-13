@@ -21,32 +21,6 @@ import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils import *
 
-number_of_images = 5
-
-
-def generate_images_grid(images: list[np.ndarray]):
-    """Generate a grid with 5 images.
-    The 6th image is the mean of the 4 first images.
-    :param images: List of 5 images.
-    """
-    img_height, img_width = images[0].shape
-    separator_size = 5
-    # Global size
-    total_height = 2 * img_height + separator_size  # 2 rows of images
-    total_width = 3 * img_width + 2 * separator_size  # 3 columns of images
-    # Empty image
-    result = np.ones((total_height, total_width), dtype=np.uint8) * 255
-    # Add each images
-    result[0:img_height, 0:img_width] = images[0]
-    result[0:img_height, img_width + separator_size:2 * img_width + separator_size] = images[1]
-    result[0:img_height, 2 * img_width + 2 * separator_size:] = images[2]
-    result[img_height + separator_size:, 0:img_width] = images[3]
-    result[img_height + separator_size:, img_width + separator_size:2 * img_width + separator_size] = images[4]
-    sum_image = (images[0] + images[1] + images[2] + images[3])/4
-    sum_image = sum_image.astype(np.uint8)
-    result[img_height + separator_size:, 2 * img_width + 2 * separator_size:] = sum_image
-    return result
-
 
 class ImagesModel:
     """Class containing images data and parameters.
@@ -102,7 +76,6 @@ class ImagesModel:
             list += set
         return list
 
-
     def load_images_set_from_file(self, filename: str = '') -> bool:
         """
         Load sets of images from a MAT file.
@@ -128,12 +101,13 @@ class ImagesModel:
         :param filename: Path of the MAT file.
         :return: True if file is saved.
         """
-        new_data = np.stack((self.images_list), axis=2).astype(np.uint8)
+        new_data = np.concatenate([np.stack(sublist, axis=-1) for sublist in self.images_list], axis=-1)
+        new_data = new_data.astype(np.uint8)
+        print(new_data.shape)
         data = {
             'Images': new_data
         }
         scipy.io.savemat(filename, data)
-
 
 
 if __name__ == '__main__':
@@ -146,13 +120,22 @@ if __name__ == '__main__':
     if image_set.load_images_set_from_file('../_data/test3.mat'):
         print('Images OK')
 
+        image_set.save_images_set_to_file('../_data/test_new.mat')
+
     ## Test class
     print(f'Number of sets = {image_set.get_number_of_sets()}')
     if image_set.get_number_of_sets() >= 1:
         image_1_1 = image_set.get_images_set(1)
+        print(type(image_1_1))
         if isinstance(image_1_1, list):
             plt.figure()
             plt.imshow(image_1_1[0], cmap='gray')
             plt.show()
 
 
+    ## Test Save and reload file MAT
+    image_set_reload = ImagesModel(nb_of_images_per_set)
+    if image_set_reload.load_images_set_from_file('../_data/test_new.mat'):
+        print('Images OK')
+        image_2_1 = image_set_reload.get_images_set(1)
+        print(type(image_2_1))

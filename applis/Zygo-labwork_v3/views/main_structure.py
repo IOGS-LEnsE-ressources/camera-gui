@@ -1,0 +1,205 @@
+# -*- coding: utf-8 -*-
+"""*main_structure.py* file.
+
+./views/main_structure.py contains MainStructure class to display the global application.
+
+--------------------------------------
+| Menu |  TOPLEFT     |  TOPRIGHT    |
+|      |              |              |
+|      |--------------|--------------|
+|      |SUB |OPTS|OPTS|  BOTRIGHT    |
+|      |MENU| 1  | 2  |              |
+--------------------------------------
+
+.. note:: LEnsE - Institut d'Optique - version 1.0
+
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+Creation : march/2025
+"""
+import sys, os
+from lensepy import load_dictionary, translate, dictionary
+from PyQt6.QtWidgets import (
+    QWidget,
+    QGridLayout
+)
+from PyQt6.QtCore import pyqtSignal
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from views import *
+
+
+MENU_WIDTH = 10
+BOT_HEIGHT, TOP_HEIGHT = 45, 50
+LEFT_WIDTH, RIGHT_WIDTH = 45, 45
+TOP_LEFT_ROW, TOP_LEFT_COL = 1, 1
+TOP_RIGHT_ROW, TOP_RIGHT_COL = 1, 2
+BOT_LEFT_ROW, BOT_LEFT_COL = 2, 1
+BOT_RIGHT_ROW, BOT_RIGHT_COL = 2, 2
+SUBMENU_ROW, SUBMENU_COL = 0, 0
+OPTIONS1_ROW, OPTIONS1_COL = 0, 1
+OPTIONS2_ROW, OPTIONS2_COL = 0, 2
+
+
+class MainWidget(QWidget):
+    """
+    Main central widget of the application.
+    """
+
+    main_signal = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        """
+        Default Constructor.
+        :param parent: Parent window of the main widget.
+        """
+        super().__init__(parent=parent)
+        self.parent = parent
+        # Layout
+        self.layout = QGridLayout()
+
+        # Graphical containers
+        self.title = QWidget()
+        self.main_menu = QWidget()
+        self.top_left_widget = QWidget()
+        self.top_right_widget = QWidget()
+        self.bot_right_widget = QWidget()
+        # Submenu and option widgets in the bottom left corner of the GUI
+        self.bot_left_widget = QWidget()
+        self.bot_left_layout = QGridLayout()
+        self.bot_left_widget.setLayout(self.bot_left_layout)
+        self.bot_left_layout.setColumnStretch(0, 50)
+        self.bot_left_layout.setColumnStretch(1, 50)
+        self.bot_left_layout.setColumnStretch(2, 50)
+        self.submenu_widget = QWidget()
+        self.options1_widget = QWidget()
+        self.options2_widget = QWidget()
+        self.bot_left_layout.addWidget(self.submenu_widget, SUBMENU_ROW, SUBMENU_COL)
+        self.bot_left_layout.addWidget(self.options1_widget, OPTIONS1_ROW, OPTIONS1_COL)
+        self.bot_left_layout.addWidget(self.options2_widget, OPTIONS2_ROW, OPTIONS2_COL)
+        self.layout.addWidget(self.bot_left_widget, BOT_LEFT_ROW, BOT_LEFT_COL)
+
+        # Adding elements in the layout
+        self.layout.addWidget(self.title, 0, 0, 1, 3)
+        self.layout.addWidget(self.main_menu, 1, 0, 2, 1)
+        self.layout.addWidget(self.top_left_widget, TOP_LEFT_ROW, TOP_LEFT_COL)
+        self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.layout.addWidget(self.bot_right_widget, BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        self.layout.setColumnStretch(0, 10)
+        self.layout.setColumnStretch(1, LEFT_WIDTH)
+        self.layout.setColumnStretch(2, RIGHT_WIDTH)
+        self.layout.setRowStretch(0, 5)
+        self.layout.setRowStretch(1, TOP_HEIGHT)
+        self.layout.setRowStretch(2, BOT_HEIGHT)
+        self.setLayout(self.layout)
+
+    def set_main_menu(self, widget):
+        """
+        Modify the main_menu.
+        :param widget: Widget to include inside the application.
+        """
+        self._clear_layout(1, 0)
+        self.main_menu = widget
+        self.layout.addWidget(self.main_menu, 1, 0, 2, 1)
+
+
+    def set_top_right_widget(self, widget):
+        """
+        Modify the top right widget.
+        :param widget: Widget to include inside the application.
+        """
+        self._clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self.top_right_widget = widget
+        self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL)
+
+    def set_top_left_widget(self, widget):
+        """
+        Modify the top left widget.
+        :param widget: Widget to include inside the application.
+        """
+        self._clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
+        self.top_left_widget = widget
+        self.layout.addWidget(self.top_left_widget, TOP_LEFT_ROW, TOP_LEFT_COL)
+
+    def set_bot_right_widget(self, widget):
+        """
+        Modify the bottom right widget.
+        :param widget: Widget to include inside the application.
+        """
+        self._clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        self.bot_right_widget = widget
+        self.layout.addWidget(self.bot_right_widget, BOT_RIGHT_ROW, BOT_RIGHT_COL)
+
+    def set_sub_menu_widget(self, widget):
+        """
+        Modify the sub menu widget.
+        :param widget: Widget of the sub menu.
+        """
+        self._clear_sublayout(SUBMENU_COL)
+        self.submenu_widget = widget
+        self.bot_left_layout.addWidget(self.submenu_widget, SUBMENU_ROW, SUBMENU_COL)
+
+    def set_options1_widget(self, widget):
+        """
+        Modify the options widget.
+        :param widget: Widget of the options.
+        """
+        self._clear_sublayout(OPTIONS1_COL)
+        self.options1_widget = widget
+        self.bot_left_layout.addWidget(self.options1_widget, OPTIONS1_ROW, OPTIONS1_COL)
+
+    def set_options2_widget(self, widget):
+        """
+        Modify the options widget.
+        :param widget: Widget of the options.
+        """
+        self._clear_sublayout(OPTIONS2_COL)
+        self.options2_widget = widget
+        self.bot_left_layout.addWidget(self.options2_widget, OPTIONS2_ROW, OPTIONS2_COL)
+
+    def _clear_layout(self, row: int, column: int) -> None:
+        """
+        Remove widgets from a specific position in the layout.
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
+        """
+        item = self.layout.itemAtPosition(row, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            else:
+                self.layout.removeItem(item)
+
+    def _clear_sublayout(self, column: int) -> None:
+        """
+        Remove widgets from a specific position in the layout of the bottom left area.
+        :param column: Column index of the layout.
+        """
+        item = self.bot_left_layout.itemAtPosition(0, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            else:
+                self.layout.removeItem(item)
+
+if __name__ == "__main__":
+    import sys
+    from PyQt6.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+    main_widget = MainWidget()
+    main_widget.showMaximized()
+
+    widget1 = QWidget()
+    widget2 = QWidget()
+    widget3 = QWidget()
+    widget1.setStyleSheet("background-color: blue;")
+    main_widget.set_top_left_widget(widget1)
+    widget2.setStyleSheet("background-color: lightgreen;")
+    main_widget.set_bot_right_widget(widget2)
+    widget3.setStyleSheet("background-color: red;")
+    main_widget.set_options1_widget(widget3)
+
+    sys.exit(app.exec())

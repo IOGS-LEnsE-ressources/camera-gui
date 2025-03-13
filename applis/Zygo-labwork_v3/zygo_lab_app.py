@@ -16,9 +16,12 @@ https://iogs-lense-ressources.github.io/camera-gui/
 
 .. version:: 3.0
 """
-import sys
+import sys, os
+from PyQt6.QtWidgets import QApplication
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from models import *
-from utils import *
+from views import *
+from controllers import *
 
 version_app = '3.0'
 
@@ -27,10 +30,18 @@ class ZygoApp:
 
     def __init__(self):
         """Constructor of the application."""
-        self.images_set = ImagesModel()
-        self.masks_set = MasksModel()
+        self.data_set = DataSetModel()
+        self.acquisition_module = AcquisitionModel()
+        self.main_widget = MainWidget()
+        self.main_menu = MainMenu()
+        self.main_menu.load_menu('./menu/menu.txt')
+        self.main_widget.set_main_menu(self.main_menu)
+        self.mode_manager = ModesManager(self.main_menu)
 
 
 if __name__ == "__main__":
     print(f'Zygo App - Version {version_app}')
+    app = QApplication(sys.argv)
     zygo_app = ZygoApp()
+    zygo_app.main_widget.showMaximized()
+    sys.exit(app.exec())

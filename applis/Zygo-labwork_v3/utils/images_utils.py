@@ -11,6 +11,29 @@ Creation : march/2025
 import numpy as np
 import scipy
 
+def generate_images_grid(images: list[np.ndarray]):
+    """Generate a grid with 5 images.
+    The 6th image is the mean of the 4 first images.
+    :param images: List of 5 images.
+    """
+    img_height, img_width = images[0].shape
+    separator_size = 5
+    # Global size
+    total_height = 2 * img_height + separator_size  # 2 rows of images
+    total_width = 3 * img_width + 2 * separator_size  # 3 columns of images
+    # Empty image
+    result = np.ones((total_height, total_width), dtype=np.uint8) * 255
+    # Add each images
+    result[0:img_height, 0:img_width] = images[0]
+    result[0:img_height, img_width + separator_size:2 * img_width + separator_size] = images[1]
+    result[0:img_height, 2 * img_width + 2 * separator_size:] = images[2]
+    result[img_height + separator_size:, 0:img_width] = images[3]
+    result[img_height + separator_size:, img_width + separator_size:2 * img_width + separator_size] = images[4]
+    sum_image = (images[0] + images[1] + images[2] + images[3])/4
+    sum_image = sum_image.astype(np.uint8)
+    result[img_height + separator_size:, 2 * img_width + 2 * separator_size:] = sum_image
+    return result
+
 def read_mat_file(file_path: str) -> dict:
     """
     Load data and masks from a .mat file.

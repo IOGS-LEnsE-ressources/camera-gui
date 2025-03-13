@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """*acquisition.py* file.
 
-./models/acquisition.py contains Acquisition_Model class to manage the acquisition of a set of images.
+./models/acquisition.py contains AcquisitionModel class to manage the acquisition of a set of images.
 
 Images are intensity measurements of interferences. All images have the same size.
 A set of 5 images is necessary to be demodulated by the Hariharan phase
@@ -73,11 +73,9 @@ class AcquisitionModel:
             self.piezo.set_channel(1)
             self.piezo_state = HWState.INITIALIZED
 
-        # self.piezo -> set channel and voltages
-
     def is_possible(self):
         """
-        Check if a camera (IDS) and a piezo controller (NIDaqMx) is connected.
+        Check if a camera (IDS) and a piezo controller (NIDaqMx) are connected.
         :return: True if acquisition is possible.
         """
         if self.piezo_state != HWState.READY:
@@ -87,6 +85,15 @@ class AcquisitionModel:
             print('models/acquisition.py - Camera not ready')
             return False
         return True
+
+    def is_camera(self) -> bool:
+        """
+        Check if a camera (IDS) is connected.
+        :return: True if a camera is connected and ready.
+        """
+        if self.camera_state != HWState.READY:
+            print('models/acquisition.py - Camera not ready')
+            return False
 
     def start(self) -> bool:
         """
@@ -216,44 +223,29 @@ if __name__ == '__main__':
     acquisition = AcquisitionModel(nb_of_images_per_set, acq_nb=3)
     volt_list = [0.80,1.62,2.43,3.24,4.05]
     acquisition.set_voltages(volt_list)
-    if acquisition.set_exposure(20000):
-        print('Expo Changed')
+    if acquisition.is_camera():
+        if acquisition.set_exposure(20000):
+            print('Expo Changed')
     if acquisition.is_possible():
         print('ACQ is possible')
-    acquisition.start()
+        acquisition.start()
 
-    while acquisition.get_progress() < 100:
+        while acquisition.get_progress() < 100:
+            time.sleep(0.2)
         time.sleep(0.2)
-    time.sleep(0.2)
 
-    image_set = ImagesModel(nb_of_images_per_set)
-    image_set.add_set_images(acquisition.get_images_set(1))
-    image_set.add_set_images(acquisition.get_images_set(2))
-    image_set.add_set_images(acquisition.get_images_set(3))
+        image_set = ImagesModel(nb_of_images_per_set)
+        image_set.add_set_images(acquisition.get_images_set(1))
+        image_set.add_set_images(acquisition.get_images_set(2))
+        image_set.add_set_images(acquisition.get_images_set(3))
 
-    ## Test class
-    print(f'Number of sets = {image_set.get_number_of_sets()}')
-    if image_set.get_number_of_sets() >= 1:
-        image_1 = image_set.get_images_set(1)
-        if isinstance(image_1, list):
-            result = generate_images_grid(image_1)
+        ## Test class
+        print(f'Number of sets = {image_set.get_number_of_sets()}')
+        if image_set.get_number_of_sets() >= 1:
+            image_1 = image_set.get_images_set(1)
+            if isinstance(image_1, list):
+                result = generate_images_grid(image_1)
 
-            plt.figure()
-            plt.imshow(result, cmap='gray')
-            plt.show()
-
-            image_set.save_images_set_to_file('../_data/test_new.mat')
-
-            data = scipy.io.loadmat('../_data/test_new.mat')
-
-            image_set2 = ImagesModel(nb_of_images_per_set)
-            if image_set2.load_images_set_from_file('../_data/test_new.mat'):
-                print('Images OK')
-                print(f'Number of sets = {image_set2.get_number_of_sets()}')
-
-            image_2 = image_set2.get_images_set(2)
-            result = generate_images_grid(image_2)
-
-            plt.figure()
-            plt.imshow(result, cmap='gray')
-            plt.show()
+                plt.figure()
+                plt.imshow(result, cmap='gray')
+                plt.show()

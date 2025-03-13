@@ -2,6 +2,7 @@
 
 from .images import *
 from .masks import *
+from .dataset import *
 from .hariharan_algorithm import *
 from .phase import *
 from .zernike_coefficients import *     # Not Tested
