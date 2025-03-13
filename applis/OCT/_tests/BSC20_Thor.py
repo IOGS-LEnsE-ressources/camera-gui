@@ -79,7 +79,7 @@ def main():
 
         time.sleep(2)
         print("Moving...")
-        channel.MoveTo(Decimal(1), 50000)
+        channel.MoveTo(Decimal(1), 50000)  # Move to 1 mm
         print(f"Position = {channel.DevicePosition}")
         time.sleep(0.5)
 
