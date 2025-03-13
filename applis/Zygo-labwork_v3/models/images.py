@@ -16,6 +16,7 @@ and "Masks" objects (array(s) in 2 dimensions - same size as images).
 Creation : march/2025
 """
 import sys, os
+import scipy
 import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils import *
@@ -82,7 +83,7 @@ class ImagesModel:
         :param index: Index of the set to return.
         :return: List of images from the specified set.
         """
-        if index <= self.images_sets_number:
+        if index <= self.images_sets_number+1:
             return self.images_list[index-1]
         return None
 
@@ -127,7 +128,12 @@ class ImagesModel:
         :param filename: Path of the MAT file.
         :return: True if file is saved.
         """
-        return False
+        new_data = np.stack((self.images_list), axis=2).astype(np.uint8)
+        data = {
+            'Images': new_data
+        }
+        scipy.io.savemat(filename, data)
+
 
 
 if __name__ == '__main__':

@@ -124,6 +124,7 @@ class Images:
         :return: List of images from the specified set.
         """
         if index <= self.images_sets_number:
+            print(index)
             return self.images_list[index-1]
         return None
 

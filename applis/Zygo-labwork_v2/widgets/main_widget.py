@@ -846,9 +846,12 @@ class MainWidget(QWidget):
             self.top_left_widget.set_image_from_array(image)
             self.update_size()
         elif self.parent.camera_connected:
+            '''
             image = self.parent.displayed_image.copy()
             self.top_left_widget.set_image_from_array(image)
             self.update_size()
+            '''
+            pass
 
     def display_masked_image(self):
         """Display the first image in the top left widget."""

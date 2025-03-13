@@ -17,8 +17,9 @@ Creation : march/2025
 """
 import sys, os
 import threading, time
+from enum import Enum
 import numpy as np
-from lensecam.basler.camera_basler import *
+from lensecam.ids.camera_ids import *
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils import *
 from models import *
@@ -26,6 +27,11 @@ from drivers import *
 
 number_of_images = 5
 
+class HWState(Enum):
+    STANDBY = 0
+    CONNECTED = 2
+    INITIALIZED = 3
+    READY = 4
 
 class AcquisitionModel:
     """Class containing images data and parameters.
@@ -36,9 +42,10 @@ class AcquisitionModel:
         :param set_size: Size of a set of images.
         """
         # Hardware
-        self.camera = CameraBasler()
-        self.camera_connected = False
+        self.camera = CameraIds()
+        self.camera_state = HWState.STANDBY
         self.piezo = NIDaqPiezo()
+        self.piezo_state = HWState.STANDBY
         self.voltages_list = []             # Voltages for piezo movement
         # Data
         self.set_size = set_size            # Number of images of each set
@@ -50,6 +57,22 @@ class AcquisitionModel:
 
         # Init hardware
         self.camera_connected = self.camera.find_first_camera()
+        if self.camera_connected:
+            self.camera_state = HWState.CONNECTED
+            self.camera.init_camera() # Add test in lensecam -> True if init correctly
+            # Default parameters to load
+            self.camera.set_color_mode('Mono8')
+
+            self.camera_state = HWState.INITIALIZED
+            self.camera.alloc_memory()
+            self.camera_state = HWState.READY
+
+        if self.piezo.is_piezo_here() is True:
+            self.piezo_state = HWState.CONNECTED
+            # Default parameters to load
+            self.piezo.set_channel(1)
+            self.piezo_state = HWState.INITIALIZED
+
         # self.piezo -> set channel and voltages
 
     def is_possible(self):
@@ -57,13 +80,11 @@ class AcquisitionModel:
         Check if a camera (IDS) and a piezo controller (NIDaqMx) is connected.
         :return: True if acquisition is possible.
         """
-        if self.piezo.is_piezo_here() is False:
+        if self.piezo_state != HWState.READY:
+            print('models/acquisition.py - Piezo not ready')
             return False
-        if self.camera_connected is False:
-            print('models/acquisition.py - No camera connected')
-            return False
-        if not self.voltages_list: # Empty list
-            print('models/acquisition.py - No voltages set for piezo')
+        if self.camera_state != HWState.READY:
+            print('models/acquisition.py - Camera not ready')
             return False
         return True
 
@@ -72,11 +93,9 @@ class AcquisitionModel:
         Start the acquisition.
         :return: Return False if acquisition is not possible.
         """
-        '''
         if self.is_possible() is False:
             return False
         self.acquisition_counter = 0
-        '''
         thread = threading.Thread(target=self.thread_acquisition)
         time.sleep(0.01)
         thread.start()
@@ -86,13 +105,17 @@ class AcquisitionModel:
         Process one acquisition, depending on index of the sample and index of the set.
         :return: Captured image as an array in 2D.
         """
+        print(f'ImCnt = {self.images_counter + 1} / {self.set_size} -- '
+              f'SetCnt = {self.acquisition_counter + 1} / {self.acquisition_number}')
         # Move piezo
         self.piezo.write_dac(self.voltages_list[self.images_counter])
         # Wait end of movement
-        time.sleep(0.5)
-        # Acquire image
-        image = self.camera.get_images(1)
         time.sleep(0.1)
+        # Acquire image
+        self.camera.start_acquisition()
+        image = self.camera.get_image().squeeze()
+        time.sleep(0.01)
+        self.camera.stop_acquisition()
         return image
 
     def thread_acquisition(self):
@@ -112,16 +135,41 @@ class AcquisitionModel:
             time.sleep(0.01)
             thread.start()
 
-    def set_voltages(self, voltage_list):
+    def set_exposure(self, exposure: int) -> bool:
+        """
+        Set the exposure time of the camera.
+        :param exposure: Exposure time in microseconds.
+        :return: True if the exposure time is modified.
+        """
+        self.camera_state = HWState.INITIALIZED
+        self.camera.stop_acquisition()
+        old_expo = self.camera.get_exposure()
+        if self.camera.set_exposure(exposure):
+            self.camera.start_acquisition()
+            self.camera_state = HWState.READY
+            return True
+        else:
+            self.camera.set_exposure(old_expo)
+            self.camera.start_acquisition()
+            self.camera_state = HWState.READY
+            return False
+
+    def set_voltages(self, voltage_list) -> bool:
         """
         Set the voltages list (for the piezo controller)
         :param voltage_list: List of float - in Volt.
+        :return: True if voltages are set after initialization.
         """
         self.voltages_list = voltage_list
+        if self.piezo_state == HWState.INITIALIZED:
+            self.piezo_state = HWState.READY
+            return True
+        else:
+            return False
 
     def reset_all_images(self):
         """Reset all images."""
-        self.images_set.reset_all_images()
+        self.images_sets.reset_all_images()
 
     def get_number_of_acquisition(self) -> int:
         """Return the number of stored sets of images.
@@ -149,9 +197,16 @@ class AcquisitionModel:
         :param index: Index of the set to return.
         :return: List of images from the specified set.
         """
-        if index <= self.acquisition_counter:
-            return self.images_set.get_images_set(index)
+        if index <= self.acquisition_counter+1:
+            return self.images_sets.get_images_set(index-1)
         return None
+
+    def get_images_sets(self) -> ImagesModel:
+        """
+        Return all the sets of images.
+        :return:
+        """
+        return self.images_sets
 
 
 if __name__ == '__main__':
@@ -161,26 +216,44 @@ if __name__ == '__main__':
     acquisition = AcquisitionModel(nb_of_images_per_set, acq_nb=3)
     volt_list = [0.80,1.62,2.43,3.24,4.05]
     acquisition.set_voltages(volt_list)
+    if acquisition.set_exposure(20000):
+        print('Expo Changed')
     if acquisition.is_possible():
         print('ACQ is possible')
     acquisition.start()
 
     while acquisition.get_progress() < 100:
-        print(f'{acquisition.get_progress()} %')
         time.sleep(0.2)
-
-
+    time.sleep(0.2)
 
     image_set = ImagesModel(nb_of_images_per_set)
-
+    image_set.add_set_images(acquisition.get_images_set(1))
+    image_set.add_set_images(acquisition.get_images_set(2))
+    image_set.add_set_images(acquisition.get_images_set(3))
 
     ## Test class
     print(f'Number of sets = {image_set.get_number_of_sets()}')
     if image_set.get_number_of_sets() >= 1:
-        image_1_1 = image_set.get_images_set(1)
-        if isinstance(image_1_1, list):
+        image_1 = image_set.get_images_set(1)
+        if isinstance(image_1, list):
+            result = generate_images_grid(image_1)
+
             plt.figure()
-            plt.imshow(image_1_1[0], cmap='gray')
+            plt.imshow(result, cmap='gray')
             plt.show()
 
+            image_set.save_images_set_to_file('../_data/test_new.mat')
 
+            data = scipy.io.loadmat('../_data/test_new.mat')
+
+            image_set2 = ImagesModel(nb_of_images_per_set)
+            if image_set2.load_images_set_from_file('../_data/test_new.mat'):
+                print('Images OK')
+                print(f'Number of sets = {image_set2.get_number_of_sets()}')
+
+            image_2 = image_set2.get_images_set(2)
+            result = generate_images_grid(image_2)
+
+            plt.figure()
+            plt.imshow(result, cmap='gray')
+            plt.show()
