@@ -9,3 +9,4 @@ matplotlib
 pyqt6
 pypylon
 pylablib
+pythonnet
