@@ -135,21 +135,6 @@ class SubMenu(QWidget):
         self.buttons_signal.append(None)
         self.buttons_enabled.append(True)
 
-    def update_options(self, options_list):
-        """
-        Update the options list from the manager, depending on the mode and the connected hardware.
-        :param options_list: list of options (nocam, nopiezo, nodata, nomask, noanalysis)
-        """
-        self.options_list = options_list
-        # Erase enabled list for buttons
-        for k in range(len(self.buttons_list)):
-            self.set_button_enabled(k+1, True)
-        # Update enabled buttons
-        for option in self.options_list:
-            for k in range(len(self.buttons_list)):
-                if option in self.buttons_options_list[k]:
-                    self.set_button_enabled(k+1, False)
-
     def inactive_buttons(self):
         """ Switches all buttons to inactive style """
         for i, element in enumerate(self.buttons_list):

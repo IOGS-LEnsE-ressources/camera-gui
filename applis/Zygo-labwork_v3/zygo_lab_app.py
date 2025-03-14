@@ -33,7 +33,7 @@ class ZygoApp:
         self.data_set = DataSetModel()
         self.main_widget = MainView()
         self.main_menu = MainMenu()
-        self.main_menu.load_menu('./menu/menu.txt')
+        self.main_menu.load_menu('menu/menu.txt')
         self.main_widget.set_main_menu(self.main_menu)
         self.mode_manager = ModesManager(self.main_menu, self.main_widget, self.data_set)
 

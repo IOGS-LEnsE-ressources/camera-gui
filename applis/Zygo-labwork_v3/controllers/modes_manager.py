@@ -12,7 +12,6 @@ import sys, os
 from enum import Enum
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from images_controller import *
 from models import *
 from views import *
 
@@ -74,6 +73,7 @@ class ModesManager:
         self.main_mode = event
         match self.main_mode:
             case 'images':
+                from images_controller import ImagesController
                 self.mode_controller = ImagesController(self)
 
         print(self.main_mode)

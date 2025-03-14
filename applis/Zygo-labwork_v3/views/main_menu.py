@@ -179,19 +179,6 @@ class MainMenu(QWidget):
         # Find the good
         for i, element in enumerate(self.buttons_list):
             if sender == element:
-                '''
-                if self.submenu is False:
-                    # Update Sub Menu
-                    self.parent.submenu_widget = MenuWidget(self.parent,
-                                                            title=f'sub_menu_{self.buttons_signal[i]}',
-                                                            sub=True)
-                    self.parent.submenu_widget.menu_clicked.connect(self.submenu_is_clicked)
-                    file_name = f'./config/{self.buttons_signal[i]}_menu.txt'
-                    load_menu(file_name, self.parent.submenu_widget)
-
-                    self.parent.set_sub_menu_widget(self.parent.submenu_widget)
-                    self.parent.submenu_widget.display_layout()
-                '''
                 # Change button style
                 sender.setStyleSheet(actived_button)
                 # Send signal
