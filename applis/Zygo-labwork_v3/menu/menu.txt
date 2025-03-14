@@ -1,13 +1,13 @@
 # Menu MAIN
-# Type; Title; Signal;
-B;acquisition_button;acquisition;
-B;load_images_button;images;
-S;;;
-B;masks_button;masks;
-S;;;
-B;simple_analysis_button;analysis;
-B;aberrations_button;aberrations;
-S;;;
-O;help_button;help;
-O;options_button;options;
-E;;;
+# Type; Title; Signal; Options List;
+B;acquisition_button;acquisition;nocam,nopiezo;
+B;load_images_button;images;;
+S;;;;
+B;masks_button;masks;nodata;
+S;;;;
+B;simple_analysis_button;analysis;nodata,nomask;
+B;aberrations_button;aberrations;noanalysis;
+S;;;;
+O;help_button;help;;
+O;options_button;options;;
+E;;;;

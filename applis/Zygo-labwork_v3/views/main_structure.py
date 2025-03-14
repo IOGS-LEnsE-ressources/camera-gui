@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """*main_structure.py* file.
 
-./views/main_structure.py contains MainStructure class to display the global application.
+./views/main_structure.py contains MainView class to display the global application.
 
 --------------------------------------
 | Menu |  TOPLEFT     |  TOPRIGHT    |
@@ -39,7 +39,7 @@ OPTIONS1_ROW, OPTIONS1_COL = 0, 1
 OPTIONS2_ROW, OPTIONS2_COL = 0, 2
 
 
-class MainWidget(QWidget):
+class MainView(QWidget):
     """
     Main central widget of the application.
     """

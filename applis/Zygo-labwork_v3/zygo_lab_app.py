@@ -31,12 +31,11 @@ class ZygoApp:
     def __init__(self):
         """Constructor of the application."""
         self.data_set = DataSetModel()
-        self.acquisition_module = AcquisitionModel()
-        self.main_widget = MainWidget()
+        self.main_widget = MainView()
         self.main_menu = MainMenu()
         self.main_menu.load_menu('./menu/menu.txt')
         self.main_widget.set_main_menu(self.main_menu)
-        self.mode_manager = ModesManager(self.main_menu)
+        self.mode_manager = ModesManager(self.main_menu, self.main_widget, self.data_set)
 
 
 if __name__ == "__main__":

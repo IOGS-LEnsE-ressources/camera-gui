@@ -99,6 +99,16 @@ class PhaseModel:
         """
         return self.unwrapped_phase
 
+    def is_analysis_ready(self):
+        """
+        Check if wrapped and unwrapped phase are processed from images.
+        :return: True if wrapped and unwrapped phase are processed.
+        """
+        if self.wrapped_phase is None or self.unwrapped_phase is None:
+            return False
+        else:
+            return True
+
 
 if __name__ == '__main__':
     import sys, os

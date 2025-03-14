@@ -49,6 +49,8 @@ class MainMenu(QWidget):
         self.buttons_list = []
         self.buttons_signal = []
         self.buttons_enabled = []
+        self.buttons_options_list = []
+        self.options_list = []
         self.actual_button = None
 
         self.label_title_main_menu = QLabel(translate(title))
@@ -79,7 +81,7 @@ class MainMenu(QWidget):
             # Read the txt file, ignoring lines starting with '#'
             data = np.genfromtxt(file_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
             # Populate the dictionary with key-value pairs from the txt file
-            for element, title, signal, _ in data:
+            for element, title, signal, option_list, _ in data:
                 if element == 'B':  # button
                     self.add_button(translate(title), signal)
                 elif element == 'O':  # options button
@@ -88,6 +90,7 @@ class MainMenu(QWidget):
                     self.add_label_title(translate(title))
                 elif element == 'S':  # blank space
                     self.add_space()
+                self.buttons_options_list.append(option_list.split(','))
             self.display_layout()
         else:
             print('MENU File error')
@@ -133,6 +136,21 @@ class MainMenu(QWidget):
         self.buttons_signal.append(None)
         self.buttons_enabled.append(True)
 
+    def update_options(self, options_list):
+        """
+        Update the options list from the manager, depending on the mode and the connected hardware.
+        :param options_list: list of options (nocam, nopiezo, nodata, nomask, noanalysis)
+        """
+        self.options_list = options_list
+        # Erase enabled list for buttons
+        for k in range(len(self.buttons_list)):
+            self.set_button_enabled(k+1, True)
+        # Update enabled buttons
+        for option in self.options_list:
+            for k in range(len(self.buttons_list)):
+                if option in self.buttons_options_list[k]:
+                    self.set_button_enabled(k+1, False)
+
     def inactive_buttons(self):
         """ Switches all buttons to inactive style """
         for i, element in enumerate(self.buttons_list):
@@ -146,20 +164,23 @@ class MainMenu(QWidget):
         :param button_index: Index of the button to update.
         :param value: True if the button must be enabled.
         """
-        self.buttons_enabled[button_index - 1] = value
-        self.buttons_list[button_index - 1].setEnabled(value)
-        if value:
-            self.buttons_list[button_index - 1].setStyleSheet(unactived_button)
-        else:
-            self.buttons_list[button_index - 1].setStyleSheet(disabled_button)
+        button = self.buttons_list[button_index - 1]
+        if button != None:
+            self.buttons_enabled[button_index - 1] = value
+            self.buttons_list[button_index - 1].setEnabled(value)
+            if value:
+                self.buttons_list[button_index - 1].setStyleSheet(unactived_button)
+            else:
+                self.buttons_list[button_index - 1].setStyleSheet(disabled_button)
 
     def menu_is_clicked(self):
         self.inactive_buttons()
         sender = self.sender()
         self.actual_button = sender
-
+        # Find the good
         for i, element in enumerate(self.buttons_list):
             if sender == element:
+                '''
                 if self.submenu is False:
                     # Update Sub Menu
                     self.parent.submenu_widget = MenuWidget(self.parent,
@@ -171,10 +192,11 @@ class MainMenu(QWidget):
 
                     self.parent.set_sub_menu_widget(self.parent.submenu_widget)
                     self.parent.submenu_widget.display_layout()
+                '''
                 # Change button style
                 sender.setStyleSheet(actived_button)
                 # Send signal
-                self.menu_clicked.emit(self.buttons_signal[i])
+                self.menu_changed.emit(self.buttons_signal[i])
 
     def update_menu_display(self):
         """Update the menu."""
@@ -227,9 +249,15 @@ if __name__ == "__main__":
     import sys
     from PyQt6.QtWidgets import QApplication
 
+    def update_menu(event):
+        print(event)
+
     app = QApplication(sys.argv)
     main_widget = MainMenu()
     main_widget.load_menu('../menu/menu.txt')
+    options_list = ['nocam', 'nodata','noanalysis']
+    main_widget.update_options(options_list)
+    main_widget.menu_changed.connect(update_menu)
     main_widget.show()
 
     sys.exit(app.exec())

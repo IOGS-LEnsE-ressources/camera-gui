@@ -20,7 +20,11 @@ Creation : march/2025
 import sys, os
 import scipy
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from models import *
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+from images import *
+from masks import *
+from phase import *
+from acquisition import *
 from utils import *
 
 
@@ -35,6 +39,8 @@ class DataSetModel:
         self.set_size = set_size
         self.images_sets = ImagesModel(set_size)
         self.masks_sets = MasksModel()
+        self.acquisition_mode = AcquisitionModel(set_size)
+        self.phase = PhaseModel()
 
     def add_set_images(self, images: list):
         """
@@ -73,6 +79,15 @@ class DataSetModel:
         """
         return self.masks_sets.get_global_cropped_mask()
 
+    def is_data_ready(self):
+        """
+        Check if a set of images and almost one mask are processed.
+        :return: True if almost a set of images and a mask are ready.
+        """
+        if self.images_sets.get_number_of_sets() >= 1 and self.masks_sets.get_masks_number() >= 1:
+            return True
+        else:
+            return False
 
 if __name__ == '__main__':
 

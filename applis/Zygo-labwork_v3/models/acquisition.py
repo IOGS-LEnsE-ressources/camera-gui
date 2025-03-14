@@ -21,9 +21,11 @@ from enum import Enum
 import numpy as np
 from lensecam.ids.camera_ids import *
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from utils import *
-from models import *
 from drivers import *
+from images import *
+from masks import *
 
 number_of_images = 5
 
@@ -89,10 +91,19 @@ class AcquisitionModel:
     def is_camera(self) -> bool:
         """
         Check if a camera (IDS) is connected.
-        :return: True if a camera is connected and ready.
+        :return: True if a camera is connected.
         """
-        if self.camera_state != HWState.READY:
-            print('models/acquisition.py - Camera not ready')
+        if self.camera_state == HWState.STANDBY:
+            print('models/acquisition.py - Camera not connected')
+            return False
+
+    def is_piezo(self) -> bool:
+        """
+        Check if a piezo controller (NIDaq) is connected.
+        :return: True if a piezo controller is connected.
+        """
+        if self.piezo_state == HWState.STANDBY:
+            print('models/acquisition.py - Piezo not connected')
             return False
 
     def start(self) -> bool:
