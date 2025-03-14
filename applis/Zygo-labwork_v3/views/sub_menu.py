@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""*main_menu.py* file.
+"""*sub_menu.py* file.
 
-./views/main_menu.py contains MainMenu class to display the main menu.
+./views/sub_menu.py contains SubMenu class to display the main menu.
 
 --------------------------------------
 | Menu |  TOPLEFT     |  TOPRIGHT    |
@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 
 
-class MainMenu(QWidget):
+class SubMenu(QWidget):
     """
     Main central widget of the application.
     """
@@ -179,19 +179,6 @@ class MainMenu(QWidget):
         # Find the good
         for i, element in enumerate(self.buttons_list):
             if sender == element:
-                '''
-                if self.submenu is False:
-                    # Update Sub Menu
-                    self.parent.submenu_widget = MenuWidget(self.parent,
-                                                            title=f'sub_menu_{self.buttons_signal[i]}',
-                                                            sub=True)
-                    self.parent.submenu_widget.menu_clicked.connect(self.submenu_is_clicked)
-                    file_name = f'./config/{self.buttons_signal[i]}_menu.txt'
-                    load_menu(file_name, self.parent.submenu_widget)
-
-                    self.parent.set_sub_menu_widget(self.parent.submenu_widget)
-                    self.parent.submenu_widget.display_layout()
-                '''
                 # Change button style
                 sender.setStyleSheet(actived_button)
                 # Send signal
@@ -252,10 +239,8 @@ if __name__ == "__main__":
         print(event)
 
     app = QApplication(sys.argv)
-    main_widget = MainMenu()
-    main_widget.load_menu('../menu/menu.txt')
-    options_list = ['nocam', 'nodata','noanalysis']
-    main_widget.update_options(options_list)
+    main_widget = SubMenu()
+    main_widget.load_menu('../menu/images_menu.txt')
     main_widget.menu_changed.connect(update_menu)
     main_widget.show()
 

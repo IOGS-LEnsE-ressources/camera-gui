@@ -63,11 +63,8 @@ class ModesManager:
             self.options_list.append('nodata')
         if self.data_set.phase.is_analysis_ready() is False:
             self.options_list.append('noanalysis')
-
-
         # Update menu
         self.main_menu.update_options(self.options_list)
-        pass
 
     def update_mode(self, event):
         """
