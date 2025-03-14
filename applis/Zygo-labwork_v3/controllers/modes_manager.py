@@ -75,6 +75,9 @@ class ModesManager:
             case 'images':
                 from images_controller import ImagesController
                 self.mode_controller = ImagesController(self)
+            case 'help':
+                from help_controller import HelpController
+                self.mode_controller = HelpController(self)
 
         print(self.main_mode)
 

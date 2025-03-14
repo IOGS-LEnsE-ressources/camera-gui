@@ -35,11 +35,11 @@ class ImagesController:
         """
         self.manager: ModesManager = manager
         self.main_widget: MainView = self.manager.main_widget
-        self.images_loaded = False
-        self.masks_loaded = False
+        self.images_loaded = (self.manager.data_set.images_sets.get_number_of_sets() >= 1)
+        self.masks_loaded = (len(self.manager.data_set.get_masks_list()) >= 1)
         # Graphical elements
-        self.top_left_widget = QWidget()        # Display first image of a set
-        self.top_right_widget = QWidget()       # Display grid of images
+        self.top_left_widget = ImagesDisplayView()        # Display first image of a set
+        self.top_right_widget = ImagesDisplayView()       # Display grid of images
         self.bot_right_widget = QWidget()       # HTML Help on images
         # Submenu
         self.submenu = SubMenu('submenu_images')
@@ -57,6 +57,14 @@ class ImagesController:
         Initializes the main structure of the interface.
         """
         self.main_widget.set_sub_menu_widget(self.submenu)
+        self.main_widget.set_top_left_widget(self.top_left_widget)
+        self.main_widget.set_top_right_widget(self.top_right_widget)
+        # Images loaded ?
+        if self.images_loaded:
+            # Display first image in top left
+            images = self.manager.data_set.get_images_sets(1)
+            self.top_left_widget.set_image_from_array(images[0], 'First Image')
+        # Update menu
         self.update_submenu_view("")
 
     def update_submenu_view(self, submode):
@@ -73,7 +81,7 @@ class ImagesController:
         ## Activate button depending on data
         # Images loaded ?
         if self.images_loaded:
-            self.submenu.set_button_enabled(2, False)
+            self.submenu.set_button_enabled(2, True)
         # Data acquired ? Saving images is ok
         ### TO DO
         ## Update menu
@@ -99,8 +107,7 @@ class ImagesController:
             case 'display_images':
                 # Display first image in top left
                 images = self.manager.data_set.get_images_sets(1)
-
-                pass
+                self.top_left_widget.set_image_from_array(images[0])
             case 'save_images':
                 pass
 

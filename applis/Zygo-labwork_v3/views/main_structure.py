@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QGridLayout
 )
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QResizeEvent
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from views import *
 
@@ -99,7 +100,6 @@ class MainView(QWidget):
         self._clear_layout(1, 0)
         self.main_menu = widget
         self.layout.addWidget(self.main_menu, 1, 0, 2, 1)
-
 
     def set_top_right_widget(self, widget):
         """
@@ -184,12 +184,15 @@ class MainView(QWidget):
             else:
                 self.layout.removeItem(item)
 
+    def resizeEvent(self, a0: QResizeEvent) -> None:
+        pass
+
 if __name__ == "__main__":
     import sys
     from PyQt6.QtWidgets import QApplication
 
     app = QApplication(sys.argv)
-    main_widget = MainWidget()
+    main_widget = MainView()
     main_widget.showMaximized()
 
     widget1 = QWidget()
