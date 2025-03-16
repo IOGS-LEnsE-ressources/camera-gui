@@ -13,7 +13,7 @@ import sys, os
 from typing import Tuple
 from lensepy.images.conversion import find_mask_limits, crop_images
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from utils import *
+from utils.images_utils import read_mat_file, split_3d_array
 import numpy as np
 
 class MasksModel:
@@ -172,6 +172,7 @@ class MasksModel:
                 if 'Masks_type' in data_from_mat:
                     print(f'Masks Type = {data_from_mat["Masks_type"]}')
                 if isinstance(mask_d, list):
+                    self.reset_masks()
                     for i, maskk in enumerate(mask_d):
                         self.add_mask(maskk.squeeze())
                 return True

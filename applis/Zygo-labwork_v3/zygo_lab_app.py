@@ -19,9 +19,11 @@ https://iogs-lense-ressources.github.io/camera-gui/
 import sys, os
 from PyQt6.QtWidgets import QApplication
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from models import *
-from views import *
-from controllers import *
+from utils.pyqt6_utils import load_default_dictionary
+from views.main_structure import MainView
+from views.main_menu import MainMenu
+from controllers.modes_manager import ModesManager
+from models.dataset import DataSetModel
 
 version_app = '3.0'
 
@@ -36,6 +38,7 @@ class ZygoApp:
         self.main_menu.load_menu('menu/menu.txt')
         self.main_widget.set_main_menu(self.main_menu)
         self.mode_manager = ModesManager(self.main_menu, self.main_widget, self.data_set)
+        load_default_dictionary("FR")
 
 
 if __name__ == "__main__":

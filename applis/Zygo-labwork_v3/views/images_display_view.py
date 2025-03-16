@@ -17,6 +17,9 @@
 Creation : march/2025
 """
 import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+import numpy as np
 from PyQt6.QtWidgets import (
     QWidget, QLabel,
     QVBoxLayout
@@ -24,9 +27,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QResizeEvent, QPixmap, QPainter, QColor, QFont
 from lensepy.images.conversion import resize_image_ratio, resize_image, array_to_qimage
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from utils import *
+
 
 
 class ImagesDisplayView(QWidget):

@@ -150,6 +150,13 @@ class MainMenu(QWidget):
                 if option in self.buttons_options_list[k]:
                     self.set_button_enabled(k+1, False)
 
+    def get_options_list(self) -> list[str]:
+        """
+        Return the actual list of options. (nocam, nopiezo, nodata, nomask, noanalysis).
+        :return: list of Options.
+        """
+        return self.options_list
+
     def inactive_buttons(self):
         """ Switches all buttons to inactive style """
         for i, element in enumerate(self.buttons_list):
@@ -197,38 +204,6 @@ class MainMenu(QWidget):
                 else:
                     element.setStyleSheet(disabled_button)
                     element.setEnabled(False)
-
-    def set_enabled(self, index: int, value: bool = True):
-        """
-        Set enabled a button.
-        :param index:
-        :param value:
-        """
-        menu = self.parent.get_list_menu('off_menu')
-        if isinstance(index, list):
-            for i in index:
-                if i not in menu:
-                    self.buttons_enabled[i - 1] = value
-                else:
-                    self.buttons_enabled[i - 1] = False
-        else:
-            if index not in menu:
-                self.buttons_enabled[index - 1] = value
-            else:
-                self.buttons_enabled[index - 1] = False
-        self.update_menu_display()
-
-    def set_activated(self, index: int):
-        """
-        Set activated a button.
-        :param index:
-        """
-        self.inactive_buttons()
-        if isinstance(index, list):
-            for i in index:
-                self.buttons_list[i - 1].setStyleSheet(actived_button)
-        else:
-            self.buttons_list[index - 1].setStyleSheet(actived_button)
 
 
 if __name__ == "__main__":

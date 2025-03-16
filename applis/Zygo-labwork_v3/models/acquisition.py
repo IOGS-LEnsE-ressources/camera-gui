@@ -22,10 +22,9 @@ import numpy as np
 from lensecam.ids.camera_ids import *
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from utils import *
-from drivers import *
 from images import *
 from masks import *
+from drivers.nidaq_piezo import NIDaqPiezo
 
 number_of_images = 5
 

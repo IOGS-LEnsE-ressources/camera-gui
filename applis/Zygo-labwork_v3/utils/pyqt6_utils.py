@@ -17,7 +17,13 @@ from PyQt6.QtWidgets import (
     QMessageBox, QFileDialog, QDialog
 )
 
+def load_default_dictionary(language: str) -> bool:
+    """Initialize default dictionary from default_config.txt file"""
+    file_name_dict = f'./lang/dict_{language}.txt'
+    load_dictionary(file_name_dict)
+
 def message_box(warning="Warning - No File Loaded", text=""):
+    """Open a warning dialog box."""
     dlg = QMessageBox()
     dlg.setWindowTitle(warning)
     dlg.setText(text)

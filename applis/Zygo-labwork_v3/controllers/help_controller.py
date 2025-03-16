@@ -11,7 +11,8 @@ Creation : march/2025
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from views import *
+from views.main_structure import MainView
+from views.sub_menu import SubMenu
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6 import *
@@ -20,20 +21,23 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QMessageBox, QFileDialog, QDialog
 )
-from modes_manager import ModesManager
-from utils import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from controllers.modes_manager import ModesManager
+
 
 class HelpController:
     """
     Help mode manager.
     """
 
-    def __init__(self, manager: ModesManager):
+    def __init__(self, manager: "ModesManager"):
         """
         Default constructor.
         :param manager: Main manager of the application (ModeManager).
         """
-        self.manager: ModesManager = manager
+        self.manager: "ModesManager" = manager
         self.main_widget: MainView = self.manager.main_widget
         # Graphical elements
         self.top_left_widget = QWidget()        # Display ?

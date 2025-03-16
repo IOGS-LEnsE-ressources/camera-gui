@@ -25,7 +25,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QResizeEvent
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from views import *
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+from views.title_view import TitleView
 
 
 MENU_WIDTH = 10
@@ -47,18 +48,17 @@ class MainView(QWidget):
 
     main_signal = pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self):
         """
         Default Constructor.
         :param parent: Parent window of the main widget.
         """
-        super().__init__(parent=parent)
-        self.parent = parent
+        super().__init__()
         # Layout
         self.layout = QGridLayout()
 
         # Graphical containers
-        self.title = QWidget()
+        self.title = TitleView()
         self.main_menu = QWidget()
         self.top_left_widget = QWidget()
         self.top_right_widget = QWidget()
@@ -91,6 +91,17 @@ class MainView(QWidget):
         self.layout.setRowStretch(1, TOP_HEIGHT)
         self.layout.setRowStretch(2, BOT_HEIGHT)
         self.setLayout(self.layout)
+
+    def clear_all(self):
+        """
+        Clear all the widgets.
+        """
+        self._clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
+        self._clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self._clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        self._clear_sublayout(SUBMENU_COL)
+        self._clear_sublayout(OPTIONS1_COL)
+        self._clear_sublayout(OPTIONS2_COL)
 
     def set_main_menu(self, widget):
         """
@@ -139,8 +150,8 @@ class MainView(QWidget):
 
     def set_options1_widget(self, widget):
         """
-        Modify the options widget.
-        :param widget: Widget of the options.
+        Modify the options1 widget.
+        :param widget: Widget to display on "Options1" area.
         """
         self._clear_sublayout(OPTIONS1_COL)
         self.options1_widget = widget
@@ -148,12 +159,23 @@ class MainView(QWidget):
 
     def set_options2_widget(self, widget):
         """
-        Modify the options widget.
-        :param widget: Widget of the options.
+        Modify the options2 widget.
+        :param widget: Widget to display on "Options2" area.
         """
         self._clear_sublayout(OPTIONS2_COL)
         self.options2_widget = widget
         self.bot_left_layout.addWidget(self.options2_widget, OPTIONS2_ROW, OPTIONS2_COL)
+
+    def set_options_widget(self, widget):
+        """
+        Modify the two options widget. Display on the two columns.
+        :param widget: Widget to display on the two "Options" columns.
+        :return:
+        """
+        self._clear_sublayout(OPTIONS1_COL)
+        self._clear_sublayout(OPTIONS2_COL)
+        self.options1_widget = widget
+        self.bot_left_layout.addWidget(self.options1_widget, OPTIONS1_ROW, OPTIONS1_COL, 1, 2)
 
     def _clear_layout(self, row: int, column: int) -> None:
         """

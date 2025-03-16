@@ -16,10 +16,10 @@ and "Masks" objects (array(s) in 2 dimensions - same size as images).
 Creation : march/2025
 """
 import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import scipy
 import numpy as np
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from utils import *
+from utils.images_utils import read_mat_file, split_3d_array
 
 
 class ImagesModel:
@@ -90,6 +90,7 @@ class ImagesModel:
 
             if isinstance(images_d, list):
                 if len(images_d) % self.set_size == 0 and len(images_d) > 1:
+                    self.reset_all_images()
                     for i in range(int(len(images_d) / 5)):
                         self.add_set_images(images_d[i:i + 5])
                     return True

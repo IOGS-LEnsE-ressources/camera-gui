@@ -9,11 +9,14 @@
 Creation : march/2025
 """
 import sys, os
-from enum import Enum
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from models import *
-from views import *
+from enum import Enum
+from views.main_structure import MainView
+from views.main_menu import MainMenu
+from models.dataset import DataSetModel
+from controllers.images_controller import ImagesController
+from controllers.help_controller import HelpController
 
 class ModesManager:
     """
@@ -21,7 +24,7 @@ class ModesManager:
     The different modes are loaded from the main menu file (menu/menu.txt)
     """
 
-    def __init__(self, menu: MainMenu, widget: MainView, dataset: DataSetModel):
+    def __init__(self, menu: MainMenu, widget: MainView, data_set: DataSetModel):
         """
         Default constructor.
         :param menu: Main menu of the application (MainMenu).
@@ -29,13 +32,13 @@ class ModesManager:
         :param dataset: Dataset of the application (DataSetModel).
         """
         # Menu
-        self.main_menu = menu
+        self.main_menu: MainMenu = menu
         self.main_menu.menu_changed.connect(self.update_mode)
         self.options_list = []
         # Main widget
         self.main_widget = widget
         # Data set
-        self.data_set = dataset
+        self.data_set = data_set
         # Modes
         self.main_mode = None
         self.mode_controller = None
@@ -60,6 +63,8 @@ class ModesManager:
         # Check dataset
         if self.data_set.is_data_ready() is False:
             self.options_list.append('nodata')
+        if self.data_set.masks_sets.get_masks_number() == 0:
+            self.options_list.append('nomask')
         if self.data_set.phase.is_analysis_ready() is False:
             self.options_list.append('noanalysis')
         # Update menu
@@ -71,20 +76,13 @@ class ModesManager:
         :return:
         """
         self.main_mode = event
+        self.main_widget.clear_all()
         match self.main_mode:
             case 'images':
-                from images_controller import ImagesController
                 self.mode_controller = ImagesController(self)
             case 'help':
-                from help_controller import HelpController
                 self.mode_controller = HelpController(self)
 
         print(self.main_mode)
-
-    def create_enum_from_file(self, filename: str):
-        with open(filename, "r", encoding="utf-8") as file:
-            items = [line.strip() for line in file if line.strip()]  # Delete empty lines
-        return Enum("VehicleType", {item: item for item in items})  # Creating enumeration
-
 
 
