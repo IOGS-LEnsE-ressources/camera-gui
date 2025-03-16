@@ -17,6 +17,7 @@ from PyQt6.QtCore import Qt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
+
 class HTMLView(QWidget):
     """
     Widget displaying an HTML content.
@@ -46,24 +47,26 @@ class HTMLView(QWidget):
         self.url = url
         self.css = css
 
-        css_content = ''
-        with open(url, "r", encoding="utf-8") as file:
-            html_content = file.read()
-        if self.css != '':
-            with open(css, "r", encoding="utf-8") as file:
-                css_content = file.read()
+        if self.url != '':
+            css_content = ''
+            if os.path.exists(self.url):
+                with open(url, "r", encoding="utf-8") as file:
+                    html_content = file.read()
+                if self.css != '':
+                    with open(css, "r", encoding="utf-8") as file:
+                        css_content = file.read()
 
-        full_html_content = f"""
-        <html>
-        <head>
-            <style>
-            {css_content}
-            </style>
-        </head>
-        <body>
-            {html_content}
-        </body>
-        </html>
-        """
-        self.html_page.setHtml(full_html_content)
+                full_html_content = f"""
+                <html>
+                <head>
+                    <style>
+                    {css_content}
+                    </style>
+                </head>
+                <body>
+                    {html_content}
+                </body>
+                </html>
+                """
+                self.html_page.setHtml(full_html_content)
 

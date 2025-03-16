@@ -26,18 +26,21 @@ from PyQt6.QtWidgets import (
 from models.dataset import DataSetModel
 from utils.images_utils import generate_images_grid
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from controllers.modes_manager import ModesManager
 
 class ImagesController:
     """
     Images mode manager.
     """
 
-    def __init__(self, manager):
+    def __init__(self, manager: "ModesManager"):
         """
         Default constructor.
         :param manager: Main manager of the application (ModeManager).
         """
-        self.manager = manager
+        self.manager: "ModesManager" = manager
         self.data_set: DataSetModel = self.manager.data_set
         self.main_widget: MainView = self.manager.main_widget
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
@@ -47,8 +50,11 @@ class ImagesController:
         self.top_right_widget = ImagesDisplayView()       # Display grid of images
         self.bot_right_widget = HTMLView()                # HTML Help on images
         # Submenu
-        self.submenu = SubMenu('submenu_images')
-        self.submenu.load_menu('menu/images_menu.txt')
+        self.submenu = SubMenu(translate('submenu_images'))
+        if __name__ == "__main__":
+            self.submenu.load_menu('../menu/images_menu.txt')
+        else:
+            self.submenu.load_menu('menu/images_menu.txt')
         self.submenu.menu_changed.connect(self.update_submenu)
         # Option 1 / Option 2
         self.options_widget = QWidget()        # Image Choice (if images are loaded)
@@ -63,7 +69,10 @@ class ImagesController:
         self.main_widget.set_sub_menu_widget(self.submenu)
         self.main_widget.set_top_left_widget(self.top_left_widget)
         self.main_widget.set_top_right_widget(self.top_right_widget)
-        self.bot_right_widget.set_url('docs/html/images.html', 'docs/html/styles.css')
+        if __name__ == "__main__":
+            self.bot_right_widget.set_url('../docs/html/images.html', '../docs/html/styles.css')
+        else:
+            self.bot_right_widget.set_url('docs/html/images.html', 'docs/html/styles.css')
         self.main_widget.set_bot_right_widget(self.bot_right_widget)
         # Images loaded ?
         if self.images_loaded:
@@ -147,3 +156,23 @@ class ImagesController:
         if self.images_loaded:
             # Display images
             self.update_submenu("display_images")
+
+
+if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
+    from controllers.modes_manager import ModesManager
+    from views.main_menu import MainMenu
+
+    app = QApplication(sys.argv)
+    widget = MainView()
+    menu = MainMenu()
+    menu.load_menu('')
+    widget.set_main_menu(menu)
+    data_set = DataSetModel()
+    manager = ModesManager(menu, widget, data_set)
+
+    # Test controller
+    manager.mode_controller = ImagesController(manager)
+    widget.showMaximized()
+    sys.exit(app.exec())
+

@@ -18,14 +18,13 @@ Data are stored in MAT file, containing "Images" (set of 5 arrays in 2 dimension
 Creation : march/2025
 """
 import sys, os
-import scipy
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from images import *
-from masks import *
-from phase import *
-from acquisition import *
-from utils import *
+import numpy as np
+from models.images import ImagesModel
+from models.masks import MasksModel
+from models.phase import PhaseModel
+from models.acquisition import AcquisitionModel
 
 
 class DataSetModel:
@@ -40,7 +39,7 @@ class DataSetModel:
         self.images_sets = ImagesModel(set_size)
         self.masks_sets = MasksModel()
         self.acquisition_mode = AcquisitionModel(set_size)
-        self.phase = PhaseModel()
+        self.phase = PhaseModel(self)
 
     def add_set_images(self, images: list):
         """
@@ -89,8 +88,9 @@ class DataSetModel:
         else:
             return False
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
+    from matplotlib import pyplot as plt
     number_of_images = 5
     data_set = DataSetModel(number_of_images)
 

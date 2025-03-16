@@ -12,62 +12,70 @@ Creation : march/2025
 """
 import cv2
 import numpy as np
-from lensepy.images.conversion import crop_images
-from models import *
+from lensepy.images.conversion import crop_images, find_mask_limits
+from models.hariharan_algorithm import *
+from models.images import ImagesModel
+from models.masks import MasksModel
 from skimage.restoration import unwrap_phase
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from models.dataset import DataSetModel
 
 
 class PhaseModel:
     """Class containing phase data and parameters.
     """
-    def __init__(self):
+    def __init__(self, data_set: "DataSetModel"):
         """
 
         """
-        self.images_list = []
-        self.mask = None
-        self.cropped_phase = None
+        self.data_set: "DataSetModel" = data_set
+        set_size = self.data_set.images_sets.set_size
+        self.cropped_images_sets = ImagesModel(set_size)
+        self.cropped_masks_sets = MasksModel()
+        self.cropped_data_ready = False
         self.wrapped_phase = None
         self.unwrapped_phase = None
 
-    def set_images(self, images_set: list[np.ndarray]) -> bool:
+    def prepare_data(self):
         """
-        Add a set of 5 images (as list of arrays).
-        :param images_set: List of array containing images data
-        (for Hariharan phase demodulation algorithm)
-        :return: True if images are added.
+        Crop the images.
+        :return:
         """
-        if isinstance(images_set, list):
-            if len(images_set) == 5:
-                self.images_list = images_set
-                return True
-        self.images_list = []
-        return False
+        # TO DO : np.ma.where !!
+        '''
+        self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase),                                                   wrapped_phase)
+        '''
+        mask = self.data_set.get_global_mask()
+        top_left, bottom_right = find_mask_limits(mask)
+        height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
+        pos_x, pos_y = top_left[1], top_left[0]
+        mask_cropped = crop_images([mask], (height, width), (pos_x, pos_y))[0]
+        self.cropped_masks_sets.add_mask(mask_cropped)
+        # Process all the sets of images
+        for k in range(self.data_set.images_sets.get_number_of_sets()):
+            images = self.data_set.get_images_sets(k)
+            # Process all images in the set
+            images_c = crop_images(images, (height, width), (pos_x, pos_y))
+            self.cropped_images_sets.add_set_images(images_c)
+        self.cropped_data_ready = True
 
-    def set_mask(self, mask: np.ndarray) -> bool:
-        """
-        Add a mask to process data.
-        :param mask: 2D array containing mask for image processing.
-        :return: True if mask is added.
-        """
-        # Test size of the mask, compared to image size
-        if mask.shape[0] == self.images_list[0].shape[0] and mask.shape[1] == self.images_list[0].shape[1]:
-            self.mask = mask
-            return True
-        self.mask = None
-        return False
 
-    def process_wrapped_phase(self):
+    def process_wrapped_phase(self, set_number: int=1):
         """
         Process Hariharan demodulation altorithm on data (set of 5 images).
+        :param set_number: Number of the set to process.
         :return: True if Hariharan algorithm is processed.
         """
-        print(f'L = {len(self.images_list)}')
-        if len(self.images_list) != 0 and self.mask is not None:
+        if self.data_set.is_data_ready() and self.cropped_data_ready:
             self.cropped_phase = []
-            for image in self.images_list:
-                self.cropped_phase.append(cv2.blur(image, (15, 15)))
-            self.wrapped_phase = hariharan_algorithm(self.cropped_phase, self.mask)
+            mask,_ = self.cropped_masks_sets.get_mask(1)
+            images_list = self.cropped_images_sets.get_images_set(set_number)
+            for k, image in enumerate(images_list):
+                # Blur images
+                images_list[k] = cv2.blur(image, (15, 15))
+            self.wrapped_phase = hariharan_algorithm(images_list, mask)
             return True
         else:
             self.wrapped_phase = None
@@ -114,25 +122,19 @@ if __name__ == '__main__':
     import sys, os
     from matplotlib import pyplot as plt
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-    from models import *
-    from utils import *
-
-    phase_test = PhaseModel()
+    from models.dataset import DataSetModel
 
     nb_of_images_per_set = 5
     file_path = '../_data/test3.mat'
-    image_set = ImagesModel(nb_of_images_per_set)
-    image_set.load_images_set_from_file(file_path)
-    masks_set = MasksModel()
-    masks_set.load_mask_from_file(file_path)
+    data_set = DataSetModel()
+    data_set.images_sets.load_images_set_from_file(file_path)
+    data_set.masks_sets.load_mask_from_file(file_path)
 
+    phase_test = PhaseModel(data_set)
     ## Test class
-    print(f'Number of sets = {image_set.get_number_of_sets()}')
-    if phase_test.set_images(image_set.get_images_set(1)):
-        print('Images OK')
-    if phase_test.set_mask(masks_set.get_global_mask()):
-        print('Mask OK')
-    cropped_mask, c_size, c_pos = masks_set.get_global_cropped_mask()
+    phase_test.prepare_data()
+    print(f'Number of sets = {phase_test.cropped_images_sets.get_number_of_sets()}')
+
     if phase_test.process_wrapped_phase():
         print('Wrapped Phase OK')
     wrapped = phase_test.get_wrapped_phase()
@@ -146,7 +148,5 @@ if __name__ == '__main__':
     if wrapped is not None:
         plt.figure()
         plt.imshow(unwrapped, cmap='gray')
-
-
 
     plt.show()

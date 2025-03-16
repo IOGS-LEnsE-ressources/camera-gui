@@ -8,6 +8,7 @@
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 Creation : march/2025
 """
+import sys, os
 import numpy as np
 import scipy
 
@@ -43,8 +44,11 @@ def read_mat_file(file_path: str) -> dict:
     :param file_path: Path and name of the file to load.
     :return: Dictionary containing at least np.ndarray including in the "Images"-key object.
     """
-    data = scipy.io.loadmat(file_path)
-    return data
+    if os.path.exists(file_path):
+        data = scipy.io.loadmat(file_path)
+        return data
+    else:
+        print('read_mat_file / No File')
 
 
 def write_mat_file(file_path, images: np.ndarray, masks: np.ndarray = None, masks_type: list = []):

@@ -84,16 +84,17 @@ class ImagesModel:
         """
         if filename != '':
             data_from_mat = read_mat_file(filename)
-            # Process images from MAT file
-            images_mat = data_from_mat['Images']
-            images_d = split_3d_array(images_mat)
+            if data_from_mat is not None:
+                # Process images from MAT file
+                images_mat = data_from_mat['Images']
+                images_d = split_3d_array(images_mat)
 
-            if isinstance(images_d, list):
-                if len(images_d) % self.set_size == 0 and len(images_d) > 1:
-                    self.reset_all_images()
-                    for i in range(int(len(images_d) / 5)):
-                        self.add_set_images(images_d[i:i + 5])
-                    return True
+                if isinstance(images_d, list):
+                    if len(images_d) % self.set_size == 0 and len(images_d) > 1:
+                        self.reset_all_images()
+                        for i in range(int(len(images_d) / 5)):
+                            self.add_set_images(images_d[i:i + 5])
+                        return True
         return False
 
     def save_images_set_to_file(self, filename: str = '') -> bool:
