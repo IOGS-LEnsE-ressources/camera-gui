@@ -16,6 +16,7 @@ from lensepy.images.conversion import crop_images, find_mask_limits
 from models.hariharan_algorithm import *
 from models.images import ImagesModel
 from models.masks import MasksModel
+from utils.dataset_utils import DataSetState
 from skimage.restoration import unwrap_phase
 
 from typing import TYPE_CHECKING
@@ -60,6 +61,7 @@ class PhaseModel:
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
             self.cropped_images_sets.add_set_images(images_c)
         self.cropped_data_ready = True
+        self.data_set.data_set_state = DataSetState.CROPPED
 
 
     def process_wrapped_phase(self, set_number: int=1):
@@ -76,6 +78,7 @@ class PhaseModel:
                 # Blur images
                 images_list[k] = cv2.blur(image, (15, 15))
             self.wrapped_phase = hariharan_algorithm(images_list, mask)
+            self.data_set.data_set_state = DataSetState.WRAPPED
             return True
         else:
             self.wrapped_phase = None
@@ -95,6 +98,7 @@ class PhaseModel:
         """
         if self.wrapped_phase is not None:
             self.unwrapped_phase = unwrap_phase(self.wrapped_phase) / (2 * np.pi)
+            self.data_set.data_set_state = DataSetState.UNWRAPPED
             return True
         else:
             self.unwrapped_phase = None
@@ -127,8 +131,8 @@ if __name__ == '__main__':
     nb_of_images_per_set = 5
     file_path = '../_data/test3.mat'
     data_set = DataSetModel()
-    data_set.images_sets.load_images_set_from_file(file_path)
-    data_set.masks_sets.load_mask_from_file(file_path)
+    data_set.load_images_set_from_file(file_path)
+    data_set.load_mask_from_file(file_path)
 
     phase_test = PhaseModel(data_set)
     ## Test class

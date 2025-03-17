@@ -21,11 +21,12 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import numpy as np
+from enum import Enum
 from models.images import ImagesModel
 from models.masks import MasksModel
 from models.phase import PhaseModel
 from models.acquisition import AcquisitionModel
-
+from utils.dataset_utils import DataSetState
 
 class DataSetModel:
     """Class containing images data and parameters.
@@ -40,6 +41,7 @@ class DataSetModel:
         self.masks_sets = MasksModel()
         self.acquisition_mode = AcquisitionModel(set_size)
         self.phase = PhaseModel(self)
+        self.data_set_state = DataSetState.NODATA
 
     def add_set_images(self, images: list):
         """
@@ -48,6 +50,7 @@ class DataSetModel:
 
         """
         self.images_sets.add_set_images(images)
+        self.data_set_state = DataSetState.IMAGES
 
     def get_images_sets(self, index: int=1) -> list[np.ndarray]:
         """
@@ -57,12 +60,43 @@ class DataSetModel:
         """
         return self.images_sets.get_images_set(index)
 
+    def load_images_set_from_file(self, filename: str = '') -> bool:
+        """
+        Load sets of images from a MAT file.
+        :param filename: Path of the MAT file.
+        :return: True if file is loaded.
+        """
+        state = self.images_sets.load_images_set_from_file(filename)
+        if state:
+            self.data_set_state = DataSetState.IMAGES
+        return state
+
     def get_masks_list(self) -> list[np.ndarray]:
         """
         Return the list of the masks.
         :return: List of 2D-array.
         """
         return self.masks_sets.get_mask_list()
+
+    def add_mask(self, mask: np.ndarray, type_m: str = ''):
+        """Add a new mask to the list.
+        :param mask: Mask to add to the list.
+        :param type_m: Type of mask (Circular, Rectangular, Polygon).
+        """
+        self.masks_sets.add_mask(mask, type_m)
+        self.data_set_state = DataSetState.MASKS
+
+    def load_mask_from_file(self, filename: str = '') -> bool:
+        """
+        Load a set of mask from a MAT file.
+        :param filename: Path of the MAT file.
+        :return: True if file is loaded.
+        """
+        state = self.masks_sets.load_mask_from_file(filename)
+        if state:
+            self.data_set_state = DataSetState.MASKS
+        return state
+
 
     def get_global_mask(self) -> np.ndarray:
         """

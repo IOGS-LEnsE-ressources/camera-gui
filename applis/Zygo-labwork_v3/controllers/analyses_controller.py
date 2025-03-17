@@ -9,6 +9,7 @@
 Creation : march/2025
 """
 import sys, os
+import threading
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views.main_structure import MainView
@@ -23,7 +24,7 @@ from PyQt6.QtWidgets import (
     QFileDialog
 )
 from models.dataset import DataSetModel
-from utils.images_utils import generate_images_grid
+from utils.dataset_utils import generate_images_grid, DataSetState
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -34,12 +35,12 @@ class AnalysesController:
     Analyses mode manager.
     """
 
-    def __init__(self, manager):
+    def __init__(self, manager: "ModesManager"):
         """
         Default constructor.
-        :param manager: Main manager of the application (ModeManager).
+        :param manager: Main manager of the application (ModesManager).
         """
-        self.manager = manager
+        self.manager: "ModesManager" = manager
         self.data_set: DataSetModel = self.manager.data_set
         self.main_widget: MainView = self.manager.main_widget
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
@@ -81,8 +82,11 @@ class AnalysesController:
         self.top_left_widget.set_image_from_array(g_images)
         # Update menu
         self.update_submenu_view("")
-        # Start Analyses ?
-        self.thread_wrapped_phase_calculation()
+        # Start Analyses
+        ## Where to find set_number ?
+        set_number = 1
+        thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
+        thread.start()
 
     def update_submenu_view(self, submode: str):
         """
@@ -95,7 +99,11 @@ class AnalysesController:
         for k in range(len(self.submenu.buttons_list)):
             self.submenu.set_button_enabled(k + 1, False)
         ## Activate button depending on data
-        ### TO DO
+        if self.data_set.data_set_state == DataSetState.WRAPPED:
+            self.submenu.set_button_enabled(1, True)
+        if self.data_set.data_set_state == DataSetState.UNWRAPPED:
+            self.submenu.set_button_enabled(1, True)
+            self.submenu.set_button_enabled(2, True)
         ## Update menu
 
     def update_submenu(self, event):
@@ -108,9 +116,16 @@ class AnalysesController:
         # Update Action
         match event:
             case 'wrappedphase_analyses':
-                pass
+                # Activate submenu
+                self.submenu.set_activated(1)
+                # Display ?
+
             case 'unwrappedphase_analyses':
-                pass
+                # Activate submenu
+                self.submenu.set_activated(1)
+                self.submenu.set_activated(2)
+                # Display ?
+
 
     def thread_wrapped_phase_calculation(self, set_number: int=1):
         """
@@ -126,12 +141,25 @@ class AnalysesController:
             self.data_set.phase.process_wrapped_phase()
             # End of process
             wrapped = self.data_set.phase.get_wrapped_phase()
-            print(wrapped)
-
-            '''
-            thread = threading.Thread(target=self.thread_unwrapped_phase_calculation)
+            # Update wrapped ?
+            self.update_submenu('')
+            thread = threading.Thread(target=self.thread_unwrapped_phase_calculation, args=(set_number,))
             thread.start()
-            '''
+
+    def thread_unwrapped_phase_calculation(self, set_number: int=1):
+        """
+        Thread to calculate unwrapped phase from the wrapped phase.
+        :param set_number: Number of the set to process.
+        """
+        if self.data_set.is_data_ready() and self.data_set.data_set_state == DataSetState.WRAPPED:
+            # Process Phase
+            self.data_set.phase.process_unwrapped_phase()
+            # End of process
+            unwrapped = self.data_set.phase.get_unwrapped_phase()
+            # Update wrapped ?
+            self.update_submenu('')
+            # Start Zernike coefficients process
+            ## TO DO
 
 
 if __name__ == "__main__":
@@ -147,8 +175,8 @@ if __name__ == "__main__":
     data_set = DataSetModel()
     manager = ModesManager(menu, widget, data_set)
     # Update data
-    manager.data_set.images_sets.load_images_set_from_file("../_data/test3.mat")
-    manager.data_set.masks_sets.load_mask_from_file("../_data/test3.mat")
+    manager.data_set.load_images_set_from_file("../_data/test3.mat")
+    manager.data_set.load_mask_from_file("../_data/test3.mat")
 
     # Test controller
     manager.mode_controller = AnalysesController(manager)

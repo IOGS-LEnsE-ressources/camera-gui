@@ -1,0 +1,191 @@
+# -*- coding: utf-8 -*-
+"""*analyses_options_view.py* file.
+
+./views/analyses_options_view.py contains AnalysesOptionsView class to display options for analyses mode.
+
+.. note:: LEnsE - Institut d'Optique - version 1.0
+
+.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+Creation : march/2025
+"""
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+from lensepy import load_dictionary, translate, dictionary
+from lensepy.css import *
+from lensepy.pyqt6 import *
+from PyQt6.QtWidgets import (
+    QWidget, QLabel, QPushButton, QProgressBar, QCheckBox,
+    QHBoxLayout, QVBoxLayout
+)
+from PyQt6.QtCore import Qt
+
+class AnalysesOptionsView(QWidget):
+    """Images Choice."""
+
+    def __init__(self, controller=None) -> None:
+        """Default constructor of the class.
+        :param parent: Parent widget or window of this widget.
+        """
+        super().__init__()
+        self.controller = controller
+        #self.data_set = self.controller.data_set
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        ## Title of the widget
+        self.label_analyses_options = QLabel(translate("label_analyses_options"))
+        self.label_analyses_options.setStyleSheet(styleH1)
+        self.label_analyses_options.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.label_analyses_options)
+
+        # Progression Bar
+        self.label_progress_bar = QLabel(translate('label_progress_bar'))
+        self.label_progress_bar.setStyleSheet(styleH2)
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setObjectName("IOGSProgressBar")
+        self.progress_bar.setStyleSheet(StyleSheet)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.label_progress_bar)
+        self.layout.addWidget(self.progress_bar)
+
+        # 2D/3D display
+        self.widget_2D_3D = QWidget()
+        self.layout_2D_3D = QHBoxLayout()
+        self.widget_2D_3D.setLayout(self.layout_2D_3D)
+        self.checkbox_2D_3D_choice = QCheckBox()
+        self.checkbox_2D_3D_choice.stateChanged.connect(self.display_changed)
+        self.label_2D_3D_choice = QLabel(translate('label_2D_3D_choice'))
+        self.layout_2D_3D.addWidget(self.checkbox_2D_3D_choice)
+        self.layout_2D_3D.addWidget(self.label_2D_3D_choice)
+        self.layout_2D_3D.addStretch()
+        self.checkbox_2D_3D_choice.setEnabled(False)
+        self.checkbox_2D_3D_choice.setChecked(False)
+        self.layout.addWidget(self.widget_2D_3D)
+
+        # PV/RMS displayed (for uncorrected phase)
+        self.label_pv_rms_uncorrected = QLabel(translate('label_pv_rms_uncorrected'))
+        self.label_pv_rms_uncorrected.setStyleSheet(styleH2)
+        self.pv_rms_uncorrected = PVRMSView()
+        self.layout.addWidget(self.label_pv_rms_uncorrected)
+        self.layout.addWidget(self.pv_rms_uncorrected)
+
+        # PV/RMS displayed (for corrected phase)
+        self.label_pv_rms_corrected = QLabel(translate('label_pv_rms_corrected'))
+        self.label_pv_rms_corrected.setStyleSheet(styleH2)
+        ## Checkbox for TILT
+        self.pv_rms_corrected = PVRMSView()
+        self.layout.addWidget(self.label_pv_rms_corrected)
+        self.layout.addWidget(self.pv_rms_corrected)
+
+        self.layout.addStretch()
+
+    def update_progress_bar(self, value):
+        """
+        Update the progress bar value.
+        :param value: Value to update to the progress bar.
+        """
+        self.progress_bar.setValue(value)
+
+    def set_enable_2D_3D(self, value: bool):
+        """
+        Set enable the 2D/3D display checkbox.
+        :param value: True or False.
+        """
+        self.checkbox_2D_3D_choice.setEnabled(value)
+
+    def display_changed(self):
+        """
+        Action performed when the 2D/3D checkbox is checked.
+        """
+        state = self.checkbox_2D_3D_choice.isChecked()
+        print(f'2D/3D check = {state}')
+
+    def set_pv_uncorrected(self, value: float, unit: str = '&lambda;'):
+        """
+        Update the value and the unit of the PV value.
+        :param value: value of the peak-to-valley.
+        :param unit: Unit of the PV value.
+        """
+        self.pv_rms_uncorrected.set_pv(value, unit)
+
+    def _clear_layout(self, row: int, column: int) -> None:
+        """Remove widgets from a specific position in the layout.
+
+        :param row: Row index of the layout.
+        :type row: int
+        :param column: Column index of the layout.
+        :type column: int
+
+        """
+        item = self.layout.itemAtPosition(row, column)
+        if item is not None:
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            else:
+                self.layout.removeItem(item)
+
+
+class PVRMSView(QWidget):
+    """
+    Class to display PV (Peak-to-Valley) and RMS value of a wavefront.
+    """
+
+    def __init__(self):
+        """
+        Default constructor.
+        """
+        super().__init__()
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+
+        styleL = f"font-size:14px; padding:0px; color:{ORANGE_IOGS}; font-weight: bold;"
+        styleT = f"font-size:14px; padding:5px; font-weight: bold; background-color: white;"
+        self.label_PV = QLabel(translate('label_PV'))
+        self.label_PV.setStyleSheet(styleL)
+        self.text_PV = QLabel()
+        self.text_PV.setStyleSheet(styleT)
+        self.unit_PV = QLabel()
+        self.label_RMS = QLabel(translate('label_RMS'))
+        self.label_RMS.setStyleSheet(styleL)
+        self.text_RMS = QLabel()
+        self.text_RMS.setStyleSheet(styleT)
+        self.unit_RMS = QLabel()
+        self.layout.addWidget(self.label_PV)
+        self.layout.addWidget(self.text_PV)
+        self.layout.addWidget(self.unit_PV)
+        self.layout.addStretch()
+        self.layout.addWidget(self.label_RMS)
+        self.layout.addWidget(self.text_RMS)
+        self.layout.addWidget(self.unit_RMS)
+        self.layout.addStretch()
+
+    def set_pv(self, value: float, unit: str = '&lambda;'):
+        """
+        Update the value and the unit of the PV value.
+        :param value: value of the peak-to-valley.
+        :param unit: Unit of the PV value.
+        """
+        self.text_PV.setText(str(value))
+        self.unit_PV.setText(unit)
+
+
+if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
+    '''
+    from controllers.analyses_controller import AnalysesController, ModesManager
+    manager = ModesManager()
+    controller = AnalysesController()
+    '''
+
+    app = QApplication(sys.argv)
+    main_widget = AnalysesOptionsView()
+    main_widget.setGeometry(100, 100, 700, 500)
+    main_widget.show()
+
+    # Class test
+    main_widget.update_progress_bar(50)
+    main_widget.set_enable_2D_3D(True)
+    main_widget.set_pv_uncorrected(20.5, 'mm')
+
+    sys.exit(app.exec())

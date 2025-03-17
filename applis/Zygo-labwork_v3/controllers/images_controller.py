@@ -24,7 +24,8 @@ from PyQt6.QtWidgets import (
     QFileDialog
 )
 from models.dataset import DataSetModel
-from utils.images_utils import generate_images_grid
+from utils.dataset_utils import generate_images_grid
+from utils.pyqt6_utils import message_box
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -140,12 +141,12 @@ class ImagesController:
         file_path, _ = file_dialog.getOpenFileName(self.main_widget, translate('dialog_open_image'),
                                                    default_path, "Matlab (*.mat)")
         if file_path != '':
-            self.images_loaded = self.data_set.images_sets.load_images_set_from_file(file_path)
+            self.images_loaded = self.data_set.load_images_set_from_file(file_path)
             if self.images_loaded is False:
                 msg = "No images in the files or bad format of data."
                 message_box("Warning - No Images Loaded", msg)
             else:
-                self.masks_loaded = self.data_set.masks_sets.load_mask_from_file(file_path)
+                self.masks_loaded = self.data_set.load_mask_from_file(file_path)
                 if self.masks_loaded is False:
                     msg = "No masks in the files."
                     message_box("Warning - No Mask Loaded", msg)

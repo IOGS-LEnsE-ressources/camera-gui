@@ -70,3 +70,13 @@ class HTMLView(QWidget):
                 """
                 self.html_page.setHtml(full_html_content)
 
+
+if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+    main_widget = HTMLView(url='../docs/html/camera.html', css='../docs/html/styles.css')
+    main_widget.setGeometry(100, 100, 400, 600)
+    main_widget.show()
+
+    sys.exit(app.exec())

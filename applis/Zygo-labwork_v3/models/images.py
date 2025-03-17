@@ -19,7 +19,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import scipy
 import numpy as np
-from utils.images_utils import read_mat_file, split_3d_array
+from utils.dataset_utils import read_mat_file, split_3d_array
 
 
 class ImagesModel:

@@ -32,3 +32,4 @@ def message_box(warning="Warning - No File Loaded", text=""):
     )
     dlg.setIcon(QMessageBox.Icon.Warning)
     return dlg.exec()
+
