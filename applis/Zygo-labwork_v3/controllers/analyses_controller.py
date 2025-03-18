@@ -54,7 +54,7 @@ class AnalysesController:
         self.tilt_possible = False
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()     # Display first image of a set
-        self.top_right_widget = Surface2DView()              # Display 2D. Default.
+        self.top_right_widget = Surface2DView('Wrapped Phase')              # Display 2D. Default.
         self.bot_right_widget = HTMLView()             # HTML Help on analyses ?
         # Submenu
         self.submenu = SubMenu(translate('submenu_analyses'))
@@ -95,7 +95,8 @@ class AnalysesController:
         self.options1_widget.analyses_changed.connect(self.analyses_changed)
         # Update grid of images
         images = self.data_set.get_images_sets(1)
-        g_images = generate_images_grid(images)
+        mask = self.data_set.get_global_mask()
+        g_images = images[0]*mask
         self.top_left_widget.set_image_from_array(g_images)
 
     def update_submenu_view(self, submode: str):
@@ -114,6 +115,8 @@ class AnalysesController:
         if self.data_set.data_set_state == DataSetState.UNWRAPPED:
             self.submenu.set_button_enabled(1, True)
             self.submenu.set_button_enabled(2, True)
+        if self.zernike_coeffs.get_coeff_counter() > 3:
+            self.submenu.set_button_enabled(3, True)
 
     def update_submenu(self, event):
         """
@@ -136,7 +139,7 @@ class AnalysesController:
                 wrapped = self.data_set.phase.get_wrapped_phase()
                 wrapped_array = wrapped.filled(np.nan)
                 # Display wrapped in 2D
-                self.top_right_widget = Surface2DView()
+                self.top_right_widget = Surface2DView('Wrapped Phase')
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.top_right_widget.set_array(wrapped_array)
                 self.options1_widget.erase_pv_rms()
@@ -147,9 +150,9 @@ class AnalysesController:
                 ## Test 2D or 3D ??
                 unwrapped = self.data_set.phase.get_unwrapped_phase()
                 unwrapped_array = unwrapped.filled(np.nan)
-                # Display unwrapped in 2D
+                # Display unwrapped and corrected in 2D
                 self.main_widget.clear_bot_right()
-                self.bot_right_widget = Surface2DView()
+                self.bot_right_widget = Surface2DView('Unwrapped Phase')
                 self.main_widget.set_bot_right_widget(self.bot_right_widget)
                 self.bot_right_widget.set_array(unwrapped_array)
                 pv, rms = process_statistics_surface(unwrapped)
@@ -168,13 +171,45 @@ class AnalysesController:
                 # Activate submenu
                 self.submenu.set_activated(1)
                 self.submenu.set_activated(2)
+            case 'correctedphase_analyses':
+                # Display corrected in 2D in the top right area
+                self.top_right_widget = Surface2DView('Corrected Phase')
+                self.main_widget.set_top_right_widget(self.top_right_widget)
+                self.display_2D_correction()
+                # Activate submenu
+                self.submenu.set_activated(3)
+                self.options1_widget.show_correction()
+
+    def display_2D_correction(self):
+        """
+        Display correction depending on tilt checkbox value.
+        """
+        ## TO DO : update colorbar depending on the max range of TOP and BOT right area.
+        unwrapped = self.data_set.phase.get_unwrapped_phase()
+        unwrapped_array = unwrapped.filled(np.nan)
+        # Test if tilt !
+        if self.options1_widget.is_tilt_checked():
+            _, corrected = self.zernike_coeffs.process_surface_correction(['piston','tilt'])
+        else:
+            corrected = unwrapped
+        corrected_array = corrected.filled(np.nan)
+        self.top_right_widget.set_array(corrected_array)
+        self.options1_widget.erase_pv_rms()
+        pv, rms = process_statistics_surface(corrected)
+        self.options1_widget.set_pv_corrected(pv, '\u03BB')
+        self.options1_widget.set_rms_corrected(rms, '\u03BB')
+        pv, rms = process_statistics_surface(unwrapped)
+        self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
+        self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
 
     def analyses_changed(self, event):
         """
         Update controller data and views when options changed.
         :param event: Signal that triggers the event.
         """
-        print(f'CHANGED !! {event}')
+        change = event.split(',')
+        if change[0] == 'tilt':
+            self.display_2D_correction()
 
     def thread_wrapped_phase_calculation(self, set_number: int=1):
         """
@@ -215,9 +250,13 @@ class AnalysesController:
         if counter > 3:
             # Tilt OK
             self.tilt_possible = True
-        print(f'Zernike [{counter}]')
+            self.submenu.set_button_enabled(3, True)
         self.zernike_coeffs.process_zernike_coefficient(counter)
         self.zernike_coeffs.inc_coeff_counter()
+        time.sleep(0.01)
+        progress_value = int(counter/max_order * 100)
+        self.options1_widget.update_progress_bar(progress_value)
+        time.sleep(0.01)
 
         if counter+1 <= max_order:
             thread = threading.Thread(target=self.thread_zernike_calculation)
@@ -242,7 +281,7 @@ if __name__ == "__main__":
     data_set = DataSetModel()
     manager = ModesManager(menu, widget, data_set)
     # Update data
-    manager.data_set.load_images_set_from_file("../_data/test3.mat")
+    manager.data_set.load_images_set_from_file("../_data/test4.mat")
     manager.data_set.load_mask_from_file("../_data/test3.mat")
 
     # Test controller

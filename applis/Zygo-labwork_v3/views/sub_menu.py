@@ -183,6 +183,7 @@ class SubMenu(QWidget):
                     element.setStyleSheet(disabled_button)
                     element.setEnabled(False)
 
+    '''
     def set_enabled(self, index: int, value: bool = True):
         """
         Set enabled a button.
@@ -202,6 +203,7 @@ class SubMenu(QWidget):
             else:
                 self.buttons_enabled[index - 1] = False
         self.update_menu_display()
+    '''
 
     def set_activated(self, index: int):
         """

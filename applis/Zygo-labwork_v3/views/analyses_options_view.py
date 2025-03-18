@@ -73,6 +73,7 @@ class AnalysesOptionsView(QWidget):
         self.layout.addWidget(self.label_pv_rms_uncorrected)
         self.layout.addWidget(self.pv_rms_uncorrected)
 
+        ## Only when corrected button in analyses is clicked.
         # PV/RMS displayed (for corrected phase)
         self.label_pv_rms_corrected = QLabel(translate('label_pv_rms_corrected'))
         self.label_pv_rms_corrected.setStyleSheet(styleH2)
@@ -93,10 +94,30 @@ class AnalysesOptionsView(QWidget):
         self.layout.addWidget(self.label_pv_rms_corrected)
         self.layout.addWidget(self.widget_tilt)
         self.layout.addWidget(self.pv_rms_corrected)
-
         self.layout.addStretch()
 
-    def update_progress_bar(self, value):
+        self.hide_correction()
+
+    def hide_correction(self):
+        """
+        Hide the corrected option part of the widget.
+        """
+        self.checkbox_tilt_choice.hide()
+        self.label_tilt_choice.hide()
+        self.label_pv_rms_corrected.hide()
+        self.pv_rms_corrected.hide()
+
+    def show_correction(self):
+        """
+        Show the corrected option part of the widget.
+        ## Only when corrected button in analyses is clicked.
+        """
+        self.checkbox_tilt_choice.show()
+        self.label_tilt_choice.show()
+        self.label_pv_rms_corrected.show()
+        self.pv_rms_corrected.show()
+
+    def update_progress_bar(self, value: int):
         """
         Update the progress bar value.
         :param value: Value to update to the progress bar.
@@ -116,6 +137,20 @@ class AnalysesOptionsView(QWidget):
         :param value: True or False.
         """
         self.checkbox_tilt_choice.setEnabled(value)
+
+    def is_tilt_checked(self):
+        """
+        Return if the tilt checkbox is checked.
+        :return: True if checked.
+        """
+        return self.checkbox_tilt_choice.isChecked()
+
+    def is_3D_checked(self):
+        """
+        Return if the 3D checkbox is checked.
+        :return: True if checked.
+        """
+        return self.checkbox_2D_3D_choice.isChecked()
 
     def display_changed(self):
         """
@@ -147,6 +182,22 @@ class AnalysesOptionsView(QWidget):
         """
         self.pv_rms_uncorrected.set_rms(value, unit)
 
+    def set_pv_corrected(self, value: float, unit: str = '\u03BB'):
+        """
+        Update the value and the unit of the PV value.
+        :param value: value of the peak-to-valley.
+        :param unit: Unit of the PV value.
+        """
+        self.pv_rms_corrected.set_pv(value, unit)
+
+    def set_rms_corrected(self, value: float, unit: str = '\u03BB'):
+        """
+        Update the value and the unit of the RMS value.
+        :param value: value of the RMS.
+        :param unit: Unit of the RMS value.
+        """
+        self.pv_rms_corrected.set_rms(value, unit)
+
     def _clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
 
@@ -169,6 +220,7 @@ class AnalysesOptionsView(QWidget):
         Erase PV and RMS values.
         """
         self.pv_rms_uncorrected.erase_pv_rms()
+        self.pv_rms_corrected.erase_pv_rms()
 
 
 class PVRMSView(QWidget):
@@ -261,5 +313,6 @@ if __name__ == "__main__":
     main_widget.set_enable_tilt(True)
     main_widget.set_pv_uncorrected(20.5, 'mm')
     main_widget.analyses_changed.connect(analyses_changed)
+    main_widget.show_correction()
 
     sys.exit(app.exec())

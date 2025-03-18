@@ -49,10 +49,6 @@ class PhaseModel:
         Crop the images.
         :return:
         """
-        # TO DO : np.ma.where !!
-        '''
-        self.parent.wrapped_phase = np.ma.masked_where(np.logical_not(self.parent.cropped_mask_phase),                                                   wrapped_phase)
-        '''
         mask = self.data_set.get_global_mask()
         top_left, bottom_right = find_mask_limits(mask)
         height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]

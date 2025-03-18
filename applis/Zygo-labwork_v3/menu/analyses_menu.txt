@@ -2,5 +2,6 @@
 # Type; Title; Signal; Options List;
 B;wrapped_phase_button;wrappedphase_analyses;;
 B;unwrapped_phase_button;unwrappedphase_analyses;;
+B;corrected_phase_button;correctedphase_analyses;;
 S;;;;
 E;;;;

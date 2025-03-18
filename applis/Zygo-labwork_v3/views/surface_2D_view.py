@@ -12,9 +12,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import numpy as np
-
-import sys
-import numpy as np
+from typing import Tuple
 from PyQt6.QtWidgets import (
     QWidget, QGraphicsView, QGraphicsScene,
     QHBoxLayout,
@@ -32,13 +30,15 @@ class Surface2DView(QWidget):
     Class Surface 2D allowing to display a 2D array in a widget.
     """
 
-    def __init__(self):
+    def __init__(self, title: str=''):
         """
         Default constructor.
+        :param title: Title of the image to display.
         """
         super().__init__()
         # Data
         self.array_2D = np.random.rand(20, 20)
+        self.title = title
         # Graphic area for image
         self.imv = pg.ImageItem(image=self.array_2D)
         # Création du layout principal
@@ -46,7 +46,9 @@ class Surface2DView(QWidget):
         self.setLayout(layout)
         self.plot = pg.PlotWidget()
         self.plot.setBackground('lightgray')
+        self.color_bar = None
         layout.addWidget(self.plot)
+        self.plot.setTitle(self.title, color="b", size="14pt")
 
     def set_array(self, array: np.ndarray):
         """
@@ -61,18 +63,35 @@ class Surface2DView(QWidget):
         self.plot.addItem(self.imv)
         self.plot.setAspectLocked(True)
         pen = QPen(QColor('black'))
-        color_bar = self.plot.addColorBar(self.imv, colorMap='plasma', interactive=False, pen=pen)
-
+        self.color_bar = self.plot.addColorBar(self.imv, colorMap='plasma', interactive=False, pen=pen)
         self.plot.setMouseEnabled(x=False, y=False)
         self.plot.hideButtons()
-        # p1.setRange(xRange=(0, 20), yRange=(0, 20), padding=0)
         self.plot.showAxes(False)
 
+    def set_z_range(self, range_z: Tuple[float]):
+        """
+        Set the range of the Z-axis, for the colorbar.
+        :param range: tuple of float, minimum and maximum values of the colorbar.
+        """
+        print(range_z[0])
+        self.imv.setLevels(range_z)
+        self.color_bar.setLevels(range_z)
+
+    def get_z_range(self) -> Tuple[float]:
+        """
+        Get the range of the colorbar.
+        :return: minimum and maximum values of the colorbar.
+        """
+        min_val, max_val = self.imv.levels
+        return min_val, max_val
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = Surface2DView()
     array_2D = np.random.rand(50, 50)
     window.set_array(array_2D)
+    print(window.get_z_range())
+    window.set_z_range((-5, 5))
+    print(window.get_z_range())
     window.show()
     sys.exit(app.exec())
