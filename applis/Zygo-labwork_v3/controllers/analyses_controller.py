@@ -9,7 +9,7 @@
 Creation : march/2025
 """
 import sys, os
-import threading
+import threading, time
 import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
@@ -51,6 +51,7 @@ class AnalysesController:
         self.main_widget: MainView = self.manager.main_widget
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
+        self.tilt_possible = False
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()     # Display first image of a set
         self.top_right_widget = Surface2DView()              # Display 2D. Default.
@@ -91,6 +92,7 @@ class AnalysesController:
             self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
         self.main_widget.set_bot_right_widget(self.bot_right_widget)
         self.main_widget.set_options_widget(self.options1_widget)
+        self.options1_widget.analyses_changed.connect(self.analyses_changed)
         # Update grid of images
         images = self.data_set.get_images_sets(1)
         g_images = generate_images_grid(images)
@@ -153,9 +155,26 @@ class AnalysesController:
                 pv, rms = process_statistics_surface(unwrapped)
                 self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
                 self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
+                if self.tilt_possible:
+                    self.options1_widget.set_enable_tilt(True)
+                else:
+                    self.main_widget.clear_bot_right()
+                    self.bot_right_widget = HTMLView()
+                    if __name__ == "__main__":
+                        self.bot_right_widget.set_url('../docs/html/analyses.html', '../docs/html/styles.css')
+                    else:
+                        self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
+                    self.main_widget.set_bot_right_widget(self.bot_right_widget)
                 # Activate submenu
                 self.submenu.set_activated(1)
                 self.submenu.set_activated(2)
+
+    def analyses_changed(self, event):
+        """
+        Update controller data and views when options changed.
+        :param event: Signal that triggers the event.
+        """
+        print(f'CHANGED !! {event}')
 
     def thread_wrapped_phase_calculation(self, set_number: int=1):
         """
@@ -169,8 +188,6 @@ class AnalysesController:
             # Process Phase
             self.data_set.phase.process_wrapped_phase()
             # End of process
-            wrapped = self.data_set.phase.get_wrapped_phase()
-            # Update wrapped ?
             thread = threading.Thread(target=self.thread_unwrapped_phase_calculation, args=(set_number,))
             thread.start()
 
@@ -183,27 +200,33 @@ class AnalysesController:
             # Process Phase
             self.data_set.phase.process_unwrapped_phase()
             # End of process
-            unwrapped = self.data_set.phase.get_unwrapped_phase()
-            # Update wrapped ?
             self.update_submenu('')
             # Start Zernike coefficients process
-            ## TO DO
+            thread = threading.Thread(target=self.thread_zernike_calculation)
+            thread.start()
 
     def thread_zernike_calculation(self):
         """Process Zernike coefficients for correction."""
-        print(f'Zernike [{self.parent.coeff_counter}]')
-        self.parent.zernike.process_zernike_coefficient(self.parent.coeff_counter)
+        counter = self.zernike_coeffs.get_coeff_counter()
+        max_order = self.zernike_coeffs.max_order
+        if counter == 0:
+            self.zernike_coeffs.set_phase(self.data_set.phase)
+            self.zernike_coeffs.init_data()
+        if counter > 3:
+            # Tilt OK
+            self.tilt_possible = True
+        print(f'Zernike [{counter}]')
+        self.zernike_coeffs.process_zernike_coefficient(counter)
+        self.zernike_coeffs.inc_coeff_counter()
 
-        self.parent.coeff_counter += 1
-        if self.parent.coeff_counter <= self.parent.coeff_zernike_max:
+        if counter+1 <= max_order:
             thread = threading.Thread(target=self.thread_zernike_calculation)
             time.sleep(0.1)
             thread.start()
         else:
             # At the end, analysis completed !
-            self.parent.analysis_completed = True
-            time.sleep(0.1)
-            self.update_menu()
+            ## WHAT TO DO ??
+            pass
 
 
 if __name__ == "__main__":

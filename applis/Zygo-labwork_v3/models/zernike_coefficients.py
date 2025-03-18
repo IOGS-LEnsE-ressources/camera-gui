@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from models.phase import PhaseModel
+from models.dataset import DataSetModel
 
 
 aberrations_type = {
@@ -82,11 +83,12 @@ class Zernike:
     """
 
     def __init__(self, phase: PhaseModel, max_order:int = 36):
-        self.max_order = max_order
-        self.phase = phase
-        self.surface = None
+        self.max_order: int = max_order
+        self.phase: PhaseModel = phase
+        self.surface = self.phase.get_unwrapped_phase()
 
         self.corrected_phase = None
+        self.coeff_counter = 0
         self.coeff_calculated = False  # Zernike coefficients are calculated
         self.coeff_list = [None] * (self.max_order + 1)
         self.polynomials = [None] * (self.max_order + 1)
@@ -95,19 +97,37 @@ class Zernike:
         self.pow1 = None
         self.pow2 = None
 
-    def set_surface(self, surface):
-        self.surface = surface
-        # Dimensions of the surface
-        a, b = self.surface.shape
+        if self.init_data():
+            print("Data Ok")
 
-        # Creating coordinate grids
-        x = np.linspace(-1, 1, b)
-        y = np.linspace(-1, 1, a)
-        self.X, self.Y = np.meshgrid(x, y)
-        self.pow1 = (self.X**2 - self.Y**2)
-        self.pow2 = (self.X**2 + self.Y**2)
+    def set_phase(self, phase):
+        self.phase = phase
+        self.surface = self.phase.get_unwrapped_phase()
+        if self.init_data():
+            print("Data Ok - Set Phase")
 
-        self.corrected_phase = np.zeros_like(self.surface)
+    def init_data(self) -> bool:
+        """
+        Initialize data.
+        :return: True if initialization procedure is correctly done.
+        """
+        print('Init !!')
+        if self.phase.is_analysis_ready():
+            self.surface = self.phase.get_unwrapped_phase()
+            # Dimensions of the surface
+            a, b = self.surface.shape
+            print(f'a = {a}')
+
+            # Creating coordinate grids
+            x = np.linspace(-1, 1, b)
+            y = np.linspace(-1, 1, a)
+            self.X, self.Y = np.meshgrid(x, y)
+            self.pow1 = (self.X**2 - self.Y**2)
+            self.pow2 = (self.X**2 + self.Y**2)
+
+            self.corrected_phase = np.zeros_like(self.surface)
+            return True
+        return False
 
     def process_cartesian_polynomials(self, noll_index: int) -> np.ndarray:
         if noll_index == 0:     # Piston
@@ -225,7 +245,19 @@ class Zernike:
         new_surface = self.surface - self.corrected_phase
 
         return self.corrected_phase, new_surface
-    
+
+    def inc_coeff_counter(self):
+        """
+        Increase the calculated coefficients counter.
+        """
+        self.coeff_counter += 1
+
+    def get_coeff_counter(self) -> int:
+        """
+        Get the calculated coefficients counter.
+        :return: Number of coefficients already calculated.
+        """
+        return self.coeff_counter
 
 def display_3_figures(init, zer, corr):
     """Displaying results."""
@@ -290,8 +322,6 @@ def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
 
 
 if __name__ == "__main__":
-    zer = Zernike(28)
-
     # Grid definition
     N, M = 256, 128  # Taille de la grille
     x = np.linspace(-1, 1, N)
@@ -302,12 +332,10 @@ if __name__ == "__main__":
     theta = np.arctan2(Y, X)
     mask = R < 1
 
-
     # Surface creation
     tilt_x = -0.27
     tilt_y = 0.35
     surface = tilt_x * X + tilt_y * Y #+ np.exp(-3 * R ** 2) + 0.48 * (2 * R ** 2 - 1)
-
 
     mask = elliptic_mask(surface, 0.2, 0, a=0.4)
 
@@ -318,7 +346,13 @@ if __name__ == "__main__":
 
     surface[~mask] = np.nan
 
-    zer.set_surface(surface)
+    ### Class test
+    data_set = DataSetModel(5)
+    phase = PhaseModel(data_set)
+    phase.wrapped_phase = surface
+    phase.unwrapped_phase = surface
+    zer = Zernike(phase)
+
     ab_list = ['tilt', 'defocus', 'astig3']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
