@@ -40,7 +40,7 @@ class ModesManager:
         # Data set
         self.data_set = data_set
         # Modes
-        self.main_mode = None
+        self.main_mode = 'first'
         self.mode_controller = None
         # Hardware
         self.piezo_connected = False
@@ -56,10 +56,12 @@ class ModesManager:
         """
         self.options_list = []
         # Check Hardware
-        if self.data_set.acquisition_mode.is_camera() is False:
-            self.options_list.append('nocam')
-        if self.data_set.acquisition_mode.is_piezo() is False:
-            self.options_list.append('nopiezo')
+        if self.main_mode == 'first':
+            if self.data_set.acquisition_mode.is_camera() is False:
+                self.options_list.append('nocam')
+            if self.data_set.acquisition_mode.is_piezo() is False:
+                self.options_list.append('nopiezo')
+            self.main_mode = ''
         # Check dataset
         if self.data_set.is_data_ready() is False:
             self.options_list.append('nodata')
@@ -77,6 +79,7 @@ class ModesManager:
         """
         self.main_mode = event
         self.main_widget.clear_all()
+        self.update_menu()
         match self.main_mode:
             case 'images':
                 self.mode_controller = ImagesController(self)

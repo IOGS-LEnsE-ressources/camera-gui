@@ -16,6 +16,8 @@ from views.main_structure import MainView
 from views.sub_menu import SubMenu
 from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
+from views.analyses_options_view import AnalysesOptionsView
+from views.surface_2D_view import Surface2DView
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6 import *
@@ -47,7 +49,7 @@ class AnalysesController:
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()     # Display first image of a set
-        self.top_right_widget = QWidget()              # Display 3D ?
+        self.top_right_widget = Surface2DView()              # Display 2D. Default.
         self.bot_right_widget = HTMLView()             # HTML Help on analyses ?
         # Submenu
         self.submenu = SubMenu(translate('submenu_analyses'))
@@ -57,17 +59,24 @@ class AnalysesController:
             self.submenu.load_menu('menu/analyses_menu.txt')
         self.submenu.menu_changed.connect(self.update_submenu)
         # Option 1
-        self.options1_widget = QWidget()        # ??
+        self.options1_widget = AnalysesOptionsView()        # Analyses Options
         # Option 2
         self.options2_widget = QWidget()        # ??
 
-        #Init view
+        # Update menu and view
+        self.update_submenu_view("")
         self.init_view()
+        # Start Analyses
+        ## Where to find set_number ?
+        set_number = 1
+        thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
+        thread.start()
 
     def init_view(self):
         """
         Initializes the main structure of the interface.
         """
+        self.main_widget.clear_all()
         self.main_widget.set_sub_menu_widget(self.submenu)
         self.main_widget.set_top_left_widget(self.top_left_widget)
         self.main_widget.set_top_right_widget(self.top_right_widget)
@@ -76,17 +85,11 @@ class AnalysesController:
         else:
             self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
         self.main_widget.set_bot_right_widget(self.bot_right_widget)
+        self.main_widget.set_options1_widget(self.options1_widget)
         # Update grid of images
         images = self.data_set.get_images_sets(1)
         g_images = generate_images_grid(images)
         self.top_left_widget.set_image_from_array(g_images)
-        # Update menu
-        self.update_submenu_view("")
-        # Start Analyses
-        ## Where to find set_number ?
-        set_number = 1
-        thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
-        thread.start()
 
     def update_submenu_view(self, submode: str):
         """
@@ -104,7 +107,6 @@ class AnalysesController:
         if self.data_set.data_set_state == DataSetState.UNWRAPPED:
             self.submenu.set_button_enabled(1, True)
             self.submenu.set_button_enabled(2, True)
-        ## Update menu
 
     def update_submenu(self, event):
         """
@@ -116,16 +118,25 @@ class AnalysesController:
         # Update Action
         match event:
             case 'wrappedphase_analyses':
+                ## Test 2D or 3D ??
+                # Display wrapped in 2D
+                self.top_right_widget = Surface2DView()
+                self.main_widget.set_top_right_widget(self.top_right_widget)
+                wrapped = self.data_set.phase.get_wrapped_phase()
+                self.top_right_widget.set_array(wrapped)
                 # Activate submenu
                 self.submenu.set_activated(1)
-                # Display ?
 
             case 'unwrappedphase_analyses':
+                ## Test 2D or 3D ??
+                # Display unwrapped in 2D
+                self.top_right_widget = Surface2DView()
+                self.main_widget.set_top_right_widget(self.top_right_widget)
+                unwrapped = self.data_set.phase.get_unwrapped_phase()
+                self.top_right_widget.set_array(unwrapped)
                 # Activate submenu
                 self.submenu.set_activated(1)
                 self.submenu.set_activated(2)
-                # Display ?
-
 
     def thread_wrapped_phase_calculation(self, set_number: int=1):
         """
@@ -136,13 +147,11 @@ class AnalysesController:
         k = 0
         if self.data_set.is_data_ready():
             self.data_set.phase.prepare_data()
-
             # Process Phase
             self.data_set.phase.process_wrapped_phase()
             # End of process
             wrapped = self.data_set.phase.get_wrapped_phase()
             # Update wrapped ?
-            self.update_submenu('')
             thread = threading.Thread(target=self.thread_unwrapped_phase_calculation, args=(set_number,))
             thread.start()
 

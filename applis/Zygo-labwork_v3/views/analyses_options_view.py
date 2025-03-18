@@ -18,10 +18,12 @@ from PyQt6.QtWidgets import (
     QWidget, QLabel, QPushButton, QProgressBar, QCheckBox,
     QHBoxLayout, QVBoxLayout
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 class AnalysesOptionsView(QWidget):
     """Images Choice."""
+
+    analyses_changed = pyqtSignal(str)
 
     def __init__(self, controller=None) -> None:
         """Default constructor of the class.
@@ -73,8 +75,21 @@ class AnalysesOptionsView(QWidget):
         self.label_pv_rms_corrected = QLabel(translate('label_pv_rms_corrected'))
         self.label_pv_rms_corrected.setStyleSheet(styleH2)
         ## Checkbox for TILT
+        self.widget_tilt = QWidget()
+        self.layout_tilt = QHBoxLayout()
+        self.widget_tilt.setLayout(self.layout_tilt)
+        self.checkbox_tilt_choice = QCheckBox()
+        self.checkbox_tilt_choice.stateChanged.connect(self.tilt_changed)
+        self.label_tilt_choice = QLabel(translate('label_tilt_choice'))
+        self.layout_tilt.addWidget(self.checkbox_tilt_choice)
+        self.layout_tilt.addWidget(self.label_tilt_choice)
+        self.layout_tilt.addStretch()
+        self.checkbox_tilt_choice.setEnabled(False)
+        self.checkbox_tilt_choice.setChecked(False)
+
         self.pv_rms_corrected = PVRMSView()
         self.layout.addWidget(self.label_pv_rms_corrected)
+        self.layout.addWidget(self.widget_tilt)
         self.layout.addWidget(self.pv_rms_corrected)
 
         self.layout.addStretch()
@@ -93,12 +108,26 @@ class AnalysesOptionsView(QWidget):
         """
         self.checkbox_2D_3D_choice.setEnabled(value)
 
+    def set_enable_tilt(self, value: bool):
+        """
+        Set enable the 2D/3D display checkbox.
+        :param value: True or False.
+        """
+        self.checkbox_tilt_choice.setEnabled(value)
+
     def display_changed(self):
         """
         Action performed when the 2D/3D checkbox is checked.
         """
         state = self.checkbox_2D_3D_choice.isChecked()
-        print(f'2D/3D check = {state}')
+        self.analyses_changed.emit(f'3D,{state}')
+
+    def tilt_changed(self):
+        """
+        Action performed when the 2D/3D checkbox is checked.
+        """
+        state = self.checkbox_tilt_choice.isChecked()
+        self.analyses_changed.emit(f'tilt,{state}')
 
     def set_pv_uncorrected(self, value: float, unit: str = '&lambda;'):
         """
@@ -178,6 +207,9 @@ if __name__ == "__main__":
     controller = AnalysesController()
     '''
 
+    def analyses_changed(value):
+        print(value)
+
     app = QApplication(sys.argv)
     main_widget = AnalysesOptionsView()
     main_widget.setGeometry(100, 100, 700, 500)
@@ -186,6 +218,8 @@ if __name__ == "__main__":
     # Class test
     main_widget.update_progress_bar(50)
     main_widget.set_enable_2D_3D(True)
+    main_widget.set_enable_tilt(True)
     main_widget.set_pv_uncorrected(20.5, 'mm')
+    main_widget.analyses_changed.connect(analyses_changed)
 
     sys.exit(app.exec())

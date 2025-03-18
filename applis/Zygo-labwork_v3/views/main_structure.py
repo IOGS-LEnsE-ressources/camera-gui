@@ -27,6 +27,7 @@ from PyQt6.QtGui import QResizeEvent
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views.title_view import TitleView
+from views.sub_menu import SubMenu
 
 
 MENU_WIDTH = 10
@@ -99,9 +100,9 @@ class MainView(QWidget):
         self._clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
         self._clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
         self._clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
-        self._clear_sublayout(SUBMENU_COL)
-        self._clear_sublayout(OPTIONS1_COL)
         self._clear_sublayout(OPTIONS2_COL)
+        self._clear_sublayout(OPTIONS1_COL)
+        self._clear_sublayout(SUBMENU_COL)
 
     def set_main_menu(self, widget):
         """
@@ -172,10 +173,29 @@ class MainView(QWidget):
         :param widget: Widget to display on the two "Options" columns.
         :return:
         """
-        self._clear_sublayout(OPTIONS1_COL)
         self._clear_sublayout(OPTIONS2_COL)
+        self._clear_sublayout(OPTIONS1_COL)
         self.options1_widget = widget
         self.bot_left_layout.addWidget(self.options1_widget, OPTIONS1_ROW, OPTIONS1_COL, 1, 2)
+
+    def clear_top_right(self):
+        """
+        Remove widget from top right area.
+        """
+        self._clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+
+    def clear_bot_right(self):
+        """
+        Remove widget from bottom right area.
+        """
+        self._clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+
+    def clear_options(self):
+        """
+        Remove widgets in options area.
+        """
+        self._clear_sublayout(OPTIONS1_COL)
+        self._clear_sublayout(OPTIONS2_COL)
 
     def _clear_layout(self, row: int, column: int) -> None:
         """
@@ -201,13 +221,14 @@ class MainView(QWidget):
         item = self.bot_left_layout.itemAtPosition(0, column)
         if item is not None:
             widget = item.widget()
-            if widget:
+            if widget is not None:
+                self.bot_left_layout.removeWidget(widget)
                 widget.deleteLater()
-            else:
-                self.layout.removeItem(item)
+                widget.setParent(None)
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         pass
+
 
 if __name__ == "__main__":
     import sys
