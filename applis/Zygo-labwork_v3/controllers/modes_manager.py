@@ -16,6 +16,7 @@ from views.main_structure import MainView
 from views.main_menu import MainMenu
 from models.dataset import DataSetModel
 from controllers.images_controller import ImagesController
+from controllers.analyses_controller import AnalysesController
 from controllers.help_controller import HelpController
 
 class ModesManager:
@@ -83,6 +84,8 @@ class ModesManager:
         match self.main_mode:
             case 'images':
                 self.mode_controller = ImagesController(self)
+            case 'analyses':
+                self.mode_controller = AnalysesController(self)
             case 'help':
                 self.mode_controller = HelpController(self)
 

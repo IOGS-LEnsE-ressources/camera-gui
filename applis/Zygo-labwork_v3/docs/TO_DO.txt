@@ -3,3 +3,9 @@
 Functions
 =========
 -->     Save mask type in MAT file (and read it)
+
+
+Bugs
+====
+-->     acquisition_button (when no hardware connected) became enabled when images_button is clicked.
+-->     np.ma on masked images (phase).

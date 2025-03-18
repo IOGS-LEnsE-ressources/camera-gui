@@ -5,7 +5,7 @@ B;load_images_button;images;;
 S;;;;
 B;masks_button;masks;nodata;
 S;;;;
-B;simple_analysis_button;analysis;nodata,nomask;
+B;simple_analyses_button;analyses;nodata,nomask;
 B;aberrations_button;aberrations;noanalysis;
 S;;;;
 O;help_button;help;;

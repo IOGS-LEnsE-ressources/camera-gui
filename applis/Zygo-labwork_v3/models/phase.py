@@ -23,6 +23,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from models.dataset import DataSetModel
 
+def process_statistics_surface(surface):
+    # Process (Peak-to-Valley) and RMS
+    PV = np.round(np.nanmax(surface) - np.nanmin(surface), 2)
+    RMS = np.round(np.nanstd(surface), 2)
+    return PV, RMS
 
 class PhaseModel:
     """Class containing phase data and parameters.
@@ -59,10 +64,11 @@ class PhaseModel:
             images = self.data_set.get_images_sets(k)
             # Process all images in the set
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
+            for im_k in range(len(images_c)):
+                images_c[im_k] = np.ma.masked_where(np.logical_not(mask_cropped), images_c[im_k])
             self.cropped_images_sets.add_set_images(images_c)
         self.cropped_data_ready = True
         self.data_set.data_set_state = DataSetState.CROPPED
-
 
     def process_wrapped_phase(self, set_number: int=1):
         """
@@ -76,7 +82,8 @@ class PhaseModel:
             images_list = self.cropped_images_sets.get_images_set(set_number)
             for k, image in enumerate(images_list):
                 # Blur images
-                images_list[k] = cv2.blur(image, (15, 15))
+                image = cv2.blur(image, (15, 15))
+                images_list[k] = np.ma.masked_where(np.logical_not(mask), image)
             self.wrapped_phase = hariharan_algorithm(images_list, mask)
             self.data_set.data_set_state = DataSetState.WRAPPED
             return True

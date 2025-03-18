@@ -14,13 +14,13 @@ https://iogs-lense-ressources.github.io/camera-gui/contents/applis/appli_Zygo_la
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
 """
-
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-
-if __name__ == '__main__':
-    from polar_cartesian_transformations import *
+from models.phase import PhaseModel
 
 
 aberrations_type = {
@@ -81,8 +81,9 @@ class Zernike:
     https://iopscience.iop.org/article/10.1088/2040-8986/ac9e08/pdf
     """
 
-    def __init__(self, max_order:int = 36):
+    def __init__(self, phase: PhaseModel, max_order:int = 36):
         self.max_order = max_order
+        self.phase = phase
         self.surface = None
 
         self.corrected_phase = None

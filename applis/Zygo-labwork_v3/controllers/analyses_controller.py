@@ -10,6 +10,7 @@ Creation : march/2025
 """
 import sys, os
 import threading
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views.main_structure import MainView
@@ -19,6 +20,7 @@ from views.html_view import HTMLView
 from views.analyses_options_view import AnalysesOptionsView
 from views.surface_2D_view import Surface2DView
 from lensepy import load_dictionary, translate, dictionary
+from models.phase import process_statistics_surface
 from lensepy.css import *
 from lensepy.pyqt6 import *
 from PyQt6.QtWidgets import (
@@ -26,6 +28,7 @@ from PyQt6.QtWidgets import (
     QFileDialog
 )
 from models.dataset import DataSetModel
+from models.zernike_coefficients import Zernike
 from utils.dataset_utils import generate_images_grid, DataSetState
 
 from typing import TYPE_CHECKING
@@ -44,6 +47,7 @@ class AnalysesController:
         """
         self.manager: "ModesManager" = manager
         self.data_set: DataSetModel = self.manager.data_set
+        self.zernike_coeffs: Zernike = Zernike(self.data_set.phase)
         self.main_widget: MainView = self.manager.main_widget
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
@@ -67,10 +71,11 @@ class AnalysesController:
         self.update_submenu_view("")
         self.init_view()
         # Start Analyses
-        ## Where to find set_number ?
-        set_number = 1
-        thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
-        thread.start()
+        if self.data_set.phase.get_wrapped_phase() is None:
+            ## Where to find set_number ?
+            set_number = 1
+            thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
+            thread.start()
 
     def init_view(self):
         """
@@ -85,7 +90,7 @@ class AnalysesController:
         else:
             self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
         self.main_widget.set_bot_right_widget(self.bot_right_widget)
-        self.main_widget.set_options1_widget(self.options1_widget)
+        self.main_widget.set_options_widget(self.options1_widget)
         # Update grid of images
         images = self.data_set.get_images_sets(1)
         g_images = generate_images_grid(images)
@@ -118,22 +123,36 @@ class AnalysesController:
         # Update Action
         match event:
             case 'wrappedphase_analyses':
+                self.main_widget.clear_bot_right()
+                self.bot_right_widget = HTMLView()
+                if __name__ == "__main__":
+                    self.bot_right_widget.set_url('../docs/html/analyses.html', '../docs/html/styles.css')
+                else:
+                    self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
+                self.main_widget.set_bot_right_widget(self.bot_right_widget)
                 ## Test 2D or 3D ??
+                wrapped = self.data_set.phase.get_wrapped_phase()
+                wrapped_array = wrapped.filled(np.nan)
                 # Display wrapped in 2D
                 self.top_right_widget = Surface2DView()
                 self.main_widget.set_top_right_widget(self.top_right_widget)
-                wrapped = self.data_set.phase.get_wrapped_phase()
-                self.top_right_widget.set_array(wrapped)
+                self.top_right_widget.set_array(wrapped_array)
+                self.options1_widget.erase_pv_rms()
                 # Activate submenu
                 self.submenu.set_activated(1)
 
             case 'unwrappedphase_analyses':
                 ## Test 2D or 3D ??
-                # Display unwrapped in 2D
-                self.top_right_widget = Surface2DView()
-                self.main_widget.set_top_right_widget(self.top_right_widget)
                 unwrapped = self.data_set.phase.get_unwrapped_phase()
-                self.top_right_widget.set_array(unwrapped)
+                unwrapped_array = unwrapped.filled(np.nan)
+                # Display unwrapped in 2D
+                self.main_widget.clear_bot_right()
+                self.bot_right_widget = Surface2DView()
+                self.main_widget.set_bot_right_widget(self.bot_right_widget)
+                self.bot_right_widget.set_array(unwrapped_array)
+                pv, rms = process_statistics_surface(unwrapped)
+                self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
+                self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
                 # Activate submenu
                 self.submenu.set_activated(1)
                 self.submenu.set_activated(2)
@@ -169,6 +188,22 @@ class AnalysesController:
             self.update_submenu('')
             # Start Zernike coefficients process
             ## TO DO
+
+    def thread_zernike_calculation(self):
+        """Process Zernike coefficients for correction."""
+        print(f'Zernike [{self.parent.coeff_counter}]')
+        self.parent.zernike.process_zernike_coefficient(self.parent.coeff_counter)
+
+        self.parent.coeff_counter += 1
+        if self.parent.coeff_counter <= self.parent.coeff_zernike_max:
+            thread = threading.Thread(target=self.thread_zernike_calculation)
+            time.sleep(0.1)
+            thread.start()
+        else:
+            # At the end, analysis completed !
+            self.parent.analysis_completed = True
+            time.sleep(0.1)
+            self.update_menu()
 
 
 if __name__ == "__main__":

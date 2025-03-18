@@ -92,13 +92,6 @@ def display_3D_surface(Z: np.ndarray, mask: np.ndarray = None, size: int = 25, t
     plt.show()
 
 
-def surface_statistics(surface):
-    # Calcul de PV (Peak-to-Valley)
-    PV = np.nanmax(surface) - np.nanmin(surface)
-    RMS = np.nanstd(surface)
-    return PV, RMS
-
-
 if __name__ == '__main__':
     X = np.linspace(-3, 3, 100)
     Y = np.linspace(-4, 5, 200)

@@ -54,7 +54,6 @@ class Surface2DView(QWidget):
         :param array: Array to display.
         """
         self.array_2D = array
-
         # Create an ImageItem for the new image
         self.imv = pg.ImageItem(image=self.array_2D)
 

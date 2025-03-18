@@ -20,6 +20,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 
+MINIMUM_WIDTH = 75
+
 class AnalysesOptionsView(QWidget):
     """Images Choice."""
 
@@ -129,13 +131,21 @@ class AnalysesOptionsView(QWidget):
         state = self.checkbox_tilt_choice.isChecked()
         self.analyses_changed.emit(f'tilt,{state}')
 
-    def set_pv_uncorrected(self, value: float, unit: str = '&lambda;'):
+    def set_pv_uncorrected(self, value: float, unit: str = '\u03BB'):
         """
         Update the value and the unit of the PV value.
         :param value: value of the peak-to-valley.
         :param unit: Unit of the PV value.
         """
         self.pv_rms_uncorrected.set_pv(value, unit)
+
+    def set_rms_uncorrected(self, value: float, unit: str = '\u03BB'):
+        """
+        Update the value and the unit of the RMS value.
+        :param value: value of the RMS.
+        :param unit: Unit of the RMS value.
+        """
+        self.pv_rms_uncorrected.set_rms(value, unit)
 
     def _clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
@@ -153,6 +163,12 @@ class AnalysesOptionsView(QWidget):
                 widget.deleteLater()
             else:
                 self.layout.removeItem(item)
+
+    def erase_pv_rms(self):
+        """
+        Erase PV and RMS values.
+        """
+        self.pv_rms_uncorrected.erase_pv_rms()
 
 
 class PVRMSView(QWidget):
@@ -174,12 +190,18 @@ class PVRMSView(QWidget):
         self.label_PV.setStyleSheet(styleL)
         self.text_PV = QLabel()
         self.text_PV.setStyleSheet(styleT)
+        self.text_PV.setMinimumWidth(MINIMUM_WIDTH)
+        self.text_PV.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.unit_PV = QLabel()
+        self.unit_PV.setMinimumWidth(MINIMUM_WIDTH)
         self.label_RMS = QLabel(translate('label_RMS'))
         self.label_RMS.setStyleSheet(styleL)
         self.text_RMS = QLabel()
         self.text_RMS.setStyleSheet(styleT)
+        self.text_RMS.setMinimumWidth(MINIMUM_WIDTH)
+        self.text_RMS.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.unit_RMS = QLabel()
+        self.unit_RMS.setMinimumWidth(MINIMUM_WIDTH)
         self.layout.addWidget(self.label_PV)
         self.layout.addWidget(self.text_PV)
         self.layout.addWidget(self.unit_PV)
@@ -189,7 +211,7 @@ class PVRMSView(QWidget):
         self.layout.addWidget(self.unit_RMS)
         self.layout.addStretch()
 
-    def set_pv(self, value: float, unit: str = '&lambda;'):
+    def set_pv(self, value: float, unit: str = ''):
         """
         Update the value and the unit of the PV value.
         :param value: value of the peak-to-valley.
@@ -197,6 +219,24 @@ class PVRMSView(QWidget):
         """
         self.text_PV.setText(str(value))
         self.unit_PV.setText(unit)
+
+    def set_rms(self, value: float, unit: str = ''):
+        """
+        Update the value and the unit of the RMS value.
+        :param value: value of the RMS.
+        :param unit: Unit of the RMS value.
+        """
+        self.text_RMS.setText(str(value))
+        self.unit_RMS.setText(unit)
+
+    def erase_pv_rms(self):
+        """
+        Erase PV and RMS values.
+        """
+        self.text_PV.setText('')
+        self.unit_PV.setText('')
+        self.text_RMS.setText('')
+        self.unit_RMS.setText('')
 
 
 if __name__ == "__main__":
