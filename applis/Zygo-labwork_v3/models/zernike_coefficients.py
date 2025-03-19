@@ -111,12 +111,10 @@ class Zernike:
         Initialize data.
         :return: True if initialization procedure is correctly done.
         """
-        print('Init !!')
         if self.phase.is_analysis_ready():
             self.surface = self.phase.get_unwrapped_phase()
             # Dimensions of the surface
             a, b = self.surface.shape
-            print(f'a = {a}')
 
             # Creating coordinate grids
             x = np.linspace(-1, 1, b)

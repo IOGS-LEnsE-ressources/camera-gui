@@ -282,7 +282,7 @@ if __name__ == "__main__":
     manager = ModesManager(menu, widget, data_set)
     # Update data
     manager.data_set.load_images_set_from_file("../_data/test4.mat")
-    manager.data_set.load_mask_from_file("../_data/test3.mat")
+    manager.data_set.load_mask_from_file("../_data/test4.mat")
 
     # Test controller
     manager.mode_controller = AnalysesController(manager)

@@ -19,8 +19,12 @@ from PyQt6.QtWidgets import (
     QWidget, QLabel, QPushButton,
     QVBoxLayout
 )
-
+from views.main_structure import MainView
+from views.sub_menu import SubMenu
+from views.images_display_view import ImagesDisplayView
+from views.html_view import HTMLView
 from modes_manager import ModesManager
+from models.dataset import DataSetModel
 
 class MasksController:
     """
@@ -34,15 +38,26 @@ class MasksController:
         """
         self.manager: ModesManager = manager
         self.main_widget: MainView = self.manager.main_widget
+        self.data_set: DataSetModel = self.manager.data_set
+        self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         # Graphical elements
-        self.top_left_widget = QWidget()        # Display first image of a set
-        self.top_right_widget = QWidget()       # Display grid of images
-        self.bot_right_widget = QWidget()       # HTML Help on images
-        self.submenu = SubMenu('submenu_masks')
-        self.submenu.load_menu('menu/masks_menu.txt')
-
+        self.top_left_widget = ImagesDisplayView()     # Display first image of a set
+        self.top_right_widget = QWidget()       # Display ?
+        self.bot_right_widget = QWidget()       # HTML Help on masks
+        # Submenu
+        self.submenu = SubMenu(translate('submenu_masks'))
+        if __name__ == "__main__":
+            self.submenu.load_menu('../menu/masks_menu.txt')
+        else:
+            self.submenu.load_menu('menu/masks_menu.txt')
+        self.submenu.menu_changed.connect(self.update_submenu)
+        # Option 1
+        self.options1_widget = QWidget()        # ??
+        # Option 2
+        self.options2_widget = QWidget()        # ??
+        # Update menu and view
+        self.update_submenu_view("")
         self.init_view()
-        print('MasksController / Masks Mode')
 
     def init_view(self):
         """
@@ -50,5 +65,52 @@ class MasksController:
         """
         self.main_widget.set_sub_menu_widget(self.submenu)
 
+    def update_submenu_view(self, submode: str):
+        """
+        Update the view of the submenu to display new options.
+        :param submode: Submode name : [open_images, display_images, save_images]
+        """
+        self.manager.update_menu()
+        ## Erase enabled list for buttons
+        self.submenu.inactive_buttons()
+        for k in range(len(self.submenu.buttons_list)):
+            self.submenu.set_button_enabled(k + 1, True)
+        ## Activate button depending on data
+
+    def update_submenu(self, event):
+        """
+        Update data and views when the submenu is clicked.
+        :param event: Sub menu click.
+        """
+        # Update view
+        self.update_submenu_view(event)
+        # Update Action
+        match event:
+            case 'circular_masks':
+                pass
+            case 'rectangular_masks':
+                pass
+            case 'polygon_masks':
+                pass
 
 
+if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
+    from controllers.modes_manager import ModesManager
+    from views.main_menu import MainMenu
+
+    app = QApplication(sys.argv)
+    widget = MainView()
+    menu = MainMenu()
+    menu.load_menu('')
+    widget.set_main_menu(menu)
+    data_set = DataSetModel()
+    manager = ModesManager(menu, widget, data_set)
+    # Update data
+    manager.data_set.load_images_set_from_file("../_data/test4.mat")
+    manager.data_set.load_mask_from_file("../_data/test4.mat")
+
+    # Test controller
+    manager.mode_controller = MasksController(manager)
+    widget.showMaximized()
+    sys.exit(app.exec())
