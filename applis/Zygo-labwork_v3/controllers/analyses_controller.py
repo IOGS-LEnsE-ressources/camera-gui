@@ -117,6 +117,17 @@ class AnalysesController:
             self.submenu.set_button_enabled(2, True)
         if self.zernike_coeffs.get_coeff_counter() > 3:
             self.submenu.set_button_enabled(3, True)
+        # Activate submenu
+        match submode:
+            case 'wrappedphase_analyses':
+                self.submenu.set_activated(1)
+            case 'unwrappedphase_analyses':
+                self.submenu.set_activated(1)
+                self.submenu.set_activated(2)
+            case 'correctedphase_analyses':
+                self.submenu.set_activated(1)
+                self.submenu.set_activated(2)
+                self.submenu.set_activated(3)
 
     def update_submenu(self, event):
         """
@@ -126,6 +137,7 @@ class AnalysesController:
         # Update view
         self.update_submenu_view(event)
         # Update Action
+        self.options1_widget.hide_correction()
         match event:
             case 'wrappedphase_analyses':
                 self.main_widget.clear_bot_right()
@@ -143,8 +155,6 @@ class AnalysesController:
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.top_right_widget.set_array(wrapped_array)
                 self.options1_widget.erase_pv_rms()
-                # Activate submenu
-                self.submenu.set_activated(1)
 
             case 'unwrappedphase_analyses':
                 ## Test 2D or 3D ??
@@ -168,16 +178,12 @@ class AnalysesController:
                     else:
                         self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
                     self.main_widget.set_bot_right_widget(self.bot_right_widget)
-                # Activate submenu
-                self.submenu.set_activated(1)
-                self.submenu.set_activated(2)
+
             case 'correctedphase_analyses':
                 # Display corrected in 2D in the top right area
                 self.top_right_widget = Surface2DView('Corrected Phase')
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.display_2D_correction()
-                # Activate submenu
-                self.submenu.set_activated(3)
                 self.options1_widget.show_correction()
 
     def display_2D_correction(self):

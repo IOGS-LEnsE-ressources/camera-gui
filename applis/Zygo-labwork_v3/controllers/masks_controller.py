@@ -23,6 +23,7 @@ from views.main_structure import MainView
 from views.sub_menu import SubMenu
 from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
+from views.masks_options_view import MasksOptionsView
 from modes_manager import ModesManager
 from models.dataset import DataSetModel
 
@@ -41,9 +42,9 @@ class MasksController:
         self.data_set: DataSetModel = self.manager.data_set
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         # Graphical elements
-        self.top_left_widget = ImagesDisplayView()     # Display first image of a set
-        self.top_right_widget = QWidget()       # Display ?
-        self.bot_right_widget = QWidget()       # HTML Help on masks
+        self.top_left_widget = ImagesDisplayView()      # Display first image of a set
+        self.top_right_widget = QWidget()               # Display ?
+        self.bot_right_widget = HTMLView()              # HTML Help on masks
         # Submenu
         self.submenu = SubMenu(translate('submenu_masks'))
         if __name__ == "__main__":
@@ -52,7 +53,7 @@ class MasksController:
             self.submenu.load_menu('menu/masks_menu.txt')
         self.submenu.menu_changed.connect(self.update_submenu)
         # Option 1
-        self.options1_widget = QWidget()        # ??
+        self.options1_widget = MasksOptionsView(self)   # Masks options
         # Option 2
         self.options2_widget = QWidget()        # ??
         # Update menu and view
@@ -63,7 +64,20 @@ class MasksController:
         """
         Initializes the main structure of the interface.
         """
+        self.main_widget.clear_all()
         self.main_widget.set_sub_menu_widget(self.submenu)
+        self.main_widget.set_top_left_widget(self.top_left_widget)
+        self.main_widget.set_top_right_widget(self.top_right_widget)
+        if __name__ == "__main__":
+            self.bot_right_widget.set_url('../docs/html/masks.html', '../docs/html/styles.css')
+        else:
+            self.bot_right_widget.set_url('docs/html/masks.html', 'docs/html/styles.css')
+        self.main_widget.set_bot_right_widget(self.bot_right_widget)
+        self.main_widget.set_options_widget(self.options1_widget)
+        self.options1_widget.masks_changed.connect(self.masks_changed)
+        # Update first image and mask
+        first_image = self.data_set.get_images_sets(1)[0]
+        self.top_left_widget.set_image_from_array(first_image)
 
     def update_submenu_view(self, submode: str):
         """
@@ -76,6 +90,13 @@ class MasksController:
         for k in range(len(self.submenu.buttons_list)):
             self.submenu.set_button_enabled(k + 1, True)
         ## Activate button depending on data
+        match submode:
+            case 'circular_masks':
+                self.submenu.set_activated(1)
+            case 'rectangular_masks':
+                self.submenu.set_activated(2)
+            case 'polygon_masks':
+                self.submenu.set_activated(3)
 
     def update_submenu(self, event):
         """
@@ -92,6 +113,14 @@ class MasksController:
                 pass
             case 'polygon_masks':
                 pass
+
+    def masks_changed(self, event):
+        """
+        Update controller data and views when options changed.
+        :param event: Signal that triggers the event.
+        """
+        change = event.split(',')
+        print(change)
 
 
 if __name__ == "__main__":

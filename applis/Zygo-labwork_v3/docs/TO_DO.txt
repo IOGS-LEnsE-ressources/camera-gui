@@ -17,3 +17,8 @@ Bugs
             + colorbar range updating ! multi level displaying
             + colorbar display in 2D surface (when correction is activated) + adapt colorbar of the 2 surfaces 2D
             + unwrapped -> display wrapped and unwrapped in 2D
+
+-->     GLOBAL TEST
+            +> analyses mode
+                + when back to analyses mode (if coeffs already calculated), no access to corrected phase
+                and progress bar to 0
