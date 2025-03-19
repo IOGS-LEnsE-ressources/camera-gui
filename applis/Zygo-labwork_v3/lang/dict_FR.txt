@@ -39,10 +39,16 @@ circular_mask_button; Masque Circulaire
 rectangular_mask_button; Masque Rectangulaire
 polygon_mask_button; Masque Polygonal
 label_masks_option_title; Affichage des masques
+masks_list_all; ALL
 delete_all; Supprimer tous
 show_all; Montrer tous
 show_mask; Montrer masque
 del_mask; Supprimer masque
+masks_list_nb; Num.
+masks_list_type; Type
+masks_list_select; Select.
+masks_list_invert; Inv.
+masks_list_delete; Supp.
 # --------------
 # Analyses
 # --------------

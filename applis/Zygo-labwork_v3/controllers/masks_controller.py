@@ -43,7 +43,7 @@ class MasksController:
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()      # Display first image of a set
-        self.top_right_widget = QWidget()               # Display ?
+        self.top_right_widget = ImagesDisplayView()     # Display first image with the global mask
         self.bot_right_widget = HTMLView()              # HTML Help on masks
         # Submenu
         self.submenu = SubMenu(translate('submenu_masks'))
@@ -75,7 +75,7 @@ class MasksController:
         self.main_widget.set_bot_right_widget(self.bot_right_widget)
         self.main_widget.set_options_widget(self.options1_widget)
         self.options1_widget.masks_changed.connect(self.masks_changed)
-        # Update first image and mask
+        # Update first image
         first_image = self.data_set.get_images_sets(1)[0]
         self.top_left_widget.set_image_from_array(first_image)
 
@@ -107,6 +107,15 @@ class MasksController:
         self.update_submenu_view(event)
         # Update Action
         match event:
+            case 'first':
+                # Update first image and global mask in the top right area
+                mask = self.data_set.get_global_mask()
+                if mask is not None:
+                    first_image = self.data_set.get_images_sets(1)[0] * mask
+                else:
+                    first_image = self.data_set.get_images_sets(1)[0]
+                    # TO DO -> MainMenu update / Add nomask in options_list
+                self.top_right_widget.set_image_from_array(first_image)
             case 'circular_masks':
                 pass
             case 'rectangular_masks':

@@ -10,15 +10,18 @@ Functions
 
 Bugs
 ====
--->     acquisition_button (when no hardware connected) became enabled when images_button is clicked.
 -->     issues with main menu management - and options list !
             + if no mask in the data loaded, Masks in main menu is not disponible
+-->     in masks controllers / options view
+            + uncheck global select if not all of the checkbox are selected
 -->     in analyses controller
             + colorbar range updating ! multi level displaying
             + colorbar display in 2D surface (when correction is activated) + adapt colorbar of the 2 surfaces 2D
             + unwrapped -> display wrapped and unwrapped in 2D
 
 -->     GLOBAL TEST
+            +> main_menu
+                + acquisition_button (when no hardware connected) became enabled when images_button is clicked.
             +> analyses mode
                 + when back to analyses mode (if coeffs already calculated), no access to corrected phase
                 and progress bar to 0
