@@ -18,17 +18,17 @@ from views import *
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6.widget_image_histogram import ImageHistogramWidget
-from PyQt6.QtWidgets import (
-    QWidget, QLabel, QPushButton,
-    QVBoxLayout
-)
+from PyQt6.QtWidgets import QWidget
 from views.main_structure import MainView
 from views.main_structure import RIGHT_WIDTH, LEFT_WIDTH, TOP_HEIGHT, BOT_HEIGHT
 from views.sub_menu import SubMenu
 from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
 from views.camera_options_view import CameraOptionsView
+from views.piezo_options_view import PiezoOptionsView
+from views.simple_acquisition_view import SimpleAcquisitionView
 from models.dataset import DataSetModel
+from utils.dataset_utils import generate_images_grid
 
 from typing import TYPE_CHECKING
 
@@ -54,7 +54,7 @@ class AcquisitionController:
         self.acquiring = False
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()  # Display first image of a set
-        self.top_right_widget = QWidget()  # Histogram ?
+        self.top_right_widget = QWidget()  # Histogram or image display, depending on submode
         self.bot_right_widget = HTMLView()  # HTML Help on masks
         # Submenu
         self.submenu = SubMenu(translate('submenu_acquisition'))
@@ -122,6 +122,7 @@ class AcquisitionController:
         self.update_submenu_view(event)
         # Update Action
         self.main_widget.clear_top_right()
+        self.main_widget.clear_options()
         match event:
             case 'camera_acquisition':
                 self.top_right_widget = ImageHistogramWidget(name=translate('histo_camera'),
@@ -132,9 +133,28 @@ class AcquisitionController:
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 # Display camera exposure time in options
                 self.histo_here = True
-
+                self.start_acquisition()
                 self.options1_widget = CameraOptionsView(self)
                 self.main_widget.set_options_widget(self.options1_widget)
+                self.options1_widget.settings_changed.connect(self.params_changed)
+
+            case 'piezo_acquisition':
+                self.start_acquisition()
+                self.options1_widget = PiezoOptionsView(self)
+                self.main_widget.set_options_widget(self.options1_widget)
+                self.options1_widget.voltage_changed.connect(self.params_changed)
+
+            case 'simple_acquisition':
+                self.stop_acquisition()
+                self.top_right_widget = ImagesDisplayView()
+                self.main_widget.set_top_right_widget(self.top_right_widget)
+                self.options1_widget = SimpleAcquisitionView(self)
+                self.main_widget.set_options_widget(self.options1_widget)
+                self.options1_widget.acquisition_end.connect(self.acquisition_update)
+
+            case 'multi_acquisition':
+                self.stop_acquisition()
+                pass
 
     def thread_update_image(self):
         """
@@ -142,11 +162,21 @@ class AcquisitionController:
         """
         try:
             # Get image
-            ## Random Image
-            width, height = 256, 256
-            image = np.random.randint(0, 256, (height, width), dtype=np.uint8)
-            # Display image in top left area
-            self.top_left_widget.set_image_from_array(image)
+            if self.data_set.acquisition_mode.is_camera():
+                image = self.data_set.acquisition_mode.get_image()
+            else:
+                ## Random Image
+                width, height = 256, 256
+                image = np.random.randint(0, 256, (height, width), dtype=np.uint8)
+            # Test zoom displaying
+            if isinstance(self.options1_widget, CameraOptionsView):
+                if not self.options1_widget.zoom_activated:
+                    # Display image in top left area
+                    self.top_left_widget.set_image_from_array(image)
+                else:
+                    self.options1_widget.zoom_window.set_image_from_array(image)
+            else:
+                self.top_left_widget.set_image_from_array(image)
             # Update histogram in camera mode
             if self.submode == 'camera_acquisition':
                 if self.histo_here:
@@ -164,6 +194,42 @@ class AcquisitionController:
         Stop timed thread for updating images.
         """
         self.acquiring = False
+
+    def start_acquisition(self):
+        """
+        Stop timed thread for updating images.
+        """
+        self.acquiring = True
+        thread = threading.Thread(target=self.thread_update_image)
+        thread.start()
+
+    def acquisition_update(self, event):
+        """
+        Update step in acquisition process.
+        """
+        if event == 'acq_end':
+            self.data_set.acquisition_mode.thread.join()
+            # Display grid of images in top right area.
+            time.sleep(0.1)
+            nb_of_set = self.data_set.acquisition_mode.get_number_of_acquisition()
+            for i in range(nb_of_set):
+                images = self.data_set.acquisition_mode.get_images_set(i+1)
+                self.data_set.add_set_images(images)
+            images = self.data_set.get_images_sets(1)
+            g_images = generate_images_grid(images)
+            self.top_right_widget.set_image_from_array(g_images)
+            #self.manager.update_mode('')
+
+    def params_changed(self, event):
+        """
+        Open a new window if zoom is activated.
+        :param event:
+        """
+        if event == 'zoom':
+            print("Zoom")
+        if event == 'voltage':
+            volt = self.options1_widget.get_voltage()
+            self.data_set.acquisition_mode.piezo.write_dac(volt)
 
 
 if __name__ == "__main__":

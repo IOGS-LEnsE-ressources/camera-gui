@@ -15,6 +15,7 @@ from enum import Enum
 from views.main_structure import MainView
 from views.main_menu import MainMenu
 from models.dataset import DataSetModel
+from controllers.acquisition_controller import AcquisitionController
 from controllers.images_controller import ImagesController
 from controllers.masks_controller import MasksController
 from controllers.analyses_controller import AnalysesController
@@ -94,10 +95,14 @@ class ModesManager:
 
         :return:
         """
+        if self.main_mode == 'acquisition':
+            self.mode_controller.stop_acquisition()
         self.main_mode = event
         self.main_widget.clear_all()
         self.update_menu()
         match self.main_mode:
+            case 'acquisition':
+                self.mode_controller = AcquisitionController(self)
             case 'images':
                 self.mode_controller = ImagesController(self)
             case 'masks':

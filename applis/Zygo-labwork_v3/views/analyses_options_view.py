@@ -15,7 +15,7 @@ from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6 import *
 from PyQt6.QtWidgets import (
-    QWidget, QLabel, QPushButton, QProgressBar, QCheckBox,
+    QWidget, QLabel, QProgressBar, QCheckBox,
     QHBoxLayout, QVBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal

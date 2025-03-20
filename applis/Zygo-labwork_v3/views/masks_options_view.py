@@ -25,8 +25,6 @@ from PyQt6.QtGui import QColor, QFont
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from controllers.masks_controller import MasksController
-    from models.masks import MasksModel
-
 
 class MasksOptionsView(QWidget):
     """Images Choice."""

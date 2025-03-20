@@ -13,14 +13,14 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from lensepy import load_dictionary, translate, dictionary
-from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6.widget_slider import SliderBloc
 from PyQt6.QtWidgets import (
-    QWidget, QLabel, QPushButton, QProgressBar, QCheckBox,
+    QWidget, QLabel, QPushButton,
     QHBoxLayout, QVBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from views.images_display_view import ImagesDisplayView
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -37,8 +37,11 @@ class CameraOptionsView(QWidget):
         """
         super().__init__()
         self.controller: "AcquisitionController" = controller
+        self.data_set = self.controller.data_set
         self.layout = QVBoxLayout()
         self.camera = self.controller.data_set.acquisition_mode.camera
+        self.zoom_activated = False
+        self.zoom_window = ImagesDisplayView()
         # Default parameters to update on loading
         if not self.controller.manager.default_parameters:
             self.default_exposure = 1000
@@ -46,10 +49,10 @@ class CameraOptionsView(QWidget):
             self.default_fps = 8
             self.default_black = 9
         else:
-            self.default_exposure = self.controller.manager.default_parameters['Exposure Time']
-            self.default_max_expo = self.controller.manager.default_parameters['Max Expo Time']
-            self.default_fps = self.controller.manager.default_parameters['Frame Rate']
-            self.default_black = self.controller.manager.default_parameters['Black Level']
+            self.default_exposure = int(self.controller.manager.default_parameters['Exposure Time'])
+            self.default_max_expo = int(self.controller.manager.default_parameters['Max Expo Time'])
+            self.default_fps = int(self.controller.manager.default_parameters['Frame Rate'])
+            self.default_black = int(self.controller.manager.default_parameters['Black Level'])
 
         # Title
         self.label_title_camera_settings = QLabel(translate('title_camera_settings'))
@@ -61,7 +64,10 @@ class CameraOptionsView(QWidget):
         self.label_title_camera_id = QLabel(translate("label_title_camera_id"))
         self.label_title_camera_id.setStyleSheet(styleH2)
 
-        self.label_value_camera_id = QLabel(translate("label_value_camera_id"))
+        self.label_value_camera_id = QLabel()
+        if self.camera is not None:
+            id_camera, name_camera = self.camera.get_cam_info()
+            self.label_value_camera_id.setText(f'{name_camera} / SN = {id_camera}')
         self.label_value_camera_id.setStyleSheet(styleH3)
 
         self.sublayout_camera_id.addWidget(self.label_title_camera_id)
@@ -85,11 +91,18 @@ class CameraOptionsView(QWidget):
         self.slider_black_level.set_value(default_black)
         self.slider_black_level.slider_changed.connect(self.slider_black_level_changing)
 
-        self.fps_label = QLabel(f'Frame Rate = {self.default_fps} FPS')
+        self.fps_label = QLabel(f'{translate("frame_rate_label")} = {self.default_fps} FPS')
         self.fps_label.setStyleSheet(styleH2)
+
+        self.zoom_button = QPushButton(translate('camera_zoom_button'))
+        self.zoom_button.setStyleSheet(unactived_button)
+        self.zoom_button.setFixedHeight(BUTTON_HEIGHT)
+        self.zoom_button.clicked.connect(self.zoom_button_clicked)
 
         self.layout.addWidget(self.label_title_camera_settings)
         self.layout.addWidget(self.subwidget_camera_id)
+        self.layout.addWidget(self.zoom_button)
+        self.layout.addStretch()
         self.layout.addWidget(self.slider_exposure_time)
         self.layout.addWidget(self.slider_black_level)
         self.layout.addWidget(self.fps_label)
@@ -123,7 +136,21 @@ class CameraOptionsView(QWidget):
         bl = self.camera.get_black_level()
         self.slider_black_level.set_value(bl)
         fps = self.camera.get_frame_rate()
-        self.fps_label.setText(f'Frame Rate = {fps} FPS')
+        self.fps_label.setText(f'{translate("frame_rate_label")} = {fps} FPS')
+
+    def zoom_button_clicked(self, event):
+        """
+        Create the zoom window.
+        """
+        self.zoom_activated = True
+        self.zoom_window.showMaximized()
+        self.zoom_window.closeEvent = self.zoom_closed
+
+    def zoom_closed(self, event):
+        """
+        Deactivate zoom window.
+        """
+        self.zoom_activated = False
 
 
 if __name__ == "__main__":
