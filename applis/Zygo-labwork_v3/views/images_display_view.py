@@ -28,7 +28,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QResizeEvent, QPixmap, QPainter, QColor, QFont
 from lensepy.images.conversion import resize_image_ratio, resize_image, array_to_qimage
 
-
+HEIGHT_MARGIN = 30
+WIDTH_MARGIN = 30
 
 class ImagesDisplayView(QWidget):
     """
@@ -54,20 +55,38 @@ class ImagesDisplayView(QWidget):
         self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_display.setScaledContents(False)
         self.layout.addWidget(self.image_display)
+        self.resizeEvent(None)
 
-    def set_image_from_array(self, pixels: np.ndarray, text: str = '') -> None:
+    def set_image_from_array(self, pixels: np.ndarray, text: str = '') -> bool:
         """
         Display a new image from an array (Numpy)
         :param pixels: Array of pixels to display.
         :param text: Text to display in the top of the image.
+        :return: True if the image can be displayed
         """
+        self.resizeEvent(None)
         self.text = text
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image.copy()
         image_to_display = np.squeeze(image_to_display)
-        self.resizeEvent(None)
+        self.display_image(image_to_display)
+        return True
+
+    def display_image(self, image_to_display: np.ndarray) -> bool:
+        """
+        Display the image.
+        :param image_to_display: 2D array to display.
+        :return: True if the image can be displayed.
+        """
+        # Resizing of the window not correct ?
+        if self.height-HEIGHT_MARGIN < 0 or self.width-WIDTH_MARGIN < 0:
+            self.image_display.setText('Window is too small')
+            return False
+
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-            image_to_display = resize_image_ratio(self.image, self.height-50, self.width-50)
+            image_to_display = resize_image_ratio(self.image,
+                                                  self.height-HEIGHT_MARGIN,
+                                                  self.width-WIDTH_MARGIN)
         qimage = array_to_qimage(image_to_display)
 
         if self.text != '':
@@ -90,17 +109,7 @@ class ImagesDisplayView(QWidget):
 
         if self.image is not None:
             image_to_display = self.image
-            if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-                image_to_display = resize_image_ratio(self.image, self.height-50, self.width-20)
-            qimage = array_to_qimage(image_to_display)
-            if self.text != '':
-                painter = QPainter(qimage)
-                painter.setPen(QColor(0, 255, 255))  # Text color, white
-                painter.setFont(QFont("Arial", 20))  # Size and police
-                painter.drawText(20, 20, self.text)
-                painter.end()
-            pmap = QPixmap.fromImage(qimage)
-            self.image_display.setPixmap(pmap)
+            self.display_image(image_to_display)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ from views.main_structure import MainView
 from views.main_menu import MainMenu
 from models.dataset import DataSetModel
 from controllers.images_controller import ImagesController
+from controllers.masks_controller import MasksController
 from controllers.analyses_controller import AnalysesController
 from controllers.help_controller import HelpController
 
@@ -55,6 +56,10 @@ class ModesManager:
 
         :return:
         """
+        if self.main_mode != 'first':
+            nocam = 'nocam' in self.options_list
+            nopiezo = 'nopiezo' in self.options_list
+
         self.options_list = []
         # Check Hardware
         if self.main_mode == 'first':
@@ -63,9 +68,18 @@ class ModesManager:
             if self.data_set.acquisition_mode.is_piezo() is False:
                 self.options_list.append('nopiezo')
             self.main_mode = ''
+        else:
+            # To avoid to check hardware each time
+            if nocam:
+                self.options_list.append('nocam')
+            if nopiezo:
+                self.options_list.append('nopiezo')
+
         # Check dataset
         if self.data_set.is_data_ready() is False:
             self.options_list.append('nodata')
+        if self.data_set.images_sets.get_number_of_sets() == 0:
+            self.options_list.append('noimages')
         if self.data_set.masks_sets.get_masks_number() == 0:
             self.options_list.append('nomask')
         if self.data_set.phase.is_analysis_ready() is False:
@@ -84,6 +98,8 @@ class ModesManager:
         match self.main_mode:
             case 'images':
                 self.mode_controller = ImagesController(self)
+            case 'masks':
+                self.mode_controller = MasksController(self)
             case 'analyses':
                 self.mode_controller = AnalysesController(self)
             case 'help':

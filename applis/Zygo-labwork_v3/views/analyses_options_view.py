@@ -20,6 +20,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from controllers.analyses_controller import AnalysesController
+
 MINIMUM_WIDTH = 75
 
 class AnalysesOptionsView(QWidget):
@@ -27,12 +31,12 @@ class AnalysesOptionsView(QWidget):
 
     analyses_changed = pyqtSignal(str)
 
-    def __init__(self, controller=None) -> None:
+    def __init__(self, controller: "AnalysesController"=None) -> None:
         """Default constructor of the class.
         :param parent: Parent widget or window of this widget.
         """
         super().__init__()
-        self.controller = controller
+        self.controller: "AnalysesController" = controller
         #self.data_set = self.controller.data_set
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)

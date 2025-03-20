@@ -24,20 +24,24 @@ from views.sub_menu import SubMenu
 from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
 from views.masks_options_view import MasksOptionsView
-from modes_manager import ModesManager
 from models.dataset import DataSetModel
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from controllers.modes_manager import ModesManager
+
 
 class MasksController:
     """
-    Images mode manager.
+    Masks mode manager.
     """
 
-    def __init__(self, manager: ModesManager):
+    def __init__(self, manager: "ModesManager"):
         """
         Default constructor.
         :param manager: Main manager of the application (ModeManager).
         """
-        self.manager: ModesManager = manager
+        self.manager: "ModesManager" = manager
         self.main_widget: MainView = self.manager.main_widget
         self.data_set: DataSetModel = self.manager.data_set
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)

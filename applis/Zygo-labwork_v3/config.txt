@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 ### Configuration file of Zygo Lab App
 Language;FR
+### Camera IDS / 
+ColorMode;Mono8
 Exposure Time;0.999891
 Max Expo Time;20
 Black Level;20
