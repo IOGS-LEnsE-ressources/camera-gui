@@ -40,10 +40,16 @@ class CameraOptionsView(QWidget):
         self.layout = QVBoxLayout()
         self.camera = self.controller.data_set.acquisition_mode.camera
         # Default parameters to update on loading
-        self.default_params = {'exposure': 10000,
-                               'max_exposure': 20000,
-                               'fps': 5,
-                               'black_level': 5}
+        if not self.controller.manager.default_parameters:
+            self.default_exposure = 1000
+            self.default_max_expo = 20000
+            self.default_fps = 8
+            self.default_black = 9
+        else:
+            self.default_exposure = self.controller.manager.default_parameters['Exposure Time']
+            self.default_max_expo = self.controller.manager.default_parameters['Max Expo Time']
+            self.default_fps = self.controller.manager.default_parameters['Frame Rate']
+            self.default_black = self.controller.manager.default_parameters['Black Level']
 
         # Title
         self.label_title_camera_settings = QLabel(translate('title_camera_settings'))
@@ -66,20 +72,20 @@ class CameraOptionsView(QWidget):
         self.subwidget_camera_id.setLayout(self.sublayout_camera_id)
 
         # Settings
-        max_expo = self.default_params['max_exposure']
-        default_expo = self.default_params['exposure']
+        max_expo = self.default_max_expo
+        default_expo = self.default_exposure
         self.slider_exposure_time = SliderBloc(name='name_slider_exposure_time', unit='us',
                                                min_value=0, max_value=max_expo, integer=True)
         self.slider_exposure_time.set_value(default_expo)
         self.slider_exposure_time.slider_changed.connect(self.slider_exposure_time_changing)
 
-        default_black = self.default_params['black_level']
+        default_black = self.default_black
         self.slider_black_level = SliderBloc(name='name_slider_black_level', unit='gray',
                                               min_value=0, max_value=100, integer=True)
         self.slider_black_level.set_value(default_black)
         self.slider_black_level.slider_changed.connect(self.slider_black_level_changing)
 
-        self.fps_label = QLabel(f'Frame Rate = {self.default_params["fps"]} FPS')
+        self.fps_label = QLabel(f'Frame Rate = {self.default_fps} FPS')
         self.fps_label.setStyleSheet(styleH2)
 
         self.layout.addWidget(self.label_title_camera_settings)

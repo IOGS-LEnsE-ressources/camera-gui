@@ -19,6 +19,7 @@ from controllers.images_controller import ImagesController
 from controllers.masks_controller import MasksController
 from controllers.analyses_controller import AnalysesController
 from controllers.help_controller import HelpController
+from utils.initialization_parameters import read_default_parameters
 
 class ModesManager:
     """
@@ -36,6 +37,7 @@ class ModesManager:
         # Menu
         self.main_menu: MainMenu = menu
         self.main_menu.menu_changed.connect(self.update_mode)
+        self.default_parameters = read_default_parameters('config.txt')
         self.options_list = []
         # Main widget
         self.main_widget = widget

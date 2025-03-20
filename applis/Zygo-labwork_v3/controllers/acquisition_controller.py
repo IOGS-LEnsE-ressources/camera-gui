@@ -12,7 +12,6 @@ Creation : march/2025
 import sys, os
 import threading, time
 import numpy as np
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views import *

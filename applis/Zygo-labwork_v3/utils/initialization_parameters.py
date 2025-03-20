@@ -42,7 +42,7 @@ def read_default_parameters(file: str) -> dict:
             for line in f:
                 if line.startswith('#'):  # Skip lines starting with '#'
                     continue
-                key, value = line.strip().split('; ')  # Split key and value based on '; '
+                key, value = line.strip().split(';')  # Split key and value based on '; '
                 default_parameters[key.strip()] = value.strip()  # Remove extra whitespace and store in dictionary
     return default_parameters
 
