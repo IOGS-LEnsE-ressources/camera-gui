@@ -69,11 +69,12 @@ def surface_statistics(surface):
 
 
 ## Read data from MatLab file
-data = read_mat_file("../_data/imgs2.mat")
-images_mat = data['Imgs']
+data = read_mat_file("../_data/test3.mat")
+images_mat = data['Images']
 images = split_3d_array(images_mat)
-## Write a new set of data into a MatLab file
-new_data = np.stack((images), axis=2).astype(np.uint8)
+
+mask = data['Masks'].squeeze()
+print(mask.shape)
 
 # Display images
 '''
@@ -84,36 +85,8 @@ for i, img in enumerate(images):
 plt.show()
 '''
 
-## Mask on the image
-mask = np.zeros_like(images[0])
-mask[400:1200, 790:1900] = 1
-mask[200:400, 950:1600] = 1
-mask[300:400, 880:1800] = 1
-mask[1200:1400, 1350:1750] = 1
-
-
-write_mat_file('test.mat', new_data, mask)
-data2 = read_mat_file('test.mat')
-images_mat = data2['Images']
-images = split_3d_array(images_mat)
-mask = data2['Masks']   # TO DO : add a test on the size of 'Masks'
-
-mask = mask > 0.5
-
-print(f'Mask Type = {mask.dtype}')
-
-#mask = mask < 0.5
-
 plt.figure()
 plt.imshow(images[0]*mask, cmap='magma')
-plt.show()
-
-
-plt.figure()
-plt.imshow(mask, cmap='magma')
-plt.colorbar()
-plt.show()
-
 
 top_left, bottom_right = find_mask_limits(mask)
 print("Top-left:", top_left)
@@ -126,10 +99,8 @@ images_c = crop_images(images, (height, width), (pos_x, pos_y))
 print(f'H / W = {height} / {width}')
 
 plt.figure()
-plt.imshow(cropped_mask_phase)
+plt.imshow(images_c[0]*cropped_mask_phase)
 plt.title('Cropped Mask !')
-plt.show()
-
 
 ## TO DO : test with masks selection by user...
 
@@ -138,11 +109,11 @@ print('Opening Images...')
 sigma = 10
 images_filtered = list(map(lambda x:gaussian_filter(x, sigma), images_c))
 
+fig = plt.figure()
 for i, img in enumerate(images_filtered):
     plt.subplot(1,5,i+1)
     plt.imshow(img*cropped_mask_phase, cmap='gray')
     plt.axis('off')
-plt.show()
 
 ## Calculation of the phase by Hariharan algorithm
 print('Calculating Phase by Hariharan Algo...')
@@ -153,7 +124,10 @@ x = np.arange(wrapped_phase.shape[1])
 y = np.arange(wrapped_phase.shape[0])
 X, Y = np.meshgrid(x, y)
 
-wrapped_phase_2 = np.ma.masked_where(np.logical_not(cropped_mask_phase), wrapped_phase)
+wrapped_phase_2 = (np.ma.masked_where(np.logical_not(cropped_mask_phase), wrapped_phase)).astype(np.float64)
+
+print(wrapped_phase_2.shape)
+print(wrapped_phase_2.dtype)
 
 # Display of the surface
 fig = plt.figure()
@@ -166,9 +140,11 @@ plt.show()
 
 ## Unwrap phase
 print('Unwrapping Phase...')
-unwrapped_phase = unwrap_phase(wrapped_phase)/(2*np.pi)
-unwrapped_phase_2 = np.ma.masked_where(np.logical_not(cropped_mask_phase), unwrapped_phase)
+unwrapped_phase = unwrap_phase(wrapped_phase_2)/(2*np.pi)
 
+#unwrapped_phase_2 = np.ma.masked_where(np.logical_not(cropped_mask_phase), unwrapped_phase)
+
+'''
 # Display of the surface
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
@@ -188,11 +164,10 @@ print('Calculating Zernike coefficients...')
 max_order = 3
 coeffs = get_zernike_coefficient(unwrapped_phase_2, max_order=max_order)
 
-'''
 plt.figure()
 plt.plot(coeffs)
 plt.title('Zernike Coefficients')
-'''
+
 # Remove specified aberration
 aberrations_considered = np.ones(max_order, dtype=int)
 print(aberrations_considered)
@@ -232,4 +207,4 @@ fig.tight_layout()
 
 plt.show()
 
-
+'''

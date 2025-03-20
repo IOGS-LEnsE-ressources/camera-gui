@@ -158,6 +158,13 @@ class AnalysesController:
 
             case 'unwrappedphase_analyses':
                 ## Test 2D or 3D ??
+                wrapped = self.data_set.phase.get_wrapped_phase()
+                wrapped_array = wrapped.filled(np.nan)
+                # Display wrapped in 2D
+                self.top_right_widget = Surface2DView('Wrapped Phase')
+                self.main_widget.set_top_right_widget(self.top_right_widget)
+                self.top_right_widget.set_array(wrapped_array)
+                ## Test 2D or 3D ??
                 unwrapped = self.data_set.phase.get_unwrapped_phase()
                 unwrapped_array = unwrapped.filled(np.nan)
                 # Display unwrapped and corrected in 2D
@@ -181,8 +188,6 @@ class AnalysesController:
 
             case 'correctedphase_analyses':
                 # Display corrected in 2D in the top right area
-                self.top_right_widget = Surface2DView('Corrected Phase')
-                self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.display_2D_correction()
                 self.options1_widget.show_correction()
 
@@ -190,9 +195,13 @@ class AnalysesController:
         """
         Display correction depending on tilt checkbox value.
         """
+        self.main_widget.clear_top_right()
+        self.top_right_widget = Surface2DView('Corrected Phase')
+        self.main_widget.set_top_right_widget(self.top_right_widget)
         ## TO DO : update colorbar depending on the max range of TOP and BOT right area.
         unwrapped = self.data_set.phase.get_unwrapped_phase()
         unwrapped_array = unwrapped.filled(np.nan)
+
         # Test if tilt !
         if self.options1_widget.is_tilt_checked():
             _, corrected = self.zernike_coeffs.process_surface_correction(['piston','tilt'])
@@ -200,11 +209,13 @@ class AnalysesController:
             corrected = unwrapped
         corrected_array = corrected.filled(np.nan)
         self.top_right_widget.set_array(corrected_array)
+        range = self.bot_right_widget.get_z_range()
+        #self.top_right_widget.set_z_range(range)
         self.options1_widget.erase_pv_rms()
-        pv, rms = process_statistics_surface(corrected)
+        pv, rms = process_statistics_surface(corrected_array)
         self.options1_widget.set_pv_corrected(pv, '\u03BB')
         self.options1_widget.set_rms_corrected(rms, '\u03BB')
-        pv, rms = process_statistics_surface(unwrapped)
+        pv, rms = process_statistics_surface(unwrapped_array)
         self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
         self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
 
@@ -251,8 +262,9 @@ class AnalysesController:
         counter = self.zernike_coeffs.get_coeff_counter()
         max_order = self.zernike_coeffs.max_order
         if counter == 0:
-            self.zernike_coeffs.set_phase(self.data_set.phase)
-            self.zernike_coeffs.init_data()
+            if self.zernike_coeffs.set_phase(self.data_set.phase):
+                print('Data initialized')
+                time.sleep(0.1)
         if counter > 3:
             # Tilt OK
             self.tilt_possible = True
@@ -287,8 +299,8 @@ if __name__ == "__main__":
     data_set = DataSetModel()
     manager = ModesManager(menu, widget, data_set)
     # Update data
-    manager.data_set.load_images_set_from_file("../_data/test4.mat")
-    manager.data_set.load_mask_from_file("../_data/test4.mat")
+    manager.data_set.load_images_set_from_file("../_data/test3.mat")
+    manager.data_set.load_mask_from_file("../_data/test3.mat")
 
     # Test controller
     manager.mode_controller = AnalysesController(manager)

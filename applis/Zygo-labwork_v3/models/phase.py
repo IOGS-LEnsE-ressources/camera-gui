@@ -100,6 +100,7 @@ class PhaseModel:
         :return: True if Hariharan algorithm is processed. None if not processed.
         """
         if self.wrapped_phase is not None:
+            print(f'Shape Wrapped : {self.wrapped_phase.shape} / {self.wrapped_phase.dtype}')
             self.unwrapped_phase = unwrap_phase(self.wrapped_phase) / (2 * np.pi)
             self.data_set.data_set_state = DataSetState.UNWRAPPED
             return True
@@ -157,3 +158,6 @@ if __name__ == '__main__':
         plt.imshow(unwrapped, cmap='gray')
 
     plt.show()
+
+    print(f'PV / RMS - Unwrapped = {process_statistics_surface(unwrapped)}')
+

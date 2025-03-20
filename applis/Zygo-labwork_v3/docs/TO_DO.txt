@@ -12,7 +12,7 @@ Functions
 
 Bugs
 ====
--->     issues with main menu management - and options list !
+-->     main menu management - and options list !
             + if no mask in the data loaded, Masks in main menu is not disponible
 -->     in acquisition controllers (and global)
             + find a way to update DEFAULT parameters (for camera and piezo)
@@ -35,3 +35,8 @@ Bugs
             +> analyses mode
                 + when back to analyses mode (if coeffs already calculated), no access to corrected phase
                 and progress bar to 0
+
+Test to do
+==========
+-> Save set of images (with multi acquisition)
+-> Display images from multi sets

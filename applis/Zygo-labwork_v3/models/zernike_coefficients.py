@@ -20,7 +20,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from models.phase import PhaseModel
+from models.phase import PhaseModel, process_statistics_surface
 from models.dataset import DataSetModel
 
 
@@ -100,11 +100,14 @@ class Zernike:
         if self.init_data():
             print("Data Ok")
 
-    def set_phase(self, phase):
+    def set_phase(self, phase) -> bool:
+        """
+        Set the phase to process.
+        :param phase: Phase to process.
+        :return: True if the data is initialized.
+        """
         self.phase = phase
-        self.surface = self.phase.get_unwrapped_phase()
-        if self.init_data():
-            print("Data Ok - Set Phase")
+        return self.init_data()
 
     def init_data(self) -> bool:
         """
@@ -112,7 +115,9 @@ class Zernike:
         :return: True if initialization procedure is correctly done.
         """
         if self.phase.is_analysis_ready():
+            print('Init DATA')
             self.surface = self.phase.get_unwrapped_phase()
+            print(f'Shape = {self.surface.shape}')
             # Dimensions of the surface
             a, b = self.surface.shape
 
@@ -128,6 +133,7 @@ class Zernike:
         return False
 
     def process_cartesian_polynomials(self, noll_index: int) -> np.ndarray:
+        print(f'Cart {noll_index}')
         if noll_index == 0:     # Piston
             return np.ones_like(self.X)
         elif noll_index == 1:   # x-Tilt
@@ -212,6 +218,7 @@ class Zernike:
 
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
+            print(f'Order = {order}')
             if self.coeff_list[order] is None:
                 Z_nm = self.process_cartesian_polynomials(order)
                 # Mask NaN values
@@ -230,14 +237,15 @@ class Zernike:
             for c in coeffs:
                 if self.coeff_list[c] is None:
                     self.process_zernike_coefficient(c)
+                print(f'{c} = {self.coeff_list[c]}')
                 self.corrected_phase += self.coeff_list[c] * self.process_cartesian_polynomials(c)
         # Correction de la surface
         new_surface = self.surface - self.corrected_phase
         return self.corrected_phase, new_surface
     
-    def  phase_correction(self, corrected_coeffs: list[float]):
+    def phase_correction(self, corrected_coeffs: list[float]):
         self.corrected_phase = np.zeros_like(self.surface)
-        for i,c in enumerate(corrected_coeffs):
+        for i, c in enumerate(corrected_coeffs):
             self.corrected_phase += c * self.process_cartesian_polynomials(i)
         # Correction de la surface
         new_surface = self.surface - self.corrected_phase
@@ -256,6 +264,7 @@ class Zernike:
         :return: Number of coefficients already calculated.
         """
         return self.coeff_counter
+
 
 def display_3_figures(init, zer, corr):
     """Displaying results."""
@@ -320,6 +329,7 @@ def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
 
 
 if __name__ == "__main__":
+    '''
     # Grid definition
     N, M = 256, 128  # Taille de la grille
     x = np.linspace(-1, 1, N)
@@ -343,17 +353,42 @@ if __name__ == "__main__":
     surface += coma_vertical #+coma_vertical
 
     surface[~mask] = np.nan
+    '''
+
+    from utils.dataset_utils import read_mat_file, split_3d_array
+    data = read_mat_file("../_data/test3.mat")
+    images_mat = data['Images']
+    images = split_3d_array(images_mat)
+
+    mask = data['Masks'].squeeze()
+    print(mask.shape)
+
+    plt.figure()
+    plt.imshow(images[0]*mask)
+    plt.show()
+
 
     ### Class test
     data_set = DataSetModel(5)
+    data_set.add_set_images(images)
+    data_set.add_mask(mask)
     phase = PhaseModel(data_set)
-    phase.wrapped_phase = surface
+    phase.prepare_data()
+    phase.process_wrapped_phase(1)
+    phase.process_unwrapped_phase()
+    surface = phase.get_unwrapped_phase()
+    '''
+    phase.wrapped_phase = ha
     phase.unwrapped_phase = surface
+    '''
     zer = Zernike(phase)
 
-    ab_list = ['tilt', 'defocus', 'astig3']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
+    ab_list = ['tilt']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
+
+    print(f'Init = {process_statistics_surface(surface)}')
+    print(f'Init = {process_statistics_surface(new_image)}')
 
     display_3_figures(surface, correction, new_image)
 

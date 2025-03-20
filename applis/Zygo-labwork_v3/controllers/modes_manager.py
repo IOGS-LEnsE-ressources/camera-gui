@@ -89,6 +89,7 @@ class ModesManager:
             self.options_list.append('noanalysis')
         # Update menu
         self.main_menu.update_options(self.options_list)
+        self.main_menu.update_menu_display()
 
     def update_mode(self, event):
         """
