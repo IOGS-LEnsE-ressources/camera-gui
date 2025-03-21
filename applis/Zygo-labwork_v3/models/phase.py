@@ -18,6 +18,7 @@ from models.images import ImagesModel
 from models.masks import MasksModel
 from utils.dataset_utils import DataSetState
 from skimage.restoration import unwrap_phase
+from scipy.ndimage import gaussian_filter
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -49,6 +50,8 @@ class PhaseModel:
         Crop the images.
         :return:
         """
+        print('Prepare Data')
+        self.cropped_masks_sets.reset_masks()
         mask = self.data_set.get_global_mask()
         top_left, bottom_right = find_mask_limits(mask)
         height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
@@ -60,9 +63,10 @@ class PhaseModel:
             images = self.data_set.get_images_sets(k)
             # Process all images in the set
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
-            for im_k in range(len(images_c)):
-                images_c[im_k] = np.ma.masked_where(np.logical_not(mask_cropped), images_c[im_k])
-            self.cropped_images_sets.add_set_images(images_c)
+            images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
+            for im_k in range(len(images_f)):
+                images_f[im_k] = np.ma.masked_where(np.logical_not(mask_cropped), images_f[im_k])
+            self.cropped_images_sets.add_set_images(images_f)
         self.cropped_data_ready = True
         self.data_set.data_set_state = DataSetState.CROPPED
 
@@ -76,10 +80,6 @@ class PhaseModel:
             self.cropped_phase = []
             mask,_ = self.cropped_masks_sets.get_mask(1)
             images_list = self.cropped_images_sets.get_images_set(set_number)
-            for k, image in enumerate(images_list):
-                # Blur images
-                image = cv2.blur(image, (15, 15))
-                images_list[k] = np.ma.masked_where(np.logical_not(mask), image)
             self.wrapped_phase = hariharan_algorithm(images_list, mask)
             self.data_set.data_set_state = DataSetState.WRAPPED
             return True
@@ -100,7 +100,6 @@ class PhaseModel:
         :return: True if Hariharan algorithm is processed. None if not processed.
         """
         if self.wrapped_phase is not None:
-            print(f'Shape Wrapped : {self.wrapped_phase.shape} / {self.wrapped_phase.dtype}')
             self.unwrapped_phase = unwrap_phase(self.wrapped_phase) / (2 * np.pi)
             self.data_set.data_set_state = DataSetState.UNWRAPPED
             return True
@@ -139,20 +138,21 @@ if __name__ == '__main__':
     data_set.load_mask_from_file(file_path)
 
     phase_test = PhaseModel(data_set)
+    data_set.phase = phase_test
     ## Test class
-    phase_test.prepare_data()
-    print(f'Number of sets = {phase_test.cropped_images_sets.get_number_of_sets()}')
+    data_set.phase.prepare_data()
+    print(f'Number of sets = {data_set.phase.cropped_images_sets.get_number_of_sets()}')
 
-    if phase_test.process_wrapped_phase():
+    if data_set.phase.process_wrapped_phase():
         print('Wrapped Phase OK')
-    wrapped = phase_test.get_wrapped_phase()
+    wrapped = data_set.phase.get_wrapped_phase()
     if wrapped is not None:
         plt.figure()
-        plt.imshow(wrapped, cmap='gray')
+        plt.imshow(wrapped.T, cmap='gray')
 
-    if phase_test.process_unwrapped_phase():
+    if data_set.phase.process_unwrapped_phase():
         print('Unwrapped Phase OK')
-    unwrapped = phase_test.get_unwrapped_phase()
+    unwrapped = data_set.phase.get_unwrapped_phase()
     if wrapped is not None:
         plt.figure()
         plt.imshow(unwrapped, cmap='gray')

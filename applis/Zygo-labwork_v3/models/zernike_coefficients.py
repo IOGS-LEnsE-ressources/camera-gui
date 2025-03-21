@@ -117,9 +117,6 @@ class Zernike:
         if self.phase.is_analysis_ready():
             print('Init DATA')
             self.surface = self.phase.get_unwrapped_phase()
-            mask, _, _ = self.phase.data_set.get_global_cropped_mask()
-            print(f'Shape = {self.surface.shape}')
-            print(f'Mask Shape = {mask.shape} / {mask.dtype}')
             # Dimensions of the surface
             a, b = self.surface.shape
 
@@ -224,7 +221,6 @@ class Zernike:
                 Z_nm = self.process_cartesian_polynomials(order)
                 # Mask NaN values
                 valid_mask = ~np.isnan(self.surface)
-                print(f'Valid Mask = {valid_mask.shape} / {valid_mask.dtype}')
                 surface_filtered = self.surface[valid_mask]
                 Z_nm_filtered = Z_nm[valid_mask]
 
@@ -366,7 +362,6 @@ if __name__ == "__main__":
     images = split_3d_array(images_mat)
 
     mask = data['Masks'].squeeze()
-    print(mask.shape)
 
     plt.figure()
     plt.imshow(images[0]*mask)
@@ -375,26 +370,33 @@ if __name__ == "__main__":
 
     ### Class test
     data_set = DataSetModel(5)
-    data_set.add_set_images(images)
+    print(f'Set ok ? {data_set.add_set_images(images)}')
     data_set.add_mask(mask)
     phase = PhaseModel(data_set)
-    phase.prepare_data()
-    phase.process_wrapped_phase(1)
-    phase.process_unwrapped_phase()
-    surface = phase.get_unwrapped_phase()
-    '''
-    phase.wrapped_phase = ha
-    phase.unwrapped_phase = surface
-    '''
+    data_set.phase = phase
+    data_set.phase.prepare_data()
+    data_set.phase.process_wrapped_phase()
+    wrapped = data_set.phase.get_wrapped_phase()
+    plt.figure()
+    plt.imshow(wrapped, cmap='gray')
+    plt.colorbar()
+
+    data_set.phase.process_unwrapped_phase()
+    surface = data_set.phase.get_unwrapped_phase()
+    plt.figure()
+    plt.imshow(surface, cmap='gray')
+    plt.colorbar()
+    plt.show()
+
     zer = Zernike(phase)
+    zer.set_phase(phase)
 
     ab_list = ['tilt']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
-    print(correction)
 
     print(f'Init = {process_statistics_surface(surface)}')
-    #print(f'End = {process_statistics_surface(new_image)}')
+    print(f'End = {process_statistics_surface(new_image)}')
 
     display_3_figures(surface, correction, new_image)
 

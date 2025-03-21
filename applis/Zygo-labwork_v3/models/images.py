@@ -34,12 +34,17 @@ class ImagesModel:
         self.images_list = []
         self.images_sets_number = 0
 
-    def add_set_images(self, images: list):
-        """Add a new set of images."""
+    def add_set_images(self, images: list) -> bool:
+        """Add a new set of images.
+        :param images: list of 5 arrays
+        :return: True if the set of images has the good size.
+        """
         if isinstance(images, list):
             if len(images) == self.set_size:
                 self.images_list.append(images)
                 self.images_sets_number += 1
+                return True
+        return False
 
     def reset_all_images(self):
         """Reset all images."""

@@ -227,7 +227,7 @@ class Zernike:
         return self.corrected_phase, new_surface
     
 
-def display_3_figures(init, zer, corr):
+def display_3_figures(init, zern, corr):
     """Displaying results."""
     vmin = np.nanmin([init.min(), corr.min()])
     vmax = np.nanmax([init.max(), corr.max()])
@@ -290,8 +290,7 @@ def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
 
 
 if __name__ == "__main__":
-    zer = Zernike(28)
-
+    '''
     # Grid definition
     N, M = 256, 128  # Taille de la grille
     x = np.linspace(-1, 1, N)
@@ -317,7 +316,7 @@ if __name__ == "__main__":
     surface += coma_vertical #+coma_vertical
 
     surface[~mask] = np.nan
-
+    '''
     ## Other test
     import os
     import scipy
@@ -344,7 +343,7 @@ if __name__ == "__main__":
         arrays = [array_3d[:, :, i].astype(np.float32) for i in range(array_3d.shape[2])]
         return arrays
 
-    data = read_mat_file("../_data/new_test_m.mat")
+    data = read_mat_file("../_data/test3.mat")
     images_mat = data['Images']
     images = split_3d_array(images_mat)
 
@@ -353,19 +352,60 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.imshow(images[0]*mask)
+
+    # Crop images around the mask
+    from lensepy.images.conversion import find_mask_limits, crop_images
+    from scipy.ndimage import gaussian_filter
+    top_left, bottom_right = find_mask_limits(mask)
+    height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
+    pos_x, pos_y = top_left[1], top_left[0]
+    cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
+    images_c = crop_images(images, (height, width), (pos_x, pos_y))
+    # Filtering images to avoid noise
+    images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
+
+    # Calculate hariharan and unwrap phase in surface
+    from process.hariharan_algorithm import *
+    wrapped = hariharan_algorithm(images_f, cropped_mask_phase)
+    wrapped = np.ma.masked_where(np.logical_not(cropped_mask_phase), wrapped)
+
+    def statistics_surface(surface):
+        # Process (Peak-to-Valley)
+        PV = np.round(np.nanmax(surface) - np.nanmin(surface), 3)
+        RMS = np.round(np.nanstd(surface), 3)
+        return PV, RMS
+
+    plt.figure()
+    plt.imshow(wrapped)
+    plt.colorbar()
+
+    print(f'Wrapped = {statistics_surface(wrapped)}')
+
+    from skimage.restoration import unwrap_phase
+    unwrapped_t = unwrap_phase(wrapped) / (2*np.pi)
+    unwrapped = np.ma.masked_where(np.logical_not(cropped_mask_phase), unwrapped_t).copy()
+
+    print(f'Unwrapped = {statistics_surface(unwrapped)}')
+
+    plt.figure()
+    plt.imshow(unwrapped)
+    plt.colorbar()
+
     plt.show()
 
-
-    # TO DO !
-    # Calculate hariharan and unwrap phase in surface
-
-
-    zer.set_surface(surface)
+    zer = Zernike(28)
+    zer.set_surface(unwrapped)
+    for i in range(28):
+        zer.process_zernike_coefficient(i)
     ab_list = ['tilt']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
 
-    display_3_figures(surface, correction, new_image)
+    #display_3_figures(unwrapped, correction, new_image)
+
+
+    print(f'Correction = {statistics_surface(new_image)}')
+
 
 
 

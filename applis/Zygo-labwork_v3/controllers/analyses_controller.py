@@ -264,7 +264,7 @@ class AnalysesController:
         if counter == 0:
             if self.zernike_coeffs.set_phase(self.data_set.phase):
                 print('Data initialized')
-                time.sleep(0.1)
+                time.sleep(0.05)
         if counter > 3:
             # Tilt OK
             self.tilt_possible = True
@@ -299,8 +299,8 @@ if __name__ == "__main__":
     data_set = DataSetModel()
     manager = ModesManager(menu, widget, data_set)
     # Update data
-    manager.data_set.load_images_set_from_file("../_data/new_test_m.mat")
-    manager.data_set.load_mask_from_file("../_data/new_test_m.mat")
+    manager.data_set.load_images_set_from_file("../_data/test3.mat")
+    manager.data_set.load_mask_from_file("../_data/test3.mat")
 
     # Test controller
     manager.mode_controller = AnalysesController(manager)

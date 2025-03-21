@@ -43,14 +43,16 @@ class DataSetModel:
         self.phase = PhaseModel(self)
         self.data_set_state = DataSetState.NODATA
 
-    def add_set_images(self, images: list):
+    def add_set_images(self, images: list) -> bool:
         """
         Add a new set of images.
         :param images: List of images to add.
-
+        :return: True if the set of images is added.
         """
-        self.images_sets.add_set_images(images)
-        self.data_set_state = DataSetState.IMAGES
+        state = self.images_sets.add_set_images(images)
+        if state:
+            self.data_set_state = DataSetState.IMAGES
+        return state
 
     def get_images_sets(self, index: int=1) -> list[np.ndarray]:
         """
