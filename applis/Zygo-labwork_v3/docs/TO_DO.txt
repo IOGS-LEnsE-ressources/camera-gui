@@ -1,5 +1,5 @@
 
--->     If new acquisition or new data, erase zernike coeff !
+-->     If new acquisition or new data, erase zernike coeff ! And restart analyses
 -->     Tilt in analyses mode / Update tilt checkbox
 
 
@@ -8,10 +8,13 @@ Functions
 -->     GLOBAL : Hardware - default values for camera and piezo to update
             if hardware is connected
 -->     Save mask type in MAT file (and read it)
+-->     Wedge factor in analyses mode
 
 
 Bugs
 ====
+-->     GLOBAL / Freeze and crash when open images then go to analyses (via masks or not)
+
 -->     main menu management - and options list !
             + if no mask in the data loaded, Masks in main menu is not disponible
 -->     in acquisition controllers (and global)

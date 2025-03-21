@@ -136,7 +136,7 @@ class MasksModel:
         top_left, bottom_right = find_mask_limits(global_mask)
         height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
         pos_x, pos_y = top_left[1], top_left[0]
-        global_crop = crop_images([global_mask], (height, width), (pos_x, pos_y))
+        global_crop = crop_images([global_mask], (height, width), (pos_x, pos_y))[0]
         return global_crop, (height, width), (pos_x, pos_y)
 
     def get_masks_number(self):

@@ -299,8 +299,8 @@ if __name__ == "__main__":
     data_set = DataSetModel()
     manager = ModesManager(menu, widget, data_set)
     # Update data
-    manager.data_set.load_images_set_from_file("../_data/test3.mat")
-    manager.data_set.load_mask_from_file("../_data/test3.mat")
+    manager.data_set.load_images_set_from_file("../_data/new_test_m.mat")
+    manager.data_set.load_mask_from_file("../_data/new_test_m.mat")
 
     # Test controller
     manager.mode_controller = AnalysesController(manager)

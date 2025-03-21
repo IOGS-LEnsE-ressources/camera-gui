@@ -117,7 +117,9 @@ class Zernike:
         if self.phase.is_analysis_ready():
             print('Init DATA')
             self.surface = self.phase.get_unwrapped_phase()
+            mask, _, _ = self.phase.data_set.get_global_cropped_mask()
             print(f'Shape = {self.surface.shape}')
+            print(f'Mask Shape = {mask.shape} / {mask.dtype}')
             # Dimensions of the surface
             a, b = self.surface.shape
 
@@ -218,15 +220,16 @@ class Zernike:
 
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
-            print(f'Order = {order}')
             if self.coeff_list[order] is None:
                 Z_nm = self.process_cartesian_polynomials(order)
                 # Mask NaN values
                 valid_mask = ~np.isnan(self.surface)
+                print(f'Valid Mask = {valid_mask.shape} / {valid_mask.dtype}')
                 surface_filtered = self.surface[valid_mask]
                 Z_nm_filtered = Z_nm[valid_mask]
 
                 self.coeff_list[order] = np.sum(surface_filtered * Z_nm_filtered) / np.sum(Z_nm_filtered ** 2)
+            print(f'Order = {order} / {self.coeff_list[order]}')
         else:
             return None
 
@@ -234,10 +237,10 @@ class Zernike:
         self.corrected_phase = np.zeros_like(self.surface)
         for k, type_ab in enumerate(aberrations):
             coeffs = aberrations_type[type_ab]
+            print(coeffs)
             for c in coeffs:
                 if self.coeff_list[c] is None:
                     self.process_zernike_coefficient(c)
-                print(f'{c} = {self.coeff_list[c]}')
                 self.corrected_phase += self.coeff_list[c] * self.process_cartesian_polynomials(c)
         # Correction de la surface
         new_surface = self.surface - self.corrected_phase
@@ -286,8 +289,10 @@ def display_3_figures(init, zer, corr):
     axs[2].set_title("Corrected surface")
     fig.colorbar(im3, ax=axs[2])
 
+    '''
     print(f'INIT = max = {np.max(init)} / min = {np.min(init)} / Mean = {np.mean(init)}')
     print(f'CORR = max = {np.max(corr)} / min = {np.min(corr)} / Mean = {np.mean(corr)}')
+    '''
 
     plt.show()
 
@@ -356,7 +361,7 @@ if __name__ == "__main__":
     '''
 
     from utils.dataset_utils import read_mat_file, split_3d_array
-    data = read_mat_file("../_data/test3.mat")
+    data = read_mat_file("../_data/new_test_m.mat")
     images_mat = data['Images']
     images = split_3d_array(images_mat)
 
@@ -386,9 +391,10 @@ if __name__ == "__main__":
     ab_list = ['tilt']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
+    print(correction)
 
     print(f'Init = {process_statistics_surface(surface)}')
-    print(f'Init = {process_statistics_surface(new_image)}')
+    #print(f'End = {process_statistics_surface(new_image)}')
 
     display_3_figures(surface, correction, new_image)
 

@@ -96,6 +96,7 @@ class Zernike:
 
     def set_surface(self, surface):
         self.surface = surface
+        print(type(self.surface))
         # Dimensions of the surface
         a, b = self.surface.shape
 
@@ -317,8 +318,50 @@ if __name__ == "__main__":
 
     surface[~mask] = np.nan
 
+    ## Other test
+    import os
+    import scipy
+    def read_mat_file(file_path: str) -> dict:
+        """
+        Load data and masks from a .mat file.
+        The file must contain a set of 5 images (Hariharan algorithm) in a dictionary key called "Images".
+        Additional masks can be included in a dictionary key called "Masks".
+
+        :param file_path: Path and name of the file to load.
+        :return: Dictionary containing at least np.ndarray including in the "Images"-key object.
+        """
+        if os.path.exists(file_path):
+            data = scipy.io.loadmat(file_path)
+            return data
+        else:
+            print('read_mat_file / No File')
+
+    def split_3d_array(array_3d, size: int = 5):
+        # Ensure the array has the expected shape
+        if array_3d.shape[2] % size != 0:
+            raise ValueError(f"The loaded array does not have the expected third dimension size of {size}.")
+        # Extract the 2D arrays
+        arrays = [array_3d[:, :, i].astype(np.float32) for i in range(array_3d.shape[2])]
+        return arrays
+
+    data = read_mat_file("../_data/new_test_m.mat")
+    images_mat = data['Images']
+    images = split_3d_array(images_mat)
+
+    mask = data['Masks'].squeeze()
+    print(mask.shape)
+
+    plt.figure()
+    plt.imshow(images[0]*mask)
+    plt.show()
+
+
+    # TO DO !
+    # Calculate hariharan and unwrap phase in surface
+
+
     zer.set_surface(surface)
-    ab_list = ['tilt', 'defocus', 'astig3']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
+    ab_list = ['tilt']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']
 
     correction, new_image = zer.process_surface_correction(ab_list)
 
