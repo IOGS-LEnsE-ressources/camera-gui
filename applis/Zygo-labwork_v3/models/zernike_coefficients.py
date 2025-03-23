@@ -357,11 +357,12 @@ if __name__ == "__main__":
     '''
 
     from utils.dataset_utils import read_mat_file, split_3d_array
-    data = read_mat_file("../_data/new_test_m.mat")
+    data = read_mat_file("../_data/test3.mat")
     images_mat = data['Images']
     images = split_3d_array(images_mat)
 
     mask = data['Masks'].squeeze()
+    mask = mask.astype(bool)
 
     plt.figure()
     plt.imshow(images[0]*mask)
@@ -372,23 +373,26 @@ if __name__ == "__main__":
     data_set = DataSetModel(5)
     print(f'Set ok ? {data_set.add_set_images(images)}')
     data_set.add_mask(mask)
+    print(f'Mask type ? {data_set.get_global_mask()}')
     phase = PhaseModel(data_set)
-    data_set.phase = phase
-    data_set.phase.prepare_data()
-    data_set.phase.process_wrapped_phase()
-    wrapped = data_set.phase.get_wrapped_phase()
+    phase.prepare_data()
+    phase.process_wrapped_phase()
+    wrapped = phase.get_wrapped_phase()
     plt.figure()
     plt.imshow(wrapped, cmap='gray')
     plt.colorbar()
 
-    data_set.phase.process_unwrapped_phase()
-    surface = data_set.phase.get_unwrapped_phase()
+    phase.process_unwrapped_phase()
+    surface = phase.get_unwrapped_phase()
     plt.figure()
     plt.imshow(surface, cmap='gray')
     plt.colorbar()
     plt.show()
 
     zer = Zernike(phase)
+    mask_d, _, _ = data_set.get_global_cropped_mask()
+
+    phase.unwrapped_phase[~mask_d] = np.nan
     zer.set_phase(phase)
 
     ab_list = ['tilt']  #,'defocus'] #,'coma1','sphere1','coma2','sphere2']

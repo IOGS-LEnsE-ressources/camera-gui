@@ -97,6 +97,8 @@ class Zernike:
     def set_surface(self, surface):
         self.surface = surface
         print(type(self.surface))
+        print(f'surface shape = {self.surface.shape}')
+        print(f'surface Infos = {np.nanmean(self.surface)} / {np.nanmin(self.surface)} / {np.nanmax(self.surface)}')
         # Dimensions of the surface
         a, b = self.surface.shape
 
@@ -202,6 +204,8 @@ class Zernike:
                 Z_nm_filtered = Z_nm[valid_mask]
 
                 self.coeff_list[order] = np.sum(surface_filtered * Z_nm_filtered) / np.sum(Z_nm_filtered ** 2)
+                print(f'Z{order} = {self.coeff_list[order]}')
+                print(f'\t Mean = {np.nanmean(Z_nm)} / {np.nanmean(Z_nm_filtered)}')
         else:
             return None
 
@@ -266,7 +270,7 @@ def zernike_radial(n, m, r):
     return R
 
 
-def zernike(n, m, rho, theta):
+def zernike2(n, m, rho, theta):
     """ Calcule un polynôme de Zernike. """
     if m >= 0:
         return zernike_radial(n, m, rho) * np.cos(m * theta)
@@ -343,15 +347,86 @@ if __name__ == "__main__":
         arrays = [array_3d[:, :, i].astype(np.float32) for i in range(array_3d.shape[2])]
         return arrays
 
+    ### START !!
     data = read_mat_file("../_data/test3.mat")
     images_mat = data['Images']
     images = split_3d_array(images_mat)
 
     mask = data['Masks'].squeeze()
-    print(mask.shape)
+    mask = mask.astype(bool)
+    print(mask.dtype)
 
     plt.figure()
     plt.imshow(images[0]*mask)
+    plt.show()
+
+    from lensepy.images.conversion import find_mask_limits, crop_images
+    from scipy.ndimage import gaussian_filter
+    from process.hariharan_algorithm import *
+    from skimage.restoration import unwrap_phase
+    #>> Wrapped phase
+    if mask is not None:
+        # Crop images around the mask
+        top_left, bottom_right = find_mask_limits(mask)
+        height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
+        pos_x, pos_y = top_left[1], top_left[0]
+        cropped_mask_phase = crop_images([mask], (height, width), (pos_x, pos_y))[0]
+        images_c = crop_images(images, (height, width), (pos_x, pos_y))
+        # Filtering images to avoid noise
+        images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
+
+        # Process Phase
+        wrapped_phase = hariharan_algorithm(images_f, cropped_mask_phase)
+        wrapped_phase = np.ma.masked_where(np.logical_not(cropped_mask_phase), wrapped_phase)
+        # End of process
+
+    plt.figure()
+    plt.imshow(cropped_mask_phase)
+    plt.show()
+
+    print(f'Cropped Mask type = {type(cropped_mask_phase)} / {cropped_mask_phase.dtype}')
+
+    plt.figure()
+    plt.imshow(wrapped_phase)
+    plt.show()
+
+    #>> Unwrapped phase
+    unwrapped_phase = unwrap_phase(wrapped_phase) / (2 * np.pi)
+
+    #unwrapped_phase = np.ma.masked_where(np.logical_not(cropped_mask_phase), unwrapped_phase)
+    unwrapped_phase_to_correct = unwrapped_phase.copy()
+    unwrapped_phase_to_correct[~cropped_mask_phase] = np.nan
+    unwrapped_phase_done = True
+
+    plt.figure()
+    plt.imshow(unwrapped_phase)
+    plt.show()
+
+    def statistics_surface(surface):
+        # Process (Peak-to-Valley)
+        PV = np.round(np.nanmax(surface) - np.nanmin(surface), 3)
+        RMS = np.round(np.nanstd(surface), 3)
+        return PV, RMS
+
+    print(f'Unwrapped = {statistics_surface(unwrapped_phase_to_correct)}')
+
+    zer = Zernike(28)
+    zer.set_surface(unwrapped_phase_to_correct)
+
+    for k in range(28):
+        zer.process_zernike_coefficient(k)
+
+    #> Correction
+    ab_list = ['tilt']  # ,'defocus'] #,'coma1','sphere1','coma2','sphere2']
+
+    correction, new_image = zer.process_surface_correction(ab_list)
+
+    # display_3_figures(unwrapped, correction, new_image)
+
+    print(f'Correction = {statistics_surface(new_image)}')
+
+    '''
+
 
     # Crop images around the mask
     from lensepy.images.conversion import find_mask_limits, crop_images
@@ -385,6 +460,8 @@ if __name__ == "__main__":
     unwrapped_t = unwrap_phase(wrapped) / (2*np.pi)
     unwrapped = np.ma.masked_where(np.logical_not(cropped_mask_phase), unwrapped_t).copy()
 
+    unwrapped[~cropped_mask_phase] = np.nan
+
     print(f'Unwrapped = {statistics_surface(unwrapped)}')
 
     plt.figure()
@@ -405,9 +482,5 @@ if __name__ == "__main__":
 
 
     print(f'Correction = {statistics_surface(new_image)}')
-
-
-
-
-
+    '''
 

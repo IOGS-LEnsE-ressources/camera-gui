@@ -53,10 +53,12 @@ class PhaseModel:
         print('Prepare Data')
         self.cropped_masks_sets.reset_masks()
         mask = self.data_set.get_global_mask()
+        print(f'Mask Type = {mask.dtype}')
         top_left, bottom_right = find_mask_limits(mask)
         height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
         pos_x, pos_y = top_left[1], top_left[0]
         mask_cropped = crop_images([mask], (height, width), (pos_x, pos_y))[0]
+        print(f'Mask Cropped Type = {mask.dtype}')
         self.cropped_masks_sets.add_mask(mask_cropped)
         # Process all the sets of images
         for k in range(self.data_set.images_sets.get_number_of_sets()):
@@ -64,8 +66,9 @@ class PhaseModel:
             # Process all images in the set
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
             images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
-            for im_k in range(len(images_f)):
-                images_f[im_k] = np.ma.masked_where(np.logical_not(mask_cropped), images_f[im_k])
+            for im_k, image_f in enumerate(images_f):
+                image_f[~mask_cropped] = np.nan
+                images_f[im_k] = np.ma.masked_where(np.logical_not(mask_cropped), image_f)
             self.cropped_images_sets.add_set_images(images_f)
         self.cropped_data_ready = True
         self.data_set.data_set_state = DataSetState.CROPPED
@@ -100,7 +103,10 @@ class PhaseModel:
         :return: True if Hariharan algorithm is processed. None if not processed.
         """
         if self.wrapped_phase is not None:
+            mask, _ = self.cropped_masks_sets.get_mask(1)
             self.unwrapped_phase = unwrap_phase(self.wrapped_phase) / (2 * np.pi)
+            self.unwrapped_phase[~mask] = np.nan
+            self.unwrapped_phase = np.ma.masked_where(np.logical_not(mask), self.unwrapped_phase)
             self.data_set.data_set_state = DataSetState.UNWRAPPED
             return True
         else:

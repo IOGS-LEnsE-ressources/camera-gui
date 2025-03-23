@@ -13,7 +13,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from enum import Enum
 from views.main_structure import MainView
-from views.main_menu import MainMenu
 from models.dataset import DataSetModel
 from controllers.acquisition_controller import AcquisitionController
 from controllers.images_controller import ImagesController
@@ -22,28 +21,37 @@ from controllers.analyses_controller import AnalysesController
 from controllers.help_controller import HelpController
 from utils.initialization_parameters import read_default_parameters
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from zygo_lab_app import ZygoApp
+    from views.main_menu import MainMenu
+
 class ModesManager:
     """
     Main modes manager.
     The different modes are loaded from the main menu file (menu/menu.txt)
     """
 
-    def __init__(self, menu: MainMenu, widget: MainView, data_set: DataSetModel):
+    def __init__(self, main_app: "ZygoApp"):
         """
         Default constructor.
         :param menu: Main menu of the application (MainMenu).
         :param widget: Main widget container of the application (MainView).
         :param dataset: Dataset of the application (DataSetModel).
         """
+        # Main App
+        self.main_app: "ZygoApp" = main_app
         # Menu
-        self.main_menu: MainMenu = menu
+        self.main_menu: "MainMenu" = self.main_app.main_menu
         self.main_menu.menu_changed.connect(self.update_mode)
         self.default_parameters = read_default_parameters('config.txt')
         self.options_list = []
         # Main widget
-        self.main_widget = widget
+        self.main_widget = self.main_app.main_widget
         # Data set
-        self.data_set = data_set
+        self.data_set = self.main_app.data_set
+        # Phase
+        self.phase = self.main_app.phase
         # Modes
         self.main_mode = 'first'
         self.mode_controller = None
@@ -85,7 +93,7 @@ class ModesManager:
             self.options_list.append('noimages')
         if self.data_set.masks_sets.get_masks_number() == 0:
             self.options_list.append('nomask')
-        if self.data_set.phase.is_analysis_ready() is False:
+        if self.phase.is_analysis_ready() is False:
             self.options_list.append('noanalysis')
         # Update menu
         self.main_menu.update_options(self.options_list)

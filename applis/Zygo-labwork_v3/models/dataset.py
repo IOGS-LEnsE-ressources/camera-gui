@@ -24,7 +24,6 @@ import numpy as np
 from enum import Enum
 from models.images import ImagesModel
 from models.masks import MasksModel
-from models.phase import PhaseModel
 from models.acquisition import AcquisitionModel
 from utils.dataset_utils import DataSetState
 
@@ -40,7 +39,6 @@ class DataSetModel:
         self.images_sets = ImagesModel(set_size)
         self.masks_sets = MasksModel()
         self.acquisition_mode = AcquisitionModel(set_size)
-        self.phase = PhaseModel(self)
         self.data_set_state = DataSetState.NODATA
 
     def add_set_images(self, images: list) -> bool:

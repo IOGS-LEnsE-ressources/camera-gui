@@ -24,6 +24,7 @@ from views.main_structure import MainView
 from views.main_menu import MainMenu
 from controllers.modes_manager import ModesManager
 from models.dataset import DataSetModel
+from models.phase import PhaseModel
 
 version_app = '3.0'
 
@@ -33,11 +34,12 @@ class ZygoApp:
     def __init__(self):
         """Constructor of the application."""
         self.data_set = DataSetModel()
+        self.phase = PhaseModel(self.data_set)
         self.main_widget = MainView()
         self.main_menu = MainMenu()
         self.main_menu.load_menu('menu/menu.txt')
         self.main_widget.set_main_menu(self.main_menu)
-        self.mode_manager = ModesManager(self.main_menu, self.main_widget, self.data_set)
+        self.mode_manager = ModesManager(self)
         load_default_dictionary("FR")
 
 

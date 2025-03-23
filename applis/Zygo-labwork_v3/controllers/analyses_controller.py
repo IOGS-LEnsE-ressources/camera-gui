@@ -27,13 +27,14 @@ from PyQt6.QtWidgets import (
     QWidget,
     QFileDialog
 )
-from models.dataset import DataSetModel
 from models.zernike_coefficients import Zernike
 from utils.dataset_utils import generate_images_grid, DataSetState
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from controllers.modes_manager import ModesManager
+    from models.dataset import DataSetModel
+    from models.phase import PhaseModel
 
 class AnalysesController:
     """
@@ -47,7 +48,8 @@ class AnalysesController:
         """
         self.manager: "ModesManager" = manager
         self.data_set: DataSetModel = self.manager.data_set
-        self.zernike_coeffs: Zernike = Zernike(self.data_set.phase)
+        self.phase: "PhaseModel"= self.manager.phase
+        self.zernike_coeffs: Zernike = Zernike(self.phase)
         self.main_widget: MainView = self.manager.main_widget
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
@@ -72,7 +74,7 @@ class AnalysesController:
         self.update_submenu_view("")
         self.init_view()
         # Start Analyses
-        if self.data_set.phase.get_wrapped_phase() is None:
+        if self.phase.get_wrapped_phase() is None:
             ## Where to find set_number ?
             set_number = 1
             thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
@@ -148,7 +150,7 @@ class AnalysesController:
                     self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
                 self.main_widget.set_bot_right_widget(self.bot_right_widget)
                 ## Test 2D or 3D ??
-                wrapped = self.data_set.phase.get_wrapped_phase()
+                wrapped = self.phase.get_wrapped_phase()
                 wrapped_array = wrapped.filled(np.nan)
                 # Display wrapped in 2D
                 self.top_right_widget = Surface2DView('Wrapped Phase')
@@ -158,14 +160,14 @@ class AnalysesController:
 
             case 'unwrappedphase_analyses':
                 ## Test 2D or 3D ??
-                wrapped = self.data_set.phase.get_wrapped_phase()
+                wrapped = self.phase.get_wrapped_phase()
                 wrapped_array = wrapped.filled(np.nan)
                 # Display wrapped in 2D
                 self.top_right_widget = Surface2DView('Wrapped Phase')
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.top_right_widget.set_array(wrapped_array)
                 ## Test 2D or 3D ??
-                unwrapped = self.data_set.phase.get_unwrapped_phase()
+                unwrapped = self.phase.get_unwrapped_phase()
                 unwrapped_array = unwrapped.filled(np.nan)
                 # Display unwrapped and corrected in 2D
                 self.main_widget.clear_bot_right()
@@ -199,7 +201,7 @@ class AnalysesController:
         self.top_right_widget = Surface2DView('Corrected Phase')
         self.main_widget.set_top_right_widget(self.top_right_widget)
         ## TO DO : update colorbar depending on the max range of TOP and BOT right area.
-        unwrapped = self.data_set.phase.get_unwrapped_phase()
+        unwrapped = self.phase.get_unwrapped_phase()
         unwrapped_array = unwrapped.filled(np.nan)
 
         # Test if tilt !
@@ -236,9 +238,9 @@ class AnalysesController:
         # TO DO : select the good set of images if multiple acquisition
         k = 0
         if self.data_set.is_data_ready():
-            self.data_set.phase.prepare_data()
+            self.phase.prepare_data()
             # Process Phase
-            self.data_set.phase.process_wrapped_phase()
+            self.phase.process_wrapped_phase()
             # End of process
             thread = threading.Thread(target=self.thread_unwrapped_phase_calculation, args=(set_number,))
             thread.start()
@@ -250,7 +252,7 @@ class AnalysesController:
         """
         if self.data_set.is_data_ready() and self.data_set.data_set_state == DataSetState.WRAPPED:
             # Process Phase
-            self.data_set.phase.process_unwrapped_phase()
+            self.phase.process_unwrapped_phase()
             # End of process
             self.update_submenu('')
             # Start Zernike coefficients process
@@ -262,7 +264,7 @@ class AnalysesController:
         counter = self.zernike_coeffs.get_coeff_counter()
         max_order = self.zernike_coeffs.max_order
         if counter == 0:
-            if self.zernike_coeffs.set_phase(self.data_set.phase):
+            if self.zernike_coeffs.set_phase(self.phase):
                 print('Data initialized')
                 time.sleep(0.05)
         if counter > 3:
@@ -287,22 +289,27 @@ class AnalysesController:
 
 
 if __name__ == "__main__":
+    from zygo_lab_app import ZygoApp
     from PyQt6.QtWidgets import QApplication
     from controllers.modes_manager import ModesManager
     from views.main_menu import MainMenu
+    from models.dataset import DataSetModel
+    from models.phase import PhaseModel
 
     app = QApplication(sys.argv)
-    widget = MainView()
-    menu = MainMenu()
-    menu.load_menu('')
-    widget.set_main_menu(menu)
+    m_app = ZygoApp()
     data_set = DataSetModel()
-    manager = ModesManager(menu, widget, data_set)
+    m_app.data_set = data_set
+    m_app.phase = PhaseModel(m_app.data_set)
+    m_app.main_widget = MainView()
+    m_app.main_menu = MainMenu()
+    m_app.main_menu.load_menu('')
+    manager = ModesManager(m_app)
     # Update data
     manager.data_set.load_images_set_from_file("../_data/test3.mat")
     manager.data_set.load_mask_from_file("../_data/test3.mat")
 
     # Test controller
     manager.mode_controller = AnalysesController(manager)
-    widget.showMaximized()
+    m_app.main_widget.showMaximized()
     sys.exit(app.exec())
