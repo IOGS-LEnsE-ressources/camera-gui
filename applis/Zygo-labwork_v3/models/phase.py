@@ -45,6 +45,7 @@ class PhaseModel:
         self.cropped_data_ready = False
         self.wrapped_phase = None
         self.unwrapped_phase = None
+        self.wedge_factor = 1.0
         # Zernike coefficients
         self.zernike_coeffs = Zernike(self)
 
@@ -118,7 +119,10 @@ class PhaseModel:
         Return the unwrapped phase if calculated
         :return: Unwrapped phase as an array in 2D. None if not processed.
         """
-        return self.unwrapped_phase
+        if self.unwrapped_phase is not None:
+            return self.unwrapped_phase * self.wedge_factor
+        else:
+            return self.unwrapped_phase
 
     def is_analysis_ready(self):
         """
@@ -135,6 +139,19 @@ class PhaseModel:
         self.wrapped_phase = None
         self.unwrapped_phase = None
         self.zernike_coeffs.reset_coeffs()
+
+    def set_wedge_factor(self, value: float):
+        """
+        Set the wedge factor, for displaying.
+        :param value: Wedge factor value.
+        """
+        self.wedge_factor = value
+
+    def get_wedge_factor(self) -> float:
+        """
+        Get the wedge factor.
+        """
+        return self.wedge_factor
 
 
 if __name__ == '__main__':

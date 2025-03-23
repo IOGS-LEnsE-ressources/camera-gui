@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """*masks_options_view.py* file.
 
-./views/masks_options_view.py contains MasksOptionsView class to display options for analyses mode.
+./views/masks_options_view.py contains MasksOptionsView class to display options for masks mode.
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
@@ -132,6 +132,14 @@ class MasksTableList(QTableWidget):
                     else:  # Lignes impaires en blanc
                         item.setBackground(QColor(255, 255, 255))
 
+    def update_display(self):
+        """
+        Update masks list display.
+        """
+        if self.data_set.masks_sets.get_masks_number()+1 >= self.rowCount():
+            self.add_new_row(self.data_set.masks_sets.get_masks_number())
+            self.setRowHeight(self.data_set.masks_sets.get_masks_number(), 40)
+
     def init_data(self):
         """
         Initialize graphical lines of the table.
@@ -158,10 +166,11 @@ class MasksTableList(QTableWidget):
         # Add data
         self._add_text(index, 0, str(index), False)
         type = self.data_set.masks_sets.get_type(index)
+        print(type)
         self._add_text(index, 1, type, False)
-        self._add_select_checkbox(1, self.data_set.masks_sets.is_mask_selected(index-1))
-        self._add_invert_checkbox(1, self.data_set.masks_sets.is_mask_inverted(index-1))
-        self._add_delete_button(1, translate('delete_mask'))
+        self._add_select_checkbox(index, self.data_set.masks_sets.is_mask_selected(index))
+        self._add_invert_checkbox(index, self.data_set.masks_sets.is_mask_inverted(index))
+        self._add_delete_button(index, translate('delete_mask'))
 
     def select_mask(self, event):
         sender = self.sender()
@@ -266,6 +275,7 @@ class MasksTableList(QTableWidget):
 
 
 if __name__ == "__main__":
+    from zygo_lab_app import ZygoApp
     from PyQt6.QtWidgets import QApplication
     from controllers.modes_manager import ModesManager
     from views.main_structure import MainView
@@ -277,12 +287,14 @@ if __name__ == "__main__":
         print(value)
 
     app = QApplication(sys.argv)
-    widget = MainView()
-    menu = MainMenu()
-    menu.load_menu('')
-    widget.set_main_menu(menu)
+    m_app = ZygoApp()
     data_set = DataSetModel()
-    manager = ModesManager(menu, widget, data_set)
+    m_app.data_set = data_set
+    m_app.main_widget = MainView()
+    m_app.main_menu = MainMenu()
+    m_app.main_menu.load_menu('')
+    manager = ModesManager(m_app)
+
     # Update data
     manager.data_set.load_images_set_from_file("../_data/test4.mat")
     manager.data_set.load_mask_from_file("../_data/test4.mat")

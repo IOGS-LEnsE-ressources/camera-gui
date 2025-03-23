@@ -511,6 +511,8 @@ class CircularMaskSelection(QDialog):
         # Convert image to QImage and QPixmap for display and adjust to maximum size of the screen
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
             image_to_display = resize_image_ratio(self.image, self.height-50, self.width)
+        else:
+            image_to_display = self.image
 
         self.qimage = array_to_qimage(image_to_display)
         self.pixmap = QPixmap.fromImage(self.qimage)
@@ -526,6 +528,7 @@ class CircularMaskSelection(QDialog):
 
         # Create a QLabel to display the image
         self.label = QLabel()
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setPixmap(self.pixmap)
 
         # Add the label to the layout
@@ -566,6 +569,7 @@ class CircularMaskSelection(QDialog):
         """
         # Enable drawing points and limit to three points
         self.can_draw = True
+        print(f'N = {len(self.points) }')
         if self.can_draw and len(self.points) < 3:
             pos = event.pos()
             self.points.append((pos.x(), pos.y()))
@@ -1177,11 +1181,13 @@ class PolygonalMaskSelection(QDialog):
 # %% Example
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    image = np.random.randint(0, 255, (4000, 6000))
+    image = np.random.randint(0, 255, (400, 600))
     try:
-        main = PolygonalMaskSelection(image)
+        main = CircularMaskSelection(image)
     except Exception as e:
         print(e)
     main.show()
     sys.exit(app.exec())
+
+
 

@@ -36,6 +36,23 @@ if TYPE_CHECKING:
     from models.dataset import DataSetModel
     from models.phase import PhaseModel
 
+
+def is_float(element: any) -> bool:
+    """
+    Return if any object is a float number.
+    :param element: Object to test.
+    :return: True if the object is a float number.
+    """
+    #If you expect None to be passed:
+    if element is None:
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
+
+
 class AnalysesController:
     """
     Analyses mode manager.
@@ -54,6 +71,7 @@ class AnalysesController:
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
         self.tilt_possible = False
+        self.sub_mode = ''
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()     # Display first image of a set
         self.top_right_widget = Surface2DView('Wrapped Phase')              # Display 2D. Default.
@@ -101,6 +119,7 @@ class AnalysesController:
         mask = self.data_set.get_global_mask()
         g_images = images[0]*mask
         self.top_left_widget.set_image_from_array(g_images)
+        self.options1_widget.wedge_edit.setEnabled(False)
 
     def update_submenu_view(self, submode: str):
         """
@@ -108,6 +127,7 @@ class AnalysesController:
         :param submode: Submode name : [open_images, display_images, save_images]
         """
         self.manager.update_menu()
+        self.sub_mode = submode
         ## Erase enabled list for buttons
         self.submenu.inactive_buttons()
         for k in range(len(self.submenu.buttons_list)):
@@ -143,6 +163,7 @@ class AnalysesController:
         self.options1_widget.hide_correction()
         match event:
             case 'wrappedphase_analyses':
+                self.options1_widget.wedge_edit.setEnabled(False)
                 self.main_widget.clear_bot_right()
                 self.bot_right_widget = HTMLView()
                 if __name__ == "__main__":
@@ -160,6 +181,7 @@ class AnalysesController:
                 self.options1_widget.erase_pv_rms()
 
             case 'unwrappedphase_analyses':
+                self.options1_widget.wedge_edit.setEnabled(True)
                 ## Test 2D or 3D ??
                 wrapped = self.phase.get_wrapped_phase()
                 wrapped_array = wrapped.filled(np.nan)
@@ -171,6 +193,7 @@ class AnalysesController:
                 self.display_2D_unwrapped()
 
             case 'correctedphase_analyses':
+                self.options1_widget.wedge_edit.setEnabled(True)
                 self.display_2D_unwrapped()
                 # Display corrected in 2D in the top right area
                 self.display_2D_correction()
@@ -215,13 +238,19 @@ class AnalysesController:
 
         # Test if tilt !
         if self.options1_widget.is_tilt_checked():
+            wedge_factor = self.phase.get_wedge_factor()
             _, corrected = self.zernike_coeffs.process_surface_correction(['piston','tilt'])
+            corrected = corrected * wedge_factor
         else:
             corrected = unwrapped
         corrected_array = corrected.filled(np.nan)
         self.top_right_widget.set_array(corrected_array)
-        #range = self.bot_right_widget.get_z_range()
-        #self.top_right_widget.set_z_range(range)
+        # Test if range is checked
+        if self.options1_widget.is_range_checked():
+            range = self.bot_right_widget.get_z_range()
+            self.top_right_widget.set_z_range(range)
+        else:
+            self.top_right_widget.reset_z_range()
         self.options1_widget.erase_pv_rms()
         pv, rms = process_statistics_surface(corrected_array)
         self.options1_widget.set_pv_corrected(pv, '\u03BB')
@@ -235,13 +264,19 @@ class AnalysesController:
         Update controller data and views when options changed.
         :param event: Signal that triggers the event.
         """
-        print(event)
         change = event.split(',')
         if change[0] == 'tilt':
             self.display_2D_correction()
+        if change[0] == 'range':
+            self.display_2D_correction()
         if change[0] == 'wedge':
-            if change[1].isnumeric():
-                print(float(change[1]))
+            if is_float(change[1]):
+                self.phase.set_wedge_factor(float(change[1]))
+                if self.sub_mode == 'unwrappedphase_analyses':
+                    self.display_2D_unwrapped()
+                elif self.sub_mode == 'correctedphase_analyses':
+                    self.display_2D_unwrapped()
+                    self.display_2D_correction()
 
     def thread_wrapped_phase_calculation(self, set_number: int=1):
         """

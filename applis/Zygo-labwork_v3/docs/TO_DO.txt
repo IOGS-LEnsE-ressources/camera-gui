@@ -8,6 +8,7 @@ Functions
             if hardware is connected
 -->     Save mask type in MAT file (and read it)
 -->     Wedge factor in analyses mode
+-->     Analyses mode / view : add 3D option !
 
 
 Bugs
@@ -20,10 +21,9 @@ Bugs
             + find a way to update DEFAULT parameters (for camera and piezo)
             + find a way to stop thread_update camera on closing acquisition mode
 -->     in masks controllers / options view
+            + in update_submenu : update 'nomask' in options_list of manager
             + uncheck global select if not all the checkbox are selected
 -->     in analyses controller
-            + colorbar range updating ! multi level displaying
-            + colorbar display in 2D surface (when correction is activated) + adapt colorbar of the 2 surfaces 2D
             + unwrapped -> display wrapped and unwrapped in 2D
 
 -->     GLOBAL TEST
@@ -34,6 +34,8 @@ Bugs
             +> images mode
                 + when deleting a mask (in masks mode) then back to images mode,
                 access to images is not possible (bar with buttons is deleted)
+            +> masks mode
+                + issues when adding a new circular mask - inversion of numbering mask !
             +> analyses mode
                 + when back to analyses mode (if coeffs already calculated), no access to corrected phase
                 and progress bar to 0

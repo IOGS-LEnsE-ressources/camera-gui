@@ -74,7 +74,14 @@ class Surface2DView(QWidget):
         Set the range of the Z-axis, for the colorbar.
         :param range: tuple of float, minimum and maximum values of the colorbar.
         """
-        print(range_z[0])
+        self.imv.setLevels(range_z)
+        self.color_bar.setLevels(range_z)
+
+    def reset_z_range(self):
+        """
+        Reset the range of the Z-axis and the colorbar to the value of the image.
+        """
+        range_z = (np.nanmin(self.array_2D), np.nanmax(self.array_2D))
         self.imv.setLevels(range_z)
         self.color_bar.setLevels(range_z)
 

@@ -13,7 +13,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
-from lensepy.pyqt6 import *
+from lensepy.pyqt6.widget_editline import LineEditView
+from lensepy.pyqt6.widget_progress_bar import ProgressBarView
+from lensepy.pyqt6.widget_checkbox import CheckBoxView
 from PyQt6.QtWidgets import (
     QWidget, QLabel, QProgressBar, QCheckBox, QLineEdit,
     QHBoxLayout, QVBoxLayout
@@ -25,108 +27,6 @@ if TYPE_CHECKING:
     from controllers.analyses_controller import AnalysesController
 
 MINIMUM_WIDTH = 75
-
-class ProgressBarView(QWidget):
-
-    def __init__(self, title: str = ''):
-        """
-        Default Constructor.
-        """
-        super().__init__()
-        self.layout = QHBoxLayout()
-        self.setLayout(self.layout)
-        self.title = title
-        self.label_progress_bar = QLabel(self.title)
-        self.label_progress_bar.setStyleSheet(styleH2)
-        self.progress_bar = QProgressBar(self)
-        self.progress_bar.setObjectName("IOGSProgressBar")
-        self.progress_bar.setStyleSheet(StyleSheet)
-        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.label_progress_bar)
-        self.layout.addWidget(self.progress_bar)
-
-    def update_progress_bar(self, value: int):
-        """
-        Update the progress bar value.
-        :param value: Value to update to the progress bar.
-        """
-        self.progress_bar.setValue(value)
-
-
-class CheckBoxView(QWidget):
-
-    check_changed = pyqtSignal(str)
-
-    def __init__(self, signal_name: str, title: str = ''):
-        """Default Constructor.
-
-        """
-        super().__init__()
-        self.title = title
-        self.signal_name = signal_name
-        self.layout = QHBoxLayout()
-        self.setLayout(self.layout)
-        self.checkbox_choice = QCheckBox()
-        self.checkbox_choice.stateChanged.connect(self._changed)
-        self.label_choice = QLabel(self.title)
-        self.label_choice.setStyleSheet(styleH3)
-        self.layout.addWidget(self.checkbox_choice)
-        self.layout.addWidget(self.label_choice)
-        self.layout.addStretch()
-        self.checkbox_choice.setEnabled(False)
-        self.checkbox_choice.setChecked(False)
-
-    def _changed(self, event):
-        """
-        Action when state of the checkbox changed.
-        """
-        sig_value = '' + self.signal_name + ',' + str(self.checkbox_choice.isChecked())
-        self.check_changed.emit(sig_value)
-
-    def set_enabled(self, value: bool = True):
-        """Set enabled the checkbox.
-        :param value: True or False. Default True.
-        """
-        self.checkbox_choice.setEnabled(value)
-
-    def set_checked(self, value: bool = False):
-        """Set checked the checkbox.
-        :param value: True or False. Default True.
-        """
-        self.checkbox_choice.setChecked(value)
-
-
-class LineEditView(QWidget):
-
-    text_changed = pyqtSignal(str)
-
-    def __init__(self, signal_name: str, title: str = '', default_value: str = ''):
-        """Default Constructor.
-
-        """
-        super().__init__()
-        self.layout = QHBoxLayout()
-        self.setLayout(self.layout)
-        self.title = title
-        self.signal_name = signal_name
-        self.label = QLabel(self.title)
-        self.text_edit = QLineEdit(default_value)
-        self.text_edit.editingFinished.connect(self._changed)
-        self.layout.addWidget(self.label)
-        self.layout.addWidget(self.text_edit)
-
-    def set_value(self, value: str):
-        """Set a new value to the edit line.
-        :param value: Value to set.
-        """
-        self.text_edit.setText(value)
-
-    def _changed(self):
-        """
-        Action when the text changed.
-        """
-        sig_value = '' + self.signal_name + ',' + str(self.text_edit.text())
-        self.text_changed.emit(sig_value)
 
 
 class AnalysesOptionsView(QWidget):
@@ -250,6 +150,13 @@ class AnalysesOptionsView(QWidget):
         :return: True if checked.
         """
         return self.widget_2D_3D.checkbox_choice.isChecked()
+
+    def is_range_checked(self):
+        """
+        Return if the tilt checkbox is checked.
+        :return: True if checked.
+        """
+        return self.widget_range.checkbox_choice.isChecked()
 
     def display_changed(self, event):
         """

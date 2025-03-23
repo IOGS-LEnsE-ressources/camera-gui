@@ -9,6 +9,9 @@
 Creation : march/2025
 """
 import sys, os
+
+import matplotlib.pyplot as plt
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views import *
@@ -17,13 +20,14 @@ from lensepy.css import *
 from lensepy.pyqt6 import *
 from PyQt6.QtWidgets import (
     QWidget, QLabel, QPushButton,
-    QVBoxLayout
+    QVBoxLayout, QDialog
 )
 from views.main_structure import MainView
 from views.sub_menu import SubMenu
 from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
 from views.masks_options_view import MasksOptionsView
+from views.masks_view import MasksView
 from models.dataset import DataSetModel
 
 from typing import TYPE_CHECKING
@@ -109,18 +113,41 @@ class MasksController:
         """
         # Update view
         self.update_submenu_view(event)
+        first_image = self.data_set.get_images_sets(1)[0]
         # Update Action
         match event:
             case 'first':
                 # Update first image and global mask in the top right area
                 mask = self.data_set.get_global_mask()
                 if mask is not None:
-                    first_image = self.data_set.get_images_sets(1)[0] * mask
-                else:
-                    first_image = self.data_set.get_images_sets(1)[0]
+                    first_image = first_image * mask
                     # TO DO -> MainMenu update / Add nomask in options_list
                 self.top_right_widget.set_image_from_array(first_image)
             case 'circular_masks':
+                dialog = MasksView(first_image)
+                result = dialog.exec()
+                if result == QDialog.DialogCode.Rejected:
+                    print('NO MASK ADDED !')
+                else:
+                    mask = dialog.mask.copy()
+                    # Add mask to the data_set
+                    self.data_set.add_mask(mask, 'circ')
+
+                    print(f'Nb Mask = {self.data_set.masks_sets.get_masks_number()}')
+                    # Test if no mask -> update options_list
+                    if 'nomask' in self.manager.options_list:
+                        self.manager.options_list.remove('nomask')
+                        self.manager.main_menu.update_menu_display()
+                    # Refresh list
+                    self.options1_widget.masks_list.update_display()
+                    self.options1_widget.masks_list.update_data()
+
+                '''
+                self.submenu_widget.set_button_enabled(1, True)
+                # Update interface
+                self.update_interface(nosub=True
+                '''
+
                 pass
             case 'rectangular_masks':
                 pass
@@ -137,22 +164,25 @@ class MasksController:
 
 
 if __name__ == "__main__":
+    from zygo_lab_app import ZygoApp
     from PyQt6.QtWidgets import QApplication
     from controllers.modes_manager import ModesManager
     from views.main_menu import MainMenu
 
     app = QApplication(sys.argv)
-    widget = MainView()
-    menu = MainMenu()
-    menu.load_menu('')
-    widget.set_main_menu(menu)
+    m_app = ZygoApp()
     data_set = DataSetModel()
-    manager = ModesManager(menu, widget, data_set)
+    m_app.data_set = data_set
+    m_app.main_widget = MainView()
+    m_app.main_menu = MainMenu()
+    m_app.main_menu.load_menu('')
+    manager = ModesManager(m_app)
+
     # Update data
     manager.data_set.load_images_set_from_file("../_data/test4.mat")
     manager.data_set.load_mask_from_file("../_data/test4.mat")
 
     # Test controller
     manager.mode_controller = MasksController(manager)
-    widget.showMaximized()
+    m_app.main_widget.showMaximized()
     sys.exit(app.exec())
