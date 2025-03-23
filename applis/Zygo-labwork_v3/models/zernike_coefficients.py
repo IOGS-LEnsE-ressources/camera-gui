@@ -119,7 +119,6 @@ class Zernike:
         :return: True if initialization procedure is correctly done.
         """
         if self.phase.is_analysis_ready():
-            print('Init DATA')
             self.surface = self.phase.get_unwrapped_phase()
             # Dimensions of the surface
             a, b = self.surface.shape
@@ -297,12 +296,6 @@ def display_3_figures(init, zer, corr):
     im3 = axs[2].imshow(corr, extent=(-1, 1, -1, 1), vmin=vmin, vmax=vmax, cmap='jet')
     axs[2].set_title("Corrected surface")
     fig.colorbar(im3, ax=axs[2])
-
-    '''
-    print(f'INIT = max = {np.max(init)} / min = {np.min(init)} / Mean = {np.mean(init)}')
-    print(f'CORR = max = {np.max(corr)} / min = {np.min(corr)} / Mean = {np.mean(corr)}')
-    '''
-
     plt.show()
 
 

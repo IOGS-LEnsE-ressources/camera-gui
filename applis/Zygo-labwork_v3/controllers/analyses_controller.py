@@ -235,9 +235,13 @@ class AnalysesController:
         Update controller data and views when options changed.
         :param event: Signal that triggers the event.
         """
+        print(event)
         change = event.split(',')
         if change[0] == 'tilt':
             self.display_2D_correction()
+        if change[0] == 'wedge':
+            if change[1].isnumeric():
+                print(float(change[1]))
 
     def thread_wrapped_phase_calculation(self, set_number: int=1):
         """
@@ -274,7 +278,6 @@ class AnalysesController:
         max_order = 3 # case of tilt only
         if counter == 0:
             if self.zernike_coeffs.set_phase(self.phase):
-                print('Data initialized')
                 time.sleep(0.05)
         if counter == 3:
             # Tilt OK
@@ -282,9 +285,6 @@ class AnalysesController:
             self.submenu.set_button_enabled(3, True)
         self.zernike_coeffs.process_zernike_coefficient(counter)
         self.zernike_coeffs.inc_coeff_counter()
-        time.sleep(0.01)
-        progress_value = int(counter/max_order * 100)
-        self.options1_widget.update_progress_bar(progress_value)
         time.sleep(0.01)
 
         if counter+1 <= max_order:

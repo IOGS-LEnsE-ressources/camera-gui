@@ -1,6 +1,5 @@
 
 -->     If new acquisition or new data, erase zernike coeff ! And restart analyses
--->     Tilt in analyses mode / Update tilt checkbox
 
 
 Functions

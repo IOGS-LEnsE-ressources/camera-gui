@@ -15,7 +15,7 @@ from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6 import *
 from PyQt6.QtWidgets import (
-    QWidget, QLabel, QProgressBar, QCheckBox,
+    QWidget, QLabel, QProgressBar, QCheckBox, QLineEdit,
     QHBoxLayout, QVBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -25,6 +25,109 @@ if TYPE_CHECKING:
     from controllers.analyses_controller import AnalysesController
 
 MINIMUM_WIDTH = 75
+
+class ProgressBarView(QWidget):
+
+    def __init__(self, title: str = ''):
+        """
+        Default Constructor.
+        """
+        super().__init__()
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+        self.title = title
+        self.label_progress_bar = QLabel(self.title)
+        self.label_progress_bar.setStyleSheet(styleH2)
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setObjectName("IOGSProgressBar")
+        self.progress_bar.setStyleSheet(StyleSheet)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.label_progress_bar)
+        self.layout.addWidget(self.progress_bar)
+
+    def update_progress_bar(self, value: int):
+        """
+        Update the progress bar value.
+        :param value: Value to update to the progress bar.
+        """
+        self.progress_bar.setValue(value)
+
+
+class CheckBoxView(QWidget):
+
+    check_changed = pyqtSignal(str)
+
+    def __init__(self, signal_name: str, title: str = ''):
+        """Default Constructor.
+
+        """
+        super().__init__()
+        self.title = title
+        self.signal_name = signal_name
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+        self.checkbox_choice = QCheckBox()
+        self.checkbox_choice.stateChanged.connect(self._changed)
+        self.label_choice = QLabel(self.title)
+        self.label_choice.setStyleSheet(styleH3)
+        self.layout.addWidget(self.checkbox_choice)
+        self.layout.addWidget(self.label_choice)
+        self.layout.addStretch()
+        self.checkbox_choice.setEnabled(False)
+        self.checkbox_choice.setChecked(False)
+
+    def _changed(self, event):
+        """
+        Action when state of the checkbox changed.
+        """
+        sig_value = '' + self.signal_name + ',' + str(self.checkbox_choice.isChecked())
+        self.check_changed.emit(sig_value)
+
+    def set_enabled(self, value: bool = True):
+        """Set enabled the checkbox.
+        :param value: True or False. Default True.
+        """
+        self.checkbox_choice.setEnabled(value)
+
+    def set_checked(self, value: bool = False):
+        """Set checked the checkbox.
+        :param value: True or False. Default True.
+        """
+        self.checkbox_choice.setChecked(value)
+
+
+class LineEditView(QWidget):
+
+    text_changed = pyqtSignal(str)
+
+    def __init__(self, signal_name: str, title: str = '', default_value: str = ''):
+        """Default Constructor.
+
+        """
+        super().__init__()
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+        self.title = title
+        self.signal_name = signal_name
+        self.label = QLabel(self.title)
+        self.text_edit = QLineEdit(default_value)
+        self.text_edit.editingFinished.connect(self._changed)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.text_edit)
+
+    def set_value(self, value: str):
+        """Set a new value to the edit line.
+        :param value: Value to set.
+        """
+        self.text_edit.setText(value)
+
+    def _changed(self):
+        """
+        Action when the text changed.
+        """
+        sig_value = '' + self.signal_name + ',' + str(self.text_edit.text())
+        self.text_changed.emit(sig_value)
+
 
 class AnalysesOptionsView(QWidget):
     """Images Choice."""
@@ -46,69 +149,46 @@ class AnalysesOptionsView(QWidget):
         self.label_analyses_options.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.label_analyses_options)
 
-        # Progression Bar
-        self.label_progress_bar = QLabel(translate('label_progress_bar'))
-        self.label_progress_bar.setStyleSheet(styleH2)
-        self.progress_bar = QProgressBar(self)
-        self.progress_bar.setObjectName("IOGSProgressBar")
-        self.progress_bar.setStyleSheet(StyleSheet)
-        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.label_progress_bar)
-        self.layout.addWidget(self.progress_bar)
-
-        # 2D/3D display
-        self.widget_2D_3D = QWidget()
-        self.layout_2D_3D = QHBoxLayout()
-        self.widget_2D_3D.setLayout(self.layout_2D_3D)
-        self.checkbox_2D_3D_choice = QCheckBox()
-        self.checkbox_2D_3D_choice.stateChanged.connect(self.display_changed)
-        self.label_2D_3D_choice = QLabel(translate('label_2D_3D_choice'))
-        self.layout_2D_3D.addWidget(self.checkbox_2D_3D_choice)
-        self.layout_2D_3D.addWidget(self.label_2D_3D_choice)
-        self.layout_2D_3D.addStretch()
-        self.checkbox_2D_3D_choice.setEnabled(False)
-        self.checkbox_2D_3D_choice.setChecked(False)
-        self.layout.addWidget(self.widget_2D_3D)
+        # 2D/3D display and Wedge Factor
+        self.widget_3D_wedge = QWidget()
+        self.layout_3D_wedge = QHBoxLayout()
+        self.widget_3D_wedge.setLayout(self.layout_3D_wedge)
+        self.widget_2D_3D = CheckBoxView('2D_3D', translate('label_2D_3D_choice'))
+        self.widget_2D_3D.check_changed.connect(self.display_changed)
+        self.widget_2D_3D.set_enabled(False)
+        self.widget_2D_3D.set_checked(False)
+        self.wedge_edit = LineEditView('wedge', translate('label_wedge_value'), '1')
+        self.wedge_edit.text_changed.connect(self.wedge_changed)
+        self.layout_3D_wedge.addWidget(self.widget_2D_3D)
+        self.layout_3D_wedge.addWidget(self.wedge_edit)
 
         # PV/RMS displayed (for uncorrected phase)
         self.label_pv_rms_uncorrected = QLabel(translate('label_pv_rms_uncorrected'))
         self.label_pv_rms_uncorrected.setStyleSheet(styleH2)
         self.pv_rms_uncorrected = PVRMSView()
-        self.layout.addWidget(self.label_pv_rms_uncorrected)
-        self.layout.addWidget(self.pv_rms_uncorrected)
 
         ## Only when corrected button in analyses is clicked.
         # PV/RMS displayed (for corrected phase)
         self.label_pv_rms_corrected = QLabel(translate('label_pv_rms_corrected'))
         self.label_pv_rms_corrected.setStyleSheet(styleH2)
         ## Checkbox for TILT
-        self.widget_tilt = QWidget()
-        self.layout_tilt = QHBoxLayout()
-        self.widget_tilt.setLayout(self.layout_tilt)
-        self.checkbox_tilt_choice = QCheckBox()
-        self.checkbox_tilt_choice.stateChanged.connect(self.tilt_changed)
-        self.label_tilt_choice = QLabel(translate('label_tilt_choice'))
-        self.layout_tilt.addWidget(self.checkbox_tilt_choice)
-        self.layout_tilt.addWidget(self.label_tilt_choice)
-        self.layout_tilt.addStretch()
-        self.checkbox_tilt_choice.setEnabled(False)
-        self.checkbox_tilt_choice.setChecked(False)
+        self.widget_tilt = CheckBoxView('tilt', translate('label_tilt_choice'))
+        self.widget_tilt.check_changed.connect(self.tilt_changed)
+        self.widget_tilt.set_enabled(False)
+        self.widget_tilt.set_checked(False)
 
         # Range check
-        self.widget_range = QWidget()
-        self.layout_range = QHBoxLayout()
-        self.widget_range.setLayout(self.layout_range)
-        self.checkbox_range_choice = QCheckBox()
-        self.checkbox_range_choice.stateChanged.connect(self.range_changed)
-        self.label_range_choice = QLabel(translate('label_range_choice'))
-        self.layout_range.addWidget(self.checkbox_range_choice)
-        self.layout_range.addWidget(self.label_range_choice)
-        self.layout_range.addStretch()
-        self.checkbox_range_choice.setEnabled(False)
-        self.checkbox_range_choice.setChecked(False)
-
+        self.widget_range = CheckBoxView('range', translate('label_range_choice'))
+        self.widget_range.check_changed.connect(self.range_changed)
+        self.widget_range.set_enabled(False)
+        self.widget_range.set_checked(False)
 
         self.pv_rms_corrected = PVRMSView()
+
+        # Add graphical elements to the layout.
+        self.layout.addWidget(self.widget_3D_wedge)
+        self.layout.addWidget(self.label_pv_rms_uncorrected)
+        self.layout.addWidget(self.pv_rms_uncorrected)
         self.layout.addWidget(self.label_pv_rms_corrected)
         self.layout.addWidget(self.widget_tilt)
         self.layout.addWidget(self.pv_rms_corrected)
@@ -121,8 +201,7 @@ class AnalysesOptionsView(QWidget):
         """
         Hide the corrected option part of the widget.
         """
-        self.checkbox_tilt_choice.hide()
-        self.label_tilt_choice.hide()
+        self.widget_tilt.hide()
         self.label_pv_rms_corrected.hide()
         self.pv_rms_corrected.hide()
         self.widget_range.hide()
@@ -132,74 +211,69 @@ class AnalysesOptionsView(QWidget):
         Show the corrected option part of the widget.
         ## Only when corrected button in analyses is clicked.
         """
-        self.checkbox_tilt_choice.show()
-        self.label_tilt_choice.show()
+        self.widget_tilt.show()
         self.label_pv_rms_corrected.show()
         self.pv_rms_corrected.show()
         self.widget_range.show()
-
-    def update_progress_bar(self, value: int):
-        """
-        Update the progress bar value.
-        :param value: Value to update to the progress bar.
-        """
-        self.progress_bar.setValue(value)
 
     def set_enable_2D_3D(self, value: bool):
         """
         Set enable the 2D/3D display checkbox.
         :param value: True or False.
         """
-        self.checkbox_2D_3D_choice.setEnabled(value)
+        self.widget_2D_3D.set_enabled(value)
 
     def set_enable_tilt(self, value: bool):
         """
         Set enable the 2D/3D display checkbox.
         :param value: True or False.
         """
-        self.checkbox_tilt_choice.setEnabled(value)
+        self.widget_tilt.set_enabled(value)
 
     def set_enable_range(self, value: bool):
         """
         Set enable the Range display checkbox.
         :param value: True or False.
         """
-        self.checkbox_range_choice.setEnabled(value)
+        self.widget_range.set_enabled(value)
 
     def is_tilt_checked(self):
         """
         Return if the tilt checkbox is checked.
         :return: True if checked.
         """
-        return self.checkbox_tilt_choice.isChecked()
+        return self.widget_tilt.checkbox_choice.isChecked()
 
     def is_3D_checked(self):
         """
         Return if the 3D checkbox is checked.
         :return: True if checked.
         """
-        return self.checkbox_2D_3D_choice.isChecked()
+        return self.widget_2D_3D.checkbox_choice.isChecked()
 
-    def display_changed(self):
+    def display_changed(self, event):
         """
         Action performed when the 2D/3D checkbox is checked.
         """
-        state = self.checkbox_2D_3D_choice.isChecked()
-        self.analyses_changed.emit(f'3D,{state}')
+        self.analyses_changed.emit(event)
 
-    def tilt_changed(self):
+    def tilt_changed(self, event):
         """
         Action performed when the 2D/3D checkbox is checked.
         """
-        state = self.checkbox_tilt_choice.isChecked()
-        self.analyses_changed.emit(f'tilt,{state}')
+        self.analyses_changed.emit(event)
 
-    def range_changed(self):
+    def range_changed(self, event):
         """
         Action performed when the Range checkbox is checked.
         """
-        state = self.checkbox_range_choice.isChecked()
-        self.analyses_changed.emit(f'range,{state}')
+        self.analyses_changed.emit(event)
+
+    def wedge_changed(self, event):
+        """
+        Action performed when the wedge line edit changed.
+        """
+        self.analyses_changed.emit(event)
 
     def set_pv_uncorrected(self, value: float, unit: str = '\u03BB'):
         """
@@ -343,9 +417,9 @@ if __name__ == "__main__":
     main_widget.show()
 
     # Class test
-    main_widget.update_progress_bar(50)
     main_widget.set_enable_2D_3D(True)
     main_widget.set_enable_tilt(True)
+    main_widget.set_enable_range(True)
     main_widget.set_pv_uncorrected(20.5, 'mm')
     main_widget.analyses_changed.connect(analyses_changed)
     main_widget.show_correction()
