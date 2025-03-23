@@ -67,6 +67,7 @@ class Surface2DView(QWidget):
         self.plot.setMouseEnabled(x=False, y=False)
         self.plot.hideButtons()
         self.plot.showAxes(False)
+        self.plot.invertY(True)
 
     def set_z_range(self, range_z: Tuple[float]):
         """

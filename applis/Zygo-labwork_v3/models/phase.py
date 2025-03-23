@@ -16,6 +16,7 @@ from lensepy.images.conversion import crop_images, find_mask_limits
 from models.hariharan_algorithm import *
 from models.images import ImagesModel
 from models.masks import MasksModel
+from models.zernike_coefficients import Zernike
 from utils.dataset_utils import DataSetState
 from skimage.restoration import unwrap_phase
 from scipy.ndimage import gaussian_filter
@@ -44,6 +45,8 @@ class PhaseModel:
         self.cropped_data_ready = False
         self.wrapped_phase = None
         self.unwrapped_phase = None
+        # Zernike coefficients
+        self.zernike_coeffs = Zernike(self)
 
     def prepare_data(self):
         """
@@ -129,6 +132,12 @@ class PhaseModel:
             return False
         else:
             return True
+
+    def reset_phase(self):
+        """Reset all the data of the phase object (wrapped and unwrapped)."""
+        self.wrapped_phase = None
+        self.unwrapped_phase = None
+        self.zernike_coeffs.reset_coeffs()
 
 
 if __name__ == '__main__':

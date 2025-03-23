@@ -94,25 +94,10 @@ class AnalysesOptionsView(QWidget):
         self.checkbox_tilt_choice.setEnabled(False)
         self.checkbox_tilt_choice.setChecked(False)
 
-        # Range check
-        self.widget_range = QWidget()
-        self.layout_range = QHBoxLayout()
-        self.widget_range.setLayout(self.layout_range)
-        self.checkbox_range_choice = QCheckBox()
-        self.checkbox_range_choice.stateChanged.connect(self.range_changed)
-        self.label_range_choice = QLabel(translate('label_range_choice'))
-        self.layout_range.addWidget(self.checkbox_range_choice)
-        self.layout_range.addWidget(self.label_range_choice)
-        self.layout_range.addStretch()
-        self.checkbox_range_choice.setEnabled(False)
-        self.checkbox_range_choice.setChecked(False)
-
-
         self.pv_rms_corrected = PVRMSView()
         self.layout.addWidget(self.label_pv_rms_corrected)
         self.layout.addWidget(self.widget_tilt)
         self.layout.addWidget(self.pv_rms_corrected)
-        self.layout.addWidget(self.widget_range)
         self.layout.addStretch()
 
         self.hide_correction()
@@ -125,7 +110,6 @@ class AnalysesOptionsView(QWidget):
         self.label_tilt_choice.hide()
         self.label_pv_rms_corrected.hide()
         self.pv_rms_corrected.hide()
-        self.widget_range.hide()
 
     def show_correction(self):
         """
@@ -136,7 +120,6 @@ class AnalysesOptionsView(QWidget):
         self.label_tilt_choice.show()
         self.label_pv_rms_corrected.show()
         self.pv_rms_corrected.show()
-        self.widget_range.show()
 
     def update_progress_bar(self, value: int):
         """
@@ -158,13 +141,6 @@ class AnalysesOptionsView(QWidget):
         :param value: True or False.
         """
         self.checkbox_tilt_choice.setEnabled(value)
-
-    def set_enable_range(self, value: bool):
-        """
-        Set enable the Range display checkbox.
-        :param value: True or False.
-        """
-        self.checkbox_range_choice.setEnabled(value)
 
     def is_tilt_checked(self):
         """
@@ -193,13 +169,6 @@ class AnalysesOptionsView(QWidget):
         """
         state = self.checkbox_tilt_choice.isChecked()
         self.analyses_changed.emit(f'tilt,{state}')
-
-    def range_changed(self):
-        """
-        Action performed when the Range checkbox is checked.
-        """
-        state = self.checkbox_range_choice.isChecked()
-        self.analyses_changed.emit(f'range,{state}')
 
     def set_pv_uncorrected(self, value: float, unit: str = '\u03BB'):
         """

@@ -20,8 +20,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from models.phase import PhaseModel, process_statistics_surface
 from models.dataset import DataSetModel
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from models.phase import PhaseModel
 
 
 aberrations_type = {
@@ -82,9 +85,9 @@ class Zernike:
     https://iopscience.iop.org/article/10.1088/2040-8986/ac9e08/pdf
     """
 
-    def __init__(self, phase: PhaseModel, max_order:int = 36):
+    def __init__(self, phase: "PhaseModel", max_order:int = 36):
         self.max_order: int = max_order
-        self.phase: PhaseModel = phase
+        self.phase: "PhaseModel" = phase
         self.surface = self.phase.get_unwrapped_phase()
 
         self.corrected_phase = None
@@ -107,6 +110,7 @@ class Zernike:
         :return: True if the data is initialized.
         """
         self.phase = phase
+        self.reset_coeffs()
         return self.init_data()
 
     def init_data(self) -> bool:
@@ -132,7 +136,6 @@ class Zernike:
         return False
 
     def process_cartesian_polynomials(self, noll_index: int) -> np.ndarray:
-        print(f'Cart {noll_index}')
         if noll_index == 0:     # Piston
             return np.ones_like(self.X)
         elif noll_index == 1:   # x-Tilt
@@ -225,7 +228,6 @@ class Zernike:
                 Z_nm_filtered = Z_nm[valid_mask]
 
                 self.coeff_list[order] = np.sum(surface_filtered * Z_nm_filtered) / np.sum(Z_nm_filtered ** 2)
-            print(f'Order = {order} / {self.coeff_list[order]}')
         else:
             return None
 
@@ -233,7 +235,6 @@ class Zernike:
         self.corrected_phase = np.zeros_like(self.surface)
         for k, type_ab in enumerate(aberrations):
             coeffs = aberrations_type[type_ab]
-            print(coeffs)
             for c in coeffs:
                 if self.coeff_list[c] is None:
                     self.process_zernike_coefficient(c)
@@ -263,6 +264,18 @@ class Zernike:
         :return: Number of coefficients already calculated.
         """
         return self.coeff_counter
+
+    def reset_coeffs(self):
+        """Reset all the coefficients."""
+        self.corrected_phase = None
+        self.coeff_counter = 0
+        self.coeff_calculated = False
+        self.coeff_list = [None] * (self.max_order + 1)
+        self.polynomials = [None] * (self.max_order + 1)
+        self.X = None
+        self.Y = None
+        self.pow1 = None
+        self.pow2 = None
 
 
 def display_3_figures(init, zer, corr):
@@ -355,7 +368,7 @@ if __name__ == "__main__":
 
     surface[~mask] = np.nan
     '''
-
+    from models.phase import PhaseModel, process_statistics_surface
     from utils.dataset_utils import read_mat_file, split_3d_array
     data = read_mat_file("../_data/test3.mat")
     images_mat = data['Images']

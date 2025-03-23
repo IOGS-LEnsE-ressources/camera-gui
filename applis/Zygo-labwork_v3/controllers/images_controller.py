@@ -119,7 +119,14 @@ class ImagesController:
         # Update Action
         match event:
             case 'open_images':
-                self.open_mat_file()
+                state = self.open_mat_file()
+                if state:
+                    # Erase old data
+                    self.manager.phase.reset_phase()
+                    # Update submenu to display images
+                    self.update_submenu("display_images")
+                else:
+                    self.update_submenu("")
             case 'display_images':
                 if self.data_set.images_sets.get_number_of_sets() >= 1:
                     # Display first image in top left
@@ -132,8 +139,11 @@ class ImagesController:
             case 'save_images':
                 pass
 
-    def open_mat_file(self):
-        """Action performed when a MAT file has to be loaded."""
+    def open_mat_file(self) -> bool:
+        """
+        Load a MAT file after controller click.
+        :return: True if the file is opened and images are present.
+        """
         file_dialog = QFileDialog()
         # Check default_path in default_parameters !
 
@@ -145,18 +155,17 @@ class ImagesController:
             if self.images_loaded is False:
                 msg = "No images in the files or bad format of data."
                 message_box("Warning - No Images Loaded", msg)
+                return self.images_loaded
             else:
                 self.masks_loaded = self.data_set.load_mask_from_file(file_path)
                 if self.masks_loaded is False:
                     msg = "No masks in the files."
                     message_box("Warning - No Mask Loaded", msg)
+                return True
         else:
             msg = "No Image File was loaded..."
             message_box("Warning - No File Loaded", msg)
-            self.update_submenu("")
-        if self.images_loaded:
-            # Display images
-            self.update_submenu("display_images")
+            return False
 
 
 if __name__ == "__main__":

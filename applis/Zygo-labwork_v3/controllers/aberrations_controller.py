@@ -75,7 +75,7 @@ class AnalysesController:
         self.init_view()
         # Start Analyses
         if self.phase.get_wrapped_phase() is None:
-            time.sleep(0.3)
+            time.sleep(0.2)
             ## Where to find set_number ?
             set_number = 1
             thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
@@ -168,39 +168,31 @@ class AnalysesController:
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.top_right_widget.set_array(wrapped_array)
                 ## Test 2D or 3D ??
-                self.display_2D_unwrapped()
+                unwrapped = self.phase.get_unwrapped_phase()
+                unwrapped_array = unwrapped.filled(np.nan)
+                # Display unwrapped and corrected in 2D
+                self.main_widget.clear_bot_right()
+                self.bot_right_widget = Surface2DView('Unwrapped Phase')
+                self.main_widget.set_bot_right_widget(self.bot_right_widget)
+                self.bot_right_widget.set_array(unwrapped_array)
+                pv, rms = process_statistics_surface(unwrapped)
+                self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
+                self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
+                if self.tilt_possible:
+                    self.options1_widget.set_enable_tilt(True)
+                else:
+                    self.main_widget.clear_bot_right()
+                    self.bot_right_widget = HTMLView()
+                    if __name__ == "__main__":
+                        self.bot_right_widget.set_url('../docs/html/analyses.html', '../docs/html/styles.css')
+                    else:
+                        self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
+                    self.main_widget.set_bot_right_widget(self.bot_right_widget)
 
             case 'correctedphase_analyses':
-                self.display_2D_unwrapped()
                 # Display corrected in 2D in the top right area
                 self.display_2D_correction()
                 self.options1_widget.show_correction()
-
-    def display_2D_unwrapped(self):
-        """
-        Display unwrapped phase in 2D at the bottom right corner.
-        """
-        unwrapped = self.phase.get_unwrapped_phase()
-        unwrapped_array = unwrapped.filled(np.nan)
-        # Display unwrapped and corrected in 2D
-        self.main_widget.clear_bot_right()
-        self.bot_right_widget = Surface2DView('Unwrapped Phase')
-        self.main_widget.set_bot_right_widget(self.bot_right_widget)
-        self.bot_right_widget.set_array(unwrapped_array)
-        pv, rms = process_statistics_surface(unwrapped)
-        self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
-        self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
-        if self.tilt_possible:
-            self.options1_widget.set_enable_tilt(True)
-            self.options1_widget.set_enable_range(True)
-        else:
-            self.main_widget.clear_bot_right()
-            self.bot_right_widget = HTMLView()
-            if __name__ == "__main__":
-                self.bot_right_widget.set_url('../docs/html/analyses.html', '../docs/html/styles.css')
-            else:
-                self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
-            self.main_widget.set_bot_right_widget(self.bot_right_widget)
 
     def display_2D_correction(self):
         """
@@ -220,7 +212,7 @@ class AnalysesController:
             corrected = unwrapped
         corrected_array = corrected.filled(np.nan)
         self.top_right_widget.set_array(corrected_array)
-        #range = self.bot_right_widget.get_z_range()
+        range = self.bot_right_widget.get_z_range()
         #self.top_right_widget.set_z_range(range)
         self.options1_widget.erase_pv_rms()
         pv, rms = process_statistics_surface(corrected_array)
@@ -271,12 +263,12 @@ class AnalysesController:
     def thread_zernike_calculation(self):
         """Process Zernike coefficients for correction."""
         counter = self.zernike_coeffs.get_coeff_counter()
-        max_order = 3 # case of tilt only
+        max_order = self.zernike_coeffs.max_order
         if counter == 0:
             if self.zernike_coeffs.set_phase(self.phase):
                 print('Data initialized')
                 time.sleep(0.05)
-        if counter == 3:
+        if counter > 3:
             # Tilt OK
             self.tilt_possible = True
             self.submenu.set_button_enabled(3, True)
@@ -291,6 +283,10 @@ class AnalysesController:
             thread = threading.Thread(target=self.thread_zernike_calculation)
             time.sleep(0.1)
             thread.start()
+        else:
+            # At the end, analysis completed !
+            ## WHAT TO DO ??
+            pass
 
 
 if __name__ == "__main__":
