@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QDialog, QApplication
 )
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QPen, QColor, QKeyEvent, QMouseEvent
+from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QPen, QKeyEvent, QMouseEvent
 from lensepy import load_dictionary, translate
 from lensepy.css import *
 from lensepy.images.conversion import *

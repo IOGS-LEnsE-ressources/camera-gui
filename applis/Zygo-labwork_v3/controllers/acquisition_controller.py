@@ -218,7 +218,9 @@ class AcquisitionController:
             images = self.data_set.get_images_sets(1)
             g_images = generate_images_grid(images)
             self.top_right_widget.set_image_from_array(g_images)
-            #self.manager.update_mode('')
+            if 'nodata' in self.manager.options_list:
+                self.manager.options_list.remove('nodata')
+            self.manager.update_menu()
 
     def params_changed(self, event):
         """
@@ -233,25 +235,41 @@ class AcquisitionController:
 
 
 if __name__ == "__main__":
+    from zygo_lab_app import ZygoApp
     from PyQt6.QtWidgets import QApplication, QMainWindow
     from controllers.modes_manager import ModesManager
     from views.main_menu import MainMenu
 
+    app = QApplication(sys.argv)
+    m_app = ZygoApp()
+    data_set = DataSetModel()
+    m_app.data_set = data_set
+    m_app.main_widget = MainView()
+    m_app.main_menu = MainMenu()
+    m_app.main_menu.load_menu('')
+    manager = ModesManager(m_app)
 
-    class MyWindow(QMainWindow):
+    # Update data
+    manager.data_set.load_images_set_from_file("../_data/test4.mat")
+    manager.data_set.load_mask_from_file("../_data/test4.mat")
+
+    # Test controller
+    manager.mode_controller = AcquisitionController(manager)
+    m_app.main_widget.showMaximized()
+    sys.exit(app.exec())
+
+
+    class MyWindow(ZygoApp):
         def __init__(self):
             super().__init__()
-            widget = MainView()
-            menu = MainMenu()
-            menu.load_menu('')
-            widget.set_main_menu(menu)
-            data_set = DataSetModel()
-            manager = ModesManager(menu, widget, data_set)
+            self.main_widget = MainView()
+            self.main_menu = MainMenu()
+            self.data_set = DataSetModel()
+            self.manager = ModesManager(self)
 
             # Test controller
-            self.controller = AcquisitionController(manager)
-            manager.mode_controller = self.controller
-            self.setCentralWidget(widget)
+            self.controller = AcquisitionController(self.manager)
+            self.manager.mode_controller = self.controller
 
         def closeEvent(self, event):
             self.controller.stop_acquisition()
@@ -259,5 +277,5 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     window = MyWindow()
-    window.showMaximized()
+    #window.showMaximized()
     sys.exit(app.exec())

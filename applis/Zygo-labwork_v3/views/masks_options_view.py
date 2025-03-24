@@ -136,9 +136,14 @@ class MasksTableList(QTableWidget):
         """
         Update masks list display.
         """
+        self.delete_data()
+        self.init_data()
+        self.update_data()
+        '''
         if self.data_set.masks_sets.get_masks_number()+1 >= self.rowCount():
             self.add_new_row(self.data_set.masks_sets.get_masks_number())
             self.setRowHeight(self.data_set.masks_sets.get_masks_number(), 40)
+        '''
 
     def init_data(self):
         """
@@ -166,7 +171,6 @@ class MasksTableList(QTableWidget):
         # Add data
         self._add_text(index, 0, str(index), False)
         type = self.data_set.masks_sets.get_type(index)
-        print(type)
         self._add_text(index, 1, type, False)
         self._add_select_checkbox(index, self.data_set.masks_sets.is_mask_selected(index))
         self._add_invert_checkbox(index, self.data_set.masks_sets.is_mask_inverted(index))
@@ -177,7 +181,11 @@ class MasksTableList(QTableWidget):
         for i, select_check in enumerate(self.select_list):
             if sender == select_check:
                 if i != 0:
-                    self.data_set.masks_sets.select_mask(i-1, sender.isChecked())
+                    # Select (or not a mask)
+                    self.data_set.masks_sets.select_mask(i, sender.isChecked())
+                    # If the sender is not checked, uncheck global mask
+                    if sender.isChecked() is False:
+                        self.select_list[0].setChecked(False)
                 else:   # Select all the masks
                     if sender.isChecked():
                         for k in range(self.data_set.masks_sets.get_masks_number()):

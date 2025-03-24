@@ -29,6 +29,7 @@ from views.html_view import HTMLView
 from views.masks_options_view import MasksOptionsView
 from views.masks_view import MasksView
 from models.dataset import DataSetModel
+from utils.pyqt6_utils import message_box
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -115,44 +116,45 @@ class MasksController:
         self.update_submenu_view(event)
         first_image = self.data_set.get_images_sets(1)[0]
         # Update Action
-        match event:
-            case 'first':
-                # Update first image and global mask in the top right area
-                mask = self.data_set.get_global_mask()
-                if mask is not None:
-                    first_image = first_image * mask
-                    # TO DO -> MainMenu update / Add nomask in options_list
-                self.top_right_widget.set_image_from_array(first_image)
-            case 'circular_masks':
-                dialog = MasksView(first_image)
-                result = dialog.exec()
-                if result == QDialog.DialogCode.Rejected:
-                    print('NO MASK ADDED !')
-                else:
-                    mask = dialog.mask.copy()
-                    # Add mask to the data_set
-                    self.data_set.add_mask(mask, 'circ')
+        if event == 'first':
+            # Update first image and global mask in the top right area
+            mask = self.data_set.get_global_mask()
+            if mask is not None:
+                first_image = first_image * mask
+                # TO DO -> MainMenu update / Add nomask in options_list
+            self.top_right_widget.set_image_from_array(first_image)
 
-                    print(f'Nb Mask = {self.data_set.masks_sets.get_masks_number()}')
-                    # Test if no mask -> update options_list
-                    if 'nomask' in self.manager.options_list:
-                        self.manager.options_list.remove('nomask')
-                        self.manager.main_menu.update_menu_display()
-                    # Refresh list
-                    self.options1_widget.masks_list.update_display()
-                    self.options1_widget.masks_list.update_data()
+        if '_masks' in event:
+            if 'circular' in event:
+                type = 'circular'
+                help = 'Select 3 different points and then Click Enter'
+                type_m = 'circ'
+            elif 'rectangular' in event:
+                type = 'rectangular'
+                help = 'Select 2 different points (diagonal of the rectangle) and then Click Enter'
+                type_m = 'rect'
+            elif 'polygon' in event:
+                type = 'polygon'
+                help = ('Select N different points, the last one must be at the same place'
+                        ' as the first one and then Click Enter')
+                type_m = 'poly'
+            dialog = MasksView(first_image, type, help)
+            result = dialog.exec()
+            if result == QDialog.DialogCode.Rejected:
+                message_box('No mask added', 'No mask will be added to the list of masks.')
+                #print('NO MASK ADDED !')
+            else:
+                mask = dialog.mask.copy()
+                # Add mask to the data_set
+                self.data_set.add_mask(mask, type_m)
 
-                '''
-                self.submenu_widget.set_button_enabled(1, True)
-                # Update interface
-                self.update_interface(nosub=True
-                '''
+                # Test if no mask -> update options_list
+                if 'nomask' in self.manager.options_list:
+                    self.manager.options_list.remove('nomask')
+                    self.manager.main_menu.update_menu_display()
+                # Refresh list
+                self.options1_widget.masks_list.update_display()
 
-                pass
-            case 'rectangular_masks':
-                pass
-            case 'polygon_masks':
-                pass
 
     def masks_changed(self, event):
         """
