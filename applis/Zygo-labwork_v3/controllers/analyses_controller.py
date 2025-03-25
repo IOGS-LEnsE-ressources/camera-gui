@@ -22,7 +22,7 @@ from views.surface_2D_view import Surface2DView
 from lensepy import load_dictionary, translate, dictionary
 from models.phase import process_statistics_surface
 from lensepy.css import *
-from lensepy.pyqt6 import *
+from lensepy.pyqt6.widget_histogram import HistogramWidget
 from PyQt6.QtWidgets import (
     QWidget,
     QFileDialog
@@ -72,6 +72,7 @@ class AnalysesController:
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
         self.tilt_possible = False
         self.sub_mode = ''
+        self.corrected_phase = None
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()     # Display first image of a set
         self.top_right_widget = Surface2DView('Wrapped Phase')              # Display 2D. Default.
@@ -91,13 +92,13 @@ class AnalysesController:
         # Update menu and view
         self.update_submenu_view("")
         self.init_view()
+        self.thread = None
         # Start Analyses
         if self.phase.get_wrapped_phase() is None:
-            time.sleep(0.3)
             ## Where to find set_number ?
             set_number = 1
-            thread = threading.Thread(target=self.thread_wrapped_phase_calculation, args=(set_number,))
-            thread.start()
+            self.process_wrapped_phase_calculation(set_number)
+            self.update_submenu('')
 
     def init_view(self):
         """
@@ -138,19 +139,25 @@ class AnalysesController:
         if self.data_set.data_set_state == DataSetState.UNWRAPPED:
             self.submenu.set_button_enabled(1, True)
             self.submenu.set_button_enabled(2, True)
-        if self.zernike_coeffs.get_coeff_counter() > 3:
+        if self.data_set.data_set_state == DataSetState.ANALYZED:
+            self.submenu.set_button_enabled(1, True)
+            self.submenu.set_button_enabled(2, True)
             self.submenu.set_button_enabled(3, True)
+            self.submenu.set_button_enabled(4, True)
         # Activate submenu
+        print(f'update_submenu_view = {submode}')
         match submode:
             case 'wrappedphase_analyses':
                 self.submenu.set_activated(1)
             case 'unwrappedphase_analyses':
-                self.submenu.set_activated(1)
+                #self.submenu.set_activated(1)
                 self.submenu.set_activated(2)
             case 'correctedphase_analyses':
-                self.submenu.set_activated(1)
-                self.submenu.set_activated(2)
+                #self.submenu.set_activated(1)
+                #self.submenu.set_activated(2)
                 self.submenu.set_activated(3)
+            case 'histophase_analyses':
+                self.submenu.set_activated(4)
 
     def update_submenu(self, event):
         """
@@ -161,24 +168,27 @@ class AnalysesController:
         self.update_submenu_view(event)
         # Update Action
         self.options1_widget.hide_correction()
+        self.main_widget.clear_bot_right()
+        self.main_widget.clear_top_right()
         match event:
             case 'wrappedphase_analyses':
                 self.options1_widget.wedge_edit.setEnabled(False)
-                self.main_widget.clear_bot_right()
-                self.bot_right_widget = HTMLView()
-                if __name__ == "__main__":
-                    self.bot_right_widget.set_url('../docs/html/analyses.html', '../docs/html/styles.css')
-                else:
-                    self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
-                self.main_widget.set_bot_right_widget(self.bot_right_widget)
+                #> BOT
+                self.display_help()
+
                 ## Test 2D or 3D ??
                 wrapped = self.phase.get_wrapped_phase()
                 wrapped_array = wrapped.filled(np.nan)
+                #> TOP
                 # Display wrapped in 2D
                 self.top_right_widget = Surface2DView('Wrapped Phase')
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.top_right_widget.set_array(wrapped_array)
                 self.options1_widget.erase_pv_rms()
+                # Process unwrapped phase
+                if self.data_set.data_set_state == DataSetState.WRAPPED:
+                    self.process_unwrapped_phase_calculation()
+                    self.update_submenu('wrappedphase_analyses')
 
             case 'unwrappedphase_analyses':
                 self.options1_widget.wedge_edit.setEnabled(True)
@@ -191,6 +201,14 @@ class AnalysesController:
                 self.top_right_widget.set_array(wrapped_array)
                 ## Test 2D or 3D ??
                 self.display_2D_unwrapped()
+                # Start Zernike coefficient process - for piston and tilt correction
+                if self.data_set.data_set_state == DataSetState.UNWRAPPED:
+                    self.zernike_coeffs.set_phase(self.phase)
+                    for k in range(3):
+                        self.process_zernike_calculation(k)
+                    self.data_set.data_set_state = DataSetState.ANALYZED
+                    self.tilt_possible = True
+                    self.update_submenu('unwrappedphase_analyses')
 
             case 'correctedphase_analyses':
                 self.options1_widget.wedge_edit.setEnabled(True)
@@ -198,6 +216,34 @@ class AnalysesController:
                 # Display corrected in 2D in the top right area
                 self.display_2D_correction()
                 self.options1_widget.show_correction()
+
+            case 'histophase_analyses':
+                self.main_widget.clear_bot_right()
+                self.main_widget.clear_top_right()
+                self.options1_widget.show_correction()
+                #> BOT
+                self.bot_right_widget = HistogramWidget(translate('histo_corrected_phase'))
+                self.bot_right_widget.set_background('white')
+
+                bins = np.linspace(-10, 10, 1001)
+                self.bot_right_widget.set_data(self.corrected_phase, bins)
+                self.bot_right_widget.refresh_chart()
+                self.main_widget.set_bot_right_widget(self.bot_right_widget)
+                #> TOP
+                self.display_2D_correction()
+
+            case _:
+                #> BOT
+                self.display_help()
+
+    def display_help(self):
+        self.main_widget.clear_bot_right()
+        self.bot_right_widget = HTMLView()
+        if __name__ == "__main__":
+            self.bot_right_widget.set_url('../docs/html/analyses.html', '../docs/html/styles.css')
+        else:
+            self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
+        self.main_widget.set_bot_right_widget(self.bot_right_widget)
 
     def display_2D_unwrapped(self):
         """
@@ -243,16 +289,17 @@ class AnalysesController:
             corrected = corrected * wedge_factor
         else:
             corrected = unwrapped
-        corrected_array = corrected.filled(np.nan)
-        self.top_right_widget.set_array(corrected_array)
+        self.corrected_phase = corrected.filled(np.nan)
+        self.top_right_widget.set_array(self.corrected_phase)
         # Test if range is checked
         if self.options1_widget.is_range_checked():
-            range = self.bot_right_widget.get_z_range()
-            self.top_right_widget.set_z_range(range)
+            if self.sub_mode == 'correctedphase_analyses':
+                range = self.bot_right_widget.get_z_range()
+                self.top_right_widget.set_z_range(range)
         else:
             self.top_right_widget.reset_z_range()
         self.options1_widget.erase_pv_rms()
-        pv, rms = process_statistics_surface(corrected_array)
+        pv, rms = process_statistics_surface(self.corrected_phase)
         self.options1_widget.set_pv_corrected(pv, '\u03BB')
         self.options1_widget.set_rms_corrected(rms, '\u03BB')
         pv, rms = process_statistics_surface(unwrapped_array)
@@ -266,6 +313,11 @@ class AnalysesController:
         """
         change = event.split(',')
         if change[0] == 'tilt':
+            if self.sub_mode == 'histophase_analyses':
+                print('Update')
+                bins = np.linspace(-1, 1, 101)
+                self.bot_right_widget.set_data(self.corrected_phase, bins)
+                self.bot_right_widget.refresh_chart()
             self.display_2D_correction()
         if change[0] == 'range':
             self.display_2D_correction()
@@ -278,7 +330,7 @@ class AnalysesController:
                     self.display_2D_unwrapped()
                     self.display_2D_correction()
 
-    def thread_wrapped_phase_calculation(self, set_number: int=1):
+    def process_wrapped_phase_calculation(self, set_number: int=1):
         """
         Thread to calculate wrapped phase from 5 images.
         :param set_number: Number of the set to process.
@@ -290,42 +342,23 @@ class AnalysesController:
             # Process Phase
             self.phase.process_wrapped_phase()
             # End of process
-            thread = threading.Thread(target=self.thread_unwrapped_phase_calculation, args=(set_number,))
-            thread.start()
+            self.data_set.data_set_state = DataSetState.WRAPPED
 
-    def thread_unwrapped_phase_calculation(self, set_number: int=1):
+    def process_unwrapped_phase_calculation(self, set_number: int=1):
         """
         Thread to calculate unwrapped phase from the wrapped phase.
         :param set_number: Number of the set to process.
         """
         if self.data_set.is_data_ready() and self.data_set.data_set_state == DataSetState.WRAPPED:
+            print('Process UNWRAPPING')
             # Process Phase
             self.phase.process_unwrapped_phase()
             # End of process
-            self.update_submenu('')
-            # Start Zernike coefficients process
-            thread = threading.Thread(target=self.thread_zernike_calculation)
-            thread.start()
+            self.data_set.data_set_state = DataSetState.UNWRAPPED
 
-    def thread_zernike_calculation(self):
+    def process_zernike_calculation(self, coeff: int):
         """Process Zernike coefficients for correction."""
-        counter = self.zernike_coeffs.get_coeff_counter()
-        max_order = 3 # case of tilt only
-        if counter == 0:
-            if self.zernike_coeffs.set_phase(self.phase):
-                time.sleep(0.05)
-        if counter == 3:
-            # Tilt OK
-            self.tilt_possible = True
-            self.submenu.set_button_enabled(3, True)
-        self.zernike_coeffs.process_zernike_coefficient(counter)
-        self.zernike_coeffs.inc_coeff_counter()
-        time.sleep(0.01)
-
-        if counter+1 <= max_order:
-            thread = threading.Thread(target=self.thread_zernike_calculation)
-            time.sleep(0.1)
-            thread.start()
+        self.zernike_coeffs.process_zernike_coefficient(coeff)
 
 
 if __name__ == "__main__":

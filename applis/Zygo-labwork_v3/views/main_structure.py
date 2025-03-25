@@ -208,10 +208,10 @@ class MainView(QWidget):
         item = self.layout.itemAtPosition(row, column)
         if item is not None:
             widget = item.widget()
-            if widget:
+            if widget is not None:
+                self.layout.removeWidget(widget)
                 widget.deleteLater()
-            else:
-                self.layout.removeItem(item)
+                widget.setParent(None)
 
     def _clear_sublayout(self, column: int) -> None:
         """

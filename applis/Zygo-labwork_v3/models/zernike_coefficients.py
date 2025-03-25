@@ -251,12 +251,6 @@ class Zernike:
 
         return self.corrected_phase, new_surface
 
-    def inc_coeff_counter(self):
-        """
-        Increase the calculated coefficients counter.
-        """
-        self.coeff_counter += 1
-
     def get_coeff_counter(self) -> int:
         """
         Get the calculated coefficients counter.

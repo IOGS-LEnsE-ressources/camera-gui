@@ -21,6 +21,7 @@ class DataSetState(Enum):
     CROPPED = 3
     WRAPPED = 4
     UNWRAPPED = 5
+    ANALYZED = 6
 
 def generate_images_grid(images: list[np.ndarray]):
     """Generate a grid with 5 images.
