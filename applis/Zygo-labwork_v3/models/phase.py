@@ -61,6 +61,7 @@ class PhaseModel:
         pos_x, pos_y = top_left[1], top_left[0]
         mask_cropped = crop_images([mask], (height, width), (pos_x, pos_y))[0]
         self.cropped_masks_sets.add_mask(mask_cropped)
+
         # Process all the sets of images
         for k in range(self.data_set.images_sets.get_number_of_sets()):
             images = self.data_set.get_images_sets(k)
@@ -68,6 +69,7 @@ class PhaseModel:
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
             images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
             for im_k, image_f in enumerate(images_f):
+                image_f = image_f.astype(np.float32)
                 image_f[~mask_cropped] = np.nan
                 images_f[im_k] = np.ma.masked_where(np.logical_not(mask_cropped), image_f)
             self.cropped_images_sets.add_set_images(images_f)
