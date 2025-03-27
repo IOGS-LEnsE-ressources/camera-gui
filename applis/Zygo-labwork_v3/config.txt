@@ -5,7 +5,7 @@ Language;FR
 ColorMode;Mono8
 Exposure Time;1000
 Max Expo Time;20000
-Frame Rate;5
+Frame Rate;10
 Black Level;10
 ### Wedge Factor
 Wedge Factor;-1

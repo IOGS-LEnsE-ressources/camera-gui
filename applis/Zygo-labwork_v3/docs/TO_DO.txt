@@ -1,8 +1,6 @@
+DONE : Acquisition, Images, Masks, Analyses
 
 -->     If new acquisition or new data, erase zernike coeff ! And restart analyses
-
--->     LENSEPY / CSS / #IOGSProgressBar {text-color: white; -> font-color ??
-
 
 Functions
 =========
@@ -10,6 +8,7 @@ Functions
             if hardware is connected
 -->     Save mask type in MAT file (and read it)
 -->     Analyses mode / view : add 3D option !
+-->     Display PV/RMS in lambda and meters (nm)
 
 
 Bugs
@@ -26,7 +25,7 @@ Bugs
 -->     in masks controllers / options view
             + in update_submenu : update 'nomask' in options_list of manager
 -->     in analyses controller
-            + unwrapped -> display wrapped and unwrapped in 2D
+            + unwrapped -> display wrapped and unwrapped in 3D
 
 -->     GLOBAL TEST
             +> main_menu

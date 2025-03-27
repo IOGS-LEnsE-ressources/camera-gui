@@ -145,7 +145,6 @@ class AnalysesController:
             self.submenu.set_button_enabled(3, True)
             self.submenu.set_button_enabled(4, True)
         # Activate submenu
-        print(f'update_submenu_view = {submode}')
         match submode:
             case 'wrappedphase_analyses':
                 self.submenu.set_activated(1)
@@ -314,7 +313,6 @@ class AnalysesController:
         change = event.split(',')
         if change[0] == 'tilt':
             if self.sub_mode == 'histophase_analyses':
-                print('Update')
                 bins = np.linspace(-1, 1, 101)
                 self.bot_right_widget.set_data(self.corrected_phase, bins)
                 self.bot_right_widget.refresh_chart()
@@ -350,7 +348,6 @@ class AnalysesController:
         :param set_number: Number of the set to process.
         """
         if self.data_set.is_data_ready() and self.data_set.data_set_state == DataSetState.WRAPPED:
-            print('Process UNWRAPPING')
             # Process Phase
             self.phase.process_unwrapped_phase()
             # End of process

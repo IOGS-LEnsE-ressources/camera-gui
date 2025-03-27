@@ -18,6 +18,7 @@ from controllers.acquisition_controller import AcquisitionController
 from controllers.images_controller import ImagesController
 from controllers.masks_controller import MasksController
 from controllers.analyses_controller import AnalysesController
+from controllers.aberrations_controller import AberrationsController
 from controllers.help_controller import HelpController
 from utils.initialization_parameters import read_default_parameters
 
@@ -118,9 +119,7 @@ class ModesManager:
                 self.mode_controller = MasksController(self)
             case 'analyses':
                 self.mode_controller = AnalysesController(self)
+            case 'aberrations':
+                self.mode_controller = AberrationsController(self)
             case 'help':
                 self.mode_controller = HelpController(self)
-
-        print(self.main_mode)
-
-
