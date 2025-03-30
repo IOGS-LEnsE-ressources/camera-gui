@@ -28,7 +28,7 @@ from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget
 )
-from models.zernike_coefficients import Zernike
+from models.zernike_coefficients import Zernike, aberrations_type, aberrations_list
 from utils.dataset_utils import generate_images_grid, DataSetState
 
 from typing import TYPE_CHECKING
@@ -55,6 +55,8 @@ class AberrationsController:
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
         self.sub_mode = ''
+        self.corrected_aberrations_list = ['piston','tilt','defocus']
+        self.colors = [None] * (self.zernike_coeffs.max_order + 1)
         # Graphical elements
         self.top_left_widget = QWidget()        # ??
         self.top_right_widget = Surface2DView('Unwrapped Phase')        # ??
@@ -139,12 +141,12 @@ class AberrationsController:
         self.update_submenu_view(event)
         # Update Action
         self.main_widget.clear_bot_right()
-        self.main_widget.clear_top_right()
         self.main_widget.clear_options()
         # Update Action
         match event:
             case 'Zernikecoefficients_aberrations':
                 self.options1_widget = AberrationsOptionsView()
+                self.options1_widget.aberrations_changed.connect(self.aberration_changed)
                 self.main_widget.set_options1_widget(self.options1_widget)
                 self.display_2D_ab_corrected()
                 self.bot_right_widget = HTMLView()
@@ -153,13 +155,7 @@ class AberrationsController:
                 else:
                     self.bot_right_widget.set_url('docs/html/aberrations.html', 'docs/html/styles.css')
                 self.main_widget.set_bot_right_widget(self.bot_right_widget)
-                self.top_left_widget = BarGraphView()
-                max_order = self.zernike_coeffs.max_order
-                x_axis = np.arange(max_order+1)
-                y_axis = np.array(self.zernike_coeffs.coeff_list)
-                self.top_left_widget.set_data(x_axis, y_axis)
-                self.main_widget.set_top_left_widget(self.top_left_widget)
-
+                self.display_bar_graph_coeff()
 
 
             case 'Seidelcoefficients_aberrations':
@@ -169,16 +165,45 @@ class AberrationsController:
             case 'aberrationsanalyses_aberrations':
                 self.submenu.set_activated(6)
 
+    def display_bar_graph_coeff(self, disp_correct: bool = False, first: bool = False):
+        """
+        Display the Zernike coefficients in a bargraph, in the top left area.
+        :param disp_correct: True if all the coefficients must be displayed.
+        :param first: True if only the first coefficients (piston, tilt and defocus) must be set to 0.
+        """
+        self.main_widget.clear_top_left()
+        # Create bargraph
+        self.top_left_widget = BarGraphView()
+        self.main_widget.set_top_left_widget(self.top_left_widget)
+        max_order = self.zernike_coeffs.max_order
+        x_axis = np.arange(max_order + 1)
+        self.update_color_aberrations()
+        # Force to 0 corrected coefficients
+        coeffs_disp = self.zernike_coeffs.coeff_list.copy()
+        if disp_correct:
+            for jj, aberration in enumerate(self.corrected_aberrations_list):
+                for k in aberrations_type[aberration]:
+                    coeffs_disp[k] = 0
+        if first:
+            options = ['piston','tilt','defocus']
+            for jj, aberration in enumerate(options):
+                for k in aberrations_type[aberration]:
+                    coeffs_disp[k] = 0
+
+        y_axis = np.array(coeffs_disp)
+        self.top_left_widget.set_data(x_axis, y_axis, color_x=self.colors)
+
     def display_2D_ab_corrected(self):
         """
         Display tilt and piston corrected phase in the top right corner.
         """
+        self.main_widget.clear_top_right()
         # Display wrapped in 2D
         self.top_right_widget = Surface2DView('Tilt and Piston Corrected Phase')
         self.main_widget.set_top_right_widget(self.top_right_widget)
         # Correction of the phase with tilt and piston
         wedge_factor = self.phase.get_wedge_factor()
-        _, corrected = self.zernike_coeffs.process_surface_correction(['piston', 'tilt'])
+        _, corrected = self.zernike_coeffs.process_surface_correction(self.corrected_aberrations_list)
         unwrapped_array = corrected * wedge_factor
         unwrapped_array = unwrapped_array.filled(np.nan)
         # Statistics
@@ -186,6 +211,59 @@ class AberrationsController:
         pv, rms = process_statistics_surface(unwrapped_array)
         self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
         self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
+
+    def update_color_aberrations(self):
+        """
+        Return a list of color to apply on Zernike bar graph.
+        Orange : corrected value, blue : order 1, ...
+        """
+        self.colors = [None] * (self.zernike_coeffs.max_order + 1)
+        #
+        for k, ab_type in enumerate(aberrations_list):
+            if '3' in ab_type:
+                for jj in aberrations_type[ab_type]:
+                    self.colors[jj] = '#0f4d7a'
+            elif '5' in ab_type:
+                for jj in aberrations_type[ab_type]:
+                    self.colors[jj] = '#1567a5'
+            elif '7' in ab_type:
+                for jj in aberrations_type[ab_type]:
+                    self.colors[jj] = '#1a82cf'
+            elif '9' in ab_type:
+                for jj in aberrations_type[ab_type]:
+                    self.colors[jj] = '#1f9cfa'
+            else:
+                for jj in aberrations_type[ab_type]:
+                    self.colors[jj] = '#051725'
+
+        for jj, aberration in enumerate(self.corrected_aberrations_list):
+            for k in aberrations_type[aberration]:
+                self.colors[k] = ORANGE_IOGS
+
+        if self.colors[k] is None:
+            self.colors[k] = BLUE_IOGS
+
+    def aberration_changed(self, event):
+        """
+        Action to perform when an option in the aberrations options view changed.
+        """
+        if 'wedge' in event:
+            d = event.split(',')
+            wedge_factor = float(d[1])
+            print(wedge_factor)
+            # Display 2D correction with new wegde factor
+
+        elif 'correct_disp' in event:
+            if 'True' in event:
+                self.display_bar_graph_coeff(disp_correct=True)
+            else:
+                self.display_bar_graph_coeff(disp_correct=False)
+
+        elif 'correct_first' in event:
+            if 'True' in event:
+                self.display_bar_graph_coeff(first=True)
+            else:
+                self.display_bar_graph_coeff(first=False)
 
 
 if __name__ == "__main__":

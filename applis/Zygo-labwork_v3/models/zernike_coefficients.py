@@ -53,6 +53,7 @@ aberrations_type = {
 }
 
 aberrations_list = [
+    "piston",
     "tilt",
     "defocus",
     "astig3" ,

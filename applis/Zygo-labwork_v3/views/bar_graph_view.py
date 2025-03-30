@@ -62,16 +62,13 @@ class BarGraphView(QWidget):
 
     def set_data(self, x, y, color_x = None):
         """
-
-        :param x:
-        :param y:
-        :param color_x:
-        :return:
+        Set data to the bar graph.
+        :param x: X-Axis data.
+        :param y: Y-Axis data.
+        :param color_x: List of colors of the bar.
         """
         self.x = x
-        print(self.x.shape)
         self.y = y
-        print(self.y.shape)
         self.colors_x = color_x
         self.update_graph()
 
@@ -79,6 +76,7 @@ class BarGraphView(QWidget):
         """
         Update graphics display.
         """
+        self.plotWidget.clear()
         if self.colors_x is not None:
             brushes = [pg.mkBrush(color) for color in self.colors_x]
             for i in range(len(self.x)):
@@ -87,6 +85,7 @@ class BarGraphView(QWidget):
         else:
             bar = pg.BarGraphItem(x=self.x, height=self.y, width=0.6)
             self.plotWidget.addItem(bar)
+        self.plotWidget.getPlotItem().enableAutoRange(axis=pg.ViewBox.YAxis, enable=True)
 
 
 if __name__ == "__main__":

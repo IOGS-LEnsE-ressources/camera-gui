@@ -178,6 +178,12 @@ class MainView(QWidget):
         self.options1_widget = widget
         self.bot_left_layout.addWidget(self.options1_widget, OPTIONS1_ROW, OPTIONS1_COL, 1, 2)
 
+    def clear_top_left(self):
+        """
+        Remove widget from top left area.
+        """
+        self._clear_layout(TOP_LEFT_ROW, TOP_LEFT_COL)
+
     def clear_top_right(self):
         """
         Remove widget from top right area.

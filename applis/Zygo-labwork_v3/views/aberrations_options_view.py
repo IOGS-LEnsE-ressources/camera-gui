@@ -13,10 +13,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
-from lensepy.pyqt6 import *
+from lensepy.pyqt6.widget_editline import LineEditView
+from lensepy.pyqt6.widget_checkbox import CheckBoxView
 from PyQt6.QtWidgets import (
-    QWidget, QLabel, QProgressBar, QCheckBox,
-    QHBoxLayout, QVBoxLayout
+    QWidget, QLabel,
+    QVBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from views.PVRMS_view import PVRMSView
@@ -47,6 +48,10 @@ class AberrationsOptionsView(QWidget):
         self.layout.addWidget(self.label_analyses_options)
 
         # Wedge factor
+        self.wedge_edit = LineEditView('wedge', translate('label_wedge_value'), '1')
+        self.wedge_edit.text_changed.connect(self.wedge_changed)
+        self.layout.addWidget(self.wedge_edit)
+        self.layout.addStretch()
 
         # PV/RMS displayed (for uncorrected phase)
         self.label_pv_rms_uncorrected = QLabel(translate('label_pv_rms_ab_corrected'))
@@ -54,6 +59,18 @@ class AberrationsOptionsView(QWidget):
         self.pv_rms_uncorrected = PVRMSView(vertical=True)
         self.layout.addWidget(self.label_pv_rms_uncorrected)
         self.layout.addWidget(self.pv_rms_uncorrected)
+        self.layout.addStretch()
+
+        # Display corrected coefficients
+        self.widget_correct = CheckBoxView('correct_disp', translate('label_correct_disp_choice'))
+        self.widget_correct.set_enabled(True)
+        self.widget_correct.check_changed.connect(self.disp_changed)
+        self.layout.addWidget(self.widget_correct)
+        self.widget_correct_first = CheckBoxView('correct_first',
+                                                 translate('label_correct_first_choice'))
+        self.widget_correct_first.set_enabled(True)
+        self.widget_correct_first.check_changed.connect(self.disp_changed)
+        self.layout.addWidget(self.widget_correct_first)
         self.layout.addStretch()
 
     def set_pv_uncorrected(self, value: float, unit: str = '\u03BB'):
@@ -95,6 +112,18 @@ class AberrationsOptionsView(QWidget):
         """
         self.pv_rms_uncorrected.erase_pv_rms()
         self.pv_rms_corrected.erase_pv_rms()
+
+    def wedge_changed(self, event):
+        """
+        Action to perform when the wedge factor changed.
+        """
+        self.aberrations_changed.emit(event)
+
+    def disp_changed(self, event):
+        """
+        Action to perform when the checkbox for corrected coefficients displaying changed.
+        """
+        self.aberrations_changed.emit(event)
 
 
 if __name__ == "__main__":
