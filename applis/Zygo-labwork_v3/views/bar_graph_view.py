@@ -53,12 +53,24 @@ class BarGraphView(QWidget):
         # Horizontal Line
         zero_line = pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen('k', width=2))
         self.plotWidget.addItem(zero_line)
+        self.x_axis_label = "X Axis"
+        self.y_axis_label = "Y Axis"
         # Labels
-        self.plotWidget.setLabel('bottom', "X Axis")
-        self.plotWidget.setLabel('left', "Y Axis")
+        self.plotWidget.setLabel('bottom', self.x_axis_label)
+        self.plotWidget.setLabel('left', self.y_axis_label)
 
         self.update_graph()
 
+    def set_labels(self, x_axis: str = None, y_axis: str = None):
+        """
+        Set the labels of the axis.
+        :param x_axis: X-Axis label.
+        :param y_axis: Y-Axis label.
+        """
+        self.x_axis_label = x_axis
+        self.y_axis_label = y_axis
+        self.plotWidget.setLabel('bottom', self.x_axis_label)
+        self.plotWidget.setLabel('left', self.y_axis_label)
 
     def set_data(self, x, y, color_x = None):
         """

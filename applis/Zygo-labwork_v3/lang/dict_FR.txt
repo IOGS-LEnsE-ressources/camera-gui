@@ -69,3 +69,5 @@ ab_astig_title; Astigmatisme
 ab_coma_title; Coma
 ab_trefoil_title; Trèfle
 ab_sphere_title; Ab. Sphériques
+label_lambda_value; Longueur d'Onde (nm)
+label_lambda_check; um

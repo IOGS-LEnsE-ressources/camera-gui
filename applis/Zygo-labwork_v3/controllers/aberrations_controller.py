@@ -55,8 +55,13 @@ class AberrationsController:
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
         self.sub_mode = ''
-        self.corrected_aberrations_list = ['piston','tilt','defocus']
+        self.corrected_aberrations_list = []
+        self.corrected_initial_list = ['piston','tilt','defocus']
         self.colors = [None] * (self.zernike_coeffs.max_order + 1)
+        self.correct_disp = False
+        self.correct_first = False
+        self.lambda_check = False
+        self.lambda_value = 632.8
         # Graphical elements
         self.top_left_widget = QWidget()        # ??
         self.top_right_widget = Surface2DView('Unwrapped Phase')        # ??
@@ -146,6 +151,9 @@ class AberrationsController:
         match event:
             case 'Zernikecoefficients_aberrations':
                 self.options1_widget = AberrationsOptionsView()
+                self.options1_widget.set_checkboxes(self.correct_disp,
+                                                    self.correct_first, self.lambda_check)
+                self.options1_widget.set_wedge(self.phase.get_wedge_factor())
                 self.options1_widget.aberrations_changed.connect(self.aberration_changed)
                 self.main_widget.set_options1_widget(self.options1_widget)
                 self.display_2D_ab_corrected()
@@ -175,23 +183,33 @@ class AberrationsController:
         # Create bargraph
         self.top_left_widget = BarGraphView()
         self.main_widget.set_top_left_widget(self.top_left_widget)
+        # Labels
+        x_axis_label = translate('coeff_noll_index')
+        if self.lambda_check:
+            unit = ' (um)'
+        else:
+            unit = ' (\u03BB)'
+        y_axis_label = translate('coeff_y_axis_label') + unit
+        # Data
         max_order = self.zernike_coeffs.max_order
         x_axis = np.arange(max_order + 1)
+        coeffs_disp = self.zernike_coeffs.get_coeffs()
+
         self.update_color_aberrations()
         # Force to 0 corrected coefficients
-        coeffs_disp = self.zernike_coeffs.coeff_list.copy()
-        if disp_correct:
-            for jj, aberration in enumerate(self.corrected_aberrations_list):
+
+        if first:
+            for jj, aberration in enumerate(self.corrected_initial_list):
                 for k in aberrations_type[aberration]:
                     coeffs_disp[k] = 0
-        if first:
-            options = ['piston','tilt','defocus']
-            for jj, aberration in enumerate(options):
+        elif disp_correct:
+            for jj, aberration in enumerate(self.corrected_aberrations_list):
                 for k in aberrations_type[aberration]:
                     coeffs_disp[k] = 0
 
         y_axis = np.array(coeffs_disp)
         self.top_left_widget.set_data(x_axis, y_axis, color_x=self.colors)
+        self.top_left_widget.set_labels(x_axis_label, y_axis_label)
 
     def display_2D_ab_corrected(self):
         """
@@ -209,6 +227,7 @@ class AberrationsController:
         # Statistics
         self.top_right_widget.set_array(unwrapped_array)
         pv, rms = process_statistics_surface(unwrapped_array)
+        # TO DO : depending on lambda or nm -> PV RMS to modify (and units !)
         self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
         self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
 
@@ -240,6 +259,10 @@ class AberrationsController:
             for k in aberrations_type[aberration]:
                 self.colors[k] = ORANGE_IOGS
 
+        for jj, aberration in enumerate(self.corrected_initial_list):
+            for k in aberrations_type[aberration]:
+                self.colors[k] = ORANGE_IOGS
+
         if self.colors[k] is None:
             self.colors[k] = BLUE_IOGS
 
@@ -247,24 +270,24 @@ class AberrationsController:
         """
         Action to perform when an option in the aberrations options view changed.
         """
+        print(event)
         if 'wedge' in event:
             d = event.split(',')
             wedge_factor = float(d[1])
-            print(wedge_factor)
-            # Display 2D correction with new wegde factor
+            self.zernike_coeffs.set_wedge_factor(wedge_factor)
 
-        elif 'correct_disp' in event:
-            if 'True' in event:
-                self.display_bar_graph_coeff(disp_correct=True)
-            else:
-                self.display_bar_graph_coeff(disp_correct=False)
+        if 'correct_disp' or 'correct_first' in event:
+            # Test if checkboxes are checked
+            self.correct_disp, self.correct_first = self.options1_widget.get_checkboxes()
+            self.display_bar_graph_coeff(disp_correct=self.correct_disp, first=self.correct_first)
 
-        elif 'correct_first' in event:
-            if 'True' in event:
-                self.display_bar_graph_coeff(first=True)
-            else:
-                self.display_bar_graph_coeff(first=False)
+        if 'wavelength' in event:
+            self.lambda_check = self.options1_widget.is_lambda_checked()
+            self.lambda_value = float(self.options1_widget.get_lambda())
+            self.zernike_coeffs.update_lambda(value=self.lambda_value, um_check=self.lambda_check)
 
+        self.display_bar_graph_coeff()
+        self.display_2D_ab_corrected()
 
 if __name__ == "__main__":
     from zygo_lab_app import ZygoApp

@@ -90,6 +90,8 @@ class Zernike:
         self.max_order: int = max_order
         self.phase: "PhaseModel" = phase
         self.surface = self.phase.get_unwrapped_phase()
+        self.lambda_value = 0       # Value of the wavelength
+        self.lambda_nm = False      # If False, display in lambda else in um
 
         self.corrected_phase = None
         self.coeff_counter = 0
@@ -113,6 +115,14 @@ class Zernike:
         self.phase = phase
         self.reset_coeffs()
         return self.init_data()
+
+    def set_wedge_factor(self, wedge_factor: float):
+        """
+        Set the wedge factor for displaying data.
+        :param wedge_factor: Value of the wedge factor.
+        """
+        self.phase.set_wedge_factor(wedge_factor)
+
 
     def init_data(self) -> bool:
         """
@@ -227,7 +237,9 @@ class Zernike:
                 surface_filtered = self.surface[valid_mask]
                 Z_nm_filtered = Z_nm[valid_mask]
 
-                self.coeff_list[order] = np.sum(surface_filtered * Z_nm_filtered) / np.sum(Z_nm_filtered ** 2)
+                num = np.sum(surface_filtered * Z_nm_filtered)
+                den = np.sum(Z_nm_filtered ** 2)
+                self.coeff_list[order] = num / den
         else:
             return None
 
@@ -259,6 +271,18 @@ class Zernike:
         """
         return self.coeff_counter
 
+    def get_coeffs(self):
+        """
+        Return an array of the coefficients.
+        :return: 1D array with the coefficients.
+        """
+        coeffs = np.array(self.coeff_list.copy()) * self.phase.get_wedge_factor()
+        if self.lambda_nm:
+            print(f'in NM')
+            print(coeffs.dtype)
+            coeffs = coeffs * self.lambda_value * 1e-3 # nm -> um
+        return coeffs
+
     def reset_coeffs(self):
         """Reset all the coefficients."""
         self.corrected_phase = None
@@ -270,6 +294,18 @@ class Zernike:
         self.Y = None
         self.pow1 = None
         self.pow2 = None
+
+    def update_lambda(self, value: int = None, um_check: bool = False):
+        """
+        Update coefficients value depending on displaying lambda in um or not.
+        :param value: Value of the wavelength.
+        :param um_check: True to display in um, False in lambda.
+        """
+        self.lambda_nm = um_check
+        if value is not None:
+            self.lambda_value = value
+        print(f'Check ? {self.lambda_nm} / {self.lambda_value}')
+
 
 
 def display_3_figures(init, zer, corr):

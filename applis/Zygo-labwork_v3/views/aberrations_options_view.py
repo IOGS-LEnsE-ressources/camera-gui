@@ -17,7 +17,7 @@ from lensepy.pyqt6.widget_editline import LineEditView
 from lensepy.pyqt6.widget_checkbox import CheckBoxView
 from PyQt6.QtWidgets import (
     QWidget, QLabel,
-    QVBoxLayout
+    QVBoxLayout, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from views.PVRMS_view import PVRMSView
@@ -73,6 +73,23 @@ class AberrationsOptionsView(QWidget):
         self.layout.addWidget(self.widget_correct_first)
         self.layout.addStretch()
 
+        # lambda or nm display
+        self.widget_lambda = QWidget()
+        self.widget_layout = QHBoxLayout()
+        self.widget_lambda.setLayout(self.widget_layout)
+        self.lambda_edit = LineEditView('wavelength',
+                                        translate('label_lambda_value'), '632.8')
+        self.lambda_edit.text_changed.connect(self.lambda_changed)
+        self.widget_layout.addWidget(self.lambda_edit)
+
+        self.lambda_check = CheckBoxView('wavelength_check', translate('label_lambda_check'))
+        self.lambda_check.check_changed.connect(self.lambda_changed)
+        self.lambda_check.set_enabled(True)
+        self.widget_layout.addWidget(self.lambda_check)
+
+        self.layout.addWidget(self.widget_lambda)
+        self.widget_layout.addStretch()
+
     def set_pv_uncorrected(self, value: float, unit: str = '\u03BB'):
         """
         Update the value and the unit of the PV value.
@@ -88,6 +105,13 @@ class AberrationsOptionsView(QWidget):
         :param unit: Unit of the RMS value.
         """
         self.pv_rms_uncorrected.set_rms(value, unit)
+
+    def set_wedge(self, value: float):
+        """
+        Set the value of the wedge factor.
+        :param value: Value of the wedge factor.
+        """
+        self.wedge_edit.text_edit.setText(str(value))
 
     def _clear_layout(self, row: int, column: int) -> None:
         """Remove widgets from a specific position in the layout.
@@ -124,6 +148,43 @@ class AberrationsOptionsView(QWidget):
         Action to perform when the checkbox for corrected coefficients displaying changed.
         """
         self.aberrations_changed.emit(event)
+
+    def lambda_changed(self, event):
+        """
+        Action to perform when the value of lambda changed.
+        """
+        self.aberrations_changed.emit(event)
+
+    def get_checkboxes(self):
+        """
+        Return the values of the checkbox in Zernike mode
+        :return:
+        """
+        disp_correct = self.widget_correct.checkbox_choice.isChecked()
+        disp_first = self.widget_correct_first.checkbox_choice.isChecked()
+        return disp_correct, disp_first
+
+    def set_checkboxes(self, correct: bool = False, first: bool = False, um_check: bool = False):
+        """
+        Set the values of the checkbox in Zernike mode
+        """
+        self.widget_correct.checkbox_choice.setChecked(correct)
+        self.widget_correct_first.checkbox_choice.setChecked(first)
+        self.lambda_check.checkbox_choice.setChecked(um_check)
+
+    def is_lambda_checked(self) -> bool:
+        """
+        Return if the lambda or meters option is checked.
+        :return: True if in um unit.
+        """
+        return self.lambda_check.checkbox_choice.isChecked()
+
+    def get_lambda(self) -> float:
+        """
+        Return the value of the wavelength.
+        :return: value of the wavelength.
+        """
+        return self.lambda_edit.text_edit.text()
 
 
 if __name__ == "__main__":
