@@ -33,6 +33,7 @@ class ZygoApp:
 
     def __init__(self):
         """Constructor of the application."""
+        load_default_dictionary("FR")
         self.data_set = DataSetModel()
         self.phase = PhaseModel(self.data_set)
         self.main_widget = MainView()
@@ -40,7 +41,6 @@ class ZygoApp:
         self.main_menu.load_menu('menu/menu.txt')
         self.main_widget.set_main_menu(self.main_menu)
         self.mode_manager = ModesManager(self)
-        load_default_dictionary("FR")
 
 
 if __name__ == "__main__":

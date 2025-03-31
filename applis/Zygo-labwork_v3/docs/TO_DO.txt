@@ -13,6 +13,8 @@ Functions
 
 Bugs
 ====
+-->     When clicking on simple_analysis_button, another window opened and disapeared...
+
 -->     GLOBAL / Freeze and crash when open images then go to analyses (via masks or not)
 
 -->     Frame Rate increase !!
