@@ -17,13 +17,13 @@ from views.main_structure import MainView
 from views.sub_menu import SubMenu
 from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
-from views.analyses_options_view import AnalysesOptionsView
 from views.surface_2D_view import Surface2DView
 from views.bar_graph_view import BarGraphView
 from lensepy import load_dictionary, translate, dictionary
 from models.phase import process_statistics_surface
 from views.aberrations_options_view import AberrationsOptionsView
 from views.aberrations_start_view import AberrationsStartView
+from views.aberrations_choice_view import AberrationsChoiceView
 from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget
@@ -156,22 +156,33 @@ class AberrationsController:
                 self.options1_widget.set_wedge(self.phase.get_wedge_factor())
                 self.options1_widget.aberrations_changed.connect(self.aberration_changed)
                 self.main_widget.set_options1_widget(self.options1_widget)
-                self.display_2D_ab_corrected()
+                self.display_2D_ab_init()
                 self.bot_right_widget = HTMLView()
+                url = 'docs/html/FR/aberrations.html'
+                css = 'docs/html/styles.css'
                 if __name__ == "__main__":
-                    self.bot_right_widget.set_url('../docs/html/aberrations.html', '../docs/html/styles.css')
+                    self.bot_right_widget.set_url('../'+url, '../'+css)
                 else:
-                    self.bot_right_widget.set_url('docs/html/aberrations.html', 'docs/html/styles.css')
+                    self.bot_right_widget.set_url(url, css)
                 self.main_widget.set_bot_right_widget(self.bot_right_widget)
                 self.display_bar_graph_coeff()
 
 
             case 'Seidelcoefficients_aberrations':
-                self.submenu.set_activated(2)
+                pass
             case 'coefficientscorrection_aberrations':
-                self.submenu.set_activated(4)
+                self.options1_widget = AberrationsOptionsView()
+                self.options1_widget.set_checkboxes(self.correct_disp,
+                                                    self.correct_first, self.lambda_check)
+                self.options1_widget.set_wedge(self.phase.get_wedge_factor())
+                self.options1_widget.aberrations_changed.connect(self.aberration_changed)
+                self.main_widget.set_options1_widget(self.options1_widget)
+
+                self.options2_widget = AberrationsChoiceView()
+                self.main_widget.set_options2_widget(self.options2_widget)
+
             case 'aberrationsanalyses_aberrations':
-                self.submenu.set_activated(6)
+                pass
 
     def display_bar_graph_coeff(self, disp_correct: bool = False, first: bool = False):
         """
@@ -193,43 +204,70 @@ class AberrationsController:
         # Data
         max_order = self.zernike_coeffs.max_order
         x_axis = np.arange(max_order + 1)
-        coeffs_disp = self.zernike_coeffs.get_coeffs()
+        coeffs_disp = self.zernike_coeffs.get_coeffs().copy()
 
         self.update_color_aberrations()
         # Force to 0 corrected coefficients
-
         if first:
             for jj, aberration in enumerate(self.corrected_initial_list):
                 for k in aberrations_type[aberration]:
                     coeffs_disp[k] = 0
-        elif disp_correct:
+        if disp_correct:
             for jj, aberration in enumerate(self.corrected_aberrations_list):
                 for k in aberrations_type[aberration]:
                     coeffs_disp[k] = 0
-
         y_axis = np.array(coeffs_disp)
         self.top_left_widget.set_data(x_axis, y_axis, color_x=self.colors)
         self.top_left_widget.set_labels(x_axis_label, y_axis_label)
 
-    def display_2D_ab_corrected(self):
+    def display_2D_ab_init(self):
         """
         Display tilt and piston corrected phase in the top right corner.
         """
         self.main_widget.clear_top_right()
         # Display wrapped in 2D
-        self.top_right_widget = Surface2DView('Tilt and Piston Corrected Phase')
+        self.top_right_widget = Surface2DView(translate('initial_corrected_phase'))
         self.main_widget.set_top_right_widget(self.top_right_widget)
         # Correction of the phase with tilt and piston
         wedge_factor = self.phase.get_wedge_factor()
-        _, corrected = self.zernike_coeffs.process_surface_correction(self.corrected_aberrations_list)
+        _, corrected = self.zernike_coeffs.process_surface_correction(self.corrected_initial_list)
         unwrapped_array = corrected * wedge_factor
+        z_label = translate('phase_value_in') + ' (\u03BB)'
+        if self.lambda_check:
+            unwrapped_array = unwrapped_array * self.lambda_value * 1e-9 * 1e6
+            z_label = translate('phase_value_in') + ' (um)'
         unwrapped_array = unwrapped_array.filled(np.nan)
         # Statistics
         self.top_right_widget.set_array(unwrapped_array)
+        self.top_right_widget.set_z_axis_label(z_label)
         pv, rms = process_statistics_surface(unwrapped_array)
         # TO DO : depending on lambda or nm -> PV RMS to modify (and units !)
         self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
         self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
+
+    def display_2D_ab_corrected(self):
+        """
+        Display tilt and piston corrected phase in the top right corner.
+        """
+        self.main_widget.clear_bot_right()
+        # Display wrapped in 2D
+        self.bot_right_widget = Surface2DView(translate('ab_corrected_phase'))
+        self.main_widget.set_bot_right_widget(self.bot_right_widget)
+        # Correction of the phase with tilt and piston
+        wedge_factor = self.phase.get_wedge_factor()
+        correction_list = self.corrected_initial_list + self.corrected_aberrations_list
+        _, corrected = self.zernike_coeffs.process_surface_correction(correction_list)
+        unwrapped_array = corrected * wedge_factor
+        if self.lambda_check:
+            unwrapped_array = unwrapped_array * self.lambda_value * 1e-9 * 1e6
+        unwrapped_array = unwrapped_array.filled(np.nan)
+        # Statistics
+        self.bot_right_widget.set_array(unwrapped_array)
+        '''
+        pv, rms = process_statistics_surface(unwrapped_array)
+        self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
+        self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
+        '''
 
     def update_color_aberrations(self):
         """
@@ -279,15 +317,14 @@ class AberrationsController:
         if 'correct_disp' or 'correct_first' in event:
             # Test if checkboxes are checked
             self.correct_disp, self.correct_first = self.options1_widget.get_checkboxes()
-            self.display_bar_graph_coeff(disp_correct=self.correct_disp, first=self.correct_first)
 
         if 'wavelength' in event:
             self.lambda_check = self.options1_widget.is_lambda_checked()
             self.lambda_value = float(self.options1_widget.get_lambda())
             self.zernike_coeffs.update_lambda(value=self.lambda_value, um_check=self.lambda_check)
 
-        self.display_bar_graph_coeff()
-        self.display_2D_ab_corrected()
+        self.display_bar_graph_coeff(disp_correct=self.correct_disp, first=self.correct_first)
+        self.display_2D_ab_init()
 
 if __name__ == "__main__":
     from zygo_lab_app import ZygoApp

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """*aberrations_options_view.py* file.
 
-./views/aberrations_options_view.py contains AnalysesOptionsView class to display options for analyses mode.
+./views/aberrations_options_view.py contains AnalysesOptionsView class to display options
+for aberrations mode.
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 

@@ -21,6 +21,7 @@ from controllers.analyses_controller import AnalysesController
 from controllers.aberrations_controller import AberrationsController
 from controllers.help_controller import HelpController
 from utils.initialization_parameters import read_default_parameters
+from views.html_view import HTMLView
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -59,7 +60,11 @@ class ModesManager:
         # Hardware
         self.piezo_connected = False
         self.camera_connected = False
-
+        # Main Help
+        url = './docs/html/main.html'
+        css = './docs/html/styles.css'
+        self.main_widget.bot_right_widget = HTMLView(url=url, css=css)
+        self.main_widget.set_bot_right_widget(self.main_widget.bot_right_widget)
         # First update
         self.update_menu()
 

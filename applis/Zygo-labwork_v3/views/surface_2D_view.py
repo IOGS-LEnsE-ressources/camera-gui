@@ -39,6 +39,7 @@ class Surface2DView(QWidget):
         # Data
         self.array_2D = np.random.rand(20, 20)
         self.title = title
+        self.z_axis_label = ''
         # Graphic area for image
         self.imv = pg.ImageItem(image=self.array_2D)
         # Création du layout principal
@@ -68,6 +69,18 @@ class Surface2DView(QWidget):
         self.plot.hideButtons()
         self.plot.showAxes(False)
         self.plot.invertY(True)
+
+    def set_z_axis_label(self, label: str):
+        """
+        Set a text to display Z axis values.
+        :param label: Text to display.
+        :return:
+        """
+        self.z_axis_label = label
+        text_item = pg.TextItem(self.z_axis_label, color="b", anchor=(0, 0))
+        text_item.setPos(self.array_2D.shape[1]+70, 10)
+        text_item.setRotation(90)
+        self.plot.addItem(text_item)
 
     def set_z_range(self, range_z: Tuple[float]):
         """
