@@ -64,7 +64,7 @@ class ImagesDisplayView(QWidget):
         :param text: Text to display in the top of the image.
         :return: True if the image can be displayed
         """
-        self.resizeEvent(None)
+        #self.resizeEvent(None)
         self.text = text
         self.image = np.array(pixels, dtype='uint8')
         image_to_display = self.image.copy()
@@ -82,19 +82,19 @@ class ImagesDisplayView(QWidget):
         if self.height-HEIGHT_MARGIN < 0 or self.width-WIDTH_MARGIN < 0:
             self.image_display.setText('Window is too small')
             return False
-
         if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
             image_to_display = resize_image_ratio(self.image,
                                                   self.height-HEIGHT_MARGIN,
                                                   self.width-WIDTH_MARGIN)
         qimage = array_to_qimage(image_to_display)
-
+        '''
         if self.text != '':
             painter = QPainter(qimage)
             painter.setPen(QColor(0, 255, 255))   # Text color, white
             painter.setFont(QFont("Arial", 20))     # Size and police
             painter.drawText(20, 20, self.text)
             painter.end()
+        '''
         pmap = QPixmap.fromImage(qimage)
         self.image_display.setPixmap(pmap)
 
@@ -123,7 +123,6 @@ if __name__ == "__main__":
     # Random Image
     width, height = 256, 256
     random_pixels = np.random.randint(0, 256, (height, width), dtype=np.uint8)
-
     main_widget.set_image_from_array(random_pixels, 'Test')
 
     sys.exit(app.exec())

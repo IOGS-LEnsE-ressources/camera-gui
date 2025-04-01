@@ -41,6 +41,11 @@ SUBMENU_ROW, SUBMENU_COL = 0, 0
 OPTIONS1_ROW, OPTIONS1_COL = 0, 1
 OPTIONS2_ROW, OPTIONS2_COL = 0, 2
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from zygo_lab_app import ZygoApp
+    from controllers.acquisition_controller import AcquisitionController
+
 
 class MainView(QWidget):
     """
@@ -49,12 +54,13 @@ class MainView(QWidget):
 
     main_signal = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, main_app: "ZygoApp" = None):
         """
         Default Constructor.
         :param parent: Parent window of the main widget.
         """
         super().__init__()
+        self.main_app: "ZygoApp" = main_app
         # Layout
         self.layout = QGridLayout()
 
@@ -234,6 +240,21 @@ class MainView(QWidget):
 
     def resizeEvent(self, a0: QResizeEvent) -> None:
         pass
+
+    def closeEvent(self, event):
+        """
+        Close event.
+        """
+        camera = self.main_app.data_set.acquisition_mode.camera
+        if self.main_app.data_set.acquisition_mode.is_camera():
+            camera.stop_acquisition()
+            camera.free_memory()
+        controller = self.main_app.mode_manager.mode_controller
+        '''
+        if isinstance(controller, AcquisitionController):
+            print('STOP !!')
+        '''
+        print('End of APP')
 
 
 if __name__ == "__main__":

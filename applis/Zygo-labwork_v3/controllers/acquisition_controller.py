@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from controllers.modes_manager import ModesManager
+    from zygo_lab_app import ZygoApp
 
 
 class AcquisitionController:
@@ -49,6 +50,7 @@ class AcquisitionController:
         self.manager: "ModesManager" = manager
         self.main_widget: MainView = self.manager.main_widget
         self.data_set: DataSetModel = self.manager.data_set
+        self.main_app: "ZygoApp" = self.manager.main_app
         self.submode = ''
         self.histo_here = False  # To allow good synchronisation for histogram display
         self.acquiring = False
@@ -70,6 +72,7 @@ class AcquisitionController:
         # Update menu and view
         self.update_submenu_view("")
         self.init_view()
+        self.data_set.acquisition_mode.set_default_parameters(self.main_app.default_parameters)
         self.acquiring = True
         # Start acquisition
         thread = threading.Thread(target=self.thread_update_image)
@@ -178,12 +181,14 @@ class AcquisitionController:
             else:
                 self.top_left_widget.set_image_from_array(image)
             # Update histogram in camera mode
+            '''
             if self.submode == 'camera_acquisition':
-                if self.histo_here:
+                if self.histo_here and not self.options1_widget.zoom_activated:
                     self.top_right_widget.set_image(image, fast_mode=True)
                     self.top_right_widget.update_info()
+            '''
             if self.acquiring:
-                time.sleep(0.2)
+                time.sleep(0.0001)
                 thread = threading.Thread(target=self.thread_update_image)
                 thread.start()
         except Exception as e:
@@ -255,10 +260,11 @@ if __name__ == "__main__":
 
     # Test controller
     manager.mode_controller = AcquisitionController(manager)
+    manager.data_set.acquisition_mode.set_default_parameters({})
     m_app.main_widget.showMaximized()
     sys.exit(app.exec())
 
-
+    '''
     class MyWindow(ZygoApp):
         def __init__(self):
             super().__init__()
@@ -270,6 +276,7 @@ if __name__ == "__main__":
             # Test controller
             self.controller = AcquisitionController(self.manager)
             self.manager.mode_controller = self.controller
+            self.data_set.acquisition_mode.set_default_parameters({})
 
         def closeEvent(self, event):
             self.controller.stop_acquisition()
@@ -279,3 +286,4 @@ if __name__ == "__main__":
     window = MyWindow()
     #window.showMaximized()
     sys.exit(app.exec())
+    '''

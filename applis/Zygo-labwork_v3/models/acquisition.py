@@ -64,18 +64,29 @@ class AcquisitionModel:
         if self.camera_connected:
             self.camera_state = HWState.CONNECTED
             self.camera.init_camera() # Add test in lensecam -> True if init correctly
-            # Default parameters to load
-            self.camera.set_color_mode('Mono8')
-
-            self.camera_state = HWState.INITIALIZED
-            self.camera.alloc_memory()
-            self.camera_state = HWState.READY
 
         if self.piezo.is_piezo_here() is True:
             self.piezo_state = HWState.CONNECTED
-            # Default parameters to load
-            self.piezo.set_channel(1)
-            self.piezo_state = HWState.INITIALIZED
+
+    def set_default_parameters(self, params: dict):
+        """
+        Set default parameters to piezo and camera.
+        :param params: Dictionary of parameters.
+        """
+        if 'Frame Rate' in params:
+            fps = float(params['Frame Rate'])
+            self.camera.set_frame_rate(fps)
+        if 'Exposure Time' in params:
+            expo = float(params['Exposure Time'])
+            self.camera.set_exposure(expo)
+        self.camera.set_color_mode('Mono8')
+        self.camera_state = HWState.INITIALIZED
+        self.camera.alloc_memory()
+        self.camera_state = HWState.READY
+
+        # Default parameters to load
+        self.piezo.set_channel(1)
+        self.piezo_state = HWState.INITIALIZED
 
     def set_number_of_acq(self, value: int = 1):
         """
@@ -126,7 +137,7 @@ class AcquisitionModel:
             return False
         self.acquisition_counter = 0
         self.thread = threading.Thread(target=self.thread_acquisition)
-        time.sleep(0.01)
+        #time.sleep(0.0001)
         self.thread.start()
 
     def get_image(self) -> np.ndarray:
@@ -251,6 +262,7 @@ if __name__ == '__main__':
 
     nb_of_images_per_set = 5
     acquisition = AcquisitionModel(nb_of_images_per_set, acq_nb=1)
+    acquisition.set_default_parameters({})
     volt_list = [0.80,1.62,2.43,3.24,4.05]
     acquisition.set_voltages(volt_list)
     if acquisition.is_camera():
@@ -266,8 +278,11 @@ if __name__ == '__main__':
             acquisition.thread.join()
         time.sleep(0.2)
 
+        new_images = acquisition.get_images_set(1)
+        print(new_images[0].shape)
+
         image_set = ImagesModel(nb_of_images_per_set)
-        image_set.add_set_images(acquisition.get_images_set(1))
+        image_set.add_set_images(new_images)
         '''
         image_set.add_set_images(acquisition.get_images_set(2))
         image_set.add_set_images(acquisition.get_images_set(3))
@@ -277,6 +292,7 @@ if __name__ == '__main__':
         print(f'Number of sets = {image_set.get_number_of_sets()}')
         if image_set.get_number_of_sets() >= 1:
             image_1 = image_set.get_images_set(1)
+            print(len(image_1))
             if isinstance(image_1, list):
                 result = generate_images_grid(image_1)
 

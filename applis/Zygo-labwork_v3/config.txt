@@ -5,10 +5,10 @@ Language;FR
 ColorMode;Mono8
 Exposure Time;1000
 Max Expo Time;20000
-Frame Rate;10
+Frame Rate;40
 Black Level;10
 ### Wedge Factor
-Wedge Factor;-1
+Wedge Factor;0.5
 ### Piezo
 Piezo voltage from Matlab;0.80,1.62,2.43,3.24,4.05
 Piezo Voltage;0.80,1.62,2.43,3.24,4.05

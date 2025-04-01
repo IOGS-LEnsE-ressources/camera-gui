@@ -90,3 +90,34 @@ def split_3d_array(array_3d, size: int = 5):
     # Extract the 2D arrays
     arrays = [array_3d[:, :, i].astype(np.float32) for i in range(array_3d.shape[2])]
     return arrays
+
+def load_default_parameters(file_path: str) -> dict:
+    """
+    Load parameter from a CSV file.
+
+    :return: Dict containing 'key_1': 'language_word_1'.
+
+    Notes
+    -----
+    This function reads a CSV file that contains key-value pairs separated by semicolons (';')
+    and stores them in a global dictionary variable. The CSV file may contain comments
+    prefixed by '#', which will be ignored.
+
+    The file should have the following format:
+        # comment
+        # comment
+        key_1 ; language_word_1
+        key_2 ; language_word_2
+    """
+    dictionary_loaded = {}
+    if os.path.exists(file_path):
+        # Read the CSV file, ignoring lines starting with '//'
+        data = np.genfromtxt(file_path, delimiter=';',
+                             dtype=str, comments='#', encoding='UTF-8')
+        # Populate the dictionary with key-value pairs from the CSV file
+        for key, value in data:
+            dictionary_loaded[key.strip()] = value.strip()
+        return dictionary_loaded
+    else:
+        print('File error')
+        return {}

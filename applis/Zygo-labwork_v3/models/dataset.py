@@ -27,6 +27,7 @@ from models.masks import MasksModel
 from models.acquisition import AcquisitionModel
 from utils.dataset_utils import DataSetState
 
+
 class DataSetModel:
     """Class containing images data and parameters.
     Images are stored in sets of N images.
