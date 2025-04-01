@@ -43,16 +43,10 @@ class CameraOptionsView(QWidget):
         self.zoom_activated = False
         self.zoom_window = ImagesDisplayView()
         # Default parameters to update on loading
-        if not self.controller.manager.default_parameters:
-            self.default_exposure = 1000
-            self.default_max_expo = 20000
-            self.default_fps = 8
-            self.default_black = 9
-        else:
-            self.default_exposure = int(self.controller.manager.default_parameters['Exposure Time'])
-            self.default_max_expo = int(self.controller.manager.default_parameters['Max Expo Time'])
-            self.default_fps = int(self.controller.manager.default_parameters['Frame Rate'])
-            self.default_black = int(self.controller.manager.default_parameters['Black Level'])
+        self.default_exposure = 1000
+        self.default_max_expo = 20000
+        self.default_fps = 8
+        self.default_black = 9
 
         # Title
         self.label_title_camera_settings = QLabel(translate('title_camera_settings'))
@@ -66,6 +60,7 @@ class CameraOptionsView(QWidget):
 
         self.label_value_camera_id = QLabel()
         if self.camera is not None:
+
             id_camera, name_camera = self.camera.get_cam_info()
             self.label_value_camera_id.setText(f'{name_camera} / SN = {id_camera}')
         self.label_value_camera_id.setStyleSheet(styleH3)

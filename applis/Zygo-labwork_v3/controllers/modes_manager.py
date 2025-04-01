@@ -20,7 +20,6 @@ from controllers.masks_controller import MasksController
 from controllers.analyses_controller import AnalysesController
 from controllers.aberrations_controller import AberrationsController
 from controllers.help_controller import HelpController
-from utils.initialization_parameters import read_default_parameters
 from views.html_view import HTMLView
 
 from typing import TYPE_CHECKING
@@ -46,7 +45,6 @@ class ModesManager:
         # Menu
         self.main_menu: "MainMenu" = self.main_app.main_menu
         self.main_menu.menu_changed.connect(self.update_mode)
-        self.default_parameters = read_default_parameters('config.txt')
         self.options_list = []
         # Main widget
         self.main_widget = self.main_app.main_widget
@@ -82,15 +80,19 @@ class ModesManager:
         if self.main_mode == 'first':
             if self.data_set.acquisition_mode.is_camera() is False:
                 self.options_list.append('nocam')
+            '''
             if self.data_set.acquisition_mode.is_piezo() is False:
                 self.options_list.append('nopiezo')
+            '''
             self.main_mode = ''
         else:
             # To avoid to check hardware each time
             if nocam:
                 self.options_list.append('nocam')
+            '''
             if nopiezo:
                 self.options_list.append('nopiezo')
+            '''
 
         # Check dataset
         if self.data_set.is_data_ready() is False:

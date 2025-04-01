@@ -167,10 +167,13 @@ class AcquisitionController:
             # Get image
             if self.data_set.acquisition_mode.is_camera():
                 image = self.data_set.acquisition_mode.get_image()
+            '''
             else:
                 ## Random Image
                 width, height = 256, 256
                 image = np.random.randint(0, 256, (height, width), dtype=np.uint8)
+            '''
+            '''
             # Test zoom displaying
             if isinstance(self.options1_widget, CameraOptionsView):
                 if not self.options1_widget.zoom_activated:
@@ -180,6 +183,7 @@ class AcquisitionController:
                     self.options1_widget.zoom_window.set_image_from_array(image)
             else:
                 self.top_left_widget.set_image_from_array(image)
+            '''
             # Update histogram in camera mode
             '''
             if self.submode == 'camera_acquisition':
@@ -187,10 +191,12 @@ class AcquisitionController:
                     self.top_right_widget.set_image(image, fast_mode=True)
                     self.top_right_widget.update_info()
             '''
+            '''
             if self.acquiring:
                 time.sleep(0.0001)
                 thread = threading.Thread(target=self.thread_update_image)
                 thread.start()
+            '''
         except Exception as e:
             print(f'thread_image / acquisition mode / {e}')
 
@@ -199,12 +205,15 @@ class AcquisitionController:
         Stop timed thread for updating images.
         """
         self.acquiring = False
+        self.data_set.acquisition_mode.camera.stop_acquisition()
 
     def start_acquisition(self):
         """
         Stop timed thread for updating images.
         """
+        print('Start ACQ')
         self.acquiring = True
+        self.data_set.acquisition_mode.camera.start_acquisition()
         thread = threading.Thread(target=self.thread_update_image)
         thread.start()
 
@@ -247,43 +256,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     m_app = ZygoApp()
-    data_set = DataSetModel()
-    m_app.data_set = data_set
-    m_app.main_widget = MainView()
-    m_app.main_menu = MainMenu()
-    m_app.main_menu.load_menu('')
-    manager = ModesManager(m_app)
-
-    # Update data
-    manager.data_set.load_images_set_from_file("../_data/test4.mat")
-    manager.data_set.load_mask_from_file("../_data/test4.mat")
-
-    # Test controller
-    manager.mode_controller = AcquisitionController(manager)
-    manager.data_set.acquisition_mode.set_default_parameters({})
+    m_app.mode_manager.mode_controller = AcquisitionController(m_app.mode_manager)
     m_app.main_widget.showMaximized()
     sys.exit(app.exec())
 
-    '''
-    class MyWindow(ZygoApp):
-        def __init__(self):
-            super().__init__()
-            self.main_widget = MainView()
-            self.main_menu = MainMenu()
-            self.data_set = DataSetModel()
-            self.manager = ModesManager(self)
-
-            # Test controller
-            self.controller = AcquisitionController(self.manager)
-            self.manager.mode_controller = self.controller
-            self.data_set.acquisition_mode.set_default_parameters({})
-
-        def closeEvent(self, event):
-            self.controller.stop_acquisition()
-
-
-    app = QApplication(sys.argv)
-    window = MyWindow()
-    #window.showMaximized()
-    sys.exit(app.exec())
-    '''

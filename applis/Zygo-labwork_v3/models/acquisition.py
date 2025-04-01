@@ -64,6 +64,9 @@ class AcquisitionModel:
         if self.camera_connected:
             self.camera_state = HWState.CONNECTED
             self.camera.init_camera() # Add test in lensecam -> True if init correctly
+            self.camera_state = HWState.INITIALIZED
+            self.camera.alloc_memory()
+            self.camera_state = HWState.READY
 
         if self.piezo.is_piezo_here() is True:
             self.piezo_state = HWState.CONNECTED
@@ -73,15 +76,14 @@ class AcquisitionModel:
         Set default parameters to piezo and camera.
         :param params: Dictionary of parameters.
         """
+        self.camera_state = HWState.INITIALIZED
         if 'Frame Rate' in params:
             fps = float(params['Frame Rate'])
             self.camera.set_frame_rate(fps)
         if 'Exposure Time' in params:
             expo = float(params['Exposure Time'])
             self.camera.set_exposure(expo)
-        self.camera.set_color_mode('Mono8')
-        self.camera_state = HWState.INITIALIZED
-        self.camera.alloc_memory()
+        #self.camera.set_color_mode('Mono8')
         self.camera_state = HWState.READY
 
         # Default parameters to load
@@ -114,7 +116,7 @@ class AcquisitionModel:
         :return: True if a camera is connected.
         """
         if self.camera_state == HWState.STANDBY:
-            print('models/acquisition.py - Camera not connected')
+            print('models/acquisition.py / is_camera - Camera not connected')
             return False
         return True
 
@@ -160,16 +162,16 @@ class AcquisitionModel:
             # Wait end of movement
             time.sleep(0.1)
         # Acquire image
-        self.camera.start_acquisition()
+        print(self.camera)
         image = self.camera.get_image().squeeze()
-        time.sleep(0.01)
-        self.camera.stop_acquisition()
+        # time.sleep(0.01)
         return image
 
     def thread_acquisition(self):
         """
         Thread for acquisition of data.
         """
+        self.camera.start_acquisition()
         if self.acquisition_counter < self.acquisition_number:
             if self.images_counter < self.set_size:
                 new_image = self._one_acquisition()
@@ -182,6 +184,8 @@ class AcquisitionModel:
                 self.current_images_set = []
             self.thread = threading.Thread(target=self.thread_acquisition)
             self.thread.start()
+        else:
+            self.camera.stop_acquisition()
 
     def set_exposure(self, exposure: int) -> bool:
         """
