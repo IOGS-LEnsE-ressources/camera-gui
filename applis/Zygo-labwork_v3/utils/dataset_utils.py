@@ -13,6 +13,8 @@ from enum import Enum
 import numpy as np
 import scipy
 
+from lensepy.images.conversion import resize_image_ratio
+
 
 class DataSetState(Enum):
     NODATA = 0
@@ -44,7 +46,8 @@ def generate_images_grid(images: list[np.ndarray]):
     sum_image = (images[0] + images[1] + images[2] + images[3])/4
     sum_image = sum_image.astype(np.uint8)
     result[img_height + separator_size:, 2 * img_width + 2 * separator_size:] = sum_image
-    return result
+    result_s = resize_image_ratio(result, img_height, img_width)
+    return result_s
 
 def read_mat_file(file_path: str) -> dict:
     """

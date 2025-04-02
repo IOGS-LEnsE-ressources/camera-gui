@@ -9,6 +9,9 @@
 Creation : march/2025
 """
 import sys, os
+
+import matplotlib.pyplot as plt
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views.main_structure import MainView
@@ -19,10 +22,7 @@ from views.html_view import HTMLView
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from lensepy.pyqt6 import *
-from PyQt6.QtWidgets import (
-    QWidget,
-    QFileDialog
-)
+from PyQt6.QtWidgets import QWidget, QFileDialog
 from models.dataset import DataSetModel
 from utils.dataset_utils import generate_images_grid
 from utils.pyqt6_utils import message_box
@@ -169,20 +169,23 @@ class ImagesController:
 
 
 if __name__ == "__main__":
+    from zygo_lab_app import ZygoApp
     from PyQt6.QtWidgets import QApplication
     from controllers.modes_manager import ModesManager
     from views.main_menu import MainMenu
 
     app = QApplication(sys.argv)
-    widget = MainView()
-    menu = MainMenu()
-    menu.load_menu('')
-    widget.set_main_menu(menu)
+    m_app = ZygoApp()
     data_set = DataSetModel()
-    manager = ModesManager(menu, widget, data_set)
+    m_app.data_set = data_set
+    m_app.main_widget = MainView()
+    m_app.main_menu = MainMenu()
+    m_app.main_menu.load_menu('')
+    manager = ModesManager(m_app)
+
 
     # Test controller
     manager.mode_controller = ImagesController(manager)
-    widget.showMaximized()
+    m_app.main_widget.showMaximized()
     sys.exit(app.exec())
 

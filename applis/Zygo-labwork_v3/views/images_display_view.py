@@ -20,18 +20,15 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import numpy as np
-from PyQt6.QtWidgets import (
-    QWidget, QLabel,
-    QVBoxLayout
-)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QResizeEvent, QPixmap, QPainter, QColor, QFont
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene
+from PyQt6.QtCore import QRectF
+from PyQt6.QtGui import QImage,QResizeEvent, QPixmap, QPainter, QColor, QFont
 from lensepy.images.conversion import resize_image_ratio, resize_image, array_to_qimage
 
 HEIGHT_MARGIN = 30
 WIDTH_MARGIN = 30
 
-class ImagesDisplayView(QWidget):
+class ImagesDisplayView(QGraphicsView):
     """
     Widget to display an image.
     """
@@ -42,87 +39,90 @@ class ImagesDisplayView(QWidget):
         :param parent: Parent widget of this widget.
         """
         super().__init__()
-        self.width = 0
-        self.height = 0
-        # GUI Structure
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-        # Objects
-        self.image = None
-        self.text = ''
-        # GUI Elements
-        self.image_display = QLabel('No Image to display')
-        self.image_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_display.setScaledContents(False)
-        self.layout.addWidget(self.image_display)
-        self.resizeEvent(None)
+        self.__scene = CustomGraphicsScene(self)
+        self.setScene(self.__scene)
 
-    def set_image_from_array(self, pixels: np.ndarray, text: str = '') -> bool:
-        """
-        Display a new image from an array (Numpy)
-        :param pixels: Array of pixels to display.
-        :param text: Text to display in the top of the image.
-        :return: True if the image can be displayed
-        """
-        #self.resizeEvent(None)
-        self.text = text
-        self.image = np.array(pixels, dtype='uint8')
-        image_to_display = self.image.copy()
-        image_to_display = np.squeeze(image_to_display)
-        self.display_image(image_to_display)
-        return True
+    def set_image(self, image: QImage):
+        self.__scene.set_image(image)
+        self.update()
 
-    def display_image(self, image_to_display: np.ndarray) -> bool:
-        """
-        Display the image.
-        :param image_to_display: 2D array to display.
-        :return: True if the image can be displayed.
-        """
-        # Resizing of the window not correct ?
-        if self.height-HEIGHT_MARGIN < 0 or self.width-WIDTH_MARGIN < 0:
-            self.image_display.setText('Window is too small')
-            return False
-        if self.image.shape[1] > self.width or self.image.shape[0] > self.height:
-            image_to_display = resize_image_ratio(self.image,
-                                                  self.height-HEIGHT_MARGIN,
-                                                  self.width-WIDTH_MARGIN)
-        qimage = array_to_qimage(image_to_display)
-        '''
-        if self.text != '':
-            painter = QPainter(qimage)
-            painter.setPen(QColor(0, 255, 255))   # Text color, white
-            painter.setFont(QFont("Arial", 20))     # Size and police
-            painter.drawText(20, 20, self.text)
-            painter.end()
-        '''
-        pmap = QPixmap.fromImage(qimage)
-        self.image_display.setPixmap(pmap)
+    def set_image_from_array(self, np_array: np.array):
+        image_disp = np_array.copy().astype(np.uint8)
+        height, width = image_disp.shape
+        print(f'set_image : {image_disp.dtype}')
+        image = QImage(image_disp, width, height, QImage.Format.Format_Grayscale8)
+        self.__scene.set_image(image)
+        self.update()
 
-    def resizeEvent(self, a0: QResizeEvent) -> None:
-        """
-        Update view display when resizing the window.
-        :param a0: Event.
-        """
-        new_size = self.size()
-        self.width = new_size.width()
-        self.height = new_size.height()
+class CustomGraphicsScene(QGraphicsScene):
+    def __init__(self, parent: ImagesDisplayView = None):
+        super().__init__(parent)
+        self.__parent = parent
+        self.__image = QImage()
 
-        if self.image is not None:
-            image_to_display = self.image
-            self.display_image(image_to_display)
+    def set_image(self, image: QImage):
+        self.__image = image
+        self.update()
+
+    def drawBackground(self, painter: QPainter, rect: QRectF):
+        try:
+            # Display size
+            display_width = self.__parent.width()
+            display_height = self.__parent.height()
+
+            # Image size
+            image_width = self.__image.width()
+            image_height = self.__image.height()
+
+            # Return if we don't have an image yet
+            if image_width == 0 or image_height == 0:
+                return
+
+            # Calculate aspect ratio of display
+            ratio1 = display_width / display_height
+            # Calculate aspect ratio of image
+            ratio2 = image_width / image_height
+
+            if ratio1 > ratio2:
+                # The height with must fit to the display height.So h remains and w must be scaled down
+                image_width = display_height * ratio2
+                image_height = display_height
+            else:
+                # The image with must fit to the display width. So w remains and h must be scaled down
+                image_width = display_width
+                image_height = display_height / ratio2
+
+            image_pos_x = -1.0 * (image_width / 2.0)
+            image_pox_y = -1.0 * (image_height / 2.0)
+
+            # Remove digits after point
+            image_pos_x = int(image_pos_x)
+            image_pox_y = int(image_pox_y)
+
+            rect = QRectF(image_pos_x, image_pox_y, image_width, image_height)
+
+            painter.drawImage(rect, self.__image)
+        except Exception as e:
+            print(f'draw_background / {e}')
 
 
 if __name__ == "__main__":
     from PyQt6.QtWidgets import QApplication
+    import time
 
     app = QApplication(sys.argv)
     main_widget = ImagesDisplayView()
-    main_widget.setGeometry(100, 100, 100, 100)
+    main_widget.setGeometry(100, 100, 300, 500)
     main_widget.show()
 
     # Random Image
     width, height = 256, 256
     random_pixels = np.random.randint(0, 256, (height, width), dtype=np.uint8)
-    main_widget.set_image_from_array(random_pixels, 'Test')
+    image = QImage(random_pixels, width, height, QImage.Format.Format_Grayscale8)
+    print(type(random_pixels))
+    print(random_pixels.dtype)
+    print(random_pixels.shape)
+    main_widget.set_image(image)
+    main_widget.set_image_from_array(random_pixels)
 
     sys.exit(app.exec())

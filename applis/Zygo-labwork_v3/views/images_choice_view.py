@@ -9,6 +9,7 @@
 Creation : march/2025
 """
 import sys, os
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from lensepy import load_dictionary, translate, dictionary
@@ -156,7 +157,8 @@ class ImagesChoiceView(QWidget):
             for i in range(self.number_of_images_per_set):
                 if sender == self.images_button_select[i]:
                     image = self.data_set.images_sets.get_image_from_set(i + 1, self.selected_set)
-                    self.controller.top_left_widget.set_image_from_array(image)
+                    image_disp = image.copy().astype(np.uint8)
+                    self.controller.top_left_widget.set_image_from_array(image_disp)
                     '''
                     if i != 5:
 
@@ -179,7 +181,8 @@ class ImagesChoiceView(QWidget):
                 if sender == self.masks_button_select[i]:
                     image = self.data_set.images_sets.get_image_from_set(1, self.selected_set)
                     mask, _ = self.data_set.masks_sets.get_mask(i + 1)
-                    self.controller.top_left_widget.set_image_from_array(mask * image)
+                    image_disp = (mask * image).copy().astype(np.uint8)
+                    self.controller.top_left_widget.set_image_from_array(image_disp)
         except Exception as e:
             print(f'display_masks : {e}')
 
