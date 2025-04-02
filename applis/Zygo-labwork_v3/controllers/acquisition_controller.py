@@ -104,7 +104,7 @@ class AcquisitionController:
         for k in range(len(self.submenu.buttons_list)):
             self.submenu.set_button_enabled(k + 1, True)
         ## Activate button depending on data
-        match submode:
+        match self.submode:
             case 'camera_acquisition':
                 self.submenu.set_activated(1)
             case 'piezo_acquisition':
@@ -223,16 +223,8 @@ class AcquisitionController:
         Stop timed thread for updating images.
         """
         if self.acquiring is False:
-            print('Start ACQ')
-            state = self.data_set.acquisition_mode.camera_state
-            print(state)
             self.acquiring = True
             self.data_set.acquisition_mode.camera.start_acquisition()
-
-            image = self.data_set.acquisition_mode.get_image()
-
-            if self.thread is not None:
-                self.thread.join()
             self.thread = threading.Thread(target=self.thread_update_image)
             self.thread.start()
 
@@ -269,7 +261,7 @@ class AcquisitionController:
     def __del__(self):
         if self.acquiring:
             self.stop_acquisition()
-            self.data_set.acquisition_mode.camera.disconnect()
+            #self.data_set.acquisition_mode.camera.disconnect()
             self.data_set.acquisition_mode.camera.destroy_camera()
 
 

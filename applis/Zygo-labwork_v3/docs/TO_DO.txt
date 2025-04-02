@@ -2,22 +2,25 @@ DONE : Acquisition, Images, Masks, Analyses
 
 -->     If new acquisition or new data, erase zernike coeff ! And restart analyses
 
+Labwork
+=======
+
+- PSF 2D
+- FTM 2D + 4 directions (0 / 45 / 90 /135) + frequency cursor
+- Circled energy + cursor (83 % ?)
+- Zernike analyse + strehl ??
+
 Functions
 =========
 -->     GLOBAL : Hardware - default values for camera and piezo to update
             if hardware is connected
 -->     Save mask type in MAT file (and read it)
 -->     Analyses mode / view : add 3D option !
--->     Display PV/RMS in lambda and meters (nm)
 
 
 Bugs
 ====
--->     When clicking on simple_analysis_button, another window opened and disapeared...
-
 -->     GLOBAL / Freeze and crash when open images then go to analyses (via masks or not)
-
--->     Frame Rate increase !!
 
 -->     main menu management - and options list !
             + if no mask in the data loaded, Masks in main menu is not available
@@ -35,7 +38,6 @@ Bugs
                 + !! CAMERA !! when starting in CMD shell :
                         QObject::startTimer: Timers cannot be started from another thread
                 + update default values to camera/piezo parameters
-                + update camera parameters when slider changed
                 + when clicking from camera submode to other submode (simple, piezo...) :
                         thread_image / acquisition mode / Error-Code: 13 (PEAK_RETURN_CODE_TIMEOUT)
             +> images mode

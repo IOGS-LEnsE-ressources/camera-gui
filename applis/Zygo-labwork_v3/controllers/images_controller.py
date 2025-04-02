@@ -79,7 +79,7 @@ class ImagesController:
         if self.images_loaded:
             # Display first image in top left
             images = self.manager.data_set.get_images_sets(1)
-            self.top_left_widget.set_image_from_array(images[0], 'First Image')
+            self.top_left_widget.set_image_from_array(images[0])
             g_images = generate_images_grid(images)
             self.top_right_widget.set_image_from_array(g_images)
         # Update menu
