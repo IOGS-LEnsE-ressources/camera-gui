@@ -12,6 +12,7 @@ import sys, os
 from enum import Enum
 import numpy as np
 import scipy
+import cv2
 
 from lensepy.images.conversion import resize_image_ratio
 
@@ -30,7 +31,10 @@ def generate_images_grid(images: list[np.ndarray]):
     The 6th image is the mean of the 4 first images.
     :param images: List of 5 images.
     """
-    img_height, img_width = images[0].shape
+    img_height, img_width, *channels = images[0].shape
+    if channels:
+        for k in range(len(images)):
+            images[k] = cv2.cvtColor(images[k], cv2.COLOR_RGB2GRAY)
     separator_size = 5
     # Global size
     total_height = 2 * img_height + separator_size  # 2 rows of images

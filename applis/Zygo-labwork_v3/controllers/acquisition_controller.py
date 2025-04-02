@@ -72,11 +72,13 @@ class AcquisitionController:
         # Update menu and view
         self.update_submenu_view("")
         self.init_view()
-        self.data_set.acquisition_mode.set_default_parameters(self.main_app.default_parameters)
-        self.acquiring = True
+        #self.data_set.acquisition_mode.set_default_parameters(self.main_app.default_parameters)
         # Start acquisition
+        self.start_acquisition()
+        '''
         thread = threading.Thread(target=self.thread_update_image)
         thread.start()
+        '''
 
     def init_view(self):
         """
@@ -114,41 +116,33 @@ class AcquisitionController:
                 self.submenu.set_activated(4)
             case 'multi_acquisition':
                 self.submenu.set_activated(5)
-
-    def update_submenu(self, event):
-        """
-        Update data and views when the submenu is clicked.
-        :param event: Sub menu click.
-        """
-        self.histo_here = False
-        # Update view
-        self.update_submenu_view(event)
-        # Update Action
+        # Update views
+        #self.main_widget.clear_top_left()  # Image from camera
         self.main_widget.clear_top_right()
+        self.main_widget.clear_bot_right()
         self.main_widget.clear_options()
-        match event:
+        # For all submodes
+
+        # Specific submodes
+        match self.submode:
             case 'camera_acquisition':
                 self.top_right_widget = ImageHistogramWidget(name=translate('histo_camera'),
                                                              info=True)
                 self.top_right_widget.set_background('white')
+                self.top_right_widget.set_bit_depth(8)  # Mono8 on the camera#
                 # self.top_right_widget.set_axis_labels(translate('x_label_histo'), translate('y_label_histo'))
-                self.top_right_widget.set_bit_depth(8)  # Mono8 on the camera
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 # Display camera exposure time in options
-                self.histo_here = True
-                self.start_acquisition()
                 self.options1_widget = CameraOptionsView(self)
                 self.main_widget.set_options_widget(self.options1_widget)
                 self.options1_widget.settings_changed.connect(self.params_changed)
 
             case 'piezo_acquisition':
-                self.start_acquisition()
                 self.options1_widget = PiezoOptionsView(self)
                 self.main_widget.set_options_widget(self.options1_widget)
                 self.options1_widget.voltage_changed.connect(self.params_changed)
 
             case 'simple_acquisition':
-                self.stop_acquisition()
                 self.top_right_widget = ImagesDisplayView()
                 self.main_widget.set_top_right_widget(self.top_right_widget)
                 self.options1_widget = SimpleAcquisitionView(self)
@@ -156,24 +150,50 @@ class AcquisitionController:
                 self.options1_widget.acquisition_end.connect(self.acquisition_update)
 
             case 'multi_acquisition':
-                self.stop_acquisition()
                 pass
+
+
+    def update_submenu(self, event):
+        """
+        Update data and views when the submenu is clicked.
+        :param event: Sub menu click.
+        """
+        # Update view
+        self.update_submenu_view(event)
+        # Update Action
+        match event:
+            case 'camera_acquisition':
+                self.start_acquisition()
+                self.histo_here = True
+
+            case 'piezo_acquisition':
+                self.start_acquisition()
+                self.histo_here = False
+
+            case 'simple_acquisition':
+                self.stop_acquisition()
+                self.histo_here = False
+
+            case 'multi_acquisition':
+                self.stop_acquisition()
+                self.histo_here = False
 
     def thread_update_image(self):
         """
         Thread for updating image displaying (and other options).
         """
         try:
+
+            if self.acquiring is False:
+                self.start_acquisition()
             # Get image
             if self.data_set.acquisition_mode.is_camera():
                 image = self.data_set.acquisition_mode.get_image()
-            '''
+                self.top_left_widget.set_image_from_array(image)
             else:
                 ## Random Image
                 width, height = 256, 256
                 image = np.random.randint(0, 256, (height, width), dtype=np.uint8)
-            '''
-            '''
             # Test zoom displaying
             if isinstance(self.options1_widget, CameraOptionsView):
                 if not self.options1_widget.zoom_activated:
@@ -183,20 +203,15 @@ class AcquisitionController:
                     self.options1_widget.zoom_window.set_image_from_array(image)
             else:
                 self.top_left_widget.set_image_from_array(image)
-            '''
             # Update histogram in camera mode
-            '''
             if self.submode == 'camera_acquisition':
                 if self.histo_here and not self.options1_widget.zoom_activated:
                     self.top_right_widget.set_image(image, fast_mode=True)
                     self.top_right_widget.update_info()
-            '''
-            '''
             if self.acquiring:
-                time.sleep(0.0001)
+                #time.sleep(0.0001)
                 thread = threading.Thread(target=self.thread_update_image)
                 thread.start()
-            '''
         except Exception as e:
             print(f'thread_image / acquisition mode / {e}')
 
@@ -211,11 +226,17 @@ class AcquisitionController:
         """
         Stop timed thread for updating images.
         """
-        print('Start ACQ')
-        self.acquiring = True
-        self.data_set.acquisition_mode.camera.start_acquisition()
-        thread = threading.Thread(target=self.thread_update_image)
-        thread.start()
+        if self.acquiring is False:
+            print('Start ACQ')
+            state = self.data_set.acquisition_mode.camera_state
+            print(state)
+            self.acquiring = True
+            self.data_set.acquisition_mode.camera.start_acquisition()
+
+            image = self.data_set.acquisition_mode.get_image()
+
+            thread = threading.Thread(target=self.thread_update_image)
+            thread.start()
 
     def acquisition_update(self, event):
         """

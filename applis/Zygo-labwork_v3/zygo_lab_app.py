@@ -30,7 +30,6 @@ from models.phase import PhaseModel
 version_app = 'r1.0'
 
 
-
 class ZygoApp:
 
     def __init__(self):

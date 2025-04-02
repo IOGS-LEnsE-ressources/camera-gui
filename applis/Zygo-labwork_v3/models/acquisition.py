@@ -65,7 +65,7 @@ class AcquisitionModel:
             self.camera_state = HWState.CONNECTED
             self.camera.init_camera() # Add test in lensecam -> True if init correctly
             self.camera_state = HWState.INITIALIZED
-            self.camera.alloc_memory()
+            print(f'Alloc ? {self.camera.alloc_memory()}')
             self.camera_state = HWState.READY
 
         if self.piezo.is_piezo_here() is True:
@@ -158,12 +158,13 @@ class AcquisitionModel:
             #print(f'ImCnt = {self.images_counter + 1} / {self.set_size} -- '
             #     f'SetCnt = {self.acquisition_counter + 1} / {self.acquisition_number}')
             # Move piezo
-            self.piezo.write_dac(self.voltages_list[self.images_counter])
+            #self.piezo.write_dac(self.voltages_list[self.images_counter])
             # Wait end of movement
             time.sleep(0.1)
         # Acquire image
-        print(self.camera)
-        image = self.camera.get_image().squeeze()
+        print('One Acquisition')
+        #image = np.random.randint(0, 256, (100, 100), dtype=np.uint8)
+        image = self.camera.get_image(fast_mode=True)
         # time.sleep(0.01)
         return image
 
