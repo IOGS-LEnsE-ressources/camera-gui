@@ -54,6 +54,7 @@ class AcquisitionController:
         self.submode = ''
         self.histo_here = False  # To allow good synchronisation for histogram display
         self.acquiring = False
+        self.thread = None
         # Graphical elements
         self.top_left_widget = ImagesDisplayView()  # Display first image of a set
         self.top_right_widget = QWidget()  # Histogram or image display, depending on submode
@@ -75,10 +76,6 @@ class AcquisitionController:
         #self.data_set.acquisition_mode.set_default_parameters(self.main_app.default_parameters)
         # Start acquisition
         self.start_acquisition()
-        '''
-        thread = threading.Thread(target=self.thread_update_image)
-        thread.start()
-        '''
 
     def init_view(self):
         """
@@ -189,7 +186,6 @@ class AcquisitionController:
             # Get image
             if self.data_set.acquisition_mode.is_camera():
                 image = self.data_set.acquisition_mode.get_image()
-                self.top_left_widget.set_image_from_array(image)
             else:
                 ## Random Image
                 width, height = 256, 256
@@ -206,12 +202,11 @@ class AcquisitionController:
             # Update histogram in camera mode
             if self.submode == 'camera_acquisition':
                 if self.histo_here and not self.options1_widget.zoom_activated:
-                    self.top_right_widget.set_image(image, fast_mode=True)
+                    self.top_right_widget.set_image(image)
                     self.top_right_widget.update_info()
             if self.acquiring:
-                #time.sleep(0.0001)
-                thread = threading.Thread(target=self.thread_update_image)
-                thread.start()
+                self.thread = threading.Thread(target=self.thread_update_image)
+                self.thread.start()
         except Exception as e:
             print(f'thread_image / acquisition mode / {e}')
 
@@ -220,6 +215,7 @@ class AcquisitionController:
         Stop timed thread for updating images.
         """
         self.acquiring = False
+        self.thread.join()
         self.data_set.acquisition_mode.camera.stop_acquisition()
 
     def start_acquisition(self):
@@ -235,8 +231,10 @@ class AcquisitionController:
 
             image = self.data_set.acquisition_mode.get_image()
 
-            thread = threading.Thread(target=self.thread_update_image)
-            thread.start()
+            if self.thread is not None:
+                self.thread.join()
+            self.thread = threading.Thread(target=self.thread_update_image)
+            self.thread.start()
 
     def acquisition_update(self, event):
         """
@@ -267,6 +265,12 @@ class AcquisitionController:
         if event == 'voltage':
             volt = self.options1_widget.get_voltage()
             self.data_set.acquisition_mode.piezo.write_dac(volt)
+
+    def __del__(self):
+        if self.acquiring:
+            self.stop_acquisition()
+            self.data_set.acquisition_mode.camera.disconnect()
+            self.data_set.acquisition_mode.camera.destroy_camera()
 
 
 if __name__ == "__main__":
