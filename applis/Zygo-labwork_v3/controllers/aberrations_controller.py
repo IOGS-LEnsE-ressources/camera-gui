@@ -24,6 +24,7 @@ from models.phase import process_statistics_surface
 from views.aberrations_options_view import AberrationsOptionsView
 from views.aberrations_start_view import AberrationsStartView
 from views.aberrations_choice_view import AberrationsChoiceView
+from views.table_view import TableView
 from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget
@@ -87,15 +88,9 @@ class AberrationsController:
         """
         Initializes the main structure of the interface.
         """
-        self.main_widget.clear_all()
         self.main_widget.set_sub_menu_widget(self.submenu)
         self.main_widget.set_top_left_widget(self.top_left_widget)
         self.main_widget.set_top_right_widget(self.top_right_widget)
-        if __name__ == "__main__":
-            self.bot_right_widget.set_url('../docs/html/aberrations.html', '../docs/html/styles.css')
-        else:
-            self.bot_right_widget.set_url('docs/html/aberrations.html', 'docs/html/styles.css')
-        self.main_widget.set_bot_right_widget(self.bot_right_widget)
         self.main_widget.set_options_widget(self.options1_widget)
 
         ## Test 2D or 3D ??
@@ -120,11 +115,11 @@ class AberrationsController:
         :param submode: Submode name : [open_images, display_images, save_images]
         """
         self.manager.update_menu()
-        self.sub_mode = submode
+        self.submode = submode
         ## Erase enabled list for buttons
         self.submenu.inactive_buttons()
         # Activate submenu
-        match submode:
+        match self.submode:
             case '':
                 for k in range(len(self.submenu.buttons_list)):
                     self.submenu.set_button_enabled(k + 1, False)
@@ -136,6 +131,54 @@ class AberrationsController:
                 self.submenu.set_activated(4)
             case 'aberrationsanalyses_aberrations':
                 self.submenu.set_activated(6)
+        # Update views
+        self.main_widget.clear_bot_right()
+        self.main_widget.clear_options()
+        # For all submodes
+
+        # Specific submodes
+        match self.submode:
+            case 'Zernikecoefficients_aberrations':
+                self.options1_widget = AberrationsOptionsView()
+                self.options1_widget.set_checkboxes(self.correct_disp,
+                                                    self.correct_first, self.lambda_check)
+                self.main_widget.set_options1_widget(self.options1_widget)
+                self.display_2D_ab_init()
+                self.display_bar_graph_coeff()
+                self.display_zernike_table()
+
+
+            case 'Seidelcoefficients_aberrations':
+                self.options1_widget = AberrationsOptionsView()
+                self.options1_widget.set_checkboxes(self.correct_disp,
+                                                    self.correct_first, self.lambda_check)
+                self.main_widget.set_options1_widget(self.options1_widget)
+                self.display_2D_ab_init()
+                self.bot_right_widget = TableView(5, 4)
+                self.main_widget.set_bot_right_widget(self.bot_right_widget)
+
+            case 'coefficientscorrection_aberrations':
+                self.options1_widget = AberrationsOptionsView()
+                self.options1_widget.set_checkboxes(self.correct_disp,
+                                                    self.correct_first, self.lambda_check)
+                self.main_widget.set_options1_widget(self.options1_widget)
+
+                self.options2_widget = AberrationsChoiceView()
+                self.main_widget.set_options2_widget(self.options2_widget)
+
+            case 'aberrationsanalyses_aberrations':
+                pass
+
+            case _:
+                print('OK')
+                self.bot_right_widget = HTMLView()
+                url = 'docs/html/FR/aberrations.html'
+                css = 'docs/html/styles.css'
+                if __name__ == "__main__":
+                    self.bot_right_widget.set_url('../' + url, '../' + css)
+                else:
+                    self.bot_right_widget.set_url(url, css)
+                self.main_widget.set_bot_right_widget(self.bot_right_widget)
 
     def update_submenu(self, event):
         """
@@ -145,41 +188,18 @@ class AberrationsController:
         # Update view
         self.update_submenu_view(event)
         # Update Action
-        self.main_widget.clear_bot_right()
-        self.main_widget.clear_options()
-        # Update Action
         match event:
             case 'Zernikecoefficients_aberrations':
-                self.options1_widget = AberrationsOptionsView()
-                self.options1_widget.set_checkboxes(self.correct_disp,
-                                                    self.correct_first, self.lambda_check)
                 self.options1_widget.set_wedge(self.phase.get_wedge_factor())
                 self.options1_widget.aberrations_changed.connect(self.aberration_changed)
-                self.main_widget.set_options1_widget(self.options1_widget)
-                self.display_2D_ab_init()
-                self.bot_right_widget = HTMLView()
-                url = 'docs/html/FR/aberrations.html'
-                css = 'docs/html/styles.css'
-                if __name__ == "__main__":
-                    self.bot_right_widget.set_url('../'+url, '../'+css)
-                else:
-                    self.bot_right_widget.set_url(url, css)
-                self.main_widget.set_bot_right_widget(self.bot_right_widget)
-                self.display_bar_graph_coeff()
-
 
             case 'Seidelcoefficients_aberrations':
-                pass
-            case 'coefficientscorrection_aberrations':
-                self.options1_widget = AberrationsOptionsView()
-                self.options1_widget.set_checkboxes(self.correct_disp,
-                                                    self.correct_first, self.lambda_check)
                 self.options1_widget.set_wedge(self.phase.get_wedge_factor())
                 self.options1_widget.aberrations_changed.connect(self.aberration_changed)
-                self.main_widget.set_options1_widget(self.options1_widget)
 
-                self.options2_widget = AberrationsChoiceView()
-                self.main_widget.set_options2_widget(self.options2_widget)
+            case 'coefficientscorrection_aberrations':
+                self.options1_widget.set_wedge(self.phase.get_wedge_factor())
+                self.options1_widget.aberrations_changed.connect(self.aberration_changed)
 
             case 'aberrationsanalyses_aberrations':
                 pass
@@ -269,6 +289,44 @@ class AberrationsController:
         self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
         '''
 
+    def display_seidel_table(self):
+        """
+
+        """
+        pass
+
+    def display_zernike_table(self):
+        """
+        Display Zernike coefficients value in a table.
+                    | Order 3 | Order 5 | Order 7 | Order 9
+        Astig       | C4 / C5 | C11 /12 | C20 /21 | C31 /32
+        Coma        | C6 / C7 | C13 /14 | C22 /23 | C33 /34
+        Ab Sph      | C8      | C15     | C24     | C35
+        Trefoil     |         | C11 /12 | C20 /21 | C31 /32
+        """
+        self.main_widget.clear_bot_right()
+        rows = 8
+        cols = 5
+        self.bot_right_widget = TableView(rows=rows, cols=cols, height=30,
+                                          title=translate('zernike_table'))
+        self.bot_right_widget.set_cols_size([120, 100, 100, 100, 100, 100, 100, 100])
+        self.bot_right_widget.set_rows_colors(['H', 'N', 'N', 'L', 'L', 'N', 'L', 'L'])
+        self.bot_right_widget.set_cols_colors(['N', 'N', 'N', 'N', 'N'])
+        coeff = list(map(lambda x: round(x, 4), self.zernike_coeffs.get_coeffs().copy()))
+        data = [[0] * cols for _ in range(rows)]
+        unit = 'um' if self.lambda_check else '\u03BB'
+        data[0] = [unit, translate('order_3'), translate('order_5'),
+                   translate('order_7'), translate('order_9')]
+        data[1] = [translate('ab_astig_title'), coeff[4], coeff[11], coeff[20], coeff[31]]
+        data[2] = ['', coeff[5], coeff[12], coeff[21], coeff[32]]
+        data[3] = [translate('ab_coma_title'), coeff[6], coeff[13], coeff[22], coeff[33]]
+        data[4] = ['', coeff[7], coeff[14], coeff[23], coeff[34]]
+        data[5] = [translate('ab_sphere_title'), coeff[8], coeff[15], coeff[24], coeff[35]]
+        data[6] = [translate('ab_trefoil_title'), '', coeff[9], coeff[18], coeff[29]]
+        data[7] = ['', '', coeff[10], coeff[19], coeff[30]]
+        self.bot_right_widget.set_data(data)
+        self.main_widget.set_bot_right_widget(self.bot_right_widget)
+
     def update_color_aberrations(self):
         """
         Return a list of color to apply on Zernike bar graph.
@@ -325,6 +383,8 @@ class AberrationsController:
 
         self.display_bar_graph_coeff(disp_correct=self.correct_disp, first=self.correct_first)
         self.display_2D_ab_init()
+        if self.submode == 'Zernikecoefficients_aberrations':
+            self.display_zernike_table()
 
 if __name__ == "__main__":
     from zygo_lab_app import ZygoApp

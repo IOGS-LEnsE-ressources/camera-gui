@@ -77,6 +77,8 @@ aberrations_list = [
     "sphere11" 
 ]
 
+COEFFICIENTS_ROUND_RANGE = 4 # decimals
+
 
 class Zernike:
     """
@@ -122,7 +124,6 @@ class Zernike:
         :param wedge_factor: Value of the wedge factor.
         """
         self.phase.set_wedge_factor(wedge_factor)
-
 
     def init_data(self) -> bool:
         """
@@ -305,6 +306,64 @@ class Zernike:
         if value is not None:
             self.lambda_value = value
         print(f'Check ? {self.lambda_nm} / {self.lambda_value}')
+
+    def convert_to_seidel(self):
+        """
+        Process Seidel coefficients from Zernike coefficients. Order 3.
+
+        Actual convention:
+
+        Aberration  | Amplitude     | Angle
+        ---------------------------------------------------
+        Tilt        | √(C3²+C2²)    | arctan(C3/C2)
+        Defocus     | 2*C4          |    no
+        Astigmatism | √(C5²+C6²)    | 1/2 * arctan(C6/C5)
+        Coma        | 3*√(C8²+C7²)  | arctan(C8/C7)
+        Sph. Ab.    | 6*C11         |    no
+        """
+        c = self.coeff_list
+        state = True
+        for k in range(11):
+            if c[k] is None:
+                state = False
+
+        if state:
+            # Tilt
+            tilt_magnitude = np.sqrt(c[3]**2 + c[2]**2)
+            tilt_angle = np.rad2deg(np.arctan2(c[3], c[2]))
+
+            # Defocus
+            defocus_amplitude = 2*c[4]
+
+            # Astigmatism
+            astigmatism_magnitude = 2 * np.sqrt(c[6]**2+c[5]**2)
+            astigmatism_angle = np.rad2deg(1/2* np.arctan2(c[6], c[5]))
+
+            # Coma
+            coma_amplitude = 3 * np.sqrt(c[7]**2+c[8]**2)
+            coma_angle = np.rad2deg(np.arctan2(c[8], c[7]))
+
+            # Spherical aberration
+            sp_ab_magnitude = 6*c[11]
+
+            # Round
+            tilt_magnitude = np.round(tilt_magnitude, COEFFICIENTS_ROUND_RANGE)
+            tilt_angle = np.round(tilt_angle, COEFFICIENTS_ROUND_RANGE)
+            defocus_amplitude = np.round(defocus_amplitude, COEFFICIENTS_ROUND_RANGE)
+            astigmatism_magnitude = np.round(astigmatism_magnitude, COEFFICIENTS_ROUND_RANGE)
+            astigmatism_angle = np.round(astigmatism_angle, COEFFICIENTS_ROUND_RANGE)
+            coma_amplitude = np.round(coma_amplitude, COEFFICIENTS_ROUND_RANGE)
+            coma_angle = np.round(coma_angle, COEFFICIENTS_ROUND_RANGE)
+            sp_ab_magnitude = np.round(sp_ab_magnitude, COEFFICIENTS_ROUND_RANGE)
+
+            # Return dict
+            result = {'tilt_mag': tilt_magnitude, 'tilt_ang': tilt_angle,
+                      'defocus_mag': defocus_amplitude, 'sphere_mag': sp_ab_magnitude,
+                      'astig_mag': astigmatism_magnitude, 'astig_ang': astigmatism_angle,
+                      'coma_mag': coma_amplitude_, 'coma_ang': coma_angle}
+            return result
+        else:
+            return {}
 
 
 
