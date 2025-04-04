@@ -38,7 +38,11 @@ class ImagesDisplayView(QGraphicsView):
         image_disp = np_array.copy().astype(np.uint8)
         height, width, *channels = image_disp.shape
         if channels:
-            image = QImage(image_disp, width, height, 3*width, QImage.Format.Format_RGB888)
+            if channels[0] == 1:
+                image_disp = image_disp.squeeze()
+                image = QImage(image_disp, width, height, QImage.Format.Format_Grayscale8)
+            else:
+                image = QImage(image_disp, width, height, 3*width, QImage.Format.Format_RGB888)
         else:
             image = QImage(image_disp, width, height, QImage.Format.Format_Grayscale8)
         self.__scene.set_image(image)

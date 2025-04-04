@@ -34,7 +34,11 @@ def generate_images_grid(images: list[np.ndarray]):
     img_height, img_width, *channels = images[0].shape
     if channels:
         for k in range(len(images)):
-            images[k] = cv2.cvtColor(images[k], cv2.COLOR_RGB2GRAY)
+            if channels[0] != 1:
+                images[k] = cv2.cvtColor(images[k], cv2.COLOR_RGB2GRAY)
+            else:
+                images[k] = images[k].squeeze()
+
     separator_size = 5
     # Global size
     total_height = 2 * img_height + separator_size  # 2 rows of images

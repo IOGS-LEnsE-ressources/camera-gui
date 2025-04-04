@@ -83,7 +83,7 @@ class AcquisitionModel:
         if 'Exposure Time' in params:
             expo = float(params['Exposure Time'])
             self.camera.set_exposure(expo)
-        #self.camera.set_color_mode('Mono8')
+        self.camera.set_color_mode('Mono8')
         self.camera_state = HWState.READY
 
         # Default parameters to load
@@ -139,7 +139,7 @@ class AcquisitionModel:
             return False
         self.acquisition_counter = 0
         self.thread = threading.Thread(target=self.thread_acquisition)
-        #time.sleep(0.0001)
+        time.sleep(0.0001)
         self.thread.start()
 
     def get_image(self) -> np.ndarray:
@@ -158,14 +158,12 @@ class AcquisitionModel:
             #print(f'ImCnt = {self.images_counter + 1} / {self.set_size} -- '
             #     f'SetCnt = {self.acquisition_counter + 1} / {self.acquisition_number}')
             # Move piezo
-            #self.piezo.write_dac(self.voltages_list[self.images_counter])
+            self.piezo.write_dac(self.voltages_list[self.images_counter])
             # Wait end of movement
             time.sleep(0.1)
         # Acquire image
-        print('One Acquisition')
-        #image = np.random.randint(0, 256, (100, 100), dtype=np.uint8)
-        image = self.camera.get_image(fast_mode=True)
-        # time.sleep(0.01)
+        image = self.camera.get_image() #fast_mode=True)
+        time.sleep(0.01)
         return image
 
     def thread_acquisition(self):

@@ -73,7 +73,7 @@ class AcquisitionController:
         # Update menu and view
         self.update_submenu_view("")
         self.init_view()
-        #self.data_set.acquisition_mode.set_default_parameters(self.main_app.default_parameters)
+        self.data_set.acquisition_mode.set_default_parameters(self.main_app.default_parameters)
         # Start acquisition
         self.start_acquisition()
 
@@ -190,6 +190,7 @@ class AcquisitionController:
                 ## Random Image
                 width, height = 256, 256
                 image = np.random.randint(0, 256, (height, width), dtype=np.uint8)
+            self.top_left_widget.set_image_from_array(image)
             # Test zoom displaying
             if isinstance(self.options1_widget, CameraOptionsView):
                 if not self.options1_widget.zoom_activated:
@@ -200,10 +201,12 @@ class AcquisitionController:
             else:
                 self.top_left_widget.set_image_from_array(image)
             # Update histogram in camera mode
+            '''
             if self.submode == 'camera_acquisition':
                 if self.histo_here and not self.options1_widget.zoom_activated:
-                    self.top_right_widget.set_image(image)
+                    #self.top_right_widget.set_image(image)
                     self.top_right_widget.update_info()
+            '''
             if self.acquiring:
                 self.thread = threading.Thread(target=self.thread_update_image)
                 self.thread.start()
@@ -259,6 +262,7 @@ class AcquisitionController:
             self.data_set.acquisition_mode.piezo.write_dac(volt)
 
     def __del__(self):
+        print('del acq controller')
         if self.acquiring:
             self.stop_acquisition()
             #self.data_set.acquisition_mode.camera.disconnect()
