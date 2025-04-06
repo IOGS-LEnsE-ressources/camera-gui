@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """*phase.py* file.
 
-./models/phase.py contains Phase_Model class to manage the phase from Zygo application.
+./models/phase.py contains PhaseModel class to manage the phase from Zygo application.
 
 Phase is demodulated by the Hariharan phase demodulation algorithm from a set of 5 images.
 
@@ -170,21 +170,21 @@ if __name__ == '__main__':
     data_set.load_mask_from_file(file_path)
 
     phase_test = PhaseModel(data_set)
-    data_set.phase = phase_test
-    ## Test class
-    data_set.phase.prepare_data()
-    print(f'Number of sets = {data_set.phase.cropped_images_sets.get_number_of_sets()}')
 
-    if data_set.phase.process_wrapped_phase():
+    ## Test class
+    phase_test.prepare_data()
+    print(f'Number of sets = {phase_test.cropped_images_sets.get_number_of_sets()}')
+
+    if phase_test.process_wrapped_phase():
         print('Wrapped Phase OK')
-    wrapped = data_set.phase.get_wrapped_phase()
+    wrapped = phase_test.get_wrapped_phase()
     if wrapped is not None:
         plt.figure()
         plt.imshow(wrapped.T, cmap='gray')
 
-    if data_set.phase.process_unwrapped_phase():
+    if phase_test.process_unwrapped_phase():
         print('Unwrapped Phase OK')
-    unwrapped = data_set.phase.get_unwrapped_phase()
+    unwrapped = phase_test.get_unwrapped_phase()
     if wrapped is not None:
         plt.figure()
         plt.imshow(unwrapped, cmap='gray')
