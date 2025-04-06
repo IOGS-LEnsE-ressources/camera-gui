@@ -146,6 +146,16 @@ class MainView(QWidget):
         self.bot_right_widget = widget
         self.layout.addWidget(self.bot_right_widget, BOT_RIGHT_ROW, BOT_RIGHT_COL)
 
+    def set_right_widget(self, widget):
+        """
+        Modify the two right widgets by only one widget.
+        :param widget: Widget to include inside the application.
+        """
+        self._clear_layout(TOP_RIGHT_ROW, TOP_RIGHT_COL)
+        self._clear_layout(BOT_RIGHT_ROW, BOT_RIGHT_COL)
+        self.top_right_widget = widget
+        self.layout.addWidget(self.top_right_widget, TOP_RIGHT_ROW, TOP_RIGHT_COL, 2, 1)
+
     def set_sub_menu_widget(self, widget):
         """
         Modify the sub menu widget.

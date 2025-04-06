@@ -146,58 +146,46 @@ class DualGraph3D(QMainWindow):
 if __name__ == "__main__":
     import sys, os
     from matplotlib import pyplot as plt
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-    from models import *
-    from utils import *
-    from scipy.ndimage import gaussian_filter
-    import cv2
 
-    phase_test = PhaseModel()
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    from models.dataset import DataSetModel
+    from models.phase import PhaseModel
 
     nb_of_images_per_set = 5
-    file_path = '../_data/test2.mat'
-    image_set = ImagesModel(nb_of_images_per_set)
-    image_set.load_images_set_from_file(file_path)
-    masks_set = MasksModel()
-    masks_set.load_mask_from_file(file_path)
+    file_path = '../_data/test3.mat'
+    data_set = DataSetModel()
+    data_set.load_images_set_from_file(file_path)
+    data_set.load_mask_from_file(file_path)
 
+    phase_test = PhaseModel(data_set)
+    data_set.phase = phase_test
     ## Test class
-    print(f'Number of sets = {image_set.get_number_of_sets()}')
-    if phase_test.set_images(image_set.get_images_set(1)):
-        print('Images OK')
-    if phase_test.set_mask(masks_set.get_global_mask()):
-        print('Mask OK')
-    cropped_mask, c_size, c_pos = masks_set.get_global_cropped_mask()
-    if phase_test.process_wrapped_phase():
+    data_set.phase.prepare_data()
+    print(f'Number of sets = {data_set.phase.cropped_images_sets.get_number_of_sets()}')
+
+    if data_set.phase.process_wrapped_phase():
         print('Wrapped Phase OK')
-    wrapped = phase_test.get_wrapped_phase()
-
-    cropped_wrapped_phase = crop_images([wrapped], c_size, c_pos)[0]
-    cropped_wrapped_phase = np.ma.masked_where(np.logical_not(cropped_mask[0]), cropped_wrapped_phase)
-
-    if cropped_wrapped_phase is not None:
+    wrapped = data_set.phase.get_wrapped_phase()
+    if wrapped is not None:
         plt.figure()
-        plt.imshow(cropped_wrapped_phase, cmap='gray')
+        plt.imshow(wrapped.T, cmap='gray')
 
-    if phase_test.process_unwrapped_phase():
+    if data_set.phase.process_unwrapped_phase():
         print('Unwrapped Phase OK')
-    unwrapped = phase_test.get_unwrapped_phase()
-    cropped_unwrapped_phase = crop_images([unwrapped], c_size, c_pos)[0]
-    cropped_unwrapped_phase = np.ma.masked_where(np.logical_not(cropped_mask[0]), cropped_unwrapped_phase)
-    n_fe = 10
-    cropped_unwrapped_phase = cropped_unwrapped_phase[::n_fe, ::n_fe]
-    cropped_wrapped_phase = cropped_wrapped_phase[::n_fe, ::n_fe]
-    if cropped_unwrapped_phase is not None:
+    unwrapped = data_set.phase.get_unwrapped_phase()
+    if wrapped is not None:
         plt.figure()
-        plt.imshow(cropped_unwrapped_phase, cmap='gray')
+        plt.imshow(unwrapped, cmap='gray')
 
-    #plt.show()
+    plt.show()
 
+    wrapped_s = wrapped[::5,::5]
+    unwrapped_s = unwrapped[::5,::5]
 
     app = QApplication(sys.argv)
     window = DualGraph3D()
-    x = np.linspace(-5, 5, cropped_wrapped_phase.shape[1])
-    y = np.linspace(-5, 5, cropped_wrapped_phase[0].shape[0])
-    window.create_mesh_surface(x, y, cropped_wrapped_phase, cropped_unwrapped_phase)
+    x = np.linspace(-10, 10, wrapped_s.shape[1])
+    y = np.linspace(-10, 10, wrapped_s.shape[0])
+    window.create_mesh_surface(x, y, wrapped_s, unwrapped_s)
     window.show()
     sys.exit(app.exec())

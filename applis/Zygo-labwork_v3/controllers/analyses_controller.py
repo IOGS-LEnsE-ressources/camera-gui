@@ -18,6 +18,7 @@ from views.images_display_view import ImagesDisplayView
 from views.html_view import HTMLView
 from views.analyses_options_view import AnalysesOptionsView
 from views.surface_2D_view import Surface2DView
+from views.double_3d_view import DoubleGraph3DView
 from lensepy import load_dictionary, translate, dictionary
 from models.phase import process_statistics_surface
 from lensepy.css import *
@@ -85,6 +86,7 @@ class AnalysesController:
         # Option 2
         self.options2_widget = QWidget()        # ??
 
+        self.w_3d_view = QWidget()
         # Update menu and view
         self.init_view()
         # Start Analyses
@@ -159,6 +161,7 @@ class AnalysesController:
         # Specific submodes
         match self.submode:
             case 'wrappedphase_analyses':
+                self.options1_widget.widget_2D_3D.set_enabled(False)
                 ## Test 2D or 3D ??
                 # Display wrapped in 2D
                 self.top_right_widget = Surface2DView('Wrapped Phase')
@@ -170,16 +173,15 @@ class AnalysesController:
                 self.options1_widget.hide_correction()
 
             case 'unwrappedphase_analyses':
-                ## Test 2D or 3D ??
-                # Display wrapped in 2D
-                self.top_right_widget = Surface2DView('Wrapped Phase')
-                self.main_widget.set_top_right_widget(self.top_right_widget)
+                self.options1_widget.widget_2D_3D.set_enabled(True)
+                self.display_2D_wrapped()
                 # Options
                 self.options1_widget.wedge_edit.setEnabled(True)
                 self.options1_widget.hide_correction()
 
             case 'correctedphase_analyses':
                 # Options
+                self.options1_widget.widget_2D_3D.set_enabled(True)
                 self.options1_widget.wedge_edit.setEnabled(True)
                 self.options1_widget.show_correction()
 
@@ -249,6 +251,21 @@ class AnalysesController:
             self.bot_right_widget.set_url('docs/html/analyses.html', 'docs/html/styles.css')
         self.main_widget.set_bot_right_widget(self.bot_right_widget)
 
+    def display_2D_wrapped(self):
+        """
+        Display Wrapped phase in 2D at the top right corner.
+        """
+        wrapped = self.phase.get_unwrapped_phase()
+        wrapped_array = wrapped.filled(np.nan)
+        # Display unwrapped and corrected in 2D
+        self.main_widget.clear_top_right()
+        self.top_right_widget = Surface2DView('Wrapped Phase')
+        self.main_widget.set_top_right_widget(self.top_right_widget)
+        self.top_right_widget.set_array(wrapped_array)
+        pv, rms = process_statistics_surface(wrapped)
+        self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
+        self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
+
     def display_2D_unwrapped(self):
         """
         Display unwrapped phase in 2D at the bottom right corner.
@@ -315,6 +332,27 @@ class AnalysesController:
         self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
         self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
 
+    def display_3D(self):
+        self.w_3d_view = DoubleGraph3DView()
+        mask, _ = self.phase.cropped_masks_sets.get_mask(1)
+        unwrapped = self.phase.get_unwrapped_phase()
+        unwrapped_array = unwrapped.filled(np.nan)
+        Z2 = np.ma.masked_where(np.logical_not(mask), unwrapped_array)
+        if self.submode == 'unwrappedphase_analyses':
+            wrapped = self.phase.get_wrapped_phase()
+            wrapped_array = wrapped.filled(np.nan)
+            Z1 = np.ma.masked_where(np.logical_not(mask), wrapped_array)
+            self.w_3d_view.add_labels(name1='Wrapped Phase', name2='Unwrapped Phase')
+        elif self.submode == 'correctedphase_analyses':
+            Z1 = np.ma.masked_where(np.logical_not(mask), self.corrected_phase)
+            self.w_3d_view.add_labels(name1='Corrected Phase', name2='Unwrapped Phase')
+        else:
+            Z1 = Z2
+        x, y, w_s, u_s = self.w_3d_view.prepare_data_for_mesh(Z1, Z2, undersampling=5)
+        self.w_3d_view.create_mesh_surface(x, y, w_s, u_s)
+        self.w_3d_view.showMaximized()
+        self.w_3d_view.raise_()
+
     def analyses_changed(self, event):
         """
         Update controller data and views when options changed.
@@ -329,6 +367,11 @@ class AnalysesController:
             self.display_2D_correction()
         if change[0] == 'range':
             self.display_2D_correction()
+        if change[0] == '2D_3D':
+            if 'True' in change[1]:
+                self.display_3D()
+            else:
+                pass
         if change[0] == 'wedge':
             if is_float(change[1]):
                 self.phase.set_wedge_factor(float(change[1]))

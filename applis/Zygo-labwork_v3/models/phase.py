@@ -87,6 +87,7 @@ class PhaseModel:
             mask,_ = self.cropped_masks_sets.get_mask(1)
             images_list = self.cropped_images_sets.get_images_set(set_number)
             self.wrapped_phase = hariharan_algorithm(images_list, mask)
+            self.wrapped_phase = np.ma.masked_where(np.logical_not(mask), self.wrapped_phase)
             self.data_set.data_set_state = DataSetState.WRAPPED
             return True
         else:
