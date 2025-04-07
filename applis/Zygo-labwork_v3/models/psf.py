@@ -22,7 +22,7 @@ def process_statistics_surface(surface):
     return PV, RMS
 
 class PSFModel:
-    """Class containing phase data and parameters.
+    """Class to process the Point Spread Function of a wavefront
     """
     def __init__(self, phase: "PhaseModel"):
         """
@@ -30,7 +30,7 @@ class PSFModel:
         """
         self.phase: "PhaseModel" = phase
 
-        self.wavefront = self.phase.get_unwrapped_phase()
+        self.wavefront = self.phase.get_unwrapped_phase() * 2 * np.pi
         self.mask, _ = self.phase.cropped_masks_sets.get_mask(1)
         self.amplitude = np.ones_like(self.wavefront)
         self.amplitude[np.isnan(self.mask)] = 0
@@ -86,5 +86,10 @@ if __name__ == '__main__':
 
     plt.figure()
     plt.imshow(np.log(psf_disp), cmap='gray')
+
+    psf_slice = psf_disp[psf_disp.shape[1]//2, :]
+
+    plt.figure()
+    plt.plot(psf_slice)
 
     plt.show()
