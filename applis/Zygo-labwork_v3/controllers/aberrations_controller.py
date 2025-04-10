@@ -57,12 +57,13 @@ class AberrationsController:
         self.masks_loaded = (len(self.data_set.get_masks_list()) >= 1)
         self.sub_mode = ''
         self.corrected_aberrations_list = []
-        self.corrected_initial_list = ['piston','tilt','defocus']
+        self.corrected_initial_list = ['piston','tilt']
         self.colors = [None] * (self.zernike_coeffs.max_order + 1)
         self.correct_disp = False
         self.correct_first = False
         self.lambda_check = False
         self.lambda_value = 632.8
+        self.defocus = False
         # Graphical elements
         self.top_left_widget = QWidget()        # ??
         self.top_right_widget = Surface2DView('Unwrapped Phase')        # ??
@@ -143,17 +144,16 @@ class AberrationsController:
                 self.options1_widget.set_checkboxes(self.correct_disp,
                                                     self.correct_first, self.lambda_check)
                 self.main_widget.set_options1_widget(self.options1_widget)
-                self.display_2D_ab_init()
+                self.display_2D_ab_init(defocus=self.defocus)
                 self.display_bar_graph_coeff()
                 self.display_zernike_table()
-
 
             case 'Seidelcoefficients_aberrations':
                 self.options1_widget = AberrationsOptionsView()
                 self.options1_widget.set_checkboxes(self.correct_disp,
                                                     self.correct_first, self.lambda_check)
                 self.main_widget.set_options1_widget(self.options1_widget)
-                self.display_2D_ab_init()
+                self.display_2D_ab_init(defocus=self.defocus)
                 self.bot_right_widget = TableView(5, 4)
                 self.main_widget.set_bot_right_widget(self.bot_right_widget)
 
@@ -170,7 +170,6 @@ class AberrationsController:
                 pass
 
             case _:
-                print('OK')
                 self.bot_right_widget = HTMLView()
                 url = 'docs/html/FR/aberrations.html'
                 css = 'docs/html/styles.css'
@@ -240,17 +239,27 @@ class AberrationsController:
         self.top_left_widget.set_data(x_axis, y_axis, color_x=self.colors)
         self.top_left_widget.set_labels(x_axis_label, y_axis_label)
 
-    def display_2D_ab_init(self):
+    def display_2D_ab_init(self, defocus: bool = False):
         """
         Display tilt and piston corrected phase in the top right corner.
+        :param defocus: If defocus aberration has to be corrected on display.
         """
         self.main_widget.clear_top_right()
         # Display wrapped in 2D
         self.top_right_widget = Surface2DView(translate('initial_corrected_phase'))
         self.main_widget.set_top_right_widget(self.top_right_widget)
         # Correction of the phase with tilt and piston
+        # Check if defocus has to be corrected
+        if defocus:
+            if 'defocus' not in self.corrected_aberrations_list:
+                self.corrected_aberrations_list.append('defocus')
+        else:
+            if 'defocus' in self.corrected_aberrations_list:
+                self.corrected_aberrations_list.remove('defocus')
+
+        new_list = self.corrected_initial_list + self.corrected_aberrations_list
         wedge_factor = self.phase.get_wedge_factor()
-        _, corrected = self.zernike_coeffs.process_surface_correction(self.corrected_initial_list)
+        _, corrected = self.zernike_coeffs.process_surface_correction(new_list)
         unwrapped_array = corrected * wedge_factor
         z_label = translate('phase_value_in') + ' (\u03BB)'
         if self.lambda_check:
@@ -366,7 +375,6 @@ class AberrationsController:
         """
         Action to perform when an option in the aberrations options view changed.
         """
-        print(event)
         if 'wedge' in event:
             d = event.split(',')
             wedge_factor = float(d[1])
@@ -376,13 +384,19 @@ class AberrationsController:
             # Test if checkboxes are checked
             self.correct_disp, self.correct_first = self.options1_widget.get_checkboxes()
 
+        if 'defocus_correct' in event:
+            if 'True' in event:
+                self.defocus = True
+            else:
+                self.defocus = False
+
         if 'wavelength' in event:
             self.lambda_check = self.options1_widget.is_lambda_checked()
             self.lambda_value = float(self.options1_widget.get_lambda())
             self.zernike_coeffs.update_lambda(value=self.lambda_value, um_check=self.lambda_check)
 
+        self.display_2D_ab_init(defocus=self.defocus)
         self.display_bar_graph_coeff(disp_correct=self.correct_disp, first=self.correct_first)
-        self.display_2D_ab_init()
         if self.submode == 'Zernikecoefficients_aberrations':
             self.display_zernike_table()
 

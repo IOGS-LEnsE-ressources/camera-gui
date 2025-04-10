@@ -12,6 +12,7 @@ https://iogs-lense-ressources.github.io/camera-gui/
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
 .. moduleauthor:: Dorian MENDES (Promo 2026) <dorian.mendes@institutoptique.fr>
+.. moduleauthor:: Abdallah MRABTI (Promo 2026)
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 
 .. version:: 3.0

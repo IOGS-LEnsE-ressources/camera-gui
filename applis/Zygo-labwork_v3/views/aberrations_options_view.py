@@ -73,6 +73,13 @@ class AberrationsOptionsView(QWidget):
         self.widget_correct_first.check_changed.connect(self.disp_changed)
         self.layout.addWidget(self.widget_correct_first)
         self.layout.addStretch()
+        # Defocus correction
+        self.widget_correct_defoc = CheckBoxView('defocus_correct',
+                                                 translate('label_correct_defocus_choice'))
+        self.widget_correct_defoc.set_enabled(True)
+        self.widget_correct_defoc.check_changed.connect(self.disp_changed)
+        self.layout.addWidget(self.widget_correct_defoc)
+        self.layout.addStretch()
 
         # lambda or nm display
         self.widget_lambda = QWidget()
@@ -190,11 +197,6 @@ class AberrationsOptionsView(QWidget):
 
 if __name__ == "__main__":
     from PyQt6.QtWidgets import QApplication
-    '''
-    from controllers.analyses_controller import AnalysesController, ModesManager
-    manager = ModesManager()
-    controller = AnalysesController()
-    '''
 
     def analyses_changed(value):
         print(value)

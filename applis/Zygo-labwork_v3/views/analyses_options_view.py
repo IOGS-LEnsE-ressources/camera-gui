@@ -17,7 +17,7 @@ from lensepy.pyqt6.widget_editline import LineEditView
 from lensepy.pyqt6.widget_progress_bar import ProgressBarView
 from lensepy.pyqt6.widget_checkbox import CheckBoxView
 from PyQt6.QtWidgets import (
-    QWidget, QLabel, QProgressBar, QCheckBox, QLineEdit,
+    QWidget, QLabel, QPushButton,
     QHBoxLayout, QVBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -53,10 +53,10 @@ class AnalysesOptionsView(QWidget):
         self.widget_3D_wedge = QWidget()
         self.layout_3D_wedge = QHBoxLayout()
         self.widget_3D_wedge.setLayout(self.layout_3D_wedge)
-        self.widget_2D_3D = CheckBoxView('2D_3D', translate('label_2D_3D_choice'))
-        self.widget_2D_3D.check_changed.connect(self.display_changed)
-        self.widget_2D_3D.set_enabled(False)
-        self.widget_2D_3D.set_checked(False)
+        self.widget_2D_3D = QPushButton(translate('label_2D_3D_choice'))
+        self.widget_2D_3D.setStyleSheet(disabled_button)
+        self.widget_2D_3D.clicked.connect(self.display_changed)
+        self.widget_2D_3D.setEnabled(False)
         self.wedge_edit = LineEditView('wedge', translate('label_wedge_value'), '1')
         self.wedge_edit.text_changed.connect(self.wedge_changed)
         self.layout_3D_wedge.addWidget(self.widget_2D_3D)
@@ -144,13 +144,6 @@ class AnalysesOptionsView(QWidget):
         """
         return self.widget_tilt.checkbox_choice.isChecked()
 
-    def is_3D_checked(self):
-        """
-        Return if the 3D checkbox is checked.
-        :return: True if checked.
-        """
-        return self.widget_2D_3D.checkbox_choice.isChecked()
-
     def is_range_checked(self):
         """
         Return if the tilt checkbox is checked.
@@ -162,7 +155,11 @@ class AnalysesOptionsView(QWidget):
         """
         Action performed when the 2D/3D checkbox is checked.
         """
-        self.analyses_changed.emit(event)
+        sender = self.sender()
+        if sender == self.widget_2D_3D:
+            self.analyses_changed.emit('disp_3D')
+        else:
+            self.analyses_changed.emit(event)
 
     def tilt_changed(self, event):
         """

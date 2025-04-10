@@ -92,7 +92,8 @@ label_aberrations_options; Etude simplifiée
 label_wedge_value; Wedge Factor
 label_pv_rms_corrected; Statistiques phase corrigée
 label_correct_disp_choice; Suppression coefficients corrigés
-label_correct_first_choice; Piston/Tilt/Defocus
+label_correct_first_choice; Piston/Tilt (Bar graph)
+label_correct_defocus_choice; Correction du defocus
 ab_piston_title; Piston
 ab_tilt_title; Tilt
 ab_defocus_title; Defocus
@@ -102,7 +103,7 @@ ab_trefoil_title; Trèfle
 ab_sphere_title; Ab. Sphériques
 label_lambda_value; Longueur d'Onde (nm)
 label_lambda_check; um
-initial_corrected_phase; Phase corrigée (Piston, Tilt, Defocus)
+initial_corrected_phase; Phase corrigée (Piston, Tilt)
 phase_value_in; Phase
 coeff_y_axis_label; Valeur des coefficients de Zernike
 coeff_x_axis_label; Indice des coefficients (Noll)

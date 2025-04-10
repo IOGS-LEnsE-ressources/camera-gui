@@ -15,7 +15,8 @@ Functions
 -->     GLOBAL : Hardware - default values for camera and piezo to update
             if hardware is connected
 -->     Save mask type in MAT file (and read it)
--->     Analyses mode / view : add 3D option !
+-->     Analyses mode / view : add 3D option - old version ?
+-->     In 3D display, add a Z-axis factor to increase details ?
 
 
 Bugs
@@ -29,8 +30,6 @@ Bugs
             + find a way to stop thread_update camera on closing acquisition mode
 -->     in masks controllers / options view
             + in update_submenu : update 'nomask' in options_list of manager
--->     in analyses controller
-            + unwrapped -> display wrapped and unwrapped in 3D
 
 -->     GLOBAL TEST
             +> main_menu
@@ -45,8 +44,6 @@ Bugs
                 access to images is not possible (bar with buttons is deleted)
             +> masks mode
             +> analyses mode
-                + when back to analyses mode (if coeffs already calculated), no access to corrected phase
-                and progress bar to 0
 
 Test to do
 ==========

@@ -10,6 +10,7 @@ Creation : march/2025
 """
 import sys, os
 import numpy as np
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from views.main_structure import MainView
@@ -28,6 +29,7 @@ from models.zernike_coefficients import Zernike
 from utils.dataset_utils import generate_images_grid, DataSetState
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from controllers.modes_manager import ModesManager
     from models.dataset import DataSetModel
@@ -40,7 +42,7 @@ def is_float(element: any) -> bool:
     :param element: Object to test.
     :return: True if the object is a float number.
     """
-    #If you expect None to be passed:
+    # If you expect None to be passed:
     if element is None:
         return False
     try:
@@ -62,7 +64,7 @@ class AnalysesController:
         """
         self.manager: "ModesManager" = manager
         self.data_set: DataSetModel = self.manager.data_set
-        self.phase: "PhaseModel"= self.manager.phase
+        self.phase: "PhaseModel" = self.manager.phase
         self.zernike_coeffs: Zernike = Zernike(self.phase)
         self.main_widget: MainView = self.manager.main_widget
         self.images_loaded = (self.data_set.images_sets.get_number_of_sets() >= 1)
@@ -71,9 +73,9 @@ class AnalysesController:
         self.sub_mode = ''
         self.corrected_phase = None
         # Graphical elements
-        self.top_left_widget = ImagesDisplayView()     # Display first image of a set
-        self.top_right_widget = QWidget()        # ??
-        self.bot_right_widget = HTMLView()             # HTML Help on analyses ?
+        self.top_left_widget = ImagesDisplayView()  # Display first image of a set
+        self.top_right_widget = QWidget()  # ??
+        self.bot_right_widget = HTMLView()  # HTML Help on analyses ?
         # Submenu
         self.submenu = SubMenu(translate('submenu_analyses'))
         if __name__ == "__main__":
@@ -82,9 +84,9 @@ class AnalysesController:
             self.submenu.load_menu('menu/analyses_menu.txt')
         self.submenu.menu_changed.connect(self.update_submenu)
         # Option 1
-        self.options1_widget = AnalysesOptionsView()        # Analyses Options
+        self.options1_widget = AnalysesOptionsView()  # Analyses Options
         # Option 2
-        self.options2_widget = QWidget()        # ??
+        self.options2_widget = QWidget()  # ??
 
         self.w_3d_view = QWidget()
         # Update menu and view
@@ -114,7 +116,7 @@ class AnalysesController:
         # Update grid of images
         images = self.data_set.get_images_sets(1)
         mask = self.data_set.get_global_mask()
-        g_images = images[0]*mask
+        g_images = images[0] * mask
         self.top_left_widget.set_image_from_array(g_images)
 
     def update_submenu_view(self, submode: str):
@@ -151,41 +153,40 @@ class AnalysesController:
                 self.submenu.set_activated(4)
         # Update views
         self.main_widget.clear_bot_right()
-        self.main_widget.clear_options()
         # For all submodes
-        self.options1_widget = AnalysesOptionsView()        # Analyses Options
-        self.main_widget.set_options_widget(self.options1_widget)
         self.options1_widget.analyses_changed.connect(self.analyses_changed)
         wedge_factor = self.phase.get_wedge_factor()
         self.options1_widget.wedge_edit.set_value(str(wedge_factor))
         # Specific submodes
         match self.submode:
             case 'wrappedphase_analyses':
-                self.options1_widget.widget_2D_3D.set_enabled(False)
-                ## Test 2D or 3D ??
+                self.options1_widget.widget_2D_3D.setEnabled(False)
+                self.options1_widget.widget_2D_3D.setStyleSheet(disabled_button)
                 # Display wrapped in 2D
-                self.top_right_widget = Surface2DView('Wrapped Phase')
-                self.main_widget.set_top_right_widget(self.top_right_widget)
+                self.display_2D_wrapped()
                 # Help
-                self.display_help() # Help in bottom right
+                self.display_help()  # Help in bottom right
                 # Options
                 self.options1_widget.wedge_edit.setEnabled(False)
                 self.options1_widget.hide_correction()
 
             case 'unwrappedphase_analyses':
-                self.options1_widget.widget_2D_3D.set_enabled(True)
-                self.display_2D_wrapped()
+                self.options1_widget.widget_2D_3D.setEnabled(True)
+                self.options1_widget.widget_2D_3D.setStyleSheet(unactived_button)
                 # Options
                 self.options1_widget.wedge_edit.setEnabled(True)
                 self.options1_widget.hide_correction()
 
             case 'correctedphase_analyses':
                 # Options
-                self.options1_widget.widget_2D_3D.set_enabled(True)
+                self.options1_widget.widget_2D_3D.setEnabled(True)
+                self.options1_widget.widget_2D_3D.setStyleSheet(unactived_button)
                 self.options1_widget.wedge_edit.setEnabled(True)
                 self.options1_widget.show_correction()
 
             case 'histophase_analyses':
+                self.options1_widget.wedge_edit.setEnabled(False)
+                self.options1_widget.widget_2D_3D.setStyleSheet(disabled_button)
                 self.bot_right_widget = HistogramWidget(translate('histo_corrected_phase'))
                 self.bot_right_widget.set_background('white')
                 # Options
@@ -193,22 +194,22 @@ class AnalysesController:
 
             case _:
                 self.options1_widget.wedge_edit.setEnabled(False)
-                self.display_help() # Help in bottom right
+                self.options1_widget.widget_2D_3D.setStyleSheet(disabled_button)
+                self.display_help()  # Help in bottom right
 
     def update_submenu(self, event):
         """
         Update data and views when the submenu is clicked.
         :param event: Sub menu click.
         """
+        if self.data_set.data_set_state == DataSetState.ANALYZED:
+            self.tilt_possible = True
         # Update view
         self.update_submenu_view(event)
         # Update Action
         match event:
             case 'wrappedphase_analyses':
                 # Display Wrapped array in top right area
-                wrapped = self.phase.get_wrapped_phase()
-                wrapped_array = wrapped.filled(np.nan)
-                self.top_right_widget.set_array(wrapped_array)
                 self.options1_widget.erase_pv_rms()
                 # Process unwrapped phase
                 if self.data_set.data_set_state == DataSetState.WRAPPED:
@@ -216,11 +217,9 @@ class AnalysesController:
                     self.update_submenu('wrappedphase_analyses')
 
             case 'unwrappedphase_analyses':
-                # Display Wrapped array in top right area
-                wrapped = self.phase.get_wrapped_phase()
-                wrapped_array = wrapped.filled(np.nan)
-                self.top_right_widget.set_array(wrapped_array)
-                # Display wrapped in 2D## Test 2D or 3D ??
+                # Display wrapped in 2D
+                self.display_2D_wrapped()
+                # Display unwrapped in 2D
                 self.display_2D_unwrapped()
                 # Start Zernike coefficient process - for piston and tilt correction
                 if self.data_set.data_set_state == DataSetState.UNWRAPPED:
@@ -255,16 +254,13 @@ class AnalysesController:
         """
         Display Wrapped phase in 2D at the top right corner.
         """
-        wrapped = self.phase.get_unwrapped_phase()
+        wrapped = self.phase.get_wrapped_phase()
         wrapped_array = wrapped.filled(np.nan)
         # Display unwrapped and corrected in 2D
         self.main_widget.clear_top_right()
         self.top_right_widget = Surface2DView('Wrapped Phase')
         self.main_widget.set_top_right_widget(self.top_right_widget)
         self.top_right_widget.set_array(wrapped_array)
-        pv, rms = process_statistics_surface(wrapped)
-        self.options1_widget.set_pv_uncorrected(pv, '\u03BB')
-        self.options1_widget.set_rms_uncorrected(rms, '\u03BB')
 
     def display_2D_unwrapped(self):
         """
@@ -306,7 +302,7 @@ class AnalysesController:
         # Test if tilt !
         if self.options1_widget.is_tilt_checked():
             wedge_factor = self.phase.get_wedge_factor()
-            _, corrected = self.zernike_coeffs.process_surface_correction(['piston','tilt'])
+            _, corrected = self.zernike_coeffs.process_surface_correction(['piston', 'tilt'])
             corrected = corrected * wedge_factor
         else:
             corrected = unwrapped
@@ -367,11 +363,8 @@ class AnalysesController:
             self.display_2D_correction()
         if change[0] == 'range':
             self.display_2D_correction()
-        if change[0] == '2D_3D':
-            if 'True' in change[1]:
-                self.display_3D()
-            else:
-                pass
+        if change[0] == 'disp_3D':
+            self.display_3D()
         if change[0] == 'wedge':
             if is_float(change[1]):
                 self.phase.set_wedge_factor(float(change[1]))
@@ -381,7 +374,7 @@ class AnalysesController:
                     self.display_2D_unwrapped()
                     self.display_2D_correction()
 
-    def process_wrapped_phase_calculation(self, set_number: int=1):
+    def process_wrapped_phase_calculation(self, set_number: int = 1):
         """
         Process wrapped phase from 5 images.
         :param set_number: Number of the set to process.
@@ -395,7 +388,7 @@ class AnalysesController:
             # End of process
             self.data_set.data_set_state = DataSetState.WRAPPED
 
-    def process_unwrapped_phase_calculation(self, set_number: int=1):
+    def process_unwrapped_phase_calculation(self, set_number: int = 1):
         """
         Process unwrapped phase from the wrapped phase.
         :param set_number: Number of the set to process.
