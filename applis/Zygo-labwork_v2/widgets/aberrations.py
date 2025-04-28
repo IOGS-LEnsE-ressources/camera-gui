@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
 
-
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont
 from lensepy import load_dictionary, translate
@@ -274,7 +274,35 @@ class AberrationsChoiceWidget(QWidget):
             if check.isChecked():
                 self.aberrations_list.append(self.signal_list[i])
         self.aberrations_choice_changed.emit('choice_changed')
+        
+class TableFromNumpy(QTableWidget):
+    def __init__(self, array, parent=None):
+        super().__init__(parent)
 
+        # Set the row and column count based on the shape of the NumPy array
+        self.setRowCount(array.shape[0])
+        self.setColumnCount(array.shape[1])
+
+        # Populate the table with the values from the NumPy array
+        for row in range(array.shape[0]):
+            for col in range(array.shape[1]):
+                item = QTableWidgetItem(str(array[row, col]))
+                self.setItem(row, col, item)
+
+        # Resize columns and rows to fit their contents
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+
+        # Set the last column to stretch when resizing the widget
+        self.horizontalHeader().setStretchLastSection(True)
+
+        # Optionally, you can disable horizontal and vertical scroll bars
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        # Ensure that the header is also adjusted
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 '''
 class CorrectionTable(QTableWidget):
     def __init__(self,parent=None):
