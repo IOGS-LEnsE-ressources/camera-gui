@@ -48,6 +48,7 @@ class ImagesDisplayView(QGraphicsView):
         self.__scene.set_image(image)
         self.update()
 
+
 class ImageToGraphicsScene(QGraphicsScene):
     def __init__(self, parent: ImagesDisplayView = None):
         super().__init__(parent)

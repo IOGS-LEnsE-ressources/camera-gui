@@ -13,8 +13,9 @@ https://iogs-lense-ressources.github.io/camera-gui/
 
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 """
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from lensepy import load_dictionary, translate, dictionary
-import sys
 from PyQt6.QtWidgets import (
     QWidget, QPushButton,
     QMainWindow, QApplication, QMessageBox)
@@ -22,7 +23,7 @@ from PyQt6.QtWidgets import (
 ## Widgets
 from lensepy.pyqt6 import *
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
-from widgets.main_widget import MainWidget
+from views.main_widget import MainWidget
 ## Camera Wrapper
 from lensecam.basler.camera_basler import CameraBasler
 

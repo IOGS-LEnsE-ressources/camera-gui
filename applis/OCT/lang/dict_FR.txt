@@ -5,4 +5,4 @@
 # TitleWidget
 # --------------------
 label_title;OCT - Image Acquisition
-test;Test
+label_subtitle;Développée par le LEnsE

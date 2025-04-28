@@ -6,6 +6,8 @@
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
 """
 import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import numpy as np
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget,
@@ -18,7 +20,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy import load_dictionary, translate, dictionary
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from lensepy.css import *
-from widgets.images import ImageDisplayGraph
+from views.images import ImageDisplayGraph
+from views.title_view import TitleView
 
 
 class CameraParamsWidget(QWidget):
@@ -33,41 +36,10 @@ class CameraParamsWidget(QWidget):
         super().__init__(parent=parent)
         self.parent = parent
 
-
-
-class TitleWidget(QWidget):
-    """
-    Widget containing the title of the application and the LEnsE logo.
-    """
-    def __init__(self, parent=None):
-        """
-        Default Constructor.
-        :param parent: Parent widget of the title widget.
-        """
-        super().__init__(parent=parent)
-        self.parent = parent
-        self.layout = QGridLayout()
-
-        self.label_title = QLabel(translate('label_title'))
-        self.label_title.setStyleSheet(styleH1)
-        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.label_subtitle = QLabel(translate('label_subtitle'))
-        self.label_subtitle.setStyleSheet(styleH3)
-        self.label_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.lense_logo = QLabel('Logo')
-        self.lense_logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo = QPixmap("./assets/IOGS-LEnsE-logo_small.jpg")
-        # logo = logo_.scaled(imageSize.width()//4, imageSize.height()//4, Qt.AspectRatioMode.KeepAspectRatio)
-        self.lense_logo.setPixmap(logo)
-
-        self.layout.addWidget(self.label_title, 0, 0)
-        self.layout.setColumnStretch(0, 1)
-        self.layout.setColumnStretch(1, 1)
-        self.layout.addWidget(self.lense_logo, 0, 1)
-
-        self.setLayout(self.layout)
+        layout = QHBoxLayout()
+        label = QLabel('Test Camera')
+        layout.addWidget(label)
+        self.setLayout(layout)
 
 
 class MiniCameraWidget(QWidget):
@@ -84,7 +56,7 @@ class MiniCameraWidget(QWidget):
         self.parent = parent
         self.layout = QGridLayout()
 
-        self.title_widget = TitleWidget(self.parent)
+        self.title_widget = TitleView(self.parent)
         self.camera_params_widget = CameraParamsWidget(self.parent)
 
         self.layout.setRowStretch(0, 1)
@@ -122,7 +94,7 @@ class MainWidget(QWidget):
         # Adding elements in the layout
         self.mini_camera = MiniCameraWidget(self.parent)
         self.layout.addWidget(self.mini_camera, 0, 0)
-        self.image1_widget = ImageDisplayGraph(self, '#7FFFD4', zoom=False)
+        self.image1_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
         self.layout.addWidget(self.image1_widget, 0, 1)
         self.image2_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
         self.layout.addWidget(self.image2_widget, 0, 2)
@@ -132,7 +104,7 @@ class MainWidget(QWidget):
 
         # TO DELETE
         image = np.random.normal(size=(100, 100))
-        self.image1_widget.set_image_from_array(image, 'Image1')
+        #self.image1_widget.set_image_from_array(image, 'Image1')
         self.image2_widget.set_image_from_array(image, 'Image2')
         self.image_graph.set_image_from_array(image, 'OCT')
 
