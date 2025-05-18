@@ -4,6 +4,7 @@
 
 ## Python requirements
 lensepy
+lensecam
 numpy
 matplotlib
 pyqt6

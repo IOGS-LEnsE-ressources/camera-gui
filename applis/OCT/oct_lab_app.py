@@ -12,6 +12,7 @@ https://iogs-lense-ressources.github.io/camera-gui/
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
 .. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
+.. moduleauthor:: Julien MOREAU () <julien.moreau@institutoptique.fr>
 """
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
