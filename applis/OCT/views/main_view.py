@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""*main_widget.py* file.
+"""*main_view.py* file.
 
 .. note:: LEnsE - Institut d'Optique - version 1.0
 
@@ -68,7 +68,7 @@ class MiniCameraWidget(QWidget):
 
 
 
-class MainWidget(QWidget):
+class MainView(QWidget):
     """
     Main central widget of the application.
     """
@@ -298,7 +298,7 @@ if __name__ == '__main__':
             self.setWindowTitle(translate("window_title_main_menu_widget"))
             self.setGeometry(100, 200, 800, 600)
 
-            self.central_widget = MainWidget(self)
+            self.central_widget = MainView(self)
             self.setCentralWidget(self.central_widget)
 
         def create_gui(self):

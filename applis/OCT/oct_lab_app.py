@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
 ## Widgets
 from lensepy.pyqt6 import *
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
-from views.main_widget import MainWidget
+from views.main_view import MainView
 ## Camera Wrapper
 from lensecam.basler.camera_basler import CameraBasler
 
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
             button = dlg.exec()
 
         ## GUI structure
-        self.central_widget = MainWidget(self)
+        self.central_widget = MainView(self)
         self.setCentralWidget(self.central_widget)
 
     def main_action(self, event):
