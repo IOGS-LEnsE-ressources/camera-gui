@@ -27,7 +27,7 @@ from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from views.main_view import MainView
 ## Camera Wrapper
 from lensecam.basler.camera_basler import CameraBasler
-
+from models.motor_control import *
 
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
 
         # Initialization of the camera
         # ----------------------------
-        self.camera = CameraBasler()
+        '''self.camera = CameraBasler()
         self.camera_connected = self.camera.find_first_camera()
         if self.camera_connected:
             self.camera.init_camera()
@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok
             )
             dlg.setIcon(QMessageBox.Icon.Warning)
-            button = dlg.exec()
+            button = dlg.exec()'''
 
         ## GUI structure
         self.central_widget = MainView(self)

@@ -82,6 +82,9 @@ def main():
         channel.MoveTo(Decimal(1), 50000)  # Move to 1 mm
         print(f"Position = {channel.DevicePosition}")
         time.sleep(0.5)
+        print("Homing Motor")
+        channel.Home(50000)
+        print("Homing Completed")
 
         # Stop Polling and Disconnect
         channel.StopPolling()
