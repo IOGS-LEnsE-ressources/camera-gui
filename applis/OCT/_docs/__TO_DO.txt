@@ -1,2 +1,17 @@
 
 
+PHASE INIT
+----------
+
++ Positionner pas à pas à 4 ou 5mm
+
+
+
+
+INFOS SYSTEMES
+--------------
+
+Moteur Pas à pas
+~~~~~~~~~~~~~~~~
+    ++ Intervalle : 2mm - 7mm
+            +> Se placer à 4 ou 5mm au départ de l'appli.
