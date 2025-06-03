@@ -3,10 +3,13 @@
 Language;FR
 ### Camera Basler
 ColorMode;Mono12
-Exposure Time;1000
-Max Expo Time;20000
+ExposureTime;1000
+MaxExpoTime;20000
+### Step Motor
+StepSN;40897338
 ### Piezo
-Piezo V0;10
-Piezo DV;3
+PiezoSN;29501399
+PiezoV0;10
+PiezoDV;3
 ### Default directory
-Dir Images;~\OCT\
+DirImages;~\OCT\
