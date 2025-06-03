@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         load_default_dictionary('FR')
         # Read default parameters
-        #self.default_parameters = load_default_parameters('./config.txt')
+        self.default_parameters = load_default_parameters('./assets/config.txt')
 
         # Initialization of the camera
         # ----------------------------

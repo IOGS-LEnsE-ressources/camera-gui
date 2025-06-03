@@ -1,0 +1,12 @@
+# -*- coding: utf-8 -*-
+### Configuration file of OCT Lab App
+Language;FR
+### Camera Basler
+ColorMode;Mono12
+Exposure Time;1000
+Max Expo Time;20000
+### Piezo
+Piezo V0;10
+Piezo DV;3
+### Default directory
+Dir Images;~\OCT\
