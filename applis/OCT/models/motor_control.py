@@ -2,7 +2,7 @@ import os
 import time
 import sys
 import clr
-from win32cryptcon import SCHANNEL_ENC_KEY
+#from win32cryptcon import SCHANNEL_ENC_KEY
 
 clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.DeviceManagerCLI.dll")
 clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.GenericMotorCLI.dll")
