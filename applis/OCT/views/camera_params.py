@@ -58,6 +58,7 @@ class CameraParamsView(QWidget):
         layout.addLayout(layout_int_time)
         layout.addWidget(self.slider)
         layout.addLayout(layout_num)
+        layout.addSpacing(40)
 
         # Appliquer le layout à la fenêtre
         self.setLayout(layout)
@@ -66,12 +67,12 @@ class CameraParamsView(QWidget):
         self.int_time_value.setText(str(tint) + " ms")
         if __name__ == "__main__":
             print("integration time changed")
-        self.camThread.emit("int" + str(tint))
+        self.camThread.emit("int=" + str(tint))
 
     def mise_a_jour_num(self):
         if __name__ == "__main__":
             print("Number of averaged images changed")
-        self.camThread.emit("num" + self.num_value.text())
+        self.camThread.emit("num=" + self.num_value.text())
 
 
 if __name__ == "__main__":

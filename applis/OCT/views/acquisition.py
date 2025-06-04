@@ -123,21 +123,22 @@ class AcquisitionView(QWidget):
         layout.addLayout(step_size_layout)
         layout.addLayout(step_num_layout)
         layout.addLayout(buttons_layout)
+        layout.addSpacing(40)
 
         self.setLayout(layout)
 
     def directory_action(self):
         sender = self.sender()
         if sender == self.directory:
-            self.acqThread.emit("dir" + self.directory.text())
+            self.acqThread.emit("dir=" + self.directory.text())
             print("the file directory has been modified")
-        if sender == self.search:
+        elif sender == self.search:
             folder_request = QFileDialog.getExistingDirectory(self,"Choisir un fichier")
             if folder_request:
-                self.acqThread.emit("direction=" + folder_request)
+                self.acqThread.emit("dir=" + folder_request)
                 print(f"the new destination is {folder_request}")
                 self.directory.setText(folder_request)
-        if sender == self.name:
+        elif sender == self.name:
             self.acqThread.emit("name=" + self.name.text())
             print(f"the name of the file will be {self.name.text()}")
 
@@ -146,13 +147,13 @@ class AcquisitionView(QWidget):
         if sender == self.step_size:
             self.acqThread.emit("StepSize=" + self.step_size.text())
             print(f"the step size has been updated")
-        if sender == self.step_num:
+        elif sender == self.step_num:
             self.acqThread.emit("StepNum=" + self.step_num.text())
             print(f"the number of steps has been updated")
-        if sender == self.start_button:
+        elif sender == self.start_button:
             self.acqThread.emit("Start=")
             print(f"the acquisition has begun")
-        if sender == self.stop_button:
+        elif sender == self.stop_button:
             self.acqThread.emit("Stop=")
             print(f"the acquisition has been stopped")
 

@@ -33,4 +33,5 @@ for i, ax in enumerate(axs.flat):
     ax.imshow(image, cmap='gray')
 
 cam.disconnect()
+P.disconnect()
 plt.show()

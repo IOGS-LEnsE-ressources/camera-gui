@@ -10,18 +10,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import numpy as np
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget,
-    QVBoxLayout, QGridLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QCheckBox, QTextEdit,
-    QMessageBox, QFileDialog, QDialog
+    QMessageBox
 )
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtCore import Qt, pyqtSignal
-from lensepy import load_dictionary, translate, dictionary
-from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
-from lensepy.css import *
+from PyQt6.QtCore import pyqtSignal
+from lensepy import translate
 from views.images import ImageDisplayGraph
 from views.title_view import TitleView
+from views.live_mode import *
 
 
 class CameraParamsWidget(QWidget):
@@ -87,7 +82,11 @@ class MainView(QWidget):
         # Set size of cols and rows
         self.layout.setColumnStretch(0, 1)
         self.layout.setColumnStretch(1, 2)
+<<<<<<< HEAD
+        #self.layout.setColumnStretch(2, 1)
+=======
         self.layout.setColumnStretch(2, 2)
+>>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
         self.layout.setRowStretch(0, 1)
         self.layout.setRowStretch(1, 1)
         self.layout.setRowStretch(2, 1)
@@ -102,18 +101,25 @@ class MainView(QWidget):
         self.layout.addWidget(self.motors_options, 2, 0)
 
         self.image1_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
-        self.layout.addWidget(self.image1_widget, 0, 1)
+        #self.layout.addWidget(self.image1_widget, 0, 1)
         self.image2_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
-        self.layout.addWidget(self.image2_widget, 0, 2)
+        #self.layout.addWidget(self.image2_widget, 0, 2)
 
         self.image_graph = ImageDisplayGraph(self, '#48D1CC')
-        self.layout.addWidget(self.image_graph, 1, 1, 2, 2)
+        self.live_widget = liveWidget()
+        self.layout.addWidget(self.live_widget, 1, 1, 2, 1)
 
         # TO DELETE
+        self.horizontalLayout = QHBoxLayout()
         image = np.random.normal(size=(100, 100))
         #self.image1_widget.set_image_from_array(image, 'Image1')
-        self.image2_widget.set_image_from_array(image, 'Image2')
+        #self.image2_widget.set_image_from_array(image, 'Image2')
         self.image_graph.set_image_from_array(image, 'OCT')
+
+        self.horizontalLayout.addWidget(self.image1_widget)
+        self.horizontalLayout.addWidget(self.image2_widget)
+
+        self.layout.addLayout(self.horizontalLayout, 0, 1)
 
         self.setLayout(self.layout)
 

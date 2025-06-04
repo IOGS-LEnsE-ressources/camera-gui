@@ -70,6 +70,17 @@ class Motor:
             # this can be bad practice: It sometimes obscures the error source
             print(e)
 
+<<<<<<< HEAD
+    def move_motor(self, position:float, SleepTime = 0.1):
+        '''
+        déplace le moteur vers la position recherchée
+        :param position: position recherchée
+        :return: None
+        '''
+        if position <= 7 and position >= 0:
+            channel = self.channel
+            time.sleep(SleepTime)
+=======
     def move_motor(self, position:float, sleep_time = 1):
         """
         Move the motor to the position.
@@ -78,6 +89,7 @@ class Motor:
         """
         if 7 >= position > 0:
             time.sleep(sleep_time) # Useful ?
+>>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
             print("Mise en position du moteur ...")
             self.channel.MoveTo(Decimal(position), 50000)  # Move to 1 mm
             self.pos = channel.DevicePosition
@@ -87,12 +99,18 @@ class Motor:
         else:
             print(f"la position choisie doit être comprise entre 0 et 7mm")
 
+<<<<<<< HEAD
+    def home_motor(self, SleepTime = 0.1):
+        channel = self.channel
+        time.sleep(SleepTime)
+=======
     def home_motor(self, sleep_time = 1):
         """
         Move the motor to its home position.
         :param sleep_time: Pause between movement of the motor, in s.
         """
         time.sleep(sleep_time)  # Useful ?
+>>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
         print("Retour à zéro du moteur")
         self.channel.Home(50000)
         print("Retour à zéro effectué")
@@ -160,15 +178,25 @@ class Piezo:
             # this can be bad practice: It sometimes obscures the error source
             print(e)
 
+<<<<<<< HEAD
+    def set_voltage_piezo(self, voltage: float, SleepTime = 0.1):
+
+        device = self.device
+=======
     def set_voltage_piezo(self, voltage: float):
         """
         Set a voltage to the piezo controller.
         :param voltage: voltage, in V.
         """
+>>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
         max_voltage = self.max_voltage
         dev_voltage = Decimal(voltage)
 
         if dev_voltage != Decimal(0) and dev_voltage <= max_voltage:
+<<<<<<< HEAD
+            device.SetOutputVoltage(dev_voltage)
+            time.sleep(SleepTime)
+=======
             timeout = time.time() + 30
             self.device.SetOutputVoltage(dev_voltage)
             time.sleep(0.5)
@@ -176,6 +204,7 @@ class Piezo:
                 time.sleep(30)
                 if time.time() < timeout:
                     raise Exception("Timeout Exceeded")'''
+>>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
             print(f"Tension appliquée {device.GetOutputVoltage()}")
         else:
             print(f'La tension doit être inférieure à {max_voltage}')
