@@ -15,6 +15,7 @@ https://iogs-lense-ressources.github.io/camera-gui/
 .. moduleauthor:: Julien MOREAU () <julien.moreau@institutoptique.fr>
 """
 import sys, os
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 from lensepy import load_dictionary, translate, dictionary
 from PyQt6.QtWidgets import (
@@ -27,7 +28,7 @@ from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from views.main_view import MainView
 ## Camera Wrapper
 from lensecam.basler.camera_basler import CameraBasler
-from models.motor_control import *
+#from models.motor_control import *
 
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
@@ -81,7 +82,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         load_default_dictionary('FR')
         # Read default parameters
-        #self.default_parameters = load_default_parameters('./config.txt')
+        self.default_parameters = load_default_parameters('./assets/config.txt')
 
         # Initialization of the camera
         # ----------------------------

@@ -82,13 +82,24 @@ class MainView(QWidget):
         # Set size of cols and rows
         self.layout.setColumnStretch(0, 1)
         self.layout.setColumnStretch(1, 2)
+<<<<<<< HEAD
         #self.layout.setColumnStretch(2, 1)
+=======
+        self.layout.setColumnStretch(2, 2)
+>>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
         self.layout.setRowStretch(0, 1)
         self.layout.setRowStretch(1, 1)
         self.layout.setRowStretch(2, 1)
         # Adding elements in the layout
         self.mini_camera = MiniCameraWidget(self.parent)
         self.layout.addWidget(self.mini_camera, 0, 0)
+        self.acquisition_options = QWidget()
+        self.acquisition_options.setStyleSheet('background-color: red;')
+        self.layout.addWidget(self.acquisition_options, 1, 0)
+        self.motors_options = QWidget()
+        self.motors_options.setStyleSheet('background-color: blue;')
+        self.layout.addWidget(self.motors_options, 2, 0)
+
         self.image1_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
         #self.layout.addWidget(self.image1_widget, 0, 1)
         self.image2_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
