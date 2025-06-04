@@ -76,13 +76,13 @@ class Motor:
             # this can be bad practice: It sometimes obscures the error source
             print(e)
 
-    def move_motor(self, position:float, SleepTime = 1):
+    def move_motor(self, position:float, SleepTime = 0.1):
         '''
         déplace le moteur vers la position recherchée
         :param position: position recherchée
         :return: None
         '''
-        if position <= 7 and position > 0:
+        if position <= 7 and position >= 0:
             channel = self.channel
             time.sleep(SleepTime)
             print("Mise en position du moteur ...")
@@ -94,7 +94,7 @@ class Motor:
         else:
             print(f"la position choisie doit être comprise entre 0 et 7mm")
 
-    def home_motor(self, SleepTime = 1):
+    def home_motor(self, SleepTime = 0.1):
         channel = self.channel
         time.sleep(SleepTime)
         print("Retour à zéro du moteur")
@@ -167,20 +167,15 @@ class Piezo:
             # this can be bad practice: It sometimes obscures the error source
             print(e)
 
-    def set_voltage_piezo(self, voltage: float):
+    def set_voltage_piezo(self, voltage: float, SleepTime = 0.1):
 
         device = self.device
         max_voltage = self.max_voltage
         dev_voltage = Decimal(voltage)
 
         if dev_voltage != Decimal(0) and dev_voltage <= max_voltage:
-            timeout = time.time() + 30
             device.SetOutputVoltage(dev_voltage)
-            time.sleep(0.5)
-            '''while (device.IsSetOutputVoltageActive()):
-                time.sleep(30)
-                if time.time() < timeout:
-                    raise Exception("Timeout Exceeded")'''
+            time.sleep(SleepTime)
             print(f"Tension appliquée {device.GetOutputVoltage()}")
         else:
             print(f'La tension doit être inférieure à {max_voltage}')
