@@ -82,11 +82,6 @@ class MainView(QWidget):
         # Set size of cols and rows
         self.layout.setColumnStretch(0, 1)
         self.layout.setColumnStretch(1, 2)
-<<<<<<< HEAD
-        #self.layout.setColumnStretch(2, 1)
-=======
-        self.layout.setColumnStretch(2, 2)
->>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
         self.layout.setRowStretch(0, 1)
         self.layout.setRowStretch(1, 1)
         self.layout.setRowStretch(2, 1)
@@ -112,8 +107,8 @@ class MainView(QWidget):
         # TO DELETE
         self.horizontalLayout = QHBoxLayout()
         image = np.random.normal(size=(100, 100))
-        #self.image1_widget.set_image_from_array(image, 'Image1')
-        #self.image2_widget.set_image_from_array(image, 'Image2')
+        self.image1_widget.set_image_from_array(image, 'Image1')
+        self.image2_widget.set_image_from_array(image, 'Image2')
         self.image_graph.set_image_from_array(image, 'OCT')
 
         self.horizontalLayout.addWidget(self.image1_widget)

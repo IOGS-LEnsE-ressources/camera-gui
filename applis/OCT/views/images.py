@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QLabel, QComboBox, QPushButton, QFrame,
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout
 )
+import cv2
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont
 from lensepy import load_dictionary, translate
@@ -54,10 +55,19 @@ class ImageDisplayGraph(QWidget):
         # Create a QGraphicsView and Scene
         self.scene = QGraphicsScene(self)
         self.graphics_view = QGraphicsView(self.scene)
-        self.layout.addWidget(self.graphics_view)
+        self.layout.addWidget(self.graphics_view)   #### A été retiré temporairement pour gérer les images en uint8
 
         self.graphics_view.setStyleSheet("border: none;")  # Remove border from the QGraphicsView
         self.graphics_view.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+
+        ###### Modifications nécessaires pour uint8, pourra être retiré plus tard
+        '''size_factor = 0.5
+        self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.image_label)
+        self.image_label.setMaximumSize(int(2048*size_factor), int(1088*size_factor))'''
+        #######
 
         # Background color of the scene
         self.scene.setBackgroundBrush(QColor(self.bg_color))
@@ -72,7 +82,7 @@ class ImageDisplayGraph(QWidget):
         """
         if text != '':
             self.text = text
-        pixmap = QPixmap.fromImage(QImage(pixels.data, pixels.shape[1], pixels.shape[0], QImage.Format.Format_RGB888))
+        pixmap = QPixmap.fromImage(QImage(pixels.data, pixels.shape[1], pixels.shape[0], QImage.Format.Format_Grayscale8))
         self.scene.clear()  # Clear the scene before adding a new item
         pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene.addItem(pixmap_item)
@@ -98,6 +108,21 @@ class ImageDisplayGraph(QWidget):
                 self.graphics_view.scale(self.zoom_factor, self.zoom_factor)
             else:
                 self.graphics_view.scale(1 / self.zoom_factor, 1 / self.zoom_factor)
+"""
+    def set_image_from_uint8(self, image : bytes, text: str = ''):
+        '''Permet d'effectuer le même fonction que set_image_from_array, mais avec une image uint8, ce qui
+        est le format des images de la caméra après conversion'''
+
+        if image.ndim != 2 or image.dtype != np.uint8:
+            raise ValueError("L'image doit être un tableau 2D en uint8 (grayscale).")
+
+        h, w = image.shape
+        qimage = QImage(image.data, w, h, w, QImage.Format.Format_Grayscale8)
+        pixmap = QPixmap.fromImage(qimage)
+
+        self.image_label.setPixmap(pixmap)
+        self.graphics_view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        self.image_label.setScaledContents(True)"""
 
 
 class MyWindow(QMainWindow):

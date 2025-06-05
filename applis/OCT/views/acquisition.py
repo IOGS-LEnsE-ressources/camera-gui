@@ -133,11 +133,7 @@ class AcquisitionView(QWidget):
             self.acqThread.emit("dir=" + self.directory.text())
             print("the file directory has been modified")
         elif sender == self.search:
-            folder_request = QFileDialog.getExistingDirectory(self,"Choisir un fichier")
-            if folder_request:
-                self.acqThread.emit("dir=" + folder_request)
-                print(f"the new destination is {folder_request}")
-                self.directory.setText(folder_request)
+            self.acqThread.emit("request=")
         elif sender == self.name:
             self.acqThread.emit("name=" + self.name.text())
             print(f"the name of the file will be {self.name.text()}")
@@ -156,6 +152,13 @@ class AcquisitionView(QWidget):
         elif sender == self.stop_button:
             self.acqThread.emit("Stop=")
             print(f"the acquisition has been stopped")
+
+    def directory(self):
+        folder_request = QFileDialog.getExistingDirectory(self, "Choisir un fichier")
+        if folder_request:
+            self.acqThread.emit("dir=" + folder_request)
+            print(f"the new destination is {folder_request}")
+            self.directory.setText(folder_request)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
