@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QWidget, QGridLayout, QSplitter, QStackedWidget, QApplication
+    QWidget, QGridLayout, QSplitter, QStackedWidget, QApplication, QFileDialog
 )
 from PyQt6.QtCore import Qt, QTimer
 import sys
@@ -58,10 +58,10 @@ class MainWindow(QWidget):
 
         self.layout = QGridLayout()
 
-        self.timer = QTimer()
+        """self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(33)
-
+"""
         self.setLayout(self.layout)
 
         self.layout.setColumnStretch(0, 1)
@@ -82,6 +82,7 @@ class MainWindow(QWidget):
 
         self.camera.camThread.connect(self.cam_action)
         self.acq.acqThread.connect(self.acquisition_action)
+        self.acq.folderThread.connect(self.folder_search, Qt.ConnectionType.QueuedConnection)
         self.motors.motThread.connect(self.motor_action)
 
         self.motors.changeZ(self.live_widget.control.motor.get_position())
@@ -97,9 +98,9 @@ class MainWindow(QWidget):
             self.live = 1
             self.stack.setCurrentIndex(0)
         elif source == "request":
-            self.timer.stop()
-            self.acq.directory()
-            self.timer.start(33)
+            self.folder_search()
+            #self.timer.stop()
+            #self.timer.singleShot(0, self.delayed_folder_search)
 
     def cam_action(self, event):
         source_event = event.split("=")
@@ -135,6 +136,14 @@ class MainWindow(QWidget):
         except Exception as e:
             return None
             #print(f"the update could not take place : {e}")
+
+    def folder_search(self):
+        print("IOGS")
+        folder_request = QFileDialog.getExistingDirectory(None, "Choisir un fichier")
+        if folder_request:
+            #self.acq.acqThread.emit("dir=" + folder_request)
+            print(f"the new destination is {folder_request}")
+            #self.acq.directory.setText(folder_request)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
