@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import sys
 import time
 
-from views import motors_control
+from views import motors_display
 
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout,
@@ -26,8 +26,8 @@ class cameraControl(QWidget):
         print(cam_connected)
 
         self.exposure = 1500
-        self.motor = Motor()
         self.piezo = Piezo()
+        self.motor = Motor()
 
         self.cam.set_exposure(self.exposure)
 
@@ -43,21 +43,22 @@ class cameraControl(QWidget):
         images_1 = self.avg_images(N)
         self.piezo.set_voltage_piezo(step_size + V0)
         images_2 = self.avg_images(N)
-        P.set_zero_piezo(V0)
+        self.piezo.set_zero_piezo(V0)
         image1 = np.mean(images_1, axis=0)
         image2 = np.mean(images_2, axis=0)
 
         image = np.sqrt((image1 - image2)**2)
         return image1, image2, image
 
-    def live_sequence(self, step_size, V0):
+    def live_sequence(self, step_size = 0.6, V0 = 0):
+        self.piezo.set_voltage_piezo(V0)
         image1 = self.capture_image()
         self.piezo.set_voltage_piezo(step_size + V0)
         image2 = self.capture_image()
         image = np.sqrt((image1 - image2) ** 2)
         return image1, image2, image
 
-    def store_acquisition_sequence(self, z_step_size, Z, v_step_size, V0, N, num):
+    def store_acquisition_sequence(self, z_step_size, z, v_step_size, V0, N, num):
         """
         This function performs the entire measurement sequence of
         the OCT protocol, and returns a list containing the resulting
@@ -70,11 +71,11 @@ class cameraControl(QWidget):
         :param num: number of steps
         :rtype: list
         """
-        self.motor.move_motor(Z)
+        self.motor.move_motor(z)
         images = []
         for i in range(num):
             _, _, image = self.acquisition_sequence(v_step_size, V0, N)
-            self.motor.move_motor(Z + i * z_step_size)
+            self.motor.move_motor(z + i * z_step_size)
             images.append(image)
         return images
 
@@ -85,4 +86,30 @@ class cameraControl(QWidget):
     def disconnect(self):
         self.cam.disconnect()
         self.motor.disconnect_motor()
-        self.piezo.diconnect_piezo()
+        self.piezo.disconnect_piezo()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    control = cameraControl()
+    control.motor.move_motor(3.125)
+    control.update_exposure(300)
+    fig, axs = plt.subplots(4, 4, figsize=(8, 8))
+    control.piezo.set_voltage_piezo(12)
+    image1 = control.cam.get_images(5)
+    for i, ax in enumerate(axs.flat):
+        control.piezo.set_voltage_piezo(12 + 0.1*i)
+        image2 = control.cam.get_images(5)
+
+        image = (np.mean(image1, axis=0) - np.mean(image2, axis=0)) ** 2
+
+        #image = np.mean(image2, axis = 0)
+        max_image = image.max()
+
+        if max_image > 0:
+            image = abs(image / max_image)
+
+        plt.title(f"V = {2*i}")
+        ax.imshow(image, cmap= "gray")
+    control.disconnect()
+    plt.show()

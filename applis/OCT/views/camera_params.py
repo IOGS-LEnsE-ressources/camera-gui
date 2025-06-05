@@ -27,7 +27,7 @@ class CameraParamsView(QWidget):
         self.int_time_label = QLabel("temps d'intégration : ")
         self.int_time_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        self.int_time_value = QLabel("50 ms")
+        self.int_time_value = QLabel("300 ms")
         self.int_time_value.setFixedWidth(40)  # largeur fixe pour garder l'alignement stable
         self.int_time_value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
@@ -46,9 +46,9 @@ class CameraParamsView(QWidget):
 
         # Créer un slider horizontal
         self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(100)
-        self.slider.setValue(50)
+        self.slider.setMinimum(50)
+        self.slider.setMaximum(4000)
+        self.slider.setValue(300)
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.setTickInterval(10)
 

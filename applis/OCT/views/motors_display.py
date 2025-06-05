@@ -80,7 +80,7 @@ class MotorControlView(QWidget):
         self.step_z_section.setFixedWidth(50)
         self.step_z_section.editingFinished.connect(self.motorAction)
 
-        self.z_value = QLabel(f"Z = {self.Z} \u03bcm")
+        self.z_value = QLabel(f"Z = {self.Z} mm")
         self.z_value.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
         step_z_layout.addWidget(self.step_z_label)
@@ -92,7 +92,7 @@ class MotorControlView(QWidget):
         self.v0_section = QLabel("Piezo Motor - V0(V) : ")
         self.v0_section.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
-        self.v0_value = QLineEdit("2")
+        self.v0_value = QLineEdit("0")
         self.v0_value.setEnabled(False)
         self.v0_value.setFixedWidth(50)
         #self.v0_value.editingFinished.connect(self.piezoAction)
@@ -109,8 +109,8 @@ class MotorControlView(QWidget):
         self.delta_v_section = QLabel("Pas \u0394V (V) : ")
         self.delta_v_section.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
-        self.delta_v_value = QLineEdit("2")
-        self.delta_v_value.setEnabled(False)
+        self.delta_v_value = QLineEdit("0.9")
+        self.delta_v_value.setEnabled(True)
         self.delta_v_value.setFixedWidth(50)
         #self.delta_v_value.editingFinished.connect(self.piezoAction)
 
@@ -134,22 +134,22 @@ class MotorControlView(QWidget):
         sender = self.sender()
         if sender == self.stepper_down:
             self.motThread.emit("down=")
-            print(f"the stepper motor position has been updated")
+            if __name__ == "__main__":print(f"the stepper motor position has been updated")
         elif sender == self.stepper_up:
             self.motThread.emit("up=")
-            print(f"the stepper motor position has been updated")
+            if __name__ == "__main__":print(f"the stepper motor position has been updated")
         elif sender == self.step_z_section:
             self.motThread.emit("stepz=" + self.step_z_section.text())
-            print(f"the motor's z-axis step size has been updated")
+            if __name__ == "__main__":print(f"the motor's z-axis step size has been updated")
 
     def piezoAction(self):
         sender = self.sender()
         if sender == self.v0_value:
             self.motThread.emit("V0=" + self.v0_value.text())
-            print(f"the tension value of the piezo actuator has been updated")
+            if __name__ == "__main__":print(f"the tension value of the piezo actuator has been updated")
         if sender == self.delta_v_value:
             self.motThread.emit("deltaV=" + self.delta_v_value.text())
-            print(f"the step size of the piezo actuator has been updated")
+            if __name__ == "__main__":print(f"the step size of the piezo actuator has been updated")
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ class Motor:
             #print(f'Device ID : {channel.DeviceID}')
 
             ## Load any configuration settings needed by the controller/stage
-            channel_config = self.channel.LoadMotorConfiguration(channel.DeviceID)
+            channel_config = self.channel.LoadMotorConfiguration(self.channel.DeviceID)
             chan_settings = self.channel.MotorDeviceSettings
 
             self.channel.GetSettings(chan_settings)
@@ -60,61 +60,55 @@ class Motor:
 
             ## Get parameters related to homing/zeroing/other
             # Home or Zero the device (if a motor/piezo)
-            print("Retour à zéro du moteur")
+            if __name__ == "__main__":print("Retour à zéro du moteur")
             self.channel.Home(50000)
-            print("Retour à zéro effectué")
+            if __name__ == "__main__":print("Retour à zéro effectué")
 
-            self.pos = channel.DevicePosition
+            self.pos = self.get_position()
 
         except Exception as e:
             # this can be bad practice: It sometimes obscures the error source
             print(e)
 
-<<<<<<< HEAD
-    def move_motor(self, position:float, SleepTime = 0.1):
-        '''
-        déplace le moteur vers la position recherchée
-        :param position: position recherchée
-        :return: None
-        '''
-        if position <= 7 and position >= 0:
-            channel = self.channel
-            time.sleep(SleepTime)
-=======
-    def move_motor(self, position:float, sleep_time = 1):
+    def move_motor(self, position:float, sleep_time = 0.1):
         """
         Move the motor to the position.
         :param position: desired position, in mm.
         :param sleep_time: Pause between movement of the motor, in s.
         """
-        if 7 >= position > 0:
-            time.sleep(sleep_time) # Useful ?
->>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
-            print("Mise en position du moteur ...")
+        if 7 >= position >= 0:
+            #time.sleep(sleep_time) # Useful ?
+            if __name__ == "__main__":print("Mise en position du moteur ...")
             self.channel.MoveTo(Decimal(position), 50000)  # Move to 1 mm
-            self.pos = channel.DevicePosition
-            print(f"Position = {self.pos}mm")
-            time.sleep(sleep_time)
+            self.pos = self.get_position()
+            if __name__ == "__main__":print(f"Position = {self.pos}mm")
+            #time.sleep(sleep_time)
 
         else:
             print(f"la position choisie doit être comprise entre 0 et 7mm")
 
-<<<<<<< HEAD
-    def home_motor(self, SleepTime = 0.1):
-        channel = self.channel
-        time.sleep(SleepTime)
-=======
-    def home_motor(self, sleep_time = 1):
+    def set_motor_displacement(self, direction : bool, delta_z : float):
+        """
+        direction = 1 : up
+        direction = 0 : down
+        """
+        self.pos = self.get_position()
+        print("déplacement du moteur")
+        if direction:
+            self.move_motor(self.pos + delta_z)
+        else:
+            self.move_motor(self.pos - delta_z)
+
+    def home_motor(self, sleep_time = 0.1):
         """
         Move the motor to its home position.
         :param sleep_time: Pause between movement of the motor, in s.
         """
-        time.sleep(sleep_time)  # Useful ?
->>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
-        print("Retour à zéro du moteur")
+        #time.sleep(sleep_time)  # Useful ?
+        if __name__ == "__main__":print("Retour à zéro du moteur")
         self.channel.Home(50000)
-        print("Retour à zéro effectué")
-        time.sleep(sleep_time)
+        if __name__ == "__main__":print("Retour à zéro effectué")
+        #time.sleep(sleep_time)
 
     def disconnect_motor(self):
         """
@@ -123,6 +117,9 @@ class Motor:
         self.channel.StopPolling()
         self.device.Disconnect()
 
+    def get_position(self):
+        position = str(self.channel.DevicePosition).replace(',','.')
+        return float(position)
 
 
 class Piezo:
@@ -178,44 +175,34 @@ class Piezo:
             # this can be bad practice: It sometimes obscures the error source
             print(e)
 
-<<<<<<< HEAD
-    def set_voltage_piezo(self, voltage: float, SleepTime = 0.1):
-
-        device = self.device
-=======
-    def set_voltage_piezo(self, voltage: float):
+    def set_voltage_piezo(self, voltage: float, SleepTime = 0.3):
         """
         Set a voltage to the piezo controller.
         :param voltage: voltage, in V.
         """
->>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
         max_voltage = self.max_voltage
         dev_voltage = Decimal(voltage)
 
         if dev_voltage != Decimal(0) and dev_voltage <= max_voltage:
-<<<<<<< HEAD
-            device.SetOutputVoltage(dev_voltage)
-            time.sleep(SleepTime)
-=======
-            timeout = time.time() + 30
             self.device.SetOutputVoltage(dev_voltage)
-            time.sleep(0.5)
-            '''while (device.IsSetOutputVoltageActive()):
-                time.sleep(30)
-                if time.time() < timeout:
-                    raise Exception("Timeout Exceeded")'''
->>>>>>> 86c1e43ad3cda1635c2c2629c0d67f664bd908a0
-            print(f"Tension appliquée {device.GetOutputVoltage()}")
+            #time.sleep(SleepTime)
+            if __name__ == "__main__":print(f"Tension appliquée {self.device.GetOutputVoltage()}")
+        elif dev_voltage == Decimal(0):
+            self.device.SetZero()
+            if __name__ == "__main__":print(f"Tension appliquée {self.device.GetOutputVoltage()}")
         else:
-            print(f'La tension doit être inférieure à {max_voltage}')
+            if __name__ == "__main__":print(f'La tension doit être inférieure à {max_voltage}')
 
     def set_zero_piezo(self):
         self.device.SetZero()
-        print(f"Piezo placé en zéro")
+        if __name__ == "__main__":print(f"Piezo placé en zéro")
 
-    def diconnect_piezo(self):
+    def disconnect_piezo(self):
         self.device.StopPolling()
         self.device.Disconnect()
+
+    def get_voltage(self):
+        return self.device.GetOutputVoltage()
 
 
 if __name__ == "__main__":
@@ -233,4 +220,5 @@ if __name__ == "__main__":
     P.set_voltage_piezo(12)
     time.sleep(1)
     P.set_voltage_piezo(14)
-
+    P.disconnect_piezo()
+    M.disconnect_motor()
