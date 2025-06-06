@@ -14,9 +14,9 @@ import sys
 import time
 import numpy as np
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QGraphicsView,
-                             QGraphicsScene, QGraphicsPixmapItem,
+                             QGraphicsScene, QGraphicsPixmapItem, QGraphicsTextItem,
                              QVBoxLayout, QWidget)
-from PyQt6.QtGui import QPixmap, QImage, QPainter, QColor, QWheelEvent
+from PyQt6.QtGui import QPixmap, QImage, QPainter, QColor, QWheelEvent, QFont
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject
 
 
@@ -46,6 +46,14 @@ class ImageDisplayGraph(QWidget):
         pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene.addItem(pixmap_item)
         self.graphics_view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+
+        if text:
+            font = QFont('Arial', 3)  # Choose a font
+            text_item = QGraphicsTextItem(text)  # Create a text item
+            text_item.setFont(font)  # Set the font
+            text_item.setDefaultTextColor(QColor(0, 0, 0))  # Set the color to black
+            text_item.setPos(-3, pixmap.height() - 3)  # Position the text (bottom left)
+            self.scene.addItem(text_item)
 
     def set_bits_depth(self, value_depth: int):
         """Set the bits depth of the camera pixels."""

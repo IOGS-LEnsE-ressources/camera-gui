@@ -58,16 +58,13 @@ class MiniCameraWidget(QWidget):
         """
         super().__init__(parent=parent)
         self.parent = parent
-        self.layout = QGridLayout()
+        self.layout = QVBoxLayout()
 
         self.title_widget = TitleView(self.parent)
         self.camera_params_widget = CameraParamsView(self.parent)
 
-        self.layout.setRowStretch(0, 1)
-        self.layout.setRowStretch(1, 2)
-
-        self.layout.addWidget(self.title_widget, 0, 0)
-        self.layout.addWidget(self.camera_params_widget, 1, 0)
+        self.layout.addWidget(self.title_widget)
+        self.layout.addWidget(self.camera_params_widget)
         self.setLayout(self.layout)
 
 
@@ -88,33 +85,35 @@ class MainView(QWidget):
         self.parent = parent
         # GUI Structure
         self.layout = QHBoxLayout()
-        self.right_layout = QVBoxLayout()
-        self.left_layout = QGridLayout()
+        self.left_layout = QVBoxLayout()
+        self.right_layout = QGridLayout()
+
         # Set size of cols and rows
-        self.left_layout.setColumnStretch(0, 1)
-        self.left_layout.setColumnStretch(1, 1)
-        self.left_layout.setRowStretch(0, 1)
-        self.left_layout.setRowStretch(1, 2)
+        self.right_layout.setColumnStretch(0, 1)
+        self.right_layout.setColumnStretch(1, 1)
+        self.right_layout.setRowStretch(0, 1)
+        self.right_layout.setRowStretch(1, 2)
         # Adding elements in the layout
         self.mini_camera = MiniCameraWidget(self.parent)
         self.mini_camera.setMaximumWidth(MAX_LEFT_WIDTH)
-        self.right_layout.addWidget(self.mini_camera)
-        self.acquisition_options = AcquisitionView(self.parent)
-        self.acquisition_options.setMaximumWidth(MAX_LEFT_WIDTH)
-        self.right_layout.addWidget(self.acquisition_options)
+        self.left_layout.addWidget(self.mini_camera)
         self.motors_options = MotorControlView(self.parent)
         self.motors_options.setMaximumWidth(MAX_LEFT_WIDTH)
-        self.right_layout.addWidget(self.motors_options)
+        self.left_layout.addWidget(self.motors_options)
+        self.left_layout.addStretch()
+        self.acquisition_options = AcquisitionView(self.parent)
+        self.acquisition_options.setMaximumWidth(MAX_LEFT_WIDTH)
+        self.left_layout.addWidget(self.acquisition_options)
+        self.left_layout.addStretch()
 
-        self.layout.addLayout(self.right_layout)
 
         self.image1_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
-        self.left_layout.addWidget(self.image1_widget, 0, 0)
+        self.right_layout.addWidget(self.image1_widget, 0, 0)
         self.image2_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
-        self.left_layout.addWidget(self.image2_widget, 0, 1)
+        self.right_layout.addWidget(self.image2_widget, 0, 1)
 
         self.image_oct_graph = ImageDisplayGraph(self, '#48D1CC')
-        self.left_layout.addWidget(self.image_oct_graph, 1, 0, 1, 2)
+        self.right_layout.addWidget(self.image_oct_graph, 1, 0, 1, 2)
         bits_depth = self.parent.image_bits_depth
         self.image1_widget.set_bits_depth(bits_depth)
         self.image2_widget.set_bits_depth(bits_depth)
@@ -125,8 +124,8 @@ class MainView(QWidget):
         self.image_oct_graph.set_image_from_array(image, 'OCT')
 
 
-        self.layout.addLayout(self.right_layout)
         self.layout.addLayout(self.left_layout)
+        self.layout.addLayout(self.right_layout)
         self.setLayout(self.layout)
 
 

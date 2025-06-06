@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import sys
 import time
-
+from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout,
     QLabel, QComboBox, QPushButton, QFrame,
@@ -27,9 +27,12 @@ class MotorControlView(QWidget):
         piezo_layout = QHBoxLayout()
         step_v_layout = QHBoxLayout()
 
+        self.title = QLabel("Stepper Motor Control")
+        self.title.setStyleSheet(styleH2)
         ### Direction du moteur
 
         self.stepper_label = QLabel("Stepper Motor")
+        self.stepper_label.setStyleSheet(styleH3)
         self.stepper_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
         self.stepper_down = QPushButton("DOWN")
@@ -87,40 +90,49 @@ class MotorControlView(QWidget):
         step_z_layout.addWidget(self.step_z_section, alignment= Qt.AlignmentFlag.AlignLeft)
         step_z_layout.addWidget(self.z_value, alignment=Qt.AlignmentFlag.AlignCenter)
 
+
+        self.piezo_title = QLabel("Piezo Parameters")
+        self.piezo_title.setStyleSheet(styleH2)
         ### Valeur tension Piezo
 
-        self.v0_section = QLabel("Piezo Motor - V0(V) : ")
+        self.v0_section = QLabel("Piezo Motor - V0 : ")
         self.v0_section.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
-        self.v0_value = QLineEdit("0")
-        self.v0_value.setEnabled(False)
+        self.v0_value = QLabel("0 V")
         self.v0_value.setFixedWidth(50)
-        #self.v0_value.editingFinished.connect(self.piezoAction)
 
-        #self.v0_unit = QLabel("V")
-        #self.v0_unit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        # Créer un slider horizontal
+        self.slider_v0 = QSlider(Qt.Orientation.Horizontal)
+        self.slider_v0.setMinimum(0)
+        self.slider_v0.setMaximum(75)
+        self.slider_v0.setValue(10)
+        self.slider_v0.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.slider_v0.setTickInterval(5)
+
+        self.slider_v0.valueChanged.connect(self.piezoAction)
+
+
 
         piezo_layout.addWidget(self.v0_section)
         piezo_layout.addWidget(self.v0_value, alignment = Qt.AlignmentFlag.AlignLeft)
-        #piezo_layout.addWidget(self.v0_unit, alignment = Qt.AlignmentFlag.AlignLeft)
 
         ### Valeur pas en tension
-
-        self.delta_v_section = QLabel("Pas \u0394V (V) : ")
+        self.delta_v_section = QLabel("Step \u0394V : ")
         self.delta_v_section.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
-        self.delta_v_value = QLineEdit("0.9")
-        self.delta_v_value.setEnabled(True)
+        self.delta_v_value = QLabel("0.9 V")
         self.delta_v_value.setFixedWidth(50)
-        #self.delta_v_value.editingFinished.connect(self.piezoAction)
 
         step_v_layout.addWidget(self.delta_v_section)
         step_v_layout.addWidget(self.delta_v_value, alignment = Qt.AlignmentFlag.AlignLeft)
 
+        layout.addWidget(self.title)
         layout.addLayout(stepper_layout)
         layout.addLayout(step_z_layout)
         layout.addSpacing(20)
+        layout.addWidget(self.piezo_title)
         layout.addLayout(piezo_layout)
+        layout.addWidget(self.slider_v0)
         layout.addLayout(step_v_layout)
         layout.addSpacing(80)
 
@@ -144,12 +156,10 @@ class MotorControlView(QWidget):
 
     def piezoAction(self):
         sender = self.sender()
-        if sender == self.v0_value:
-            self.motThread.emit("V0=" + self.v0_value.text())
+        if sender == self.slider_v0:
+            self.motThread.emit("V0=" + self.slider_v0.value())
+            self.v0_value.setText(f'{self.slider_v0.value()} V')
             if __name__ == "__main__":print(f"the tension value of the piezo actuator has been updated")
-        if sender == self.delta_v_value:
-            self.motThread.emit("deltaV=" + self.delta_v_value.text())
-            if __name__ == "__main__":print(f"the step size of the piezo actuator has been updated")
 
 
 if __name__ == "__main__":
