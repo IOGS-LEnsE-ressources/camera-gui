@@ -3,10 +3,11 @@
 Language;FR
 ### Camera Basler
 ColorMode;Mono12
-ExposureTime;1000
+ExposureTime;1500
 MaxExpoTime;20000
 ### Step Motor
 StepSN;40897338
+StepInitPosition;3.0
 ### Piezo
 PiezoSN;29501399
 PiezoV0;10

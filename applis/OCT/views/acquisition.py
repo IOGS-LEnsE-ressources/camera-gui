@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import sys
+from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QVBoxLayout,
     QLabel, QComboBox, QPushButton, QFrame,
@@ -27,16 +28,23 @@ class AcquisitionView(QWidget):
         step_num_layout = QHBoxLayout()
         buttons_layout = QHBoxLayout()
 
+        self.title = QLabel("Acquisition Mode")
+        self.title.setStyleSheet(styleH2)
+
         ### Destination
 
-        self.directory_label = QLabel("Destination : ")
+        self.directory_label = QLabel("Directory : ")
+        self.directory_label.setMaximumWidth(100)
+        self.directory_label.setStyleSheet(styleH3)
         self.directory_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.directory = QLineEdit("")
-        self.directory.setEnabled = True
+        self.directory.setEnabled(False)
         self.directory.editingFinished.connect(self.directory_action)
 
-        self.search = QPushButton("Parcourir")
+        self.search = QPushButton("Browse...")
+        self.search.setMinimumWidth(100)
+        self.search.setStyleSheet(unactived_button)
         self.search.clicked.connect(self.directory_action)
 
         directory_layout.addWidget(self.directory_label)
@@ -45,7 +53,8 @@ class AcquisitionView(QWidget):
 
         ### Nom du fichier
 
-        self.name_label = QLabel("Nom : ")
+        self.name_label = QLabel("File Name : ")
+        self.name_label.setStyleSheet(styleH3)
         self.name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.name = QLineEdit("")
@@ -57,7 +66,8 @@ class AcquisitionView(QWidget):
 
         ### Pas
 
-        self.step_size_label = QLabel("Pas : p(\u03bcm)")
+        self.step_size_label = QLabel("Vertical Step : p(\u03bcm)")
+        self.step_size_label.setStyleSheet(styleH3)
         self.step_size_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.step_size = QLineEdit("5")
@@ -69,7 +79,8 @@ class AcquisitionView(QWidget):
 
         ### Nombre de pas
 
-        self.step_num_label = QLabel("Nombre de pas : ")
+        self.step_num_label = QLabel("Number of steps : ")
+        self.step_num_label.setStyleSheet(styleH3)
         self.step_num_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.step_num = QLineEdit("5")
@@ -119,6 +130,8 @@ class AcquisitionView(QWidget):
         buttons_layout.addWidget(self.start_button)
         buttons_layout.addWidget(self.stop_button)
 
+
+        layout.addWidget(self.title)
         layout.addLayout(directory_layout)
         layout.addLayout(name_layout)
         layout.addLayout(step_size_layout)

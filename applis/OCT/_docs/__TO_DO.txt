@@ -28,3 +28,8 @@ Moteur Pas à pas
 ~~~~~~~~~~~~~~~~
     ++ Intervalle : 2mm - 7mm
             +> Se placer à 4 ou 5mm au départ de l'appli.
+
+
+BUGS !!!
+{#########
+-> Revoir ImageDisplayGraph lorsqu'on renvoit une seconde image à afficher (typiquement dans thread de rafraichissement)

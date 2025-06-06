@@ -127,7 +127,7 @@ class Piezo:
     Class for controlling Thorlabs KPZ step motor, through a DRV208 controller.
     """
     def __init__(self, serial_no = "29501399"):
-        SimulationManager.Instance.InitializeSimulations()
+        #SimulationManager.Instance.InitializeSimulations()
         self.serial_no = serial_no  # Replace this line with your device's serial number
 
         try:

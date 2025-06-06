@@ -1,5 +1,0 @@
-https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=Motion_Control
-
-https://github.com/Thorlabs/Motion_Control_Examples
-
-DOC : https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9019&tabname=APT%20Manuals

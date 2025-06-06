@@ -2,8 +2,12 @@ from PyQt6.QtWidgets import (
     QWidget, QGridLayout, QSplitter, QStackedWidget, QApplication, QFileDialog
 )
 from PyQt6.QtCore import Qt, QTimer
-import sys
+import sys, os
 import time
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from views.acquisition import AcquisitionView
 from views.camera_params import CameraParamsView
@@ -31,15 +35,15 @@ class MainWindow(QWidget):
 
         self.live_widget.get_live_sequence(float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
 
-        self.image1_widget = ImageDisplayGraph(self, '#909090')
+        self.image1_widget = ImageDisplayGraph(self, bg_color='#909090')
         self.image1_widget.set_image_from_array(np.array(self.live_widget.image1), "image1")
-        self.image2_widget = ImageDisplayGraph(self, '#909090')
+        self.image2_widget = ImageDisplayGraph(self, bg_color='#909090')
         self.image2_widget.set_image_from_array(np.array(self.live_widget.image2), "image2")
         self.top_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.top_splitter.addWidget(self.image1_widget)
         self.top_splitter.addWidget(self.image2_widget)
 
-        self.image_widget = ImageDisplayGraph(self, '#404040')
+        self.image_widget = ImageDisplayGraph(self, bg_color='#404040')
         self.image_widget.set_image_from_array(np.array(self.live_widget.image), "image2")
 
         # Zone dynamique pour image ou live
@@ -144,6 +148,16 @@ class MainWindow(QWidget):
             #self.acq.acqThread.emit("dir=" + folder_request)
             print(f"the new destination is {folder_request}")
             #self.acq.directory.setText(folder_request)
+
+    def closeEvent(self, event):
+        """
+        Close event.
+        """
+        if self.camera is not None:
+            self.camera.stop_acquisition()
+            self.camera.free_memory()
+
+        print('End of APP')
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

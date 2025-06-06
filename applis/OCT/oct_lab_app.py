@@ -26,9 +26,9 @@ from PyQt6.QtWidgets import (
 from lensepy.pyqt6 import *
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
 from views.main_view import MainView
-## Camera Wrapper
-from lensecam.basler.camera_basler import CameraBasler
-#from models.motor_control import *
+from lensecam.basler.camera_basler import CameraBasler, get_bits_per_pixel
+from models.motor_control import *
+from controllers.modes_manager import ModesController
 
 def load_default_dictionary(language: str) -> bool:
     """Initialize default dictionary from default_config.txt file"""
@@ -67,6 +67,7 @@ def load_default_parameters(file_path: str) -> dict:
         print('File error')
         return {}
 
+
 class MainWindow(QMainWindow):
     """
     Our main window.
@@ -84,13 +85,38 @@ class MainWindow(QMainWindow):
         # Read default parameters
         self.default_parameters = load_default_parameters('./assets/config.txt')
 
+        # Main objects
+        # ------------
+        self.piezo = None
+        self.step_motor = None
+        self.camera = None
+        self.camera_connected = False
+
+        self.image_bits_depth = 12
+        self.image1 = None
+        self.image2 = None
+        self.image_oct = None
+
+        ## GUI structure
+        self.central_widget = MainView(self)
+        self.setCentralWidget(self.central_widget)
+
+        # Initialization
+        self.init_app()
+        self.controller = ModesController(self)
+
+    def init_app(self):
+        """
+        Initialization of the application : camera, piezo, step motor, gui.
+        """
         # Initialization of the camera
         # ----------------------------
-        '''self.camera = CameraBasler()
+        print('Camera Initialization')
+        self.camera = CameraBasler()
         self.camera_connected = self.camera.find_first_camera()
         if self.camera_connected:
-            self.camera.init_camera()
             self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
+            print(f'Color mode = {self.image_bits_depth}')
             if 'Exposure Time' in self.default_parameters:
                 self.camera.set_exposure(float(self.default_parameters['Exposure Time'])*1000)  # in us
             else:
@@ -98,7 +124,7 @@ class MainWindow(QMainWindow):
             if 'Black Level' in self.default_parameters:
                 self.camera.set_black_level(float(self.default_parameters['Black Level']))
             else:
-                self.camera.set_black_level(32)
+                self.camera.set_black_level(10)
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No Camera Connected")
@@ -108,18 +134,40 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok
             )
             dlg.setIcon(QMessageBox.Icon.Warning)
-            button = dlg.exec()'''
+            button = dlg.exec()
+            return
 
-        ## GUI structure
-        self.central_widget = MainView(self)
-        self.setCentralWidget(self.central_widget)
+        # Initialization of the piezo
+        # ---------------------------
+        print('Piezo Initialization')
+        if 'PiezoSN' in self.default_parameters:
+            self.piezo = Piezo(serial_no=self.default_parameters['PiezoSN'])
+        else:
+            self.piezo = Piezo()
+        serial = self.piezo.serial_no
+        print(f'Piezo connected / SN = {serial}')
 
-    def main_action(self, event):
-        """
-        Action performed by an event in the main widget.
-        :param event: Event that triggered the action.
-        """
-        pass
+
+        # Initialization of the step motor
+        # --------------------------------
+        print('Step Motor Initialization')
+        if 'StepSN' in self.default_parameters:
+            self.step_motor = Motor(serial_no=self.default_parameters['StepSN'])
+        else:
+            self.step_motor = Motor()
+        serial = self.step_motor.serial_no
+        print(f'Step Motor connected / SN = {serial}')
+        if 'StepInitPosition' in self.default_parameters:
+            position = float(self.default_parameters['StepInitPosition'])
+        else:
+            position = 3.0
+        self.step_motor.move_motor(position)
+        new_position = self.step_motor.get_position()
+        print(f'Step Motor moved to position {new_position} mm')
+
+
+        # At the end, start LIVE mode
+
 
     def resizeEvent(self, event):
         """
@@ -138,9 +186,15 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
+            self.controller.mode = 'stop'   # To correctly stop the thread in controller
+            time.sleep(0.1)
             if self.camera_connected:
                 self.camera.stop_acquisition()
                 self.camera.disconnect()
+            if self.piezo is not None:
+                self.piezo.disconnect_piezo()
+            if self.step_motor is not None:
+                self.step_motor.disconnect_motor()
             event.accept()
         else:
             event.ignore()

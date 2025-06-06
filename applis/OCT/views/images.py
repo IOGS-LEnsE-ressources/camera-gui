@@ -51,53 +51,71 @@ class ImageDisplayGraph(QWidget):
         self.text = ''
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+        self.bits_depth = 8
 
         # Create a QGraphicsView and Scene
         self.scene = QGraphicsScene(self)
         self.graphics_view = QGraphicsView(self.scene)
-        self.layout.addWidget(self.graphics_view)   #### A été retiré temporairement pour gérer les images en uint8
+        self.layout.addWidget(self.graphics_view)
 
         self.graphics_view.setStyleSheet("border: none;")  # Remove border from the QGraphicsView
         self.graphics_view.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-
-        ###### Modifications nécessaires pour uint8, pourra être retiré plus tard
-        '''size_factor = 0.5
-        self.image_label = QLabel()
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.image_label)
-        self.image_label.setMaximumSize(int(2048*size_factor), int(1088*size_factor))'''
-        #######
 
         # Background color of the scene
         self.scene.setBackgroundBrush(QColor(self.bg_color))
         self.zoom = zoom
         self.zoom_factor = 1.1
 
-    def set_image_from_array(self, pixels: np.ndarray, text: str=''):
+
+    def set_bits_depth(self, depth_value: int = 8):
+        """
+        Set the bits depth for pixel.
+        :param depth_value: Bits depth of each pixel.
+        """
+        self.bits_depth = depth_value
+
+    def set_image_from_array(self, pixels: np.ndarray, text: str = ''):
         """
         Display a new image from a numpy array.
         :param pixels: Array of pixels to display.
         :param text: Text to display in the bottom left corner of the widget.
         """
-        if text != '':
+        self.scene.clear()
+        if pixels is None:
+            return  # Ne rien faire si aucun tableau fourni
+
+        if text:
             self.text = text
-        pixmap = QPixmap.fromImage(QImage(pixels.data, pixels.shape[1], pixels.shape[0], QImage.Format.Format_Grayscale8))
-        self.scene.clear()  # Clear the scene before adding a new item
+        # Convert pixels
+        if self.bits_depth > 8:
+            raw_image = pixels.view(np.uint16)
+            image = (raw_image >> (self.bits_depth - 8)).astype(np.uint8)
+        else:
+            image = pixels.view(np.uint8)
+
+        # Copy of the image
+        image_copy = image.copy()
+        # QtImage creation
+        height, width = image_copy.shape
+        qimage = QImage(image_copy.data, width, height, QImage.Format.Format_Grayscale8)
+        pixmap = QPixmap.fromImage(qimage)
         pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene.addItem(pixmap_item)
 
-        # Automatically adjust the view to fit the image
+        # Adjust size view
         self.graphics_view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
 
-        # Add the text in the bottom left corner
+        # Add text in the bottom left corner
+        '''
         if self.text:
-            font = QFont('Arial', 3)  # Choose a font
-            text_item = QGraphicsTextItem(self.text)  # Create a text item
-            text_item.setFont(font)  # Set the font
-            text_item.setDefaultTextColor(QColor(0, 0, 0))  # Set the color to black
-            text_item.setPos(-3, pixmap.height()-3)  # Position the text (bottom left)
-            self.scene.addItem(text_item)  # Add the text item to the scene
+            font = QFont('Arial', 3)
+            text_item = QGraphicsTextItem(self.text)
+            text_item.setFont(font)
+            text_item.setDefaultTextColor(QColor(0, 0, 0))
+            text_item.setPos(0, pixmap.height() - 10)  # Décaler un peu plus pour éviter d'être coupé
+            self.scene.addItem(text_item)
+        '''
 
     def wheelEvent(self, event: QWheelEvent):
         """

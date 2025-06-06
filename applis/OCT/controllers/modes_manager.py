@@ -1,125 +1,79 @@
-# -*- coding: utf-8 -*-
-"""*modes_manager.py* file.
-
-./controllers/modes_manager.py contains ModesManager class to manage the different modes of the application.
-
-.. note:: LEnsE - Institut d'Optique - version 1.0
-
-.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
-Creation : march/2025
-"""
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from enum import Enum
-from views.main_structure import MainView
-from models.dataset import DataSetModel
-from controllers.acquisition_controller import AcquisitionController
-from controllers.images_controller import ImagesController
-from controllers.masks_controller import MasksController
-from controllers.analyses_controller import AnalysesController
-from controllers.aberrations_controller import AberrationsController
-from controllers.help_controller import HelpController
-from utils.initialization_parameters import read_default_parameters
+import time
+import numpy as np
+import threading
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from zygo_lab_app import ZygoApp
-    from views.main_menu import MainMenu
+    from oct_lab_app import MainWindow
 
-class ModesManager:
+class ModesController:
     """
-    Main modes manager.
-    The different modes are loaded from the main menu file (menu/menu.txt)
+    Modes manager.
     """
 
-    def __init__(self, main_app: "ZygoApp"):
+    def __init__(self, main_app: "MainWindow"):
         """
         Default constructor.
-        :param menu: Main menu of the application (MainMenu).
-        :param widget: Main widget container of the application (MainView).
-        :param dataset: Dataset of the application (DataSetModel).
+        :param manager: Main manager of the application (ModesManager).
         """
-        # Main App
-        self.main_app: "ZygoApp" = main_app
-        # Menu
-        self.main_menu: "MainMenu" = self.main_app.main_menu
-        self.main_menu.menu_changed.connect(self.update_mode)
-        self.default_parameters = read_default_parameters('config.txt')
-        self.options_list = []
-        # Main widget
-        self.main_widget = self.main_app.main_widget
-        # Data set
-        self.data_set = self.main_app.data_set
-        # Phase
-        self.phase = self.main_app.phase
-        # Modes
-        self.main_mode = 'first'
-        self.mode_controller = None
-        # Hardware
-        self.piezo_connected = False
-        self.camera_connected = False
+        self.main_app: "MainWindow" = main_app
+        self.mode = 'live'
 
-        # First update
-        self.update_menu()
+        thread = threading.Thread(target=self.main_thread)
+        thread.start()
 
-    def update_menu(self):
+
+    def main_thread(self):
         """
 
         :return:
         """
-        if self.main_mode != 'first':
-            nocam = 'nocam' in self.options_list
-            nopiezo = 'nopiezo' in self.options_list
+        if self.mode == 'live':
+            print('LIVE')
+            # Get images
+            self.live_sequence()
+            # Display images
+            self.display_live_images()
 
-        self.options_list = []
-        # Check Hardware
-        if self.main_mode == 'first':
-            if self.data_set.acquisition_mode.is_camera() is False:
-                self.options_list.append('nocam')
-            if self.data_set.acquisition_mode.is_piezo() is False:
-                self.options_list.append('nopiezo')
-            self.main_mode = ''
+        time.sleep(0.2) # TO TEST
+        if self.mode != 'stop':
+            thread = threading.Thread(target=self.main_thread)
+            thread.start()
         else:
-            # To avoid to check hardware each time
-            if nocam:
-                self.options_list.append('nocam')
-            if nopiezo:
-                self.options_list.append('nopiezo')
+            print('End Thread')
 
-        # Check dataset
-        if self.data_set.is_data_ready() is False:
-            self.options_list.append('nodata')
-        if self.data_set.images_sets.get_number_of_sets() == 0:
-            self.options_list.append('noimages')
-        if self.data_set.masks_sets.get_masks_number() == 0:
-            self.options_list.append('nomask')
-        if self.phase.is_analysis_ready() is False:
-            self.options_list.append('noanalysis')
-        # Update menu
-        self.main_menu.update_options(self.options_list)
-        self.main_menu.update_menu_display()
-
-    def update_mode(self, event):
+    def display_live_images(self):
         """
-
-        :return:
+        Display images for live mode in the main_view
         """
-        if self.main_mode == 'acquisition':
-            self.mode_controller.stop_acquisition()
-        self.main_mode = event
-        self.main_widget.clear_all()
-        self.update_menu()
-        match self.main_mode:
-            case 'acquisition':
-                self.mode_controller = AcquisitionController(self)
-            case 'images':
-                self.mode_controller = ImagesController(self)
-            case 'masks':
-                self.mode_controller = MasksController(self)
-            case 'analyses':
-                self.mode_controller = AnalysesController(self)
-            case 'aberrations':
-                self.mode_controller = AberrationsController(self)
-            case 'help':
-                self.mode_controller = HelpController(self)
+        image_view = self.main_app.central_widget
+        print(image_view.image1_widget.size())
+        piezo = self.main_app.piezo
+        if piezo is not None and self.main_app.camera_connected:
+            image_view.image1_widget.set_image_from_array(self.main_app.image1) #, 'Image 1')
+            image_view.image2_widget.set_image_from_array(self.main_app.image2) #, 'Image 2')
+            image_view.image_oct_graph.set_image_from_array(self.main_app.image_oct) # 'OCT')
+        else:
+            black = np.random.normal(size=(100, 100))
+            image_view.image1_widget.set_image_from_array(black, "No Piezo or camera")
+            image_view.image2_widget.set_image_from_array(black, "No Piezo or camera")
+            image_view.image_oct_graph.set_image_from_array(black, "No Piezo or camera")
+            print('No piezo or camera')
+
+
+    def live_sequence(self, step_size=0.6, V0=0):
+        piezo = self.main_app.piezo
+        camera = self.main_app.camera
+        if piezo is not None and self.main_app.camera_connected:
+            piezo.set_voltage_piezo(V0)
+            self.main_app.image1 = camera.get_image()
+            print(f'Im1 ? {self.main_app.image1.shape} / Type ? {self.main_app.image1.dtype}')
+            piezo.set_voltage_piezo(step_size + V0)
+            self.main_app.image2 = camera.get_image()
+            self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)
+        else:
+            print('No Piezo or camera connected')
+
