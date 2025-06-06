@@ -29,6 +29,7 @@ class ImageDisplayGraph(QWidget):
         self.scene = QGraphicsScene(self)
         self.graphics_view = QGraphicsView(self.scene)
         self.layout.addWidget(self.graphics_view)
+        self.bits_depth = 8
 
         self.scene.setBackgroundBrush(QColor(bg_color))
         self.zoom = zoom
@@ -45,6 +46,10 @@ class ImageDisplayGraph(QWidget):
         pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene.addItem(pixmap_item)
         self.graphics_view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+
+    def set_bits_depth(self, value_depth: int):
+        """Set the bits depth of the camera pixels."""
+        self.bits_depth = value_depth
 
     def wheelEvent(self, event: QWheelEvent):
         """

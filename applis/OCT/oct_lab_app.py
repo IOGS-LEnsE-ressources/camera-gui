@@ -191,9 +191,10 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.controller.worker.stop()
-            self.controller.thread.quit()
-            self.controller.thread.wait()
+            if self.controller.worker is not None:
+                self.controller.worker.stop()
+                self.controller.thread.quit()
+                self.controller.thread.wait()
             if self.camera_connected:
                 print("Disconnect Camera")
                 self.camera.stop_acquisition()

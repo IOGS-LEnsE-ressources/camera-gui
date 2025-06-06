@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import numpy as np
 from PyQt6.QtWidgets import (
     QMessageBox, QWidget,
-    QGridLayout, QHBoxLayout,
+    QGridLayout, QHBoxLayout, QVBoxLayout,
     QLabel
 )
 from PyQt6.QtCore import pyqtSignal
@@ -23,6 +23,9 @@ from views.acquisition import AcquisitionView
 from views.motors_display import MotorControlView
 from views.camera_params import CameraParamsView
 #from views.live_mode import *
+
+
+MAX_LEFT_WIDTH = 300
 
 
 class CameraParamsWidget(QWidget):
@@ -84,47 +87,46 @@ class MainView(QWidget):
         super().__init__(parent=parent)
         self.parent = parent
         # GUI Structure
-        self.layout = QGridLayout()
+        self.layout = QHBoxLayout()
+        self.right_layout = QVBoxLayout()
+        self.left_layout = QGridLayout()
         # Set size of cols and rows
-        self.layout.setColumnStretch(0, 1)
-        self.layout.setColumnStretch(1, 2)
-        self.layout.setRowStretch(0, 1)
-        self.layout.setRowStretch(1, 1)
-        self.layout.setRowStretch(2, 1)
+        self.left_layout.setColumnStretch(0, 1)
+        self.left_layout.setColumnStretch(1, 1)
+        self.left_layout.setRowStretch(0, 1)
+        self.left_layout.setRowStretch(1, 2)
         # Adding elements in the layout
         self.mini_camera = MiniCameraWidget(self.parent)
-        self.layout.addWidget(self.mini_camera, 0, 0)
+        self.mini_camera.setMaximumWidth(MAX_LEFT_WIDTH)
+        self.right_layout.addWidget(self.mini_camera)
         self.acquisition_options = AcquisitionView(self.parent)
-        self.layout.addWidget(self.acquisition_options, 1, 0)
+        self.acquisition_options.setMaximumWidth(MAX_LEFT_WIDTH)
+        self.right_layout.addWidget(self.acquisition_options)
         self.motors_options = MotorControlView(self.parent)
-        self.layout.addWidget(self.motors_options, 2, 0)
+        self.motors_options.setMaximumWidth(MAX_LEFT_WIDTH)
+        self.right_layout.addWidget(self.motors_options)
 
-        self.image1_widget = ImagesDisplayView()
-        #self.layout.addWidget(self.image1_widget, 0, 1)
-        self.image2_widget = ImagesDisplayView() #ImageDisplayGraph(self, '#90EE90', zoom=False)
-        #self.layout.addWidget(self.image2_widget, 0, 2)
+        self.layout.addLayout(self.right_layout)
 
-        self.image_oct_graph = ImagesDisplayView()
-        #self.image_oct_graph = ImageDisplayGraph(self, '#48D1CC')
-        self.live_widget = QWidget() #liveWidget()
-        self.layout.addWidget(self.image_oct_graph, 1, 1, 2, 1)
+        self.image1_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
+        self.left_layout.addWidget(self.image1_widget, 0, 0)
+        self.image2_widget = ImageDisplayGraph(self, '#90EE90', zoom=False)
+        self.left_layout.addWidget(self.image2_widget, 0, 1)
+
+        self.image_oct_graph = ImageDisplayGraph(self, '#48D1CC')
+        self.left_layout.addWidget(self.image_oct_graph, 1, 0, 1, 2)
         bits_depth = self.parent.image_bits_depth
-        #self.image1_widget.set_bits_depth(bits_depth) - for ImageDispGraph
-        #self.image2_widget.set_bits_depth(bits_depth)
-        #self.image_oct_graph.set_bits_depth(bits_depth)
-
-        # TO DELETE
-        self.horizontalLayout = QHBoxLayout()
+        self.image1_widget.set_bits_depth(bits_depth)
+        self.image2_widget.set_bits_depth(bits_depth)
+        self.image_oct_graph.set_bits_depth(bits_depth)
         image = np.random.normal(size=(100, 100))
-        self.image1_widget.set_image_from_array(image) #, 'Image1')
-        self.image2_widget.set_image_from_array(image) #, 'Image2')
-        self.image_oct_graph.set_image_from_array(image) #, 'OCT')
+        self.image1_widget.set_image_from_array(image, 'Image1')
+        self.image2_widget.set_image_from_array(image, 'Image2')
+        self.image_oct_graph.set_image_from_array(image, 'OCT')
 
-        self.horizontalLayout.addWidget(self.image1_widget)
-        self.horizontalLayout.addWidget(self.image2_widget)
 
-        self.layout.addLayout(self.horizontalLayout, 0, 1)
-
+        self.layout.addLayout(self.right_layout)
+        self.layout.addLayout(self.left_layout)
         self.setLayout(self.layout)
 
 
@@ -148,6 +150,7 @@ if __name__ == '__main__':
 
             self.setWindowTitle(translate("window_title_main_menu_widget"))
             self.setGeometry(100, 200, 800, 600)
+            self.image_bits_depth = 8
 
             self.central_widget = MainView(self)
             self.setCentralWidget(self.central_widget)
@@ -170,6 +173,5 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     main = MyWindow()
-    main.create_gui()
     main.show()
     sys.exit(app.exec())

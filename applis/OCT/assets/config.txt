@@ -8,6 +8,7 @@ MaxExpoTime;20000
 ### Step Motor
 StepSN;40897338
 StepInitPosition;3.0
+StepInitStep;100
 ### Piezo
 PiezoSN;29501399
 PiezoV0;10

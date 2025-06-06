@@ -13,7 +13,7 @@ from lensepy import load_dictionary, translate, dictionary
 from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget, QLabel,
-    QGridLayout
+    QVBoxLayout
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
@@ -32,7 +32,7 @@ class TitleView(QWidget):
         """
         super().__init__(parent=parent)
         self.parent = parent
-        self.layout = QGridLayout()
+        self.layout = QVBoxLayout()
 
         self.label_title = QLabel(translate('label_title'))
         self.label_title.setStyleSheet(styleH1)
@@ -48,11 +48,9 @@ class TitleView(QWidget):
         # logo = logo_.scaled(imageSize.width()//4, imageSize.height()//4, Qt.AspectRatioMode.KeepAspectRatio)
         self.lense_logo.setPixmap(logo)
 
-        self.layout.addWidget(self.label_title, 0, 0)
-        self.layout.addWidget(self.label_subtitle, 1, 0)
-        self.layout.setColumnStretch(0, 10)
-        self.layout.setColumnStretch(1, 5)
-        self.layout.addWidget(self.lense_logo, 0, 1, 2, 1)
+        self.layout.addWidget(self.label_title)
+        self.layout.addWidget(self.label_subtitle)
+        self.layout.addWidget(self.lense_logo)
 
         self.setLayout(self.layout)
 

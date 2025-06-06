@@ -31,6 +31,11 @@ class ImageAcquisition(QObject):
                     camera.alloc_memory()
                     camera.start_acquisition()
                     self.main_app.camera_acquiring = True
+                piezo.set_voltage_piezo(self.main_app.V0)
+                self.main_app.image1 = camera.get_image()
+                piezo.set_voltage_piezo(self.main_app.step_size + self.main_app.V0)
+                self.main_app.image2 = camera.get_image()
+                self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)
             else:
                 print('No Piezo or camera connected')
             time.sleep(0.1)

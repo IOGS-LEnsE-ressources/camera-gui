@@ -49,11 +49,6 @@ class ModesController:
         piezo = self.main_app.piezo
         camera = self.main_app.camera
         if piezo is not None and self.main_app.camera_connected:
-            piezo.set_voltage_piezo(self.main_app.V0)
-            self.main_app.image1 = camera.get_image()
-            piezo.set_voltage_piezo(self.main_app.step_size + self.main_app.V0)
-            self.main_app.image2 = camera.get_image()
-            self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)
             image_view.image1_widget.set_image_from_array(self.main_app.image1, 'Image 1')
             image_view.image2_widget.set_image_from_array(self.main_app.image2, 'Image 2')
             image_view.image_oct_graph.set_image_from_array(self.main_app.image_oct, 'OCT')
