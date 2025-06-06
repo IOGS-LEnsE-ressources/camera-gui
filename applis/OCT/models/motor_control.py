@@ -213,13 +213,16 @@ else:
 
         def __init__(self, serial_no="40897338"):
             self.serial_no = serial_no
-            pass
+            self.position = 3
 
         def move_motor(self, position: float, sleep_time=0.1):
-            pass
+            self.position = position
 
         def set_motor_displacement(self, direction: bool, delta_z: float):
-            pass
+            if direction == 1:
+                self.position += delta_z
+            else:
+                self.position -= delta_z
 
         def home_motor(self, sleep_time=0.1):
             pass
@@ -231,7 +234,7 @@ else:
             pass
 
         def get_position(self):
-            return 6.3
+            return self.position
 
 
     class Piezo:

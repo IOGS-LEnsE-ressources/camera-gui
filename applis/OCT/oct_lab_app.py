@@ -94,13 +94,25 @@ class MainWindow(QMainWindow):
         self.camera_acquiring = False
 
         self.image_bits_depth = 12
+        self.number_avgd_images = 1
         self.image1 = None
         self.image2 = None
         self.image_oct = None
 
+
         # Main variables
-        self.step_size = 0.6
-        self.V0 = 0
+        self.piezo_step_size = 0.6
+        if 'PiezoDV' in self.default_parameters:
+            self.piezo_step_size = self.default_parameters['PiezoDV']
+        self.piezo_V0 = 0
+        if 'PiezoV0' in self.default_parameters:
+            self.piezo_V0 = self.default_parameters['PiezoV0']
+        self.stepper_init_value = 3.3
+        if 'StepperInitPosition' in self.default_parameters:
+            self.stepper_init_value = self.default_parameters['StepperInitPosition']
+        self.stepper_step = 100
+        if 'StepperInitStep' in self.default_parameters:
+            self.stepper_step = self.default_parameters['StepperInitStep']
 
         ## GUI structure
         self.central_widget = MainView(self)
@@ -139,8 +151,6 @@ class MainWindow(QMainWindow):
             )
             dlg.setIcon(QMessageBox.Icon.Warning)
             button = dlg.exec()
-            return
-
 
         # Initialization of the piezo
         # ---------------------------
@@ -152,7 +162,6 @@ class MainWindow(QMainWindow):
         serial = self.piezo.serial_no
         print(f'Piezo connected / SN = {serial}')
 
-        '''
         # Initialization of the step motor
         # --------------------------------
         print('Step Motor Initialization')
@@ -169,7 +178,6 @@ class MainWindow(QMainWindow):
         self.step_motor.move_motor(position)
         new_position = self.step_motor.get_position()
         print(f'Step Motor moved to position {new_position} mm')
-        '''
 
         # At the end, start LIVE mode
 

@@ -8,11 +8,30 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout, QApplication, QSlider, QLineEdit, QFileDialog)
 from PyQt6.QtCore import Qt, pyqtSignal
 
+style_but_enabled = """QPushButton {
+                        background-color: #ee0000;
+                        color: white;
+                        border-radius: 5px;
+                        padding: 8px 16px;
+                    }
+                    QPushButton:hover {
+                        background-color: #ce0000;
+                    }
+                    QPushButton:pressed {
+                        background-color: #ae0000;
+                    }"""
+style_but_disabled = """QPushButton {
+                        background-color: #555555;
+                        color: white;
+                        border-radius: 5px;
+                        padding: 8px 16px;
+                    }"""
+
 
 class AcquisitionView(QWidget):
 
+    filename_changed = pyqtSignal(str)
     acqThread = pyqtSignal(str)
-    folderThread = pyqtSignal(str)
 
     def __init__(self, parent = None):
         super().__init__()
@@ -33,12 +52,13 @@ class AcquisitionView(QWidget):
 
         ### Destination
 
-        self.directory_label = QLabel("Directory : ")
+        self.directory_label = QLabel("Directory")
         self.directory_label.setMaximumWidth(100)
         self.directory_label.setStyleSheet(styleH3)
         self.directory_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.directory = QLineEdit("")
+        self.directory.setStyleSheet("background-color:white;")
         self.directory.setEnabled(False)
         self.directory.editingFinished.connect(self.directory_action)
 
@@ -48,7 +68,6 @@ class AcquisitionView(QWidget):
         self.search.clicked.connect(self.directory_action)
 
         directory_layout.addWidget(self.directory_label)
-        directory_layout.addWidget(self.directory)
         directory_layout.addWidget(self.search)
 
         ### Nom du fichier
@@ -93,37 +112,13 @@ class AcquisitionView(QWidget):
         ### start/stop
 
         self.start_button = QPushButton("Start")
-        self.start_button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #ee0000; 
-                        color: white;                
-                        border-radius: 5px;
-                        padding: 8px 16px;
-                    }
-                    QPushButton:hover {
-                        background-color: #ce0000;
-                    }
-                    QPushButton:pressed {
-                        background-color: #ae0000;
-                    }
-                """)
+        self.start_button.setEnabled(False)
+        self.start_button.setStyleSheet(style_but_disabled)
         self.start_button.clicked.connect(self.step_action)
 
         self.stop_button = QPushButton("Stop")
-        self.stop_button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #ee0000;
-                        color: white;           
-                        border-radius: 5px;
-                        padding: 8px 16px;
-                    }
-                    QPushButton:hover {
-                        background-color: #ce0000; 
-                    }
-                    QPushButton:pressed {
-                        background-color: #ae0000; 
-                    }
-                """)
+        self.stop_button.setEnabled(False)
+        self.stop_button.setStyleSheet(style_but_disabled)
 
         self.stop_button.clicked.connect(self.step_action)
 
@@ -133,6 +128,7 @@ class AcquisitionView(QWidget):
 
         layout.addWidget(self.title)
         layout.addLayout(directory_layout)
+        layout.addWidget(self.directory)
         layout.addLayout(name_layout)
         layout.addLayout(step_size_layout)
         layout.addLayout(step_num_layout)
@@ -141,16 +137,31 @@ class AcquisitionView(QWidget):
 
         self.setLayout(layout)
 
+    def set_start_enabled(self, value: bool):
+        """Set the start button enabled."""
+        if value:
+            self.start_button.setEnabled(True)
+            self.start_button.setStyleSheet(style_but_enabled)
+        else:
+            self.start_button.setEnabled(False)
+            self.start_button.setStyleSheet(style_but_disabled)
+
+    def set_stop_enabled(self, value: bool):
+        """Set the stop button enabled."""
+        if value:
+            self.stop_button.setEnabled(True)
+            self.stop_button.setStyleSheet(style_but_enabled)
+        else:
+            self.stop_button.setEnabled(False)
+            self.stop_button.setStyleSheet(style_but_disabled)
+
     def directory_action(self):
         sender = self.sender()
-        if sender == self.directory:
-            self.acqThread.emit("dir=" + self.directory.text())
-            print("the file directory has been modified")
-        elif sender == self.search:
-            self.folderThread.emit("request=")
+        if sender == self.search:
+            self.filename_changed.emit("request=")
             #if __name__ == "__main__" : self.folder_search()
         elif sender == self.name:
-            self.acqThread.emit("name=" + self.name.text())
+            self.filename_changed.emit("name=" + self.name.text())
             print(f"the name of the file will be {self.name.text()}")
 
     def step_action(self):
