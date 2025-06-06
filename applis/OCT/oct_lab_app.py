@@ -91,11 +91,16 @@ class MainWindow(QMainWindow):
         self.step_motor = None
         self.camera = None
         self.camera_connected = False
+        self.camera_acquiring = False
 
         self.image_bits_depth = 12
         self.image1 = None
         self.image2 = None
         self.image_oct = None
+
+        # Main variables
+        self.step_size = 0.6
+        self.V0 = 0
 
         ## GUI structure
         self.central_widget = MainView(self)
@@ -115,16 +120,15 @@ class MainWindow(QMainWindow):
         self.camera = CameraBasler()
         self.camera_connected = self.camera.find_first_camera()
         if self.camera_connected:
-            self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
-            print(f'Color mode = {self.image_bits_depth}')
+            self.camera.init_camera()
+            self.camera.set_color_mode('Mono12')
             if 'Exposure Time' in self.default_parameters:
                 self.camera.set_exposure(float(self.default_parameters['Exposure Time'])*1000)  # in us
             else:
-                self.camera.set_exposure(10000) # in us
-            if 'Black Level' in self.default_parameters:
-                self.camera.set_black_level(float(self.default_parameters['Black Level']))
-            else:
-                self.camera.set_black_level(10)
+                self.camera.set_exposure(1000) # in us
+            self.camera.set_frame_rate(10)
+            self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
+            print(f'Color mode = {self.image_bits_depth}')
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No Camera Connected")
@@ -137,6 +141,7 @@ class MainWindow(QMainWindow):
             button = dlg.exec()
             return
 
+
         # Initialization of the piezo
         # ---------------------------
         print('Piezo Initialization')
@@ -147,7 +152,7 @@ class MainWindow(QMainWindow):
         serial = self.piezo.serial_no
         print(f'Piezo connected / SN = {serial}')
 
-
+        '''
         # Initialization of the step motor
         # --------------------------------
         print('Step Motor Initialization')
@@ -164,7 +169,7 @@ class MainWindow(QMainWindow):
         self.step_motor.move_motor(position)
         new_position = self.step_motor.get_position()
         print(f'Step Motor moved to position {new_position} mm')
-
+        '''
 
         # At the end, start LIVE mode
 
@@ -190,6 +195,7 @@ class MainWindow(QMainWindow):
             self.controller.thread.quit()
             self.controller.thread.wait()
             if self.camera_connected:
+                print("Disconnect Camera")
                 self.camera.stop_acquisition()
                 self.camera.disconnect()
             if self.piezo is not None:

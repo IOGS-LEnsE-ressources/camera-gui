@@ -6,28 +6,35 @@ from PyQt6.QtCore import QObject, QThread, pyqtSignal
 import numpy as np
 import time
 
-#from models.motor_control import *
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from oct_lab_app import MainWindow
+
 
 class ImageAcquisition(QObject):
-    images_ready = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
+    images_ready = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, main_app: "MainWindow"):
         super().__init__()
-        self.parent = parent
+        self.main_app = main_app
         self._running = True
 
     def run(self):
         while self._running:
-            # Get first image
-            image1 = np.random.normal(loc=128, scale=40, size=(100, 100)).clip(0, 255).astype(np.uint8)
-            image2 = np.random.normal(loc=128, scale=40, size=(100, 100)).clip(0, 255).astype(np.uint8)
-            image_oct = np.sqrt((image1 - image2)**2)
-
-            # Get second image
-
-            self.images_ready.emit(image1, image2, image_oct)
-            time.sleep(0.2)
+            # Get images
+            piezo = self.main_app.piezo
+            camera = self.main_app.camera
+            if piezo is not None and self.main_app.camera_connected:
+                if not self.main_app.camera_acquiring:
+                    print("Start ACQUISITION")
+                    camera.alloc_memory()
+                    camera.start_acquisition()
+                    self.main_app.camera_acquiring = True
+            else:
+                print('No Piezo or camera connected')
+            time.sleep(0.1)
+            self.images_ready.emit()
         self.finished.emit()
 
     def stop(self):
