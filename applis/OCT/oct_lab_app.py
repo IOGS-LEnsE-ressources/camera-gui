@@ -186,8 +186,9 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.controller.mode = 'stop'   # To correctly stop the thread in controller
-            time.sleep(0.1)
+            self.controller.worker.stop()
+            self.controller.thread.quit()
+            self.controller.thread.wait()
             if self.camera_connected:
                 self.camera.stop_acquisition()
                 self.camera.disconnect()

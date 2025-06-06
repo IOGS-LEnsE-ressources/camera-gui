@@ -4,6 +4,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import time
 import numpy as np
 import threading
+from PyQt6.QtCore import QThread
+from models.images_acquisition import ImageAcquisition
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -20,30 +22,23 @@ class ModesController:
         :param manager: Main manager of the application (ModesManager).
         """
         self.main_app: "MainWindow" = main_app
+        # For image processing and displaying / Thread
+        self.thread = QThread()
+        self.worker = None
+
         self.mode = 'live'
+        self.start_live()
 
-        thread = threading.Thread(target=self.main_thread)
-        thread.start()
+    def start_live(self):
+        self.worker = ImageAcquisition()
+        self.worker.moveToThread(self.thread)
 
+        # Connexions
+        self.thread.started.connect(self.worker.run)
+        self.worker.image_ready.connect(self.viewer.set_image_from_array)
+        self.worker.finished.connect(self.thread.quit)
+        self.thread.start()
 
-    def main_thread(self):
-        """
-
-        :return:
-        """
-        if self.mode == 'live':
-            print('LIVE')
-            # Get images
-            self.live_sequence()
-            # Display images
-            self.display_live_images()
-
-        time.sleep(0.2) # TO TEST
-        if self.mode != 'stop':
-            thread = threading.Thread(target=self.main_thread)
-            thread.start()
-        else:
-            print('End Thread')
 
     def display_live_images(self):
         """
