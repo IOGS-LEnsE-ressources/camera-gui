@@ -99,7 +99,6 @@ class MainWindow(QMainWindow):
         self.image2 = None
         self.image_oct = None
 
-
         # Main variables
         self.piezo_step_size = 0.6
         if 'PiezoDV' in self.default_parameters:
@@ -113,6 +112,11 @@ class MainWindow(QMainWindow):
         self.stepper_step = 100
         if 'StepperInitStep' in self.default_parameters:
             self.stepper_step = self.default_parameters['StepperInitStep']
+
+        self.dir_images = os.path.expanduser("~")
+        if 'DirImages' in self.default_parameters:
+            self.dir_images = self.default_parameters['DirImages']
+        self.file_name = ''
 
         ## GUI structure
         self.central_widget = MainView(self)

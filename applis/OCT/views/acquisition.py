@@ -3,10 +3,14 @@ import numpy as np
 import sys
 from lensepy.css import *
 from PyQt6.QtWidgets import (
-    QWidget, QGridLayout, QVBoxLayout,
-    QLabel, QComboBox, QPushButton, QFrame,
-    QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout, QApplication, QSlider, QLineEdit, QFileDialog)
+    QWidget, QVBoxLayout,
+    QLabel,  QPushButton,
+    QSizePolicy, QProgressBar, QHBoxLayout, QApplication, QLineEdit)
 from PyQt6.QtCore import Qt, pyqtSignal
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from oct_lab_app import MainWindow
 
 style_but_enabled = """QPushButton {
                         background-color: #ee0000;
@@ -37,7 +41,7 @@ class AcquisitionView(QWidget):
         super().__init__()
 
         self.setWindowTitle("Acquisition")
-        self.parent = parent
+        self.parent: "MainWindow" = parent
 
         layout = QVBoxLayout()
 
@@ -58,6 +62,8 @@ class AcquisitionView(QWidget):
         self.directory_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.directory = QLineEdit("")
+        if self.parent.dir_images != '':
+            self.directory.setText(self.parent.dir_images)
         self.directory.setStyleSheet("background-color:white;")
         self.directory.setEnabled(False)
         self.directory.editingFinished.connect(self.directory_action)
@@ -125,6 +131,10 @@ class AcquisitionView(QWidget):
         buttons_layout.addWidget(self.start_button)
         buttons_layout.addWidget(self.stop_button)
 
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setObjectName("IOGSProgressBar")
+        self.progress_bar.setStyleSheet(StyleSheet)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout.addWidget(self.title)
         layout.addLayout(directory_layout)
@@ -133,9 +143,17 @@ class AcquisitionView(QWidget):
         layout.addLayout(step_size_layout)
         layout.addLayout(step_num_layout)
         layout.addLayout(buttons_layout)
+        layout.addWidget(self.progress_bar)
         layout.addSpacing(40)
 
         self.setLayout(layout)
+
+    def update_progress_bar(self, value: int):
+        """
+        Update the progression bar value.
+        :param value: Value to display.
+        """
+        self.progress_bar.setValue(value)
 
     def set_start_enabled(self, value: bool):
         """Set the start button enabled."""

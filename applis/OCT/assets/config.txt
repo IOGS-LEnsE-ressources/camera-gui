@@ -14,4 +14,4 @@ PiezoSN;29501399
 PiezoV0;10
 PiezoDV;3
 ### Default directory
-DirImages;~\OCT\
+DirImages;D:/_old_dd/

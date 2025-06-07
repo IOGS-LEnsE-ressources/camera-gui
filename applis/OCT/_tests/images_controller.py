@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtCore import QThread
-from models.images_acquisition import ImageAcquisition
+from models.images_acquisition import ImageLive
 from views.images import ImageDisplayGraph
 
 from typing import TYPE_CHECKING
@@ -23,7 +23,7 @@ class ImageController(QMainWindow):
 
         # Modèle
         self.thread = QThread()
-        self.worker = ImageAcquisition()
+        self.worker = ImageLive()
         self.worker.moveToThread(self.thread)
 
         # Connexions
