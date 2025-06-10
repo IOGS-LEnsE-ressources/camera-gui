@@ -134,51 +134,45 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
         def __init__(self, serial_no = "29501399"):
             #SimulationManager.Instance.InitializeSimulations()
             self.serial_no = serial_no  # Replace this line with your device's serial number
+            print(f"Initialisation...")
+            DeviceManagerCLI.BuildDeviceList()
 
-            try:
-                print(f"Initialisation...")
-                DeviceManagerCLI.BuildDeviceList()
+            # Connect, begin polling, and enable
+            self.device = KCubePiezo.CreateKCubePiezo(self.serial_no)
 
-                # Connect, begin polling, and enable
-                self.device = KCubePiezo.CreateKCubePiezo(self.serial_no)
+            self.device.Connect(self.serial_no)
 
-                self.device.Connect(self.serial_no)
+            # Get Device Information and display description
+            device_info = self.device.GetDeviceInfo()
+            #print(device_info.Description)
 
-                # Get Device Information and display description
-                device_info = self.device.GetDeviceInfo()
-                #print(device_info.Description)
+            # Start polling and enable
+            self.device.StartPolling(250)  # 250ms polling rate
+            time.sleep(0.25)
+            self.device.EnableDevice()
+            time.sleep(0.25)  # Wait for device to enable
 
-                # Start polling and enable
-                self.device.StartPolling(250)  # 250ms polling rate
-                time.sleep(0.25)
-                self.device.EnableDevice()
-                time.sleep(0.25)  # Wait for device to enable
+            if not self.device.IsSettingsInitialized():
+                self.device.WaitForSettingsInitialized(10000)  # 10 second timeout
+                assert self.device.IsSettingsInitialized() is True
 
-                if not self.device.IsSettingsInitialized():
-                    self.device.WaitForSettingsInitialized(10000)  # 10 second timeout
-                    assert self.device.IsSettingsInitialized() is True
+            # Load the device configuration
+            device_config = self.device.GetPiezoConfiguration(self.serial_no)
 
-                # Load the device configuration
-                device_config = self.device.GetPiezoConfiguration(self.serial_no)
+            # This shows how to obtain the device settings
+            device_settings = self.device.PiezoDeviceSettings
 
-                # This shows how to obtain the device settings
-                device_settings = self.device.PiezoDeviceSettings
+            # Set the Zero point of the device
+            #print("Setting Zero Point")
+            self.device.SetZero()
 
-                # Set the Zero point of the device
-                #print("Setting Zero Point")
-                self.device.SetZero()
+            # Get the maximum voltage output of the KPZ
+            max_voltage = self.device.GetMaxOutputVoltage()  # This is stored as a .NET decimal
+            #print(f'Max voltage {max_voltage}')
+            self.device.SetMaxOutputVoltage(max_voltage)
 
-                # Get the maximum voltage output of the KPZ
-                max_voltage = self.device.GetMaxOutputVoltage()  # This is stored as a .NET decimal
-                #print(f'Max voltage {max_voltage}')
-                self.device.SetMaxOutputVoltage(max_voltage)
-
-                self.max_voltage = max_voltage
-                print(f"Piezo initialisé")
-
-            except Exception as e:
-                # this can be bad practice: It sometimes obscures the error source
-                print(e)
+            self.max_voltage = max_voltage
+            print(f"Piezo initialisé")
 
         def set_voltage_piezo(self, voltage: float, SleepTime = 0.3):
             """
