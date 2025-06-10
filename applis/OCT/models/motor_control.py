@@ -3,9 +3,10 @@ import time
 import sys
 import clr
 #from win32cryptcon import SCHANNEL_ENC_KEY
-thorlabs = False
+thorlabs = True
+test = True
 
-if thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
+if not thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
     clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.DeviceManagerCLI.dll")
     clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.GenericMotorCLI.dll")
     clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\ThorLabs.MotionControl.Benchtop.StepperMotorCLI.dll")
@@ -15,6 +16,29 @@ if thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
     from Thorlabs.MotionControl.Benchtop.StepperMotorCLI import *
     from Thorlabs.MotionControl.KCube.PiezoCLI import *
     from System import Decimal  # necessary for real world units
+
+
+    class Piezo:
+        """
+        Class for controlling Thorlabs KPZ step motor, through a DRV208 controller.
+        """
+
+        def __init__(self, serial_no="29501399"):
+            # SimulationManager.Instance.InitializeSimulations()
+            self.serial_no = serial_no  # Replace this line with your device's serial number
+            pass
+
+        def set_voltage_piezo(self, voltage: float, SleepTime=0.3):
+            pass
+
+        def set_zero_piezo(self):
+            pass
+
+        def disconnect_piezo(self):
+            pass
+
+        def get_voltage(self):
+            return 5.2
 
     class Motor:
         """
@@ -127,7 +151,100 @@ if thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
             self.device.Connect(self.serial_no)
             time.sleep(0.25)
 
+elif test:
+    class Motor:
+        """
+        Class for controlling Thorlabs BSC20x step motor, through a DRV208 controller.
+        """
 
+        def __init__(self, serial_no="40897338"):
+            self.serial_no = serial_no
+            self.position = 3
+
+        def move_motor(self, position: float, sleep_time=0.1):
+            self.position = position
+
+        def set_motor_displacement(self, direction: bool, delta_z: float):
+            if direction == 1:
+                self.position += delta_z
+            else:
+                self.position -= delta_z
+
+        def home_motor(self, sleep_time=0.1):
+            pass
+
+        def disconnect_motor(self):
+            """
+            Disconnect the motor.
+            """
+            pass
+
+        def get_position(self):
+            return self.position
+
+    class Piezo:
+        """
+        Class for controlling Thorlabs KPZ step motor, through a DRV208 controller.
+        """
+
+        def __init__(self, serial_no="29501399"):
+            # SimulationManager.Instance.InitializeSimulations()
+            self.serial_no = serial_no  # Replace this line with your device's serial number
+            pass
+
+        def set_voltage_piezo(self, voltage: float, SleepTime=0.3):
+            pass
+
+        def set_zero_piezo(self):
+            pass
+
+        def disconnect_piezo(self):
+            pass
+
+        def get_voltage(self):
+            return 5.2
+
+
+else:
+    clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.DeviceManagerCLI.dll")
+    clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.GenericMotorCLI.dll")
+    clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\ThorLabs.MotionControl.Benchtop.StepperMotorCLI.dll")
+    clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\ThorLabs.MotionControl.KCube.PiezoCLI.dll")
+    from Thorlabs.MotionControl.DeviceManagerCLI import *
+    from Thorlabs.MotionControl.GenericMotorCLI import *
+    from Thorlabs.MotionControl.Benchtop.StepperMotorCLI import *
+    from Thorlabs.MotionControl.KCube.PiezoCLI import *
+    from System import Decimal  # necessary for real world units
+
+    class Motor:
+        """
+        Class for controlling Thorlabs BSC20x step motor, through a DRV208 controller.
+        """
+
+        def __init__(self, serial_no="40897338"):
+            self.serial_no = serial_no
+            self.position = 3
+
+        def move_motor(self, position: float, sleep_time=0.1):
+            self.position = position
+
+        def set_motor_displacement(self, direction: bool, delta_z: float):
+            if direction == 1:
+                self.position += delta_z
+            else:
+                self.position -= delta_z
+
+        def home_motor(self, sleep_time=0.1):
+            pass
+
+        def disconnect_motor(self):
+            """
+            Disconnect the motor.
+            """
+            pass
+
+        def get_position(self):
+            return self.position
 
     class Piezo:
         """
@@ -171,11 +288,9 @@ if thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
                 self.device.SetZero()
 
                 # Get the maximum voltage output of the KPZ
-                max_voltage = self.device.GetMaxOutputVoltage()  # This is stored as a .NET decimal
+                self.max_voltage = self.device.GetMaxOutputVoltage()  # This is stored as a .NET decimal
                 #print(f'Max voltage {max_voltage}')
-                self.device.SetMaxOutputVoltage(max_voltage)
-
-                self.max_voltage = max_voltage
+                self.device.SetMaxOutputVoltage(self.max_voltage)
                 print(f"Piezo initialisé")
 
             except Exception as e:
@@ -213,60 +328,6 @@ if thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
 
         def find_piezo(self):
             self.device.Connect(self.serial_no)
-
-else:
-    class Motor:
-        """
-        Class for controlling Thorlabs BSC20x step motor, through a DRV208 controller.
-        """
-
-        def __init__(self, serial_no="40897338"):
-            self.serial_no = serial_no
-            self.position = 3
-
-        def move_motor(self, position: float, sleep_time=0.1):
-            self.position = position
-
-        def set_motor_displacement(self, direction: bool, delta_z: float):
-            if direction == 1:
-                self.position += delta_z
-            else:
-                self.position -= delta_z
-
-        def home_motor(self, sleep_time=0.1):
-            pass
-
-        def disconnect_motor(self):
-            """
-            Disconnect the motor.
-            """
-            pass
-
-        def get_position(self):
-            return self.position
-
-
-    class Piezo:
-        """
-        Class for controlling Thorlabs KPZ step motor, through a DRV208 controller.
-        """
-
-        def __init__(self, serial_no="29501399"):
-            # SimulationManager.Instance.InitializeSimulations()
-            self.serial_no = serial_no  # Replace this line with your device's serial number
-            pass
-
-        def set_voltage_piezo(self, voltage: float, SleepTime=0.3):
-            pass
-
-        def set_zero_piezo(self):
-            pass
-
-        def disconnect_piezo(self):
-            pass
-
-        def get_voltage(self):
-            return 5.2
 
 
 if __name__ == "__main__":

@@ -149,9 +149,9 @@ class MainWindow(QWidget):
             print("IOGS")
             folder_request = QFileDialog.getExistingDirectory(None, "Choisir un fichier")
             if folder_request:
-                #self.acq.acqThread.emit("dir=" + folder_request)
+                self.acq.acqThread.emit("dir=" + folder_request)
                 print(f"the new destination is {folder_request}")
-                #self.acq.directory.setText(folder_request)
+                self.acq.directory.setText(folder_request)
         except Exception as e:
             print(f"pas d'extraction possible : {e}")
         """self.live_widget.control.find_camera()
