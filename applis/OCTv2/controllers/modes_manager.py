@@ -26,6 +26,7 @@ class ModesController:
         # For image processing and displaying / Thread
         self.thread = QThread()
         self.worker = None
+        self.dialog = None
 
         # Signals management
         camera_widget = self.main_app.central_widget.mini_camera.camera_params_widget
@@ -159,6 +160,15 @@ class ModesController:
         print(dir_images)
         if source == "request":
             self.worker.stop()
+
+            self.dialog = QFileDialog(self.main_app)
+            self.dialog.setFileMode(QFileDialog.FileMode.Directory)  # Pour choisir un dossier
+            self.dialog.setOption(QFileDialog.Option.ShowDirsOnly, True)  # Pour n’afficher que des dossiers
+            self.dialog.setDirectory(dir_images)
+            self.dialog.fileSelected.connect(self.folder_selected)
+            self.dialog.show()
+
+            '''
             folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
                                                               dir_images, QFileDialog.Option.ShowDirsOnly)
             if folder_request:
@@ -166,11 +176,22 @@ class ModesController:
                 if acquisition.name.text() != '':
                     acquisition.set_start_enabled(True)
             self.start_live()
+            '''
         if source == "name":
             if acquisition.directory.text() != '':
                 # Check Name ?? (only "normal" character)
                 self.main_app.file_name = acquisition.name.text()
                 acquisition.set_start_enabled(True)
+
+    def folder_selected(self, directory):
+        acquisition = self.main_app.central_widget.acquisition_options
+        self.main_app.dir_images = directory
+        acquisition.directory.setText(directory)
+        print(f'New Dir = {directory}')
+        if acquisition.name.text() != '':
+            acquisition.set_start_enabled(True)
+
+        self.start_live()
 
     def handle_acquisition(self, event):
         """Action to performed when acquisition is started."""
