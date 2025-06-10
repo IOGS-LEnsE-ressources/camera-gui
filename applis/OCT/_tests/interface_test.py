@@ -65,6 +65,7 @@ class MainWindow(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(33)
+
         self.setLayout(self.layout)
 
         self.layout.setColumnStretch(0, 1)
@@ -141,13 +142,21 @@ class MainWindow(QWidget):
             #print(f"the update could not take place : {e}")
 
     def folder_search(self):
-        print("IOGS")
-        folder_request = QFileDialog.getExistingDirectory(None, "Choisir un fichier")
-        if folder_request:
-            #self.acq.acqThread.emit("dir=" + folder_request)
-            print(f"the new destination is {folder_request}")
-            #self.acq.directory.setText(folder_request)
-
+        """self.live_widget.control.disconnect()
+        self.timer.stop()"""
+        #time.sleep(3)
+        try:
+            print("IOGS")
+            folder_request = QFileDialog.getExistingDirectory(None, "Choisir un fichier")
+            if folder_request:
+                #self.acq.acqThread.emit("dir=" + folder_request)
+                print(f"the new destination is {folder_request}")
+                #self.acq.directory.setText(folder_request)
+        except Exception as e:
+            print(f"pas d'extraction possible : {e}")
+        """self.live_widget.control.find_camera()
+        self.live_widget.control.find_motors()
+"""
     def closeEvent(self, event):
         """
         Close event.

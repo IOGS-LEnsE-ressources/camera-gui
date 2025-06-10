@@ -88,6 +88,13 @@ class cameraControl(QWidget):
         self.motor.disconnect_motor()
         self.piezo.disconnect_piezo()
 
+    def find_camera(self):
+        self.cam.find_first_camera()
+
+    def find_motors(self):
+        self.piezo.find_piezo()
+        self.motor.find_motor()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -3,8 +3,9 @@ import time
 import sys
 import clr
 #from win32cryptcon import SCHANNEL_ENC_KEY
+thorlabs = False
 
-if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
+if thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
     clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.DeviceManagerCLI.dll")
     clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.GenericMotorCLI.dll")
     clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\ThorLabs.MotionControl.Benchtop.StepperMotorCLI.dll")
@@ -122,6 +123,11 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
             position = str(self.channel.DevicePosition).replace(',','.')
             return float(position)
 
+        def find_motor(self):
+            self.device.Connect(self.serial_no)
+            time.sleep(0.25)
+
+
 
     class Piezo:
         """
@@ -204,6 +210,9 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
 
         def get_voltage(self):
             return self.device.GetOutputVoltage()
+
+        def find_piezo(self):
+            self.device.Connect(self.serial_no)
 
 else:
     class Motor:

@@ -71,7 +71,7 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
                 # this can be bad practice: It sometimes obscures the error source
                 print(e)
 
-        def move_motor(self, position:float, sleep_time = 0.1):
+        def move_motor(self, position:float, offset:float = 0, sleep_time = 0.1):
             """
             Move the motor to the position.
             :param position: desired position, in mm.
@@ -80,7 +80,7 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
             if 7 >= position >= 0:
                 #time.sleep(sleep_time) # Useful ?
                 if __name__ == "__main__":print("Mise en position du moteur ...")
-                self.channel.MoveTo(Decimal(position), 50000)  # Move to 1 mm
+                self.channel.MoveTo(Decimal(position - offset), 50000)  # Move to 1 mm
                 self.pos = self.get_position()
                 if __name__ == "__main__":print(f"Position = {self.pos}mm")
                 #time.sleep(sleep_time)
@@ -121,6 +121,10 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
         def get_position(self):
             position = str(self.channel.DevicePosition).replace(',','.')
             return float(position)
+
+        def find_motor(self):
+            self.device.Connect(self.serial_no)
+            time.sleep(0.25)
 
 
     class Piezo:
@@ -204,6 +208,9 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
 
         def get_voltage(self):
             return self.device.GetOutputVoltage()
+
+        def find_piezo(self):
+            self.device.Connect(self.serial_no)
 
 else:
     class Motor:

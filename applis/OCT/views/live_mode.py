@@ -53,10 +53,7 @@ class liveWidget(QWidget):
         type = image.dtype
         if type == "uint8":
             return image
-        if type == "float16":
-            image_float32 = image.astype(np.float32)
-        elif type == "float32":
-            image_float32 = image
+        image_float32 = image.astype(np.float32)
         image_normalized = (image_float32 - np.min(image_float32)) / (
                 np.max(image_float32) - np.min(image_float32) + 1e-8)
         image_uint8 = (image_normalized * 255).astype(np.uint8)
