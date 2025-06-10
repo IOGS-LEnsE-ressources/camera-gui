@@ -102,16 +102,16 @@ class MainWindow(QMainWindow):
         # Main variables
         self.piezo_step_size = 0.6
         if 'PiezoDV' in self.default_parameters:
-            self.piezo_step_size = self.default_parameters['PiezoDV']
+            self.piezo_step_size = float(self.default_parameters['PiezoDV'])
         self.piezo_V0 = 0
         if 'PiezoV0' in self.default_parameters:
-            self.piezo_V0 = self.default_parameters['PiezoV0']
+            self.piezo_V0 = float(self.default_parameters['PiezoV0'])
         self.stepper_init_value = 3.3
         if 'StepperInitPosition' in self.default_parameters:
-            self.stepper_init_value = self.default_parameters['StepperInitPosition']
+            self.stepper_init_value = float(self.default_parameters['StepperInitPosition'])
         self.stepper_step = 100
         if 'StepperInitStep' in self.default_parameters:
-            self.stepper_step = self.default_parameters['StepperInitStep']
+            self.stepper_step = float(self.default_parameters['StepperInitStep'])
 
         self.dir_images = os.path.expanduser("~")
         if 'DirImages' in self.default_parameters:

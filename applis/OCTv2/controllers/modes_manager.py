@@ -83,6 +83,21 @@ class ModesController:
 
         # Update Progression bar !
 
+    def convertTo_uint8(self, image):
+        type = image.dtype
+        print(f'T = {type}')
+        if type == "uint8":
+            return image
+        if type == "float16":
+            image_float32 = image.astype(np.float32)
+        elif type == "float32":
+            image_float32 = image
+        elif type == "float64":
+            image_float32 = image.astype(np.float32)
+        image_normalized = (image_float32 - np.min(image_float32)) / (
+                np.max(image_float32) - np.min(image_float32) + 1e-8)
+        image_uint8 = (image_normalized * 255).astype(np.uint8)
+        return image_uint8
 
     def display_live_images(self):
         """
@@ -91,6 +106,10 @@ class ModesController:
         image_view = self.main_app.central_widget
         piezo = self.main_app.piezo
         if piezo is not None and self.main_app.camera_connected:
+            self.main_app.image1 = self.convertTo_uint8(self.main_app.image1)
+            self.main_app.image2 = self.convertTo_uint8(self.main_app.image2)
+            self.main_app.image_oct = self.convertTo_uint8(self.main_app.image_oct)
+
             image_view.image1_widget.set_image_from_array(self.main_app.image1, 'Image 1')
             image_view.image2_widget.set_image_from_array(self.main_app.image2, 'Image 2')
             image_view.image_oct_graph.set_image_from_array(self.main_app.image_oct, 'OCT')
@@ -132,7 +151,6 @@ class ModesController:
 
     def handle_folder(self, event):
         """Action performed when Up or Down button is clicked."""
-        '''
         acquisition = self.main_app.central_widget.acquisition_options
         dir_images = self.main_app.dir_images
         source_event = event.split("=")
@@ -140,8 +158,11 @@ class ModesController:
         message = source_event[1]
         print(dir_images)
         if source == "request":
-            folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
-                                                              dir_images, QFileDialog.Option.ShowDirsOnly)
+            try:
+                folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
+                                                                  dir_images, QFileDialog.Option.ShowDirsOnly)
+            except Exception as e:
+                print(f'E Request {e}')
             if folder_request:
                 acquisition.directory.setText(folder_request)
                 if acquisition.name.text() != '':
@@ -151,8 +172,6 @@ class ModesController:
                 # Check Name ?? (only "normal" character)
                 self.main_app.file_name = acquisition.name.text()
                 acquisition.set_start_enabled(True)
-        '''
-        print('Folder')
 
     def handle_acquisition(self, event):
         """Action to performed when acquisition is started."""
