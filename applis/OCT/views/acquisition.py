@@ -32,7 +32,7 @@ style_but_disabled = """QPushButton {
 
 class AcquisitionView(QWidget):
 
-    filename_changed = pyqtSignal(str)
+    folderThread = pyqtSignal(str)
     acqThread = pyqtSignal(str)
 
     def __init__(self, parent = None):
@@ -60,8 +60,10 @@ class AcquisitionView(QWidget):
         self.directory_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.directory = QLineEdit("")
+        '''
         if self.parent.dir_images != '':
             self.directory.setText(self.parent.dir_images)
+        '''
         self.directory.setStyleSheet("background-color:white;")
         self.directory.setEnabled(False)
         self.directory.editingFinished.connect(self.directory_action)
@@ -174,10 +176,10 @@ class AcquisitionView(QWidget):
     def directory_action(self):
         sender = self.sender()
         if sender == self.search:
-            self.filename_changed.emit("request=")
+            self.folderThread.emit("request=")
             #if __name__ == "__main__" : self.folder_search()
         elif sender == self.name:
-            self.filename_changed.emit("name=" + self.name.text())
+            self.folderThread.emit("name=" + self.name.text())
             print(f"the name of the file will be {self.name.text()}")
 
     def step_action(self):

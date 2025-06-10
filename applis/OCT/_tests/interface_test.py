@@ -62,10 +62,9 @@ class MainWindow(QWidget):
 
         self.layout = QGridLayout()
 
-        """self.timer = QTimer()
+        self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(33)
-        """
         self.setLayout(self.layout)
 
         self.layout.setColumnStretch(0, 1)

@@ -13,7 +13,8 @@ MAX_EXPO_VALUE = 4000
 
 class CameraParamsView(QWidget):
 
-    camera_exposure_changed = pyqtSignal(str)
+    #camera_exposure_changed = pyqtSignal(str)
+    camThread = pyqtSignal(str)
 
     def __init__(self, parent = None):
         super().__init__()
@@ -31,12 +32,13 @@ class CameraParamsView(QWidget):
         self.int_time_label = QLabel("Exposure time : ")
         self.int_time_label.setStyleSheet(styleH3)
         self.int_time_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
+        '''
         if self.parent.camera_connected:
             init_value = self.parent.camera.get_exposure()
         else:
             init_value = 0
-        self.int_time_value = QLabel(f"{init_value} us")
+        '''
+        self.int_time_value = QLabel(f"100 us")
         self.int_time_value.setStyleSheet(styleH3)
         self.int_time_value.setFixedWidth(50)  # largeur fixe pour garder l'alignement stable
         self.int_time_value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -48,7 +50,7 @@ class CameraParamsView(QWidget):
         self.num_label.setStyleSheet(styleH3)
         self.num_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        init_value = self.parent.number_avgd_images
+        init_value = 1 #self.parent.number_avgd_images
         self.num_value = QLineEdit(str(init_value))
         self.num_value.setEnabled = True
         self.num_value.editingFinished.connect(self.update_num)
@@ -83,12 +85,12 @@ class CameraParamsView(QWidget):
         self.int_time_value.setText(str(tint) + " us")
         if __name__ == "__main__":
             print("integration time changed")
-        self.camera_exposure_changed.emit("int=" + str(tint))
+        self.camThread.emit("int=" + str(tint))
 
     def update_num(self):
         if __name__ == "__main__":
             print("Number of averaged images changed")
-        self.camera_exposure_changed.emit("num=" + self.num_value.text())
+        self.camThread.emit("num=" + self.num_value.text())
 
 
 if __name__ == "__main__":
