@@ -7,9 +7,8 @@ class fileManager:
         self.directory = ""
         self.name = "\\"
 
-    def sendTo(self):
-        for i, file in enumerate(self.files):
-            np.save(self.directory + self.name + str(i) + ".png", file)
+    def sendTo(self, file, i):
+        np.save(self.directory + self.name + str(i) + ".png", file)
 
     def changeDirectory(self, directory:str):
         self.dirtectory = directory

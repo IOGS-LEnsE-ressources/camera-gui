@@ -149,6 +149,8 @@ class AcquisitionView(QWidget):
 
         self.setLayout(layout)
 
+        self.set_start_enabled(1)
+
     def update_progress_bar(self, value: int):
         """
         Update the progression bar value.

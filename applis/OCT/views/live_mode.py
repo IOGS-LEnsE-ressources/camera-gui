@@ -86,6 +86,15 @@ class liveWidget(QWidget):
         scaled_pixmap = pixmap.scaled(label.size(), Qt.AspectRatioMode.KeepAspectRatio)
         label.setPixmap(scaled_pixmap)
 
+    def acquisition_sequence(self, zstep, z0, vstep, V0, Nimg, i, Nstep, tol = 0.3, timeout = 300):
+        image1, image2, image = self.control.store_acquisition_sequence(zstep, z0, vstep, V0, Nimg, i, Nstep, tol, timeout)
+        if image is None:
+            print(f"Pas d'image détectée")
+            return
+        self.image1 = self.convertTo_uint8(image1)
+        self.image2 = self.convertTo_uint8(image2)
+        self.image = self.convertTo_uint8(image)
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = liveWidget()

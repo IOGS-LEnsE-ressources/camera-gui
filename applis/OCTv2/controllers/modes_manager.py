@@ -186,7 +186,6 @@ class ModesController:
         acquisition = self.main_app.central_widget.acquisition_options
         self.main_app.dir_images = directory
         acquisition.directory.setText(directory)
-        print(f'New Dir = {directory}')
         if acquisition.name.text() != '':
             acquisition.set_start_enabled(True)
 

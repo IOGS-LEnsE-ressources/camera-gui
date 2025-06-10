@@ -28,7 +28,6 @@ if not thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
 
             self.home = 1
             self.find_motor()
-            self.home = 0
 
         def move_motor(self, position:float, sleep_time = 0.1):
             """
@@ -134,6 +133,9 @@ if not thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
                 channel_config.UpdateCurrentConfiguration()
 
                 self.channel.SetSettings(chan_settings, True, False)
+
+                if self.home:
+                    self.home_motor()
 
             except Exception as e:
                 # this can be bad practice: It sometimes obscures the error source

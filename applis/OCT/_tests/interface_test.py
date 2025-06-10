@@ -26,6 +26,8 @@ class MainWindow(QWidget):
         self.camera = CameraParamsView(self)
         self.acq = AcquisitionView(self)
         self.motors = MotorControlView(self)
+        self.folder = fileManager(self)
+        self.z = 0
 
         self.numberOfAvgdImages = self.camera.num_value
         self.z_step = float(self.motors.step_z_section.text())*0.001
@@ -61,11 +63,11 @@ class MainWindow(QWidget):
         #self.start.clicked.connect(self.button_action)
         #self.stop.clicked.connect(self.button_action)
 
-        self.layout = QGridLayout()
-
         self.timer = QTimer()
-        self.timer.timeout.connect(self.update_frame)
+        self.timer.timeout.connect(self.mainLoop)
         self.timer.start(33)
+
+        self.layout = QGridLayout()
 
         self.setLayout(self.layout)
 
@@ -92,6 +94,8 @@ class MainWindow(QWidget):
 
         self.motors.changeZ(self.live_widget.control.motor.get_position())
 
+        self.folder.directory = self.acq.directory.text()
+
     def acquisition_action(self, event):
         source_event = event.split("=")
         source = source_event[0]
@@ -102,6 +106,8 @@ class MainWindow(QWidget):
         elif source == "Stop" and self.live == 0:
             self.live = 1
             self.stack.setCurrentIndex(0)
+        elif source == "name":
+            self.folder.name = message
         elif source == "request":
             self.folder_search()
             #self.timer.stop()
@@ -122,6 +128,7 @@ class MainWindow(QWidget):
         message = source_event[1]
         if source == "stepz":
             self.z_step = float(message)*0.001
+            self.mainLoop()
         elif source == "up":
             self.live_widget.control.motor.set_motor_displacement(1, self.z_step)
             self.motors.changeZ(self.live_widget.control.motor.get_position())
@@ -151,7 +158,8 @@ class MainWindow(QWidget):
             print("IOGS")
             folder_request = QFileDialog.getExistingDirectory(None, "Choisir un fichier")
             if folder_request:
-                self.acq.acqThread.emit("dir=" + folder_request)
+                #self.acq.acqThread.emit("dir=" + folder_request)
+                self.folder.directory = folder_request
                 print(f"the new destination is {folder_request}")
                 self.acq.directory.setText(folder_request)
         except Exception as e:
@@ -167,6 +175,44 @@ class MainWindow(QWidget):
             self.camera.free_memory()
 
         print('End of APP')
+
+    def acquisition_update(self,consigne, tolerance = 0.1, timeout = 3):
+        a = 0
+        while(self.live_widget.control.motor.get_position() - consigne > tolerance and a < timeout):
+            a+=1
+            time.sleep(0.01)
+
+    def get_z(self):
+        self.z = self.live_widget.control.motor.get_position()
+
+    def mainLoop(self):
+        i = 0
+        if self.live:
+            self.acq.set_start_enabled(1)
+            self.acq.set_stop_enabled(0)
+            i = 0
+            self.update_frame()
+            time.sleep(0.03)
+        else:
+            self.timer.stop()
+            self.acq.set_stop_enabled(1)
+            self.acq.set_start_enabled(0)
+            zstep = float(self.motors.step_z_section.text())
+            z0 = self.z
+            vstep = float(self.motors.delta_v_value.text())
+            V0 = float(self.motors.v0_value.text())
+            Nimg = int(self.camera.num_value.text())
+            Nstep = int(self.acq.step_num.text())
+            tol = 0.3
+            timeout = 300
+            self.live_widget.acquisition_sequence(zstep, z0, vstep, V0, Nimg, i, Nstep, tol, timeout)
+            i += 1
+            self.get_z()
+            self.update_frame()
+            self.folder.sendTo(self.live_widget.image, i)
+            if i >= Nstep:
+                self.live = 1
+                self.timer.start(33)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

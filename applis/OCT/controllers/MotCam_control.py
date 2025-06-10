@@ -58,7 +58,14 @@ class cameraControl(QWidget):
         image = np.sqrt((image1 - image2) ** 2)
         return image1, image2, image
 
-    def store_acquisition_sequence(self, z_step_size, z, v_step_size, V0, N, num):
+    def acquisition_update(self,consigne, tolerance = 0.1, timeout = 300):
+        self.motor.move_motor(consigne)
+        a = 0
+        while(self.motor.get_position() - consigne > tolerance and a < timeout):
+            a+=1
+            time.sleep(0.01)
+
+    def store_acquisition_sequence(self, z_step_size, z0, v_step_size, V0, N, index, num, consigne, tolerance = 0.1, timeout = 300):
         """
         This function performs the entire measurement sequence of
         the OCT protocol, and returns a list containing the resulting
@@ -71,13 +78,9 @@ class cameraControl(QWidget):
         :param num: number of steps
         :rtype: list
         """
-        self.motor.move_motor(z)
-        images = []
-        for i in range(num):
-            _, _, image = self.acquisition_sequence(v_step_size, V0, N)
-            self.motor.move_motor(z + i * z_step_size)
-            images.append(image)
-        return images
+        self.acquisition_update(z0 - num / 2 * z_step_size + index * z_step_size, tolerance, timeout)
+        image1, image2, image = self.acquisition_sequence(v_step_size, V0, N)
+        return image1, image2, image
 
     def update_exposure(self, exposure):
         self.exposure = exposure
