@@ -158,15 +158,14 @@ class ModesController:
         message = source_event[1]
         print(dir_images)
         if source == "request":
-            try:
-                folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
-                                                                  dir_images, QFileDialog.Option.ShowDirsOnly)
-            except Exception as e:
-                print(f'E Request {e}')
+            self.worker.stop()
+            folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
+                                                              dir_images, QFileDialog.Option.ShowDirsOnly)
             if folder_request:
                 acquisition.directory.setText(folder_request)
                 if acquisition.name.text() != '':
                     acquisition.set_start_enabled(True)
+            self.start_live()
         if source == "name":
             if acquisition.directory.text() != '':
                 # Check Name ?? (only "normal" character)
