@@ -1,5 +1,3 @@
-import cv2
-import numpy as np
 import sys
 from lensepy.css import *
 from PyQt6.QtWidgets import (
