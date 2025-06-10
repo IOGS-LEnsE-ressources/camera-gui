@@ -31,7 +31,7 @@ class liveWidget(QWidget):
         self.image2 = None
         self.image = None
 
-    def generate_frame(self, step_size = 1.25, V0 = 12):
+    def generate_frame(self, step_size = 0.75, V0 = 0):
         try:
             image1, image2, image = self.control.live_sequence(step_size, V0)
             if image is None:

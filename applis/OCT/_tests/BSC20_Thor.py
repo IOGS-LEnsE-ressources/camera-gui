@@ -26,7 +26,7 @@ from System import Decimal  # necessary for real world units
 
 def main():
     # Comment out this line for the real device
-    # SimulationManager.Instance.InitializeSimulations()
+    SimulationManager.Instance.InitializeSimulations()
     try:
         device_list = DeviceManagerCLI.BuildDeviceList()
 

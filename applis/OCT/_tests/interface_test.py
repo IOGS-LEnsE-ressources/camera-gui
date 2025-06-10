@@ -14,6 +14,7 @@ from views.camera_params import CameraParamsView
 from views.images import ImageDisplayGraph
 from views.live_mode import liveWidget
 from views.motors_display import MotorControlView
+from models.file_management import fileManager
 import numpy as np
 
 
@@ -142,9 +143,10 @@ class MainWindow(QWidget):
             #print(f"the update could not take place : {e}")
 
     def folder_search(self):
-        """self.live_widget.control.disconnect()
-        self.timer.stop()"""
-        #time.sleep(3)
+        self.live_widget.control.disconnect()
+        self.timer.stop()
+        time.sleep(3)
+        print("IOGS")
         try:
             print("IOGS")
             folder_request = QFileDialog.getExistingDirectory(None, "Choisir un fichier")
@@ -154,9 +156,8 @@ class MainWindow(QWidget):
                 self.acq.directory.setText(folder_request)
         except Exception as e:
             print(f"pas d'extraction possible : {e}")
-        """self.live_widget.control.find_camera()
         self.live_widget.control.find_motors()
-"""
+
     def closeEvent(self, event):
         """
         Close event.

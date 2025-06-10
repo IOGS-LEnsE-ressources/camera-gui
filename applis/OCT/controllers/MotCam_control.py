@@ -84,7 +84,7 @@ class cameraControl(QWidget):
         self.cam.set_exposure(self.exposure)
 
     def disconnect(self):
-        self.cam.disconnect()
+        #self.cam.disconnect()
         self.motor.disconnect_motor()
         self.piezo.disconnect_piezo()
 

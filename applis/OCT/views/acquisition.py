@@ -59,7 +59,7 @@ class AcquisitionView(QWidget):
         self.directory_label.setStyleSheet(styleH3)
         self.directory_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        self.directory = QLineEdit("")
+        self.directory = QLineEdit("C:\\Users\\Noam\\Documents\\images")
         '''
         if self.parent.dir_images != '':
             self.directory.setText(self.parent.dir_images)
@@ -70,6 +70,7 @@ class AcquisitionView(QWidget):
 
         self.search = QPushButton("Browse...")
         self.search.setMinimumWidth(100)
+        self.search.setEnabled(False)
         self.search.setStyleSheet(unactived_button)
         self.search.clicked.connect(self.directory_action)
 
@@ -82,7 +83,7 @@ class AcquisitionView(QWidget):
         self.name_label.setStyleSheet(styleH3)
         self.name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        self.name = QLineEdit("")
+        self.name = QLineEdit("Capture")
         self.name.setEnabled = True
         self.name.editingFinished.connect(self.directory_action)
 
