@@ -86,7 +86,6 @@ class ModesController:
 
     def convertTo_uint8(self, image):
         type = image.dtype
-        print(f'T = {type}')
         if type == "uint8":
             return image
         if type == "float16":
