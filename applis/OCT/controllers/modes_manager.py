@@ -27,17 +27,12 @@ class ModesController:
         self.thread = QThread()
         self.worker = None
 
-        # Signals management
-        camera_widget = self.main_app.central_widget.mini_camera.camera_params_widget
-        camera_widget.camera_exposure_changed.connect(self.handle_camera_exposure)
-        motor_widget = self.main_app.central_widget.motors_options
-        motor_widget.motor_changed.connect(self.handle_stepper_move)
-        acq_widget = self.main_app.central_widget.acquisition_options
-        acq_widget.filename_changed.connect(self.handle_folder)
-        acq_widget.acqThread.connect(self.handle_acquisition)
-
         # Variables
-        self.stepper_z_step = int(self.main_app.stepper_step) * 0.001
+        self.stepper_z_step = self.main_app.z_step
+
+        acq_widget = self.main_app.acq
+        acq_widget.folderThread.connect(self.handle_folder)
+        acq_widget.acqThread.connect(self.handle_acquisition)
 
         # Start first mode : Live
         self.mode = 'live'
@@ -50,7 +45,6 @@ class ModesController:
 
         # Connexions
         self.thread.started.connect(self.worker.run)
-        self.worker.images_ready.connect(self.display_live_images)
         self.worker.finished.connect(self.thread.quit)
         self.thread.start()
 
@@ -61,12 +55,11 @@ class ModesController:
 
         # Connexions
         self.thread.started.connect(self.worker.run)
-        self.worker.images_ready.connect(self.store_acquisition_images)
         self.worker.finished.connect(self.thread.quit)
         self.thread.start()
 
 
-    def store_acquisition_images(self):
+    '''def store_acquisition_images(self):
         """Store and display images."""
         self.display_live_images()
         z0 = self.main_app.stepper_init_value
@@ -128,7 +121,7 @@ class ModesController:
             new_position = np.round(self.main_app.step_motor.get_position(), 3)
             motors.changeZ(new_position)
         elif source == "deltaV":
-            self.v_step = float(message)
+            self.v_step = float(message)'''
 
     def handle_folder(self, event):
         """Action performed when Up or Down button is clicked."""
@@ -139,22 +132,43 @@ class ModesController:
         message = source_event[1]
         print(dir_images)
         if source == "request":
+            self.worker.stop()
+
+            dialog = QFileDialog(self.main_app)
+            dialog.setFileMode(QFileDialog.FileMode.Directory)  # Pour choisir un dossier
+            dialog.setOption(QFileDialog.Option.ShowDirsOnly, True)  # Pour n’afficher que des dossiers
+            dialog.setDirectory(dir_images)
+            dialog.fileSelected.connect(self.folder_selected)
+            dialog.show()
+
+            '''
             folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
                                                               dir_images, QFileDialog.Option.ShowDirsOnly)
             if folder_request:
                 acquisition.directory.setText(folder_request)
                 if acquisition.name.text() != '':
                     acquisition.set_start_enabled(True)
+            self.start_live()
+            '''
         if source == "name":
             if acquisition.directory.text() != '':
                 # Check Name ?? (only "normal" character)
                 self.main_app.file_name = acquisition.name.text()
                 acquisition.set_start_enabled(True)
 
+    def folder_selected(self, directory):
+        acquisition = self.main_app.central_widget.acquisition_options
+        self.main_app.dir_images = directory
+        acquisition.directory.setText(directory)
+        if acquisition.name.text() != '':
+            acquisition.set_start_enabled(True)
+
+        self.start_live()
+
     def handle_acquisition(self, event):
         """Action to performed when acquisition is started."""
+        acquisition = self.main_app.acq
         print(event)
-        acquisition = self.main_app.central_widget.acquisition_options
         source_event = event.split("=")
         source = source_event[0]
         message = source_event[1]
@@ -164,7 +178,7 @@ class ModesController:
         self.thread.quit()
         self.thread.wait()
         # Restart in the good mode
-        if source == 'Start':
+        if source == 'Start' and not self.mode == 'acq':
             dir_images = self.main_app.dir_images
             file_name = self.main_app.file_name
             if not os.path.exists(dir_images+'/'+file_name):
@@ -183,7 +197,6 @@ class ModesController:
                 self.start_live()
                 return
             self.mode = 'acq'
-            self.worker.images_ready.disconnect(self.display_live_images)
             print('Start Acq')
             acquisition.set_start_enabled(False)
             acquisition.set_stop_enabled(True)
@@ -191,8 +204,9 @@ class ModesController:
             self.start_acquisition()
         elif source == 'Stop':
             self.mode = 'live'
-            self.worker.images_ready.disconnect(self.store_acquisition_images)
             print('Stop Acq')
             acquisition.set_start_enabled(True)
             acquisition.set_stop_enabled(False)
             self.start_live()
+        elif source == "name":
+            self.main_app.folder.name = message

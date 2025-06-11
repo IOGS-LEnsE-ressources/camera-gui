@@ -201,10 +201,6 @@ if not thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
 
                 self.device.Connect(self.serial_no)
 
-                # Get Device Information and display description
-                device_info = self.device.GetDeviceInfo()
-                print(device_info.Description)
-
                 # Start polling and enable
                 self.device.StartPolling(250)  # 250ms polling rate
                 time.sleep(0.25)
@@ -227,60 +223,6 @@ if not thorlabs:#os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
                 # this can be bad practice: It sometimes obscures the error source
                 print(e)
                 self.device = None
-
-elif test:
-    class Motor:
-        """
-        Class for controlling Thorlabs BSC20x step motor, through a DRV208 controller.
-        """
-
-        def __init__(self, serial_no="40897338"):
-            self.serial_no = serial_no
-            self.position = 3
-
-        def move_motor(self, position: float, sleep_time=0.1):
-            self.position = position
-
-        def set_motor_displacement(self, direction: bool, delta_z: float):
-            if direction == 1:
-                self.position += delta_z
-            else:
-                self.position -= delta_z
-
-        def home_motor(self, sleep_time=0.1):
-            pass
-
-        def disconnect_motor(self):
-            """
-            Disconnect the motor.
-            """
-            pass
-
-        def get_position(self):
-            return self.position
-
-    class Piezo:
-        """
-        Class for controlling Thorlabs KPZ step motor, through a DRV208 controller.
-        """
-
-        def __init__(self, serial_no="29501399"):
-            # SimulationManager.Instance.InitializeSimulations()
-            self.serial_no = serial_no  # Replace this line with your device's serial number
-            pass
-
-        def set_voltage_piezo(self, voltage: float, SleepTime=0.3):
-            pass
-
-        def set_zero_piezo(self):
-            pass
-
-        def disconnect_piezo(self):
-            pass
-
-        def get_voltage(self):
-            return 5.2
-
 
 else:
 

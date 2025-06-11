@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 
 class ImageLive(QObject):
-    images_ready = pyqtSignal()
     finished = pyqtSignal()
 
     def __init__(self, main_app: "MainWindow"):
@@ -22,25 +21,10 @@ class ImageLive(QObject):
 
     def run(self):
         while self._running:
-            # Get images
-            piezo = self.main_app.piezo
-            camera = self.main_app.camera
-            if piezo is not None and self.main_app.camera_connected:
-                if not self.main_app.camera_acquiring:
-                    print("Start ACQUISITION")
-                    camera.alloc_memory()
-                    camera.start_acquisition()
-                    self.main_app.camera_acquiring = True
-                nb_images = self.main_app.central_widget.mini_camera.camera_params_widget.num_value.text()
-                piezo.set_voltage_piezo(self.main_app.piezo_V0)
-                images_list = camera.get_images(int(nb_images))
-                self.main_app.image1 = np.mean(images_list, axis = 0)
-                piezo.set_voltage_piezo(self.main_app.piezo_step_size + self.main_app.piezo_V0)
-                images_list = camera.get_images(int(nb_images))
-                self.main_app.image2 = np.mean(images_list, axis = 0)
-                self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)
+            self.main_app.acq.set_start_enabled(1)
+            self.main_app.acq.set_stop_enabled(0)
+            self.main_app.update_frame()
             time.sleep(0.01)
-            self.images_ready.emit()
         self.finished.emit()
 
     def stop(self):
@@ -48,7 +32,6 @@ class ImageLive(QObject):
 
 
 class ImageAcquisition(QObject):
-    images_ready = pyqtSignal()
     finished = pyqtSignal()
 
     def __init__(self, main_app: "MainWindow"):
@@ -59,31 +42,25 @@ class ImageAcquisition(QObject):
 
     def run(self):
         while self._running:
-            # Get images
-            piezo = self.main_app.piezo
-            camera = self.main_app.camera
-            if piezo is not None and self.main_app.camera_connected:
-                if not self.main_app.camera_acquiring:
-                    print("Start ACQUISITION")
-                    camera.alloc_memory()
-                    camera.start_acquisition()
-                    self.main_app.camera_acquiring = True
-                nb_images = self.main_app.central_widget.mini_camera.camera_params_widget.num_value.text()
-                piezo.set_voltage_piezo(self.main_app.piezo_V0)
-                images_list = camera.get_images(int(nb_images))
-                self.main_app.image1 = np.mean(images_list, axis = 0)
-                piezo.set_voltage_piezo(self.main_app.piezo_step_size + self.main_app.piezo_V0)
-                images_list = camera.get_images(int(nb_images))
-                self.main_app.image2 = np.mean(images_list, axis = 0)
-                self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)
-                self.number_of_samples += 1
-                print(f'Sample nb = {self.number_of_samples}')
-            else:
-                self.main_app.image_oct = np.random.randint(0, 256, (50, 100), dtype=np.uint8)
-                self.number_of_samples += 1
-                print(f'Sample nb = {self.number_of_samples}')
-            self.images_ready.emit()
-            time.sleep(0.5)     # TO ADAPT DEPENDING ON STEPPER MOVEMENT SPEED ! Test position ?
+            zstep = float(self.main_app.motors.step_z_section.text())
+            z0 = self.main_app.z
+            vstep = float(self.main_app.motors.delta_v_value.text())
+            V0 = float(self.main_app.motors.v0_value.text())
+            Nimg = int(self.main_app.camera.num_value.text())
+            Nstep = int(self.main_app.acq.step_num.text())
+            tol = 0.3
+            timeout = 300
+            self.main_app.main_widget.get_acquisition_sequence(zstep, z0, vstep, V0, Nimg, self.number_of_samples, Nstep, tol, timeout)
+            self.number_of_samples += 1
+            self.main_app.get_z()
+            self.main_app.update_frame()
+            self.main_app.folder.sendTo(self.main_app.main_widget.image, self.number_of_samples)
+            time.sleep(0.01)
+
+            if self.number_of_samples >= Nstep:
+                self.number_of_samples = 0
+                self._running = False
+                self.finished.emit()
         self.finished.emit()
 
     def stop(self):

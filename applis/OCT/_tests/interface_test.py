@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from views.acquisition import AcquisitionView
 from views.camera_params import CameraParamsView
 from views.images import ImageDisplayGraph
-from views.live_mode import liveWidget
+from views.live_mode import mainWidget
 from views.motors_display import MotorControlView
 from models.file_management import fileManager
 import numpy as np
@@ -34,9 +34,9 @@ class MainWindow(QWidget):
         self.v_step = float(self.motors.delta_v_value.text())
 
         self.image_graph = ImageDisplayGraph(self, '#404040')
-        self.live_widget = liveWidget()
+        self.live_widget = mainWidget()
 
-        self.live_widget.get_live_sequence(float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
+        self.live_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
 
         self.image1_widget = ImageDisplayGraph(self, bg_color='#909090')
         self.image1_widget.set_image_from_array(np.array(self.live_widget.image1), "image1")
@@ -138,9 +138,9 @@ class MainWindow(QWidget):
         elif source == "deltaV":
             self.v_step = float(message)
 
-    def update_frame(self):
+    def update_frame(self, image1, image2, image):
         try:
-            self.live_widget.get_live_sequence(float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
+            #self.live_widget.get_live_sequence(float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
             self.image1_widget.set_image_from_array(np.array(self.live_widget.image1), "image1")
             self.image2_widget.set_image_from_array(np.array(self.live_widget.image2), "image2")
             self.image_widget.set_image_from_array(np.array(self.live_widget.image), "image")
@@ -205,7 +205,7 @@ class MainWindow(QWidget):
             Nstep = int(self.acq.step_num.text())
             tol = 0.3
             timeout = 300
-            self.live_widget.acquisition_sequence(zstep, z0, vstep, V0, Nimg, i, Nstep, tol, timeout)
+            self.live_widget.get_acquisition_sequence(zstep, z0, vstep, V0, Nimg, i, Nstep, tol, timeout)
             i += 1
             self.get_z()
             self.update_frame()

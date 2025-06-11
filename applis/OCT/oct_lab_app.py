@@ -1,197 +1,186 @@
-# -*- coding: utf-8 -*-
-"""*oct_lab_app.py* file.
-
-*oct_lab_app* file that contains :class::OCTLabApp
-
-This file is attached to a 3rd year of engineer training labwork in photonics.
-Subject :
-
-More about the development of this interface :
-https://iogs-lense-ressources.github.io/camera-gui/
-
-.. note:: LEnsE - Institut d'Optique - version 1.0
-
-.. moduleauthor:: Julien VILLEMEJANE (PRAG LEnsE) <julien.villemejane@institutoptique.fr>
-.. moduleauthor:: Julien MOREAU () <julien.moreau@institutoptique.fr>
-"""
-import sys, os
-import numpy as np
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-from lensepy import load_dictionary, translate, dictionary
 from PyQt6.QtWidgets import (
-    QWidget, QPushButton,
-    QMainWindow, QApplication, QMessageBox)
+    QWidget, QGridLayout, QSplitter, QStackedWidget, QApplication, QFileDialog, QMessageBox
+)
+from PyQt6.QtCore import Qt, QTimer
+import sys, os
+import time
 
-## Widgets
-from lensepy.pyqt6 import *
-from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
-from views.main_view import MainView
-from lensecam.basler.camera_basler import CameraBasler, get_bits_per_pixel
-from models.motor_control import *
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from views.acquisition import AcquisitionView
+from views.camera_params import CameraParamsView
+from views.images import ImageDisplayGraph
+from views.live_mode import mainWidget
+from views.motors_display import MotorControlView
+from models.file_management import fileManager
 from controllers.modes_manager import ModesController
-
-def load_default_dictionary(language: str) -> bool:
-    """Initialize default dictionary from default_config.txt file"""
-    file_name_dict = f'./lang/dict_{language}.txt'
-    load_dictionary(file_name_dict)
+import numpy as np
 
 
-def load_default_parameters(file_path: str) -> dict:
-    """
-    Load parameter from a CSV file.
-
-    :return: Dict containing 'key_1': 'language_word_1'.
-
-    Notes
-    -----
-    This function reads a CSV file that contains key-value pairs separated by semicolons (';')
-    and stores them in a global dictionary variable. The CSV file may contain comments
-    prefixed by '#', which will be ignored.
-
-    The file should have the following format:
-        # comment
-        # comment
-        key_1 ; language_word_1
-        key_2 ; language_word_2
-    """
-    dictionary_loaded = {}
-    if os.path.exists(file_path):
-        # Read the CSV file, ignoring lines starting with '//'
-        data = np.genfromtxt(file_path, delimiter=';',
-                             dtype=str, comments='#', encoding='UTF-8')
-        # Populate the dictionary with key-value pairs from the CSV file
-        for key, value in data:
-            dictionary_loaded[key.strip()] = value.strip()
-        return dictionary_loaded
-    else:
-        print('File error')
-        return {}
-
-
-class MainWindow(QMainWindow):
-    """
-    Our main window.
-
-    Args:
-        QMainWindow (class): QMainWindow can contain several widgets.
-    """
-
-    def __init__(self):
-        """
-        Initialisation of the main Window.
-        """
+class MainWindow(QWidget):
+    def __init__(self, parent = None):
         super().__init__()
-        load_default_dictionary('FR')
-        # Read default parameters
-        self.default_parameters = load_default_parameters('./assets/config.txt')
+        self.parent = parent
 
-        # Main objects
-        # ------------
-        self.piezo = None
-        self.step_motor = None
-        self.camera = None
-        self.camera_connected = False
-        self.camera_acquiring = False
+        self.camera = CameraParamsView(self)
+        self.acq = AcquisitionView(self)
+        self.motors = MotorControlView(self)
+        self.folder = fileManager(self)
+        self.z = 0
 
-        self.image_bits_depth = 12
-        self.number_avgd_images = 1
-        self.image1 = None
-        self.image2 = None
-        self.image_oct = None
+        self.numberOfAvgdImages = self.camera.num_value
+        self.z_step = float(self.motors.step_z_section.text())*0.001
+        self.v_step = float(self.motors.delta_v_value.text())
 
-        # Main variables
-        self.piezo_step_size = 0.6
-        if 'PiezoDV' in self.default_parameters:
-            self.piezo_step_size = self.default_parameters['PiezoDV']
-        self.piezo_V0 = 0
-        if 'PiezoV0' in self.default_parameters:
-            self.piezo_V0 = self.default_parameters['PiezoV0']
-        self.stepper_init_value = 3.3
-        if 'StepperInitPosition' in self.default_parameters:
-            self.stepper_init_value = self.default_parameters['StepperInitPosition']
-        self.stepper_step = 100
-        if 'StepperInitStep' in self.default_parameters:
-            self.stepper_step = self.default_parameters['StepperInitStep']
+        self.manager = ModesController(self)
 
-        self.dir_images = os.path.expanduser("~")
-        if 'DirImages' in self.default_parameters:
-            self.dir_images = self.default_parameters['DirImages']
-        self.file_name = ''
+        self.image_graph = ImageDisplayGraph(self, '#404040')
+        self.main_widget = mainWidget()
 
-        ## GUI structure
-        self.central_widget = MainView(self)
-        self.setCentralWidget(self.central_widget)
+        self.main_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
 
-        # Initialization
-        self.init_app()
-        self.controller = ModesController(self)
+        self.image1_widget = ImageDisplayGraph(self, bg_color='#909090')
+        self.image1_widget.set_image_from_array(np.array(self.main_widget.image1), "image1")
+        self.image2_widget = ImageDisplayGraph(self, bg_color='#909090')
+        self.image2_widget.set_image_from_array(np.array(self.main_widget.image2), "image2")
+        self.top_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.top_splitter.addWidget(self.image1_widget)
+        self.top_splitter.addWidget(self.image2_widget)
 
-    def init_app(self):
+        self.image_widget = ImageDisplayGraph(self, bg_color='#404040')
+        self.image_widget.set_image_from_array(np.array(self.main_widget.image), "image2")
+
+        # Zone dynamique pour image ou live
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.image_widget)  # index 0
+        self.stack.addWidget(self.image_graph)  # index 1
+        self.stack.setCurrentIndex(0)
+
+        self.main_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.main_splitter.addWidget(self.top_splitter)
+        self.main_splitter.addWidget(self.stack)
+        self.main_splitter.setSizes([230,500])
+
+        self.dir_image = self.acq.directory
+
+        #self.start.clicked.connect(self.button_action)
+        #self.stop.clicked.connect(self.button_action)
+
+        """self.timer = QTimer()
+        self.timer.timeout.connect(self.mainLoop)
+        self.timer.start(33)
         """
-        Initialization of the application : camera, piezo, step motor, gui.
-        """
-        # Initialization of the camera
-        # ----------------------------
-        print('Camera Initialization')
-        self.camera = CameraBasler()
-        self.camera_connected = self.camera.find_first_camera()
-        if self.camera_connected:
-            self.camera.init_camera()
-            self.camera.set_color_mode('Mono12')
-            if 'Exposure Time' in self.default_parameters:
-                self.camera.set_exposure(float(self.default_parameters['Exposure Time'])*1000)  # in us
+        self.layout = QGridLayout()
+
+        self.setLayout(self.layout)
+
+        self.layout.setColumnStretch(0, 1)
+        self.layout.setColumnStretch(1, 3)
+
+        # Configuration des lignes
+        self.layout.setRowStretch(0, 1)
+        self.layout.setRowStretch(1, 1)
+        self.layout.setRowStretch(2, 1)
+
+        self.layout.addWidget(self.camera, 0, 0)
+        self.layout.addWidget(self.acq, 1, 0)
+        self.layout.addWidget(self.motors, 2, 0)
+
+        self.layout.addWidget(self.main_splitter, 0, 1, 3, 1)
+
+        self.live = 1
+
+        self.camera.camThread.connect(self.cam_action)
+        """self.acq.acqThread.connect(self.acquisition_action)
+        self.acq.folderThread.connect(self.folder_search, Qt.ConnectionType.QueuedConnection)"""
+        self.motors.motThread.connect(self.motor_action)
+
+        self.motors.changeZ(self.main_widget.control.motor.get_position())
+
+        self.folder.directory = self.acq.directory.text()
+
+    """def acquisition_action(self, event):
+        source_event = event.split("=")
+        source = source_event[0]
+        message = source_event[1]
+        if source == "Start" and self.live == 1:
+            self.live = 0
+            self.stack.setCurrentIndex(1)
+        elif source == "Stop" and self.live == 0:
+            self.live = 1
+            self.stack.setCurrentIndex(0)
+        elif source == "name":
+            self.folder.name = message
+        elif source == "request":
+            self.folder_search()
+            #self.timer.stop()
+            #self.timer.singleShot(0, self.delayed_folder_search)"""
+
+    def cam_action(self, event):
+        source_event = event.split("=")
+        source = source_event[0]
+        message = source_event[1]
+        if source == "int":
+            self.main_widget.control.update_exposure(int(message))
+        if source == "num":
+            self.numberOfAvgdImages = int(message)
+
+    def motor_action(self, event):
+        source_event = event.split("=")
+        source = source_event[0]
+        message = source_event[1]
+        if source == "stepz":
+            self.z_step = float(message)*0.001
+            self.mainLoop()
+        elif source == "up":
+            self.main_widget.control.motor.set_motor_displacement(1, self.z_step)
+            self.motors.changeZ(self.main_widget.control.motor.get_position())
+        elif source == "down":
+            self.main_widget.control.motor.set_motor_displacement(0, self.z_step)
+            self.motors.changeZ(self.main_widget.control.motor.get_position())
+        elif source == "deltaV":
+            self.v_step = float(message)
+
+    def update_frame(self):
+        try:
+            if self.main_widget.control.camera_connected and self.main_widget.control.piezo is not None:
+                try:
+                    self.main_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
+                    self.image1_widget.set_image_from_array(np.array(self.main_widget.image1), "image1")
+                    self.image2_widget.set_image_from_array(np.array(self.main_widget.image2), "image2")
+                    self.image_widget.set_image_from_array(np.array(self.main_widget.image), "image")
+                except Exception as e:
+                    print(e)
             else:
-                self.camera.set_exposure(1000) # in us
-            self.camera.set_frame_rate(10)
-            self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
-            print(f'Color mode = {self.image_bits_depth}')
-        else:
-            dlg = QMessageBox(self)
-            dlg.setWindowTitle("Warning - No Camera Connected")
-            dlg.setText("No Basler Camera is connected to the computer...\n\nThe application will not start "
-                        "correctly.\n\nYou will only access to a pre-established data set.")
-            dlg.setStandardButtons(
-                QMessageBox.StandardButton.Ok
-            )
-            dlg.setIcon(QMessageBox.Icon.Warning)
-            button = dlg.exec()
+                black = np.random.normal(size=(100, 100))
+                self.image1_widget.set_image_from_array(black, "No Piezo or camera")
+                self.image2_widget.set_image_from_array(black, "No Piezo or camera")
+                self.image_oct_graph.set_image_from_array(black, "No Piezo or camera")
+            #print("updated")
+        except Exception as e:
+            return None
+            #print(f"the update could not take place : {e}")
 
-        # Initialization of the piezo
-        # ---------------------------
-        print('Piezo Initialization')
-        if 'PiezoSN' in self.default_parameters:
-            self.piezo = Piezo(serial_no=self.default_parameters['PiezoSN'])
-        else:
-            self.piezo = Piezo()
-        serial = self.piezo.serial_no
-        print(f'Piezo connected / SN = {serial}')
-
-        # Initialization of the step motor
-        # --------------------------------
-        print('Step Motor Initialization')
-        if 'StepSN' in self.default_parameters:
-            self.step_motor = Motor(serial_no=self.default_parameters['StepSN'])
-        else:
-            self.step_motor = Motor()
-        serial = self.step_motor.serial_no
-        print(f'Step Motor connected / SN = {serial}')
-        if 'StepInitPosition' in self.default_parameters:
-            position = float(self.default_parameters['StepInitPosition'])
-        else:
-            position = 3.0
-        self.step_motor.move_motor(position)
-        new_position = self.step_motor.get_position()
-        print(f'Step Motor moved to position {new_position} mm')
-
-        # At the end, start LIVE mode
-
-
-    def resizeEvent(self, event):
+    def closeEvent(self, event):
         """
-        Action performed when the main window is resized.
-        :param event: Object that triggered the event.
+        Close event.
         """
-        pass
+        if self.main_widget.control.cam is not None:
+            self.main_widget.control.cam.stop_acquisition()
+            self.main_widget.control.cam.free_memory()
+
+        print('End of APP')
+
+    def acquisition_update(self,consigne, tolerance = 0.1, timeout = 3):
+        a = 0
+        while(self.main_widget.control.motor.get_position() - consigne > tolerance and a < timeout):
+            a+=1
+            time.sleep(0.01)
+
+    def get_z(self):
+        self.z = self.main_widget.control.motor.get_position()
 
     def closeEvent(self, event):
         """
@@ -203,25 +192,22 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            if self.controller.worker is not None:
-                self.controller.worker.stop()
-                self.controller.thread.quit()
-                self.controller.thread.wait()
-            if self.camera_connected:
-                print("Disconnect Camera")
-                self.camera.stop_acquisition()
-                self.camera.disconnect()
-            if self.piezo is not None:
-                self.piezo.disconnect_piezo()
-            if self.step_motor is not None:
-                self.step_motor.disconnect_motor()
+            if self.manager.worker is not None:
+                self.manager.worker.stop()
+                self.manager.thread.quit()
+                self.manager.thread.wait()
+            self.main_widget.control.disconnect()
             event.accept()
         else:
             event.ignore()
 
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    window = MainWindow()
-    window.showMaximized()
-    sys.exit(app.exec())
+    fenetre = MainWindow()
+    fenetre.show()
+    try:
+        sys.exit(app.exec())
+    except Exception as e:
+        print(e)
+        fenetre.main_widget.control.dicsonnect()

@@ -8,11 +8,10 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QPixmap, QImage
 import numpy as np
-from controllers import MotCam_control
-from controllers.MotCam_control import cameraControl
+from controllers.camera_control import cameraControl
 
 
-class liveWidget(QWidget):
+class mainWidget(QWidget):
     def __init__(self, parent = None):
         super().__init__()
 
@@ -59,8 +58,8 @@ class liveWidget(QWidget):
         image_uint8 = (image_normalized * 255).astype(np.uint8)
         return image_uint8
 
-    def get_live_sequence(self, step_size, V0):
-        image1, image2, image = self.control.live_sequence(step_size, V0)
+    def get_live_sequence(self, step_size, V0, N):
+        image1, image2, image = self.control.acquisition_sequence(N, step_size, V0)
         if image is None:
             print(f"Pas d'image détectée")
             return
@@ -86,7 +85,7 @@ class liveWidget(QWidget):
         scaled_pixmap = pixmap.scaled(label.size(), Qt.AspectRatioMode.KeepAspectRatio)
         label.setPixmap(scaled_pixmap)
 
-    def acquisition_sequence(self, zstep, z0, vstep, V0, Nimg, i, Nstep, tol = 0.3, timeout = 300):
+    def get_acquisition_sequence(self, zstep, z0, vstep, V0, Nimg, i, Nstep, tol = 0.3, timeout = 300):
         image1, image2, image = self.control.store_acquisition_sequence(zstep, z0, vstep, V0, Nimg, i, Nstep, tol, timeout)
         if image is None:
             print(f"Pas d'image détectée")
@@ -97,7 +96,7 @@ class liveWidget(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = liveWidget()
+    widget = mainWidget()
     widget.if_main_video()
     widget.show()
     sys.exit(app.exec())

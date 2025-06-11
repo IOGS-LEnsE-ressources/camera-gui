@@ -2,7 +2,7 @@ from fontTools.merge.util import avg_int
 
 from models.motor_control import *
 import numpy as np
-from lensecam.basler.camera_basler import CameraBasler
+from lensecam.basler.camera_basler import CameraBasler, get_bits_per_pixel
 import matplotlib.pyplot as plt
 import sys
 import time
@@ -10,9 +10,7 @@ import time
 from views import motors_display
 
 from PyQt6.QtWidgets import (
-    QWidget, QGridLayout, QVBoxLayout,
-    QLabel, QComboBox, QPushButton, QFrame,
-    QSizePolicy, QSpacerItem, QMainWindow, QHBoxLayout, QApplication, QSlider, QLineEdit, QFileDialog)
+    QWidget, QApplication, QMessageBox)
 from PyQt6.QtCore import Qt, pyqtSignal
 
 class cameraControl(QWidget):
@@ -20,43 +18,42 @@ class cameraControl(QWidget):
         super().__init__()
         self.parent = parent
 
-        self.cam = CameraBasler()
-        #if __name__ == "__main__":
-        cam_connected = self.cam.find_first_camera()
-        print(cam_connected)
+        self.find_camera()
+
+        if self.camera_connected:
+            print(f"la caméra est connectée")
+        else:
+            print(f"la caméra n'a pas pu être connectée")
 
         self.exposure = 1500
         self.piezo = Piezo()
         self.motor = Motor()
 
-        self.cam.set_exposure(self.exposure)
+        self.piezo_flag = self.piezo is not None
+        self.motor_flag = self.motor is not None
 
-    def capture_image(self):
-        image = self.cam.get_image()
-        return image
+        self.cam.set_exposure(self.exposure)
 
     def avg_images(self, N):
         images = self.cam.get_images(N)
         return np.mean(images, axis = 0)
 
-    def acquisition_sequence(self, step_size, V0, N):
-        images_1 = self.avg_images(N)
+    def acquisition_sequence(self,N , step_size, V0):
+        self.piezo.set_voltage_piezo(V0)
+        image1 = self.avg_images(N)
         self.piezo.set_voltage_piezo(step_size + V0)
-        images_2 = self.avg_images(N)
-        self.piezo.set_zero_piezo(V0)
-        image1 = np.mean(images_1, axis=0)
-        image2 = np.mean(images_2, axis=0)
+        image2 = self.avg_images(N)
 
         image = np.sqrt((image1 - image2)**2)
         return image1, image2, image
 
-    def live_sequence(self, step_size = 0.6, V0 = 0):
+    """def live_sequence(self, N, step_size, V0):
         self.piezo.set_voltage_piezo(V0)
-        image1 = self.capture_image()
+        image1 = self.avg_images(N)
         self.piezo.set_voltage_piezo(step_size + V0)
-        image2 = self.capture_image()
+        image2 = self.avg_images(N)
         image = np.sqrt((image1 - image2) ** 2)
-        return image1, image2, image
+        return image1, image2, image"""
 
     def acquisition_update(self,consigne, tolerance = 0.1, timeout = 300):
         self.motor.move_motor(consigne)
@@ -79,7 +76,7 @@ class cameraControl(QWidget):
         :rtype: list
         """
         self.acquisition_update(z0 - num / 2 * z_step_size + index * z_step_size, tolerance, timeout)
-        image1, image2, image = self.acquisition_sequence(v_step_size, V0, N)
+        image1, image2, image = self.acquisition_sequence(N, v_step_size, V0)
         return image1, image2, image
 
     def update_exposure(self, exposure):
@@ -87,12 +84,34 @@ class cameraControl(QWidget):
         self.cam.set_exposure(self.exposure)
 
     def disconnect(self):
-        #self.cam.disconnect()
-        self.motor.disconnect_motor()
-        self.piezo.disconnect_piezo()
+        if self.camera_connected:
+            print("Disconnect Camera")
+            self.cam.stop_acquisition()
+            self.cam.disconnect()
+        if self.piezo is not None:
+            self.piezo.disconnect_piezo()
+        if self.motor is not None:
+            self.motor.disconnect_motor()
 
     def find_camera(self):
-        self.cam.find_first_camera()
+        self.cam = CameraBasler()
+        self.camera_connected = self.cam.find_first_camera()
+        if self.camera_connected:
+            self.cam.init_camera()
+            self.cam.set_color_mode('Mono12')
+            self.cam.set_frame_rate(10)
+            self.image_bits_depth = get_bits_per_pixel(self.cam.get_color_mode())
+            print(f'Color mode = {self.image_bits_depth}')
+        else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Warning - No Camera Connected")
+            dlg.setText("No Basler Camera is connected to the computer...\n\nThe application will not start "
+                        "correctly.\n\nYou will only access to a pre-established data set.")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
 
     def find_motors(self):
         self.piezo.find_piezo()

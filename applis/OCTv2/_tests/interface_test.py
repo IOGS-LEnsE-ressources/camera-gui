@@ -33,7 +33,7 @@ class MainWindow(QWidget):
         self.image_graph = ImageDisplayGraph(self, '#404040')
         self.live_widget = liveWidget()
 
-        self.live_widget.get_live_sequence(float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
+        self.live_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
 
         self.image1_widget = ImageDisplayGraph(self, bg_color='#909090')
         self.image1_widget.set_image_from_array(np.array(self.live_widget.image1), "image1")
@@ -132,7 +132,7 @@ class MainWindow(QWidget):
 
     def update_frame(self):
         try:
-            self.live_widget.get_live_sequence(float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
+            self.live_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
             self.image1_widget.set_image_from_array(np.array(self.live_widget.image1), "image1")
             self.image2_widget.set_image_from_array(np.array(self.live_widget.image2), "image2")
             self.image_widget.set_image_from_array(np.array(self.live_widget.image), "image")
