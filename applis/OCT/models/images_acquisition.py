@@ -20,7 +20,13 @@ class ImageLive(QObject):
         self._running = True
 
     def run(self):
+        control = self.main_app.main_widget.control
         while self._running:
+            if not self.main_app.camera_acquiring:
+                print("Start ACQUISITION")
+                control.cam.alloc_memory()
+                control.start_acquisition()
+                self.main_app.camera_acquiring = True
             self.main_app.acq.set_start_enabled(1)
             self.main_app.acq.set_stop_enabled(0)
             self.main_app.update_frame()
@@ -41,7 +47,13 @@ class ImageAcquisition(QObject):
         self.number_of_samples = 0
 
     def run(self):
+        control = self.main_app.main_widget.control
         while self._running:
+            if not self.main_app.camera_acquiring:
+                print("Start ACQUISITION")
+                control.cam.alloc_memory()
+                control.start_acquisition()
+                self.main_app.camera_acquiring = True
             zstep = float(self.main_app.motors.step_z_section.text())
             z0 = self.main_app.z
             vstep = float(self.main_app.motors.delta_v_value.text())

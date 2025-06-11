@@ -50,7 +50,7 @@ class CameraParamsView(QWidget):
         self.num_label.setStyleSheet(styleH3)
         self.num_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        init_value = 1 #self.parent.number_avgd_images
+        init_value = 5 #self.parent.number_avgd_images
         self.num_value = QLineEdit(str(init_value))
         self.num_value.setEnabled = True
         self.num_value.editingFinished.connect(self.update_num)

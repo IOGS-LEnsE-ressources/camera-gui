@@ -29,68 +29,11 @@ class MainWindow(QWidget):
         self.motors = MotorControlView(self)
         self.folder = fileManager(self)
         self.z = 0
+        self.camera_acquiring = True
+        self.z_step = self.motors.step_z_section.text()
+        self.v_step = self.motors.delta_v_value.text()
 
-        self.numberOfAvgdImages = self.camera.num_value
-        self.z_step = float(self.motors.step_z_section.text())*0.001
-        self.v_step = float(self.motors.delta_v_value.text())
-
-        self.manager = ModesController(self)
-
-        self.image_graph = ImageDisplayGraph(self, '#404040')
-        self.main_widget = mainWidget()
-
-        self.main_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()), float(self.motors.v0_value.text()))
-
-        self.image1_widget = ImageDisplayGraph(self, bg_color='#909090')
-        self.image1_widget.set_image_from_array(np.array(self.main_widget.image1), "image1")
-        self.image2_widget = ImageDisplayGraph(self, bg_color='#909090')
-        self.image2_widget.set_image_from_array(np.array(self.main_widget.image2), "image2")
-        self.top_splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.top_splitter.addWidget(self.image1_widget)
-        self.top_splitter.addWidget(self.image2_widget)
-
-        self.image_widget = ImageDisplayGraph(self, bg_color='#404040')
-        self.image_widget.set_image_from_array(np.array(self.main_widget.image), "image2")
-
-        # Zone dynamique pour image ou live
-        self.stack = QStackedWidget()
-        self.stack.addWidget(self.image_widget)  # index 0
-        self.stack.addWidget(self.image_graph)  # index 1
-        self.stack.setCurrentIndex(0)
-
-        self.main_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.main_splitter.addWidget(self.top_splitter)
-        self.main_splitter.addWidget(self.stack)
-        self.main_splitter.setSizes([230,500])
-
-        self.dir_image = self.acq.directory
-
-        #self.start.clicked.connect(self.button_action)
-        #self.stop.clicked.connect(self.button_action)
-
-        """self.timer = QTimer()
-        self.timer.timeout.connect(self.mainLoop)
-        self.timer.start(33)
-        """
-        self.layout = QGridLayout()
-
-        self.setLayout(self.layout)
-
-        self.layout.setColumnStretch(0, 1)
-        self.layout.setColumnStretch(1, 3)
-
-        # Configuration des lignes
-        self.layout.setRowStretch(0, 1)
-        self.layout.setRowStretch(1, 1)
-        self.layout.setRowStretch(2, 1)
-
-        self.layout.addWidget(self.camera, 0, 0)
-        self.layout.addWidget(self.acq, 1, 0)
-        self.layout.addWidget(self.motors, 2, 0)
-
-        self.layout.addWidget(self.main_splitter, 0, 1, 3, 1)
-
-        self.live = 1
+        self.set_layout()
 
         self.camera.camThread.connect(self.cam_action)
         """self.acq.acqThread.connect(self.acquisition_action)
@@ -100,6 +43,8 @@ class MainWindow(QWidget):
         self.motors.changeZ(self.main_widget.control.motor.get_position())
 
         self.folder.directory = self.acq.directory.text()
+
+        self.manager = ModesController(self)
 
     """def acquisition_action(self, event):
         source_event = event.split("=")
@@ -152,7 +97,7 @@ class MainWindow(QWidget):
                     self.image2_widget.set_image_from_array(np.array(self.main_widget.image2), "image2")
                     self.image_widget.set_image_from_array(np.array(self.main_widget.image), "image")
                 except Exception as e:
-                    print(e)
+                    print(f"update {e}")
             else:
                 black = np.random.normal(size=(100, 100))
                 self.image1_widget.set_image_from_array(black, "No Piezo or camera")
@@ -201,13 +146,64 @@ class MainWindow(QWidget):
         else:
             event.ignore()
 
+    def set_layout(self):
+        self.image_graph = ImageDisplayGraph(self, '#404040')
+        self.main_widget = mainWidget()
+
+        self.main_widget.get_live_sequence(int(self.camera.num_value.text()), float(self.motors.delta_v_value.text()),
+                                           float(self.motors.v0_value.text()))
+
+        self.image1_widget = ImageDisplayGraph(self, bg_color='#909090')
+        self.image1_widget.set_image_from_array(np.array(self.main_widget.image1), "image1")
+        self.image2_widget = ImageDisplayGraph(self, bg_color='#909090')
+        self.image2_widget.set_image_from_array(np.array(self.main_widget.image2), "image2")
+        self.top_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.top_splitter.addWidget(self.image1_widget)
+        self.top_splitter.addWidget(self.image2_widget)
+
+        self.image_widget = ImageDisplayGraph(self, bg_color='#404040')
+        self.image_widget.set_image_from_array(np.array(self.main_widget.image), "image2")
+
+        # Zone dynamique pour image ou live
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.image_widget)  # index 0
+        self.stack.addWidget(self.image_graph)  # index 1
+        self.stack.setCurrentIndex(0)
+
+        self.main_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.main_splitter.addWidget(self.top_splitter)
+        self.main_splitter.addWidget(self.stack)
+        self.main_splitter.setSizes([230, 500])
+
+        self.dir_image = self.acq.directory
+
+        # self.start.clicked.connect(self.button_action)
+        # self.stop.clicked.connect(self.button_action)
+
+        """self.timer = QTimer()
+        self.timer.timeout.connect(self.mainLoop)
+        self.timer.start(33)
+        """
+        self.layout = QGridLayout()
+
+        self.setLayout(self.layout)
+
+        self.layout.setColumnStretch(0, 1)
+        self.layout.setColumnStretch(1, 3)
+
+        # Configuration des lignes
+        self.layout.setRowStretch(0, 1)
+        self.layout.setRowStretch(1, 1)
+        self.layout.setRowStretch(2, 1)
+
+        self.layout.addWidget(self.camera, 0, 0)
+        self.layout.addWidget(self.acq, 1, 0)
+        self.layout.addWidget(self.motors, 2, 0)
+
+        self.layout.addWidget(self.main_splitter, 0, 1, 3, 1)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     fenetre = MainWindow()
     fenetre.show()
-    try:
-        sys.exit(app.exec())
-    except Exception as e:
-        print(e)
-        fenetre.main_widget.control.dicsonnect()
+    sys.exit(app.exec())

@@ -1,3 +1,10 @@
+if __name__ == "__main__":
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    from lensecam.basler.camera_basler import CameraBasler
+
 from _tests.camera_test import *
 import sys
 from PyQt6.QtWidgets import (
@@ -10,6 +17,12 @@ from PyQt6.QtGui import QPixmap, QImage
 import numpy as np
 from controllers.camera_control import cameraControl
 
+def find_camera():
+    cam = CameraBasler()
+    cam_connected = cam.find_first_camera()
+    print(cam_connected)
+    return cam
+
 
 class mainWidget(QWidget):
     def __init__(self, parent = None):
@@ -18,7 +31,7 @@ class mainWidget(QWidget):
         self.control = cameraControl()
         self.layout = QHBoxLayout()
         self.parent = parent
-        self.motor_position = 3.09
+        self.motor_position = 3.125
         self.timer = None
         self.label = None
 
@@ -58,7 +71,7 @@ class mainWidget(QWidget):
         image_uint8 = (image_normalized * 255).astype(np.uint8)
         return image_uint8
 
-    def get_live_sequence(self, step_size, V0, N):
+    def get_live_sequence(self, N, step_size, V0):
         image1, image2, image = self.control.acquisition_sequence(N, step_size, V0)
         if image is None:
             print(f"Pas d'image détectée")
@@ -86,7 +99,7 @@ class mainWidget(QWidget):
         label.setPixmap(scaled_pixmap)
 
     def get_acquisition_sequence(self, zstep, z0, vstep, V0, Nimg, i, Nstep, tol = 0.3, timeout = 300):
-        image1, image2, image = self.control.store_acquisition_sequence(zstep, z0, vstep, V0, Nimg, i, Nstep, tol, timeout)
+        image1, image2, image = self.control.store_acquisition_sequence(Nimg, zstep, z0, vstep, V0, i, Nstep, z0, tol, timeout)
         if image is None:
             print(f"Pas d'image détectée")
             return

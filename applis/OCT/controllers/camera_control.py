@@ -35,10 +35,11 @@ class cameraControl(QWidget):
         self.cam.set_exposure(self.exposure)
 
     def avg_images(self, N):
-        images = self.cam.get_images(N)
+        print(N)
+        images = self.cam.get_images(int(N))
         return np.mean(images, axis = 0)
 
-    def acquisition_sequence(self,N , step_size, V0):
+    def acquisition_sequence(self, N, step_size, V0):
         self.piezo.set_voltage_piezo(V0)
         image1 = self.avg_images(N)
         self.piezo.set_voltage_piezo(step_size + V0)
@@ -62,7 +63,7 @@ class cameraControl(QWidget):
             a+=1
             time.sleep(0.01)
 
-    def store_acquisition_sequence(self, z_step_size, z0, v_step_size, V0, N, index, num, consigne, tolerance = 0.1, timeout = 300):
+    def store_acquisition_sequence(self, N, z_step_size, z0, v_step_size, V0, index, num, tolerance = 0.1, timeout = 300):
         """
         This function performs the entire measurement sequence of
         the OCT protocol, and returns a list containing the resulting
@@ -102,6 +103,7 @@ class cameraControl(QWidget):
             self.cam.set_frame_rate(10)
             self.image_bits_depth = get_bits_per_pixel(self.cam.get_color_mode())
             print(f'Color mode = {self.image_bits_depth}')
+            self.cam.start_acquisition()
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No Camera Connected")
