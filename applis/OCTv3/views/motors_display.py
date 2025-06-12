@@ -38,33 +38,32 @@ class MotorControlView(QWidget):
         self.stepper_down = QPushButton("DOWN")
         self.stepper_down.setStyleSheet("""
                             QPushButton {
-                                background-color: #ee0000; 
-                                color: white;                
+                                background-color: #e08000;
+                                color: white;
                                 border-radius: 5px;
                                 padding: 8px 16px;
                             }
                             QPushButton:hover {
-                                background-color: #ce0000;
+                                background-color: #c07000;
                             }
                             QPushButton:pressed {
-                                background-color: #ae0000;
-                            }
-                        """)
+                                background-color: #a06000;
+                            }""")
         self.stepper_down.clicked.connect(self.motor_action)
 
         self.stepper_up = QPushButton("UP")
         self.stepper_up.setStyleSheet("""
                             QPushButton {
-                                background-color: #ee0000; 
+                                background-color: #e08000; 
                                 color: white;                
                                 border-radius: 5px;
                                 padding: 8px 16px;
                             }
                             QPushButton:hover {
-                                background-color: #ce0000;
+                                background-color: #c07000;
                             }
                             QPushButton:pressed {
-                                background-color: #ae0000;
+                                background-color: #a06000;
                             }
                         """)
         self.stepper_up.clicked.connect(self.motor_action)

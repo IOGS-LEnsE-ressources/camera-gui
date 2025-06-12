@@ -13,16 +13,16 @@ if TYPE_CHECKING:
     from oct_lab_app import MainWindow
 
 style_but_enabled = """QPushButton {
-                        background-color: #ee0000;
+                        background-color: #e08000;
                         color: white;
                         border-radius: 5px;
                         padding: 8px 16px;
                     }
                     QPushButton:hover {
-                        background-color: #ce0000;
+                        background-color: #c07000;
                     }
                     QPushButton:pressed {
-                        background-color: #ae0000;
+                        background-color: #a06000;
                     }"""
 style_but_disabled = """QPushButton {
                         background-color: #555555;
@@ -95,7 +95,8 @@ class AcquisitionView(QWidget):
         self.step_size_label.setStyleSheet(styleH3)
         self.step_size_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        self.step_size = QLineEdit("5")
+        init_value = self.parent.init_acq_step_size
+        self.step_size = QLineEdit(str(init_value))
         self.step_size.setEnabled(True)
         self.step_size.editingFinished.connect(self.step_action)
 
@@ -108,7 +109,8 @@ class AcquisitionView(QWidget):
         self.step_num_label.setStyleSheet(styleH3)
         self.step_num_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        self.step_num = QLineEdit("5")
+        init_value = self.parent.init_acq_step_num
+        self.step_num = QLineEdit(str(init_value))
         self.step_num.setEnabled(True)
         self.step_num.editingFinished.connect(self.step_action)
 

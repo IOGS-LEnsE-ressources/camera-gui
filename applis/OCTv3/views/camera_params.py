@@ -64,8 +64,7 @@ class CameraParamsView(QWidget):
         self.slider.setMaximum(self.max_expo_value)
         self.slider.setValue(self.ini_expo_value)
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.slider.setTickInterval(10)
-
+        self.slider.setTickInterval(int((self.max_expo_value - self.min_expo_value)/20))
         self.slider.valueChanged.connect(self.update_slider)
 
         # Ajouter le slider au layout

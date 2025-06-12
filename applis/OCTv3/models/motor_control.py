@@ -19,7 +19,7 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
         """
         Class for controlling Thorlabs BSC20x step motor, through a DRV208 controller.
         """
-        def __init__(self, serial_no = "40897338"):
+        def __init__(self, parent, serial_no = "40897338"):
             self.serial_no = serial_no
             try:
                 # device_list = DeviceManagerCLI.BuildDeviceList()
@@ -27,6 +27,7 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
                 # Connect, begin polling, and enable
                 self.device = BenchtopStepperMotor.CreateBenchtopStepperMotor(self.serial_no)
                 self.device.Connect(self.serial_no)
+                self.parent = parent
                 time.sleep(0.25)  # wait statements are important to allow settings to be sent to the device
 
                 # For benchtop devices, get the channel
@@ -77,16 +78,14 @@ if os.path.exists("C:\\Program Files\\Thorlabs\\Kinesis\\"):
             :param position: desired position, in mm.
             :param sleep_time: Pause between movement of the motor, in s.
             """
-            if 7 >= position >= 0:
-                #time.sleep(sleep_time) # Useful ?
+            if float(self.parent.motor_max_pos) >= position >= 0:
                 if __name__ == "__main__":print("Mise en position du moteur ...")
                 self.channel.MoveTo(Decimal(position - offset), 50000)  # Move to 1 mm
                 self.pos = self.get_position()
                 if __name__ == "__main__":print(f"Position = {self.pos}mm")
-                #time.sleep(sleep_time)
 
             else:
-                print(f"la position choisie doit être comprise entre 0 et 7mm")
+                print(f"la position choisie doit être comprise entre 0 et {round(float(self.parent.motor_max_pos), 3)}mm")
 
         def set_motor_displacement(self, direction : bool, delta_z : float):
             """

@@ -115,6 +115,12 @@ class MainWindow(QMainWindow):
             self.ini_expo_value = self.default_parameters['ExposureTime']
         if 'NumberAvgdImages' in self.default_parameters:
             self.number_avgd_images = self.default_parameters['NumberAvgdImages']
+        if 'MotorMaxPos' in self.default_parameters:
+            self.motor_max_pos = self.default_parameters['MotorMaxPos']
+        if 'AcquisitionStepSize' in self.default_parameters:
+            self.init_acq_step_size = self.default_parameters['AcquisitionStepSize']
+        if 'AcquisitionStepNumber' in self.default_parameters:
+            self.init_acq_step_num = self.default_parameters['AcquisitionStepNumber']
 
         self.dir_images = os.path.expanduser("~")
         if 'DirImages' in self.default_parameters:
@@ -181,9 +187,9 @@ class MainWindow(QMainWindow):
         # --------------------------------
         print('Step Motor Initialization')
         if 'StepSN' in self.default_parameters:
-            self.step_motor = Motor(serial_no=self.default_parameters['StepSN'])
+            self.step_motor = Motor(self, serial_no=self.default_parameters['StepSN'])
         else:
-            self.step_motor = Motor()
+            self.step_motor = Motor(self)
         serial = self.step_motor.serial_no
         print(f'Step Motor connected / SN = {serial}')
         if 'StepperInitPosition' in self.default_parameters:

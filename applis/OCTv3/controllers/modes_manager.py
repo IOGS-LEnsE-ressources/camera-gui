@@ -78,9 +78,6 @@ class ModesController:
         self.position = self.main_app.step_motor.get_position()
         self.moderate_interactions(False)
 
-        z0 = self.position
-        self.main_app.acquisition_update(z0, TOLERANCE, TIMEOUT)
-
         # Connexions
         self.thread.started.connect(self.worker.run)
         self.worker.images_ready.connect(self.store_acquisition_images)

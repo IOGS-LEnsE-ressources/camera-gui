@@ -17,3 +17,8 @@ PiezoV0;10
 PiezoDV;0.75
 ### Default directory
 DirImages;C:\Users\Noam\Documents\GitHub\camera-gui\applis\OCTv3\img
+### Motor limits
+MotorMaxPos;5
+### Acquisition initial parameters
+AcquisitionStepSize;0.5
+AcquisitionStepNumber;20
