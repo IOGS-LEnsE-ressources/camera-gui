@@ -103,8 +103,6 @@ class MainWindow(QMainWindow):
         self.piezo_V0 = 0
         self.stepper_init_value = 3.3
         self.stepper_step = 100
-        self.number_samples = 5
-        self.stepper_step_size = 5 * 0.001
 
         # Main variables
         if 'PiezoDV' in self.default_parameters:
@@ -145,8 +143,16 @@ class MainWindow(QMainWindow):
                 self.camera.set_exposure(float(self.default_parameters['Exposure Time'])*1000)  # in us
             else:
                 self.camera.set_exposure(1000) # in us
-            self.camera.set_frame_rate(10)
+            self.camera.set_frame_rate(80)
+
+            print(f'FPS = {self.camera.get_frame_rate()}')
             self.image_bits_depth = get_bits_per_pixel(self.camera.get_color_mode())
+            # Binning 2x2
+            self.camera.camera_device.Open()
+            self.camera.camera_device.BinningVertical.Value = 2
+            self.camera.camera_device.BinningHorizontal.Value = 2
+            self.camera.camera_device.Close()
+
             print(f'Color mode = {self.image_bits_depth}')
         else:
             dlg = QMessageBox(self)
@@ -190,8 +196,8 @@ class MainWindow(QMainWindow):
 
     def acquisition_update(self,consigne, tolerance = 0.1, timeout = 300):
         self.step_motor.move_motor(consigne)
-        print("motor moved")
         a = 0
+        print(consigne)
         while(self.step_motor.get_position() - consigne > tolerance and a < timeout):
             a+=1
             time.sleep(0.01)

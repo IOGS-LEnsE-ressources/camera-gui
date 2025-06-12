@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from oct_lab_app import MainWindow
 
 ### Timings of the motor during acquisition phase
-TOLERANCE = 0.1 #(tolerance in position in um)
+TOLERANCE = 0.01 #(tolerance in position in um)
 TIMEOUT = 3 #(motor displacement timeout in s)
 
 
@@ -72,11 +72,10 @@ class ModesController:
 
         # Motor displacement
         self.position = self.main_app.step_motor.get_position()
+        #self.moderate_interactions(False)
 
         z0 = self.position
-        z_step = self.main_app.stepper_step_size
-        total_count = self.main_app.number_samples
-        self.main_app.acquisition_update(z0 - total_count * z_step / 2, TOLERANCE, TIMEOUT)
+        self.main_app.acquisition_update(z0, TOLERANCE, TIMEOUT)
 
         # Connexions
         self.thread.started.connect(self.worker.run)
@@ -87,17 +86,21 @@ class ModesController:
     def stop_acquisition(self):
         acquisition = self.main_app.central_widget.acquisition_options
         self.thread.quit()
-        z0 = self.main_app.self.position
+
+        z0 = self.position
         self.main_app.acquisition_update(z0, TOLERANCE, TIMEOUT)
         acquisition.set_start_enabled(True)
         acquisition.set_stop_enabled(False)
+
+        #self.moderate_interactions(True)
+
         self.start_live()
 
     def store_acquisition_images(self):
         """Store and display images."""
         self.display_live_images()
         z0 = self.position
-        z_step = self.stepper_step_size
+        z_step = self.main_app.stepper_step
         image_number = self.worker.number_of_samples
         total_count = self.number_samples
         print(f'Acq N-{image_number}')
@@ -107,7 +110,7 @@ class ModesController:
         name = dir_name+self.main_app.file_name+f'_{image_number}.tiff'
         img.save(name)
         # Move motor to new position
-        self.main_app.acquisition_update(z0 + image_number * z_step - total_count*z_step/2, TOLERANCE, TIMEOUT)
+        self.main_app.acquisition_update(z0 + image_number * z_step, TOLERANCE, TIMEOUT)
 
         # Update Progression bar !
 
@@ -121,9 +124,8 @@ class ModesController:
             image_float32 = image
         elif type == "float64":
             image_float32 = image.astype(np.float32)
-        image_normalized = (image_float32 - np.min(image_float32)) / (
-                np.max(image_float32) - np.min(image_float32) + 1e-8)
-        image_uint8 = (image_normalized * 255).astype(np.uint8)
+        image_normalized = (image_float32) # - np.min(image_float32)) / (np.max(image_float32) - np.min(image_float32) + 1e-8)
+        image_uint8 = image_normalized.astype(np.uint8) # (image_normalized * 255).astype(np.uint8)
         return image_uint8
 
     def display_live_images(self):
@@ -154,7 +156,12 @@ class ModesController:
         if source == "int":
             self.main_app.camera.set_exposure(int(message))
         if source == "num":
+            self.worker.stop()
+            time.sleep(0.1)
+            self.thread.quit()
+            self.thread.wait()
             self.main_app.number_avgd_images = int(message)
+            self.start_live()
 
     def handle_stepper_move(self, event):
         """Action performed when Up or Down button is clicked."""
@@ -218,6 +225,11 @@ class ModesController:
 
         self.start_live()
 
+    def moderate_interactions(self, activation : bool):
+        self.main_app.central_widget.motors_options.moderate_interactions(activation)
+        self.main_app.central_widget.acquisition_options.moderate_interactions(activation)
+        self.main_app.central_widget.mini_camera.camera_params_widget.moderate_interactions(activation)
+
     def handle_acquisition(self, event):
         """Action to performed when acquisition is started."""
         print(event)
@@ -266,12 +278,11 @@ class ModesController:
             acquisition.set_stop_enabled(False)
             self.start_live()
         elif source == "StepNum":
-<<<<<<< HEAD
-            self.number_samples = message
-        elif source == "StepSize":
-            self.stepper_step_size = message * 0.001
-=======
             self.main_app.number_samples = int(message)
+            print(event)
+            self.start_live()
         elif source == "StepSize":
-            self.main_app.stepper_step_size = float(message) * 0.001
->>>>>>> f80c0ddf3c0b34b86f10ea32befbb98306922d8d
+            self.main_app.stepper_step = float(message) * 0.001
+            print(self.main_app.stepper_step)
+            print(event)
+            self.start_live()

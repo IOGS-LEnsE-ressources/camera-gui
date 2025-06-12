@@ -88,6 +88,11 @@ class CameraParamsView(QWidget):
             print("Number of averaged images changed")
         self.camera_exposure_changed.emit("num=" + self.num_value.text())
 
+    def moderate_interactions(self, activation : bool):
+        self.int_time_value.setEnabled(activation)
+        self.slider.setEnabled(activation)
+        self.num_value.setEnabled(activation)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

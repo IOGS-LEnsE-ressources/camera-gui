@@ -79,6 +79,7 @@ class ImageAcquisition(QObject):
                 piezo.set_voltage_piezo(self.main_app.piezo_V0)
                 images_list = camera.get_images(int(nb_images))
                 self.main_app.image1 = np.mean(images_list, axis = 0)
+
                 piezo.set_voltage_piezo(self.main_app.piezo_step_size + self.main_app.piezo_V0)
                 images_list = camera.get_images(int(nb_images))
                 self.main_app.image2 = np.mean(images_list, axis = 0)

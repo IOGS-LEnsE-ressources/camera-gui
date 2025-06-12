@@ -197,6 +197,13 @@ class AcquisitionView(QWidget):
             self.acqThread.emit("Stop=")
             print(f"the acquisition has been stopped")
 
+    def moderate_interactions(self, activation : bool):
+        self.directory.setEnabled(activation)
+        self.name.setEnabled(activation)
+        self.search.setEnabled(activation)
+        self.step_size.setEnabled(activation)
+        self.step_num.setEnabled(activation)
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     fenetre = AcquisitionView()

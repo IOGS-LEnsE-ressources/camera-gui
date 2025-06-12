@@ -163,6 +163,12 @@ class MotorControlView(QWidget):
             self.v0_value.setText(f'{self.slider_v0.value()} V')
             if __name__ == "__main__":print(f"the tension value of the piezo actuator has been updated")
 
+    def moderate_interactions(self, activation : bool):
+        self.stepper_down.setEnabled(activation)
+        self.stepper_up.setEnabled(activation)
+        self.step_z_section.setEnabled(activation)
+        self.v0_value.setEnabled(activation)
+        self.delta_v_value.setEnabled(activation)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
