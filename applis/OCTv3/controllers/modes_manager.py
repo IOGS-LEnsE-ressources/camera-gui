@@ -34,9 +34,9 @@ class ModesController:
         self.dialog = None
 
         ### Initial values
-        self.number_samples = 5
-        self.stepper_step_size = 5 * 0.001
-        self.position = self.main_app.stepper_init_value
+        self.number_samples = int(self.main_app.init_acq_step_num)
+        self.acq_stepper_step_size = float(self.main_app.init_acq_step_size) * 0.001
+        self.position = float(self.main_app.stepper_init_value)
 
         # Signals management
         camera_widget = self.main_app.central_widget.mini_camera.camera_params_widget
@@ -103,7 +103,7 @@ class ModesController:
         """Store and display images."""
         self.display_live_images()
         z0 = self.position
-        z_step = self.main_app.stepper_step
+        z_step = self.acq_stepper_step_size
         image_number = self.worker.number_of_samples
         print(f'Acq N-{image_number}')
         # Store images in
@@ -285,11 +285,11 @@ class ModesController:
             acquisition.set_stop_enabled(False)
             self.start_live()
         elif source == "StepNum":
-            self.main_app.number_samples = int(message)
+            self.number_samples = int(message)
             print(event)
             self.start_live()
         elif source == "StepSize":
-            self.main_app.stepper_step = float(message) * 0.001
+            self.acq_stepper_step_size = float(message) * 0.001
             print(self.main_app.stepper_step)
             print(event)
             self.start_live()
