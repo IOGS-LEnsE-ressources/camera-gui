@@ -266,6 +266,12 @@ class ModesController:
             acquisition.set_stop_enabled(False)
             self.start_live()
         elif source == "StepNum":
+<<<<<<< HEAD
             self.number_samples = message
         elif source == "StepSize":
             self.stepper_step_size = message * 0.001
+=======
+            self.main_app.number_samples = int(message)
+        elif source == "StepSize":
+            self.main_app.stepper_step_size = float(message) * 0.001
+>>>>>>> f80c0ddf3c0b34b86f10ea32befbb98306922d8d
