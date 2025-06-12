@@ -51,7 +51,7 @@ class MiniCameraWidget(QWidget):
     Widget containing the title and the camera parameters.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self,parent=None):
         """
         Default Constructor.
         :param parent: Parent widget of the title widget.
@@ -83,6 +83,7 @@ class MainView(QWidget):
         """
         super().__init__(parent=parent)
         self.parent = parent
+
         # GUI Structure
         self.layout = QHBoxLayout()
         self.left_layout = QVBoxLayout()

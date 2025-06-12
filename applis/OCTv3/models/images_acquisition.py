@@ -72,8 +72,15 @@ class ImageAcquisition(QObject):
             # Get images
             piezo = self.main_app.piezo
             camera = self.main_app.camera
-            nb_images_text = int(self.main_app.central_widget.acquisition_options.step_num.text())
+            nb_avg_images_text = self.main_app.central_widget.mini_camera.camera_params_widget.num_value.text()
 
+            try:
+                nb_avg_images = int(nb_avg_images_text)
+            except Exception as e:
+                print(e)
+                nb_avg_images = 1
+
+            nb_images_text = self.main_app.central_widget.acquisition_options.step_num.text()
             try:
                 nb_images = int(nb_images_text)
             except Exception as e:
@@ -89,11 +96,11 @@ class ImageAcquisition(QObject):
                     self.main_app.camera_acquiring = True
 
                 piezo.set_voltage_piezo(self.main_app.piezo_V0)
-                images_list = camera.get_images(nb_images)
+                images_list = camera.get_images(nb_avg_images)
                 self.main_app.image1 = np.mean(images_list, axis = 0)
 
                 piezo.set_voltage_piezo(self.main_app.piezo_step_size + self.main_app.piezo_V0)
-                images_list = camera.get_images(nb_images)
+                images_list = camera.get_images(nb_avg_images)
                 self.main_app.image2 = np.mean(images_list, axis = 0)
 
                 self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)

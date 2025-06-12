@@ -96,13 +96,7 @@ class MainWindow(QMainWindow):
         self.image2 = None
         self.image_oct = None
 
-        #Initial QLineEdit variables
         self.image_bits_depth = 12
-        self.number_avgd_images = 1
-        self.piezo_step_size = 0.75
-        self.piezo_V0 = 0
-        self.stepper_init_value = 3.3
-        self.stepper_step = 100
 
         # Main variables
         if 'PiezoDV' in self.default_parameters:
@@ -113,6 +107,14 @@ class MainWindow(QMainWindow):
             self.stepper_init_value = float(self.default_parameters['StepperInitPosition'])
         if 'StepperInitStep' in self.default_parameters:
             self.stepper_step = float(self.default_parameters['StepperInitStep'])
+        if 'MaxExpoTime' in self.default_parameters:
+            self.max_expo_value = self.default_parameters['MaxExpoTime']
+        if 'MinExpoTime' in self.default_parameters:
+            self.min_expo_value = self.default_parameters['MinExpoTime']
+        if 'ExposureTime' in self.default_parameters:
+            self.ini_expo_value = self.default_parameters['ExposureTime']
+        if 'NumberAvgdImages' in self.default_parameters:
+            self.number_avgd_images = self.default_parameters['NumberAvgdImages']
 
         self.dir_images = os.path.expanduser("~")
         if 'DirImages' in self.default_parameters:
@@ -184,10 +186,10 @@ class MainWindow(QMainWindow):
             self.step_motor = Motor()
         serial = self.step_motor.serial_no
         print(f'Step Motor connected / SN = {serial}')
-        if 'StepInitPosition' in self.default_parameters:
-            position = float(self.default_parameters['StepInitPosition'])
+        if 'StepperInitPosition' in self.default_parameters:
+            position = float(self.default_parameters['StepperInitPosition'])
         else:
-            position = 3.0
+            position = 3.2
         self.step_motor.move_motor(position)
         new_position = self.step_motor.get_position()
         print(f'Step Motor moved to position {new_position} mm')

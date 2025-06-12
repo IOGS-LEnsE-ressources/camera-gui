@@ -83,7 +83,7 @@ class AcquisitionView(QWidget):
         self.name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.name = QLineEdit("")
-        self.name.setEnabled = True
+        self.name.setEnabled(True)
         self.name.editingFinished.connect(self.directory_action)
 
         name_layout.addWidget(self.name_label)
@@ -96,7 +96,7 @@ class AcquisitionView(QWidget):
         self.step_size_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.step_size = QLineEdit("5")
-        self.step_size.setEnabled = True
+        self.step_size.setEnabled(True)
         self.step_size.editingFinished.connect(self.step_action)
 
         step_size_layout.addWidget(self.step_size_label)
@@ -109,7 +109,7 @@ class AcquisitionView(QWidget):
         self.step_num_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.step_num = QLineEdit("5")
-        self.step_num.setEnabled = True
+        self.step_num.setEnabled(True)
         self.step_num.editingFinished.connect(self.step_action)
 
         step_num_layout.addWidget(self.step_num_label)
@@ -133,6 +133,8 @@ class AcquisitionView(QWidget):
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setObjectName("IOGSProgressBar")
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
         self.progress_bar.setStyleSheet(StyleSheet)
         self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -148,12 +150,14 @@ class AcquisitionView(QWidget):
 
         self.setLayout(layout)
 
-    def update_progress_bar(self, value: int):
+    def update_progress_bar(self, progression: float):
         """
         Update the progression bar value.
-        :param value: Value to display.
+        :param value: Value to display (float between 0 and 1)
         """
-        self.progress_bar.setValue(value)
+        '''progression est un float entre 0 et 1'''
+        bar_progress = int(progression * 100)
+        self.progress_bar.setValue(bar_progress)
 
     def set_start_enabled(self, value: bool):
         """Set the start button enabled."""
@@ -198,11 +202,11 @@ class AcquisitionView(QWidget):
             print(f"the acquisition has been stopped")
 
     def moderate_interactions(self, activation : bool):
-        self.directory.setEnabled(activation)
         self.name.setEnabled(activation)
         self.search.setEnabled(activation)
         self.step_size.setEnabled(activation)
         self.step_num.setEnabled(activation)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

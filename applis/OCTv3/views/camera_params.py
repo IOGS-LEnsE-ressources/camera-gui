@@ -8,9 +8,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from lensepy.css import *
 
-MIN_EXPO_VALUE = 50
-EXPOSURE = 1500
-MAX_EXPO_VALUE = 4000
+if __name__ == '__main__':
+    MIN_EXPO_VALUE = 50
+    EXPOSURE = 1500
+    MAX_EXPO_VALUE = 4000
 
 class CameraParamsView(QWidget):
 
@@ -26,6 +27,11 @@ class CameraParamsView(QWidget):
         layout_int_time = QHBoxLayout()
         layout_num = QHBoxLayout()
 
+        self.min_expo_value = int(self.parent.min_expo_value)
+        self.ini_expo_value = int(self.parent.ini_expo_value)
+        self.max_expo_value = int(self.parent.max_expo_value)
+        self.number_avgd_images = int(self.parent.number_avgd_images)
+
         self.title = QLabel("Camera / Images")
         self.title.setStyleSheet(styleH2)
 
@@ -33,9 +39,7 @@ class CameraParamsView(QWidget):
         self.int_time_label.setStyleSheet(styleH3)
         self.int_time_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        init_value = EXPOSURE
-
-        self.int_time_value = QLabel(f"{init_value} us")
+        self.int_time_value = QLabel(f"{self.ini_expo_value} us")
         self.int_time_value.setStyleSheet(styleH3)
         self.int_time_value.setFixedWidth(50)  # largeur fixe pour garder l'alignement stable
         self.int_time_value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -47,9 +51,8 @@ class CameraParamsView(QWidget):
         self.num_label.setStyleSheet(styleH3)
         self.num_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        init_value = self.parent.number_avgd_images
-        self.num_value = QLineEdit(str(init_value))
-        self.num_value.setEnabled = True
+        self.num_value = QLineEdit(str(self.number_avgd_images))
+        self.num_value.setEnabled(True)
         self.num_value.editingFinished.connect(self.update_num)
 
         layout_num.addWidget(self.num_label)
@@ -57,9 +60,9 @@ class CameraParamsView(QWidget):
 
         # Créer un slider horizontal
         self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setMinimum(MIN_EXPO_VALUE)
-        self.slider.setMaximum(MAX_EXPO_VALUE)
-        self.slider.setValue(init_value)
+        self.slider.setMinimum(self.min_expo_value)
+        self.slider.setMaximum(self.max_expo_value)
+        self.slider.setValue(self.ini_expo_value)
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.setTickInterval(10)
 
@@ -75,7 +78,7 @@ class CameraParamsView(QWidget):
         # Appliquer le layout à la fenêtre
         self.setLayout(layout)
 
-        self.camera_exposure_changed.emit("int=" + str(EXPOSURE))
+        #self.camera_exposure_changed.emit("int=" + str(self.ini_expo_value))
 
     def update_slider(self, tint):
         self.int_time_value.setText(str(tint) + " us")
@@ -96,6 +99,6 @@ class CameraParamsView(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    fenetre = CameraParamsView()
+    fenetre = CameraParamsView(MIN_EXPO_VALUE, EXPOSURE, MAX_EXPO_VALUE)
     fenetre.show()
     sys.exit(app.exec())

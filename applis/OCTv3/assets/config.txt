@@ -5,13 +5,15 @@ Language;FR
 ColorMode;Mono12
 ExposureTime;1500
 MaxExpoTime;20000
+MinExpoTime;50
+NumberAvgdImages;1
 ### Step Motor
 StepSN;40897338
-StepperInitPosition;3.5
+StepperInitPosition;3.2
 StepperInitStep;200
 ### Piezo
 PiezoSN;29501399
 PiezoV0;10
-PiezoDV;3
+PiezoDV;0.75
 ### Default directory
-DirImages;D:/_old_dd/
+DirImages;C:\Users\Noam\Documents\GitHub\camera-gui\applis\OCTv3\img

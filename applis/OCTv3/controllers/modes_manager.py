@@ -50,6 +50,10 @@ class ModesController:
         # Variables
         self.stepper_z_step = int(self.main_app.stepper_step) * 0.001
 
+        motors = self.main_app.central_widget.motors_options
+        new_position = np.round(self.main_app.step_motor.get_position(), 3)
+        motors.changeZ(new_position)
+
         # Start first mode : Live
         self.mode = 'live'
         self.start_live()
@@ -72,7 +76,7 @@ class ModesController:
 
         # Motor displacement
         self.position = self.main_app.step_motor.get_position()
-        #self.moderate_interactions(False)
+        self.moderate_interactions(False)
 
         z0 = self.position
         self.main_app.acquisition_update(z0, TOLERANCE, TIMEOUT)
@@ -94,7 +98,7 @@ class ModesController:
         acquisition.set_start_enabled(True)
         acquisition.set_stop_enabled(False)
 
-        #self.moderate_interactions(True)
+        self.moderate_interactions(True)
 
         self.start_live()
 
@@ -104,10 +108,10 @@ class ModesController:
         z0 = self.position
         z_step = self.main_app.stepper_step
         image_number = self.worker.number_of_samples
-        total_count = self.number_samples
         print(f'Acq N-{image_number}')
         # Store images in
-        img = Image.fromarray(self.main_app.image_oct)
+        image_float64 = self.main_app.image_oct.astype(np.uint16)
+        img = Image.fromarray(image_float64 * 16)
         dir_name = self.main_app.dir_images+'/'+self.main_app.file_name+'/'
         name = dir_name+self.main_app.file_name+f'_{image_number}.tiff'
         img.save(name)
@@ -115,6 +119,20 @@ class ModesController:
         self.main_app.acquisition_update(z0 + image_number * z_step, TOLERANCE, TIMEOUT)
 
         # Update Progression bar !
+        nb_images_text = self.main_app.central_widget.acquisition_options.step_num.text()
+        try:
+            nb_images = int(nb_images_text)
+        except Exception as e:
+            print(e)
+            nb_images = 1
+
+        progress = image_number/nb_images
+        if 1 >= progress >= 0:
+            self.main_app.central_widget.acquisition_options.update_progress_bar(progress)
+        elif progress < 0:
+            self.main_app.central_widget.acquisition_options.update_progress_bar(0.)
+        else:
+            self.main_app.central_widget.acquisition_options.update_progress_bar(1.)
 
     def convertTo_uint8(self, image):
         type = image.dtype
@@ -126,7 +144,7 @@ class ModesController:
             image_float32 = image
         elif type == "float64":
             image_float32 = image.astype(np.float32)
-        image_normalized = image_float32 # - np.min(image_float32)) / (np.max(image_float32) - np.min(image_float32) + 1e-8)
+        image_normalized = image_float32/16 # - np.min(image_float32)) / (np.max(image_float32) - np.min(image_float32) + 1e-8)
         image_uint8 = image_normalized.astype(np.uint8) # (image_normalized * 255).astype(np.uint8)
         return image_uint8
 
@@ -139,11 +157,10 @@ class ModesController:
         if piezo is not None and self.main_app.camera_connected:
             self.main_app.image1 = self.convertTo_uint8(self.main_app.image1)
             self.main_app.image2 = self.convertTo_uint8(self.main_app.image2)
-            self.main_app.image_oct = self.convertTo_uint8(self.main_app.image_oct)
 
             image_view.image1_widget.set_image_from_array(self.main_app.image1, 'Image 1')
             image_view.image2_widget.set_image_from_array(self.main_app.image2, 'Image 2')
-            image_view.image_oct_graph.set_image_from_array(self.main_app.image_oct, 'OCT')
+            image_view.image_oct_graph.set_image_from_array(self.convertTo_uint8(self.main_app.image_oct), 'OCT')
         else:
             black = np.random.normal(size=(100, 100))
             image_view.image1_widget.set_image_from_array(black, "No Piezo or camera")
@@ -184,6 +201,8 @@ class ModesController:
             motors.changeZ(new_position)
         elif source == "deltaV":
             self.v_step = float(message)
+        elif source == "V0":
+            self.main_app.piezo_V0 = int(message)
 
     def handle_folder(self, event):
         """Action performed when Up or Down button is clicked."""
@@ -203,15 +222,6 @@ class ModesController:
             self.dialog.fileSelected.connect(self.folder_selected)
             self.dialog.show()
 
-            '''
-            folder_request = QFileDialog.getExistingDirectory(None, "Select a directory...",
-                                                              dir_images, QFileDialog.Option.ShowDirsOnly)
-            if folder_request:
-                acquisition.directory.setText(folder_request)
-                if acquisition.name.text() != '':
-                    acquisition.set_start_enabled(True)
-            self.start_live()
-            '''
         if source == "name":
             if acquisition.directory.text() != '':
                 # Check Name ?? (only "normal" character)
@@ -251,8 +261,6 @@ class ModesController:
             if not os.path.exists(dir_images+'/'+file_name):
                 os.makedirs(dir_images+'/'+file_name)
             else:
-                print(f"acquisition override : the folder already exists")
-                '''
                 dlg = QMessageBox(self.main_app)
                 dlg.setWindowTitle("Warning - Directory already exists")
                 dlg.setText("The file name is already existing ! \r\nNo acquisition will be done")
@@ -260,7 +268,7 @@ class ModesController:
                     QMessageBox.StandardButton.Ok
                 )
                 dlg.setIcon(QMessageBox.Icon.Warning)
-                button = dlg.exec()'''
+                button = dlg.exec()
                 acquisition.set_start_enabled(True)
                 acquisition.set_stop_enabled(False)
                 self.start_live()
