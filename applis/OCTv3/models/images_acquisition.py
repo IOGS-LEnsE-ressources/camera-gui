@@ -31,14 +31,19 @@ class ImageLive(QObject):
                     camera.alloc_memory()
                     camera.start_acquisition()
                     self.main_app.camera_acquiring = True
+
                 nb_images = self.main_app.central_widget.mini_camera.camera_params_widget.num_value.text()
+
                 piezo.set_voltage_piezo(self.main_app.piezo_V0)
                 images_list = camera.get_images(int(nb_images))
                 self.main_app.image1 = np.mean(images_list, axis = 0)
+
                 piezo.set_voltage_piezo(self.main_app.piezo_step_size + self.main_app.piezo_V0)
                 images_list = camera.get_images(int(nb_images))
                 self.main_app.image2 = np.mean(images_list, axis = 0)
+
                 self.main_app.image_oct = np.sqrt((self.main_app.image1 - self.main_app.image2) ** 2)
+
             time.sleep(0.01)
             self.images_ready.emit()
         self.finished.emit()

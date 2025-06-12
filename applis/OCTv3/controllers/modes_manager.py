@@ -33,6 +33,11 @@ class ModesController:
         self.worker = None
         self.dialog = None
 
+        ### Initial values
+        self.number_samples = 5
+        self.stepper_step_size = 5 * 0.001
+        self.position = self.main_app.stepper_init_value
+
         # Signals management
         camera_widget = self.main_app.central_widget.mini_camera.camera_params_widget
         camera_widget.camera_exposure_changed.connect(self.handle_camera_exposure)
@@ -66,7 +71,9 @@ class ModesController:
         self.worker.moveToThread(self.thread)
 
         # Motor displacement
-        z0 = self.main_app.stepper_init_value
+        self.position = self.main_app.step_motor.get_position()
+
+        z0 = self.position
         z_step = self.main_app.stepper_step_size
         total_count = self.main_app.number_samples
         self.main_app.acquisition_update(z0 - total_count * z_step / 2, TOLERANCE, TIMEOUT)
@@ -80,7 +87,7 @@ class ModesController:
     def stop_acquisition(self):
         acquisition = self.main_app.central_widget.acquisition_options
         self.thread.quit()
-        z0 = self.main_app.stepper_init_value
+        z0 = self.main_app.self.position
         self.main_app.acquisition_update(z0, TOLERANCE, TIMEOUT)
         acquisition.set_start_enabled(True)
         acquisition.set_stop_enabled(False)
@@ -89,10 +96,10 @@ class ModesController:
     def store_acquisition_images(self):
         """Store and display images."""
         self.display_live_images()
-        z0 = self.main_app.stepper_init_value
-        z_step = self.main_app.stepper_step_size
+        z0 = self.position
+        z_step = self.stepper_step_size
         image_number = self.worker.number_of_samples
-        total_count = self.main_app.number_samples
+        total_count = self.number_samples
         print(f'Acq N-{image_number}')
         # Store images in
         img = Image.fromarray(self.main_app.image_oct)
@@ -230,6 +237,8 @@ class ModesController:
             if not os.path.exists(dir_images+'/'+file_name):
                 os.makedirs(dir_images+'/'+file_name)
             else:
+                print(f"acquisition override : the folder already exists")
+                '''
                 dlg = QMessageBox(self.main_app)
                 dlg.setWindowTitle("Warning - Directory already exists")
                 dlg.setText("The file name is already existing ! \r\nNo acquisition will be done")
@@ -237,7 +246,7 @@ class ModesController:
                     QMessageBox.StandardButton.Ok
                 )
                 dlg.setIcon(QMessageBox.Icon.Warning)
-                button = dlg.exec()
+                button = dlg.exec()'''
                 acquisition.set_start_enabled(True)
                 acquisition.set_stop_enabled(False)
                 self.start_live()
@@ -257,6 +266,6 @@ class ModesController:
             acquisition.set_stop_enabled(False)
             self.start_live()
         elif source == "StepNum":
-            self.main_app.number_samples = message
+            self.number_samples = message
         elif source == "StepSize":
-            self.main_app.stepper_step_size = message * 0.001
+            self.stepper_step_size = message * 0.001
