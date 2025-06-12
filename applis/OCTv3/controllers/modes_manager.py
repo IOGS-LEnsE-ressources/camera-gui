@@ -85,7 +85,9 @@ class ModesController:
 
     def stop_acquisition(self):
         acquisition = self.main_app.central_widget.acquisition_options
+        self.worker.stop()
         self.thread.quit()
+        self.thread.wait()
 
         z0 = self.position
         self.main_app.acquisition_update(z0, TOLERANCE, TIMEOUT)
@@ -124,7 +126,7 @@ class ModesController:
             image_float32 = image
         elif type == "float64":
             image_float32 = image.astype(np.float32)
-        image_normalized = (image_float32) # - np.min(image_float32)) / (np.max(image_float32) - np.min(image_float32) + 1e-8)
+        image_normalized = image_float32 # - np.min(image_float32)) / (np.max(image_float32) - np.min(image_float32) + 1e-8)
         image_uint8 = image_normalized.astype(np.uint8) # (image_normalized * 255).astype(np.uint8)
         return image_uint8
 
