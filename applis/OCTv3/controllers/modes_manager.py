@@ -48,7 +48,7 @@ class ModesController:
         acq_widget.acqThread.connect(self.handle_acquisition)
 
         # Variables
-        self.stepper_z_step = int(self.main_app.stepper_step) * 0.001
+        self.stepper_z_step = float(self.main_app.stepper_step) * 0.001
 
         motors = self.main_app.central_widget.motors_options
         new_position = np.round(self.main_app.step_motor.get_position(), 3)
