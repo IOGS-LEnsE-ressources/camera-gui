@@ -122,6 +122,26 @@ class MainWindow(QMainWindow):
         if 'AcquisitionStepNumber' in self.default_parameters:
             self.init_acq_step_num = self.default_parameters['AcquisitionStepNumber']
 
+        ### Buttons style sheet
+        self.style_but_enabled = """QPushButton {
+                                background-color: #ff960a;
+                                color: white;
+                                border-radius: 5px;
+                                padding: 8px 16px;
+                            }
+                            QPushButton:hover {
+                                background-color: #d7861c;
+                            }
+                            QPushButton:pressed {
+                                background-color: #aa752f;
+                            }"""
+        self.style_but_disabled = """QPushButton {
+                                background-color: #555555;
+                                color: white;
+                                border-radius: 5px;
+                                padding: 8px 16px;
+                            }"""
+
         self.dir_images = os.path.expanduser("~")
         if 'DirImages' in self.default_parameters:
             self.dir_images = self.default_parameters['DirImages']

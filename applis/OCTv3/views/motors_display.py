@@ -36,36 +36,11 @@ class MotorControlView(QWidget):
         self.stepper_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
         self.stepper_down = QPushButton("DOWN")
-        self.stepper_down.setStyleSheet("""
-                            QPushButton {
-                                background-color: #e08000;
-                                color: white;
-                                border-radius: 5px;
-                                padding: 8px 16px;
-                            }
-                            QPushButton:hover {
-                                background-color: #c07000;
-                            }
-                            QPushButton:pressed {
-                                background-color: #a06000;
-                            }""")
+        self.stepper_down.setStyleSheet(self.parent.style_but_enabled)
         self.stepper_down.clicked.connect(self.motor_action)
 
         self.stepper_up = QPushButton("UP")
-        self.stepper_up.setStyleSheet("""
-                            QPushButton {
-                                background-color: #e08000; 
-                                color: white;                
-                                border-radius: 5px;
-                                padding: 8px 16px;
-                            }
-                            QPushButton:hover {
-                                background-color: #c07000;
-                            }
-                            QPushButton:pressed {
-                                background-color: #a06000;
-                            }
-                        """)
+        self.stepper_up.setStyleSheet(self.parent.style_but_enabled)
         self.stepper_up.clicked.connect(self.motor_action)
 
         stepper_layout.addWidget(self.stepper_label)
@@ -170,6 +145,13 @@ class MotorControlView(QWidget):
         self.step_z_section.setEnabled(activation)
         self.v0_value.setEnabled(activation)
         self.delta_v_value.setEnabled(activation)
+
+        if activation:
+            self.stepper_up.setStyleSheet(self.parent.style_but_enabled)
+            self.stepper_down.setStyleSheet(self.parent.style_but_enabled)
+        else:
+            self.stepper_up.setStyleSheet(self.parent.style_but_disabled)
+            self.stepper_down.setStyleSheet(self.parent.style_but_disabled)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

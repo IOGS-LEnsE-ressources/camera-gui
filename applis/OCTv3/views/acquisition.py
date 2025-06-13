@@ -12,25 +12,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from oct_lab_app import MainWindow
 
-style_but_enabled = """QPushButton {
-                        background-color: #e08000;
-                        color: white;
-                        border-radius: 5px;
-                        padding: 8px 16px;
-                    }
-                    QPushButton:hover {
-                        background-color: #c07000;
-                    }
-                    QPushButton:pressed {
-                        background-color: #a06000;
-                    }"""
-style_but_disabled = """QPushButton {
-                        background-color: #555555;
-                        color: white;
-                        border-radius: 5px;
-                        padding: 8px 16px;
-                    }"""
-
 
 class AcquisitionView(QWidget):
 
@@ -121,12 +102,12 @@ class AcquisitionView(QWidget):
 
         self.start_button = QPushButton("Start")
         self.start_button.setEnabled(False)
-        self.start_button.setStyleSheet(style_but_disabled)
+        self.start_button.setStyleSheet(self.parent.style_but_disabled)
         self.start_button.clicked.connect(self.step_action)
 
         self.stop_button = QPushButton("Stop")
         self.stop_button.setEnabled(False)
-        self.stop_button.setStyleSheet(style_but_disabled)
+        self.stop_button.setStyleSheet(self.parent.style_but_disabled)
 
         self.stop_button.clicked.connect(self.step_action)
 
@@ -165,19 +146,19 @@ class AcquisitionView(QWidget):
         """Set the start button enabled."""
         if value:
             self.start_button.setEnabled(True)
-            self.start_button.setStyleSheet(style_but_enabled)
+            self.start_button.setStyleSheet(self.parent.style_but_enabled)
         else:
             self.start_button.setEnabled(False)
-            self.start_button.setStyleSheet(style_but_disabled)
+            self.start_button.setStyleSheet(self.parent.style_but_disabled)
 
     def set_stop_enabled(self, value: bool):
         """Set the stop button enabled."""
         if value:
             self.stop_button.setEnabled(True)
-            self.stop_button.setStyleSheet(style_but_enabled)
+            self.stop_button.setStyleSheet(self.parent.style_but_enabled)
         else:
             self.stop_button.setEnabled(False)
-            self.stop_button.setStyleSheet(style_but_disabled)
+            self.stop_button.setStyleSheet(self.parent.style_but_disabled)
 
     def directory_action(self):
         sender = self.sender()
